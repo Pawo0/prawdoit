@@ -70,6 +70,37 @@ def save_check(result: dict, masked_input: str, session: str | None) -> None:
         _db.commit()
 
 
+def save_auto_check(result: dict, text_sha256: str) -> None:
+    """Audit row for a background check (CheckRequest.mode="auto"): what was decided and on which sources, without
+    the text. No input excerpt, no claim wording, no explanation or short answer (both quote the claim), no session;
+    security events keep their kind and place but not the matched passage. Expires after auto_retention_days."""
+    claims = result.get("claims", [])
+    sources = sorted({e["url"] for c in claims for e in c.get("evidence", [])})
+    slim = {
+        "id": result["id"], "created_at": result["created_at"], "channel": result["channel"], "mode": "auto",
+        "status": result["status"], "input_sha256": text_sha256, "input_kind": result.get("input_kind"),
+        "claims": [{"verdict": c["verdict"], "kind": c.get("kind"), "rules_fired": c.get("rules_fired", []),
+                    "reason_codes": c.get("reason_codes", []), "strength_label": c.get("strength_label"),
+                    "evidence": [{k: e.get(k) for k in ("doc_id", "publisher", "url", "title", "published_at",
+                                                        "source_type", "tier", "stance", "factcheck_verdict_raw")}
+                                 for e in c.get("evidence", [])]} for c in claims],
+        "security_events": [{"kind": ev["kind"], "where": ev["where"]} for ev in result.get("security_events", [])],
+        "timings_ms": result.get("timings_ms", {}), "engine": result.get("engine", {}),
+    }
+    with _lock:
+        _db.execute(
+            "INSERT OR REPLACE INTO checks VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (result["id"], result["created_at"], result["channel"], None, f"sha256:{text_sha256}", result["status"],
+             json.dumps([c["verdict"] for c in claims]), json.dumps(sources), json.dumps(slim, ensure_ascii=False),
+             result.get("timings_ms", {}).get("total_ms"), None),
+        )
+        for ev in result.get("security_events", []):
+            _db.execute("INSERT INTO security_events (created_at, check_id, kind, location, detail) VALUES (?,?,?,?,?)",
+                        (result["created_at"], result["id"], ev["kind"], ev["where"],
+                         "(tryb automatyczny: treść nie jest zapisywana)"))
+        _db.commit()
+
+
 def log_error(check_id: str | None, component: str, detail: str) -> None:
     with _lock:
         _db.execute("INSERT INTO errors (created_at, check_id, component, detail) VALUES (?,?,?,?)",
@@ -91,8 +122,12 @@ def delete_session(session: str) -> int:
 
 def purge_expired() -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.retention_days)).isoformat()
+    auto_cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.auto_retention_days)).isoformat()
     with _lock:
         n = _db.execute("DELETE FROM checks WHERE created_at < ?", (cutoff,)).rowcount
+        # background (mode="auto") rows carry no text and are kept for a shorter time
+        n += _db.execute("DELETE FROM checks WHERE created_at < ? AND input_masked LIKE 'sha256:%' "
+                         "AND channel LIKE '%-auto'", (auto_cutoff,)).rowcount
         _db.commit()
     return n
 

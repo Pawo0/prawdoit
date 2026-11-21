@@ -47,7 +47,8 @@ as they are. New items go into new lines of v1 (never v2), or into a future v3.
 | `compare.py` | Paired comparison of two runs: fixed / broken / new false verdicts, per phenomenon, sign test. `--set v1|v2`. |
 | `lexical_bench.py` | Analyzer only (no neural model): BM25 rank of the gold document and the lexical gate, for 4 analyzers. v1 only. |
 | `signal_bench.py` | Threshold-free comparison of "same claim?" signals: embedders and cross-encoder rerankers. v1 only. |
-| `results/*.json` | Outputs of the runs described in the report; `results/baseline_v2.json` is the v2 baseline. |
+| `guard_check.py` | No model, about half a minute: the name/number agreement guard (`backend/prawdowid/agreement.py`) on every Polish fact-checked claim of the corpus — benign rewrites must not be read as disagreement, synthetic in-place swaps must be. |
+| `results/*.json` | Outputs of the runs described in the report; `results/baseline_v2.json` is the v2 baseline. `eng0_baseline` … `eng4_all` belong to report section 11 (fragment fix, diacritics, agreement guard). |
 
 Item groups and what counts as correct (identical in both splits):
 

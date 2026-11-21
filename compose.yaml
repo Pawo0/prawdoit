@@ -8,12 +8,16 @@ services:
     environment:
       PRAWDOWID_MODERATOR_TOKEN: ${PRAWDOWID_MODERATOR_TOKEN:?Set PRAWDOWID_MODERATOR_TOKEN in .env}
       PRAWDOWID_PUBLIC_URL: ${PRAWDOWID_PUBLIC_URL:-http://localhost:8000}
-      PRAWDOWID_RATE_LIMIT: ${PRAWDOWID_RATE_LIMIT:-30}
+      PRAWDOWID_RATE_LIMIT: ${PRAWDOWID_RATE_LIMIT:-120}
+      PRAWDOWID_RATE_LIMIT_QUICK: ${PRAWDOWID_RATE_LIMIT_QUICK:-60}
+      PRAWDOWID_RATE_LIMIT_AUTO: ${PRAWDOWID_RATE_LIMIT_AUTO:-20}
       PRAWDOWID_RETENTION_DAYS: ${PRAWDOWID_RETENTION_DAYS:-30}
       OMP_NUM_THREADS: ${PRAWDOWID_CPU_THREADS:-4}
       MKL_NUM_THREADS: ${PRAWDOWID_CPU_THREADS:-4}
       HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
       # Compose exposes the API on loopback; public traffic arrives through Caddy.
+      # Rate limits are per client address: uvicorn takes it from X-Forwarded-For only for these peers
+      # (docs/DEPLOYMENT.md, "Limity zapytań i adres klienta za proxy").
       FORWARDED_ALLOW_IPS: ${PRAWDOWID_TRUSTED_PROXY_IPS:-127.0.0.1}
     volumes:
       - state:/var/lib/prawdowid

@@ -33,12 +33,14 @@ const result = {
         if (msg.type === 'check') return window.replies.push(cb);
         cb({ok: true});
       }
-    }, storage: {onChanged: {addListener() {}}}};
+    }, storage: {onChanged: {addListener: fn => window.storageChanged = fn}}};
   });
   await page.addScriptTag({content: script});
   const sheet = page.locator('prawdowid-ui .sheet');
   const start = () => page.evaluate(() => window.extensionMessage({type: 'startPicker'}));
-  const pick = async () => { await start(); await page.locator('[data-testid="tweetText"]').first().click(); };
+  // Posts 0 and 1 get a source badge further down; the plain checks use post 2, which stays unmarked.
+  const pickAt = async n => { await start(); await page.locator('[data-testid="tweetText"]').nth(n).click(); };
+  const pick = () => pickAt(2);
   const reply = data => page.evaluate(data => window.replies.shift()({ok: true, data}), data);
   const screenshot = async name => {
     if (process.env.SCREENSHOT_DIR) { mkdirSync(process.env.SCREENSHOT_DIR, {recursive: true}); await page.screenshot({path: resolve(process.env.SCREENSHOT_DIR, name + '.png')}); }
@@ -64,18 +66,38 @@ const result = {
   assert.equal(await page.locator('prawdowid-ui .pbar').isVisible(), true);
   await screenshot('floating-picker');
   await page.keyboard.press('Escape');
-  // A matched post uses the same flat window style, and can always be revealed.
-  await pick();
-  await page.evaluate(() => window.quickReplies.pop()({ok: true, data: [{id: 'pick', level: 'wysokie', risk: .9, match: {claim: 'Przykładowe twierdzenie', publisher: 'Źródło testowe', verdict: 'false', verdict_raw: 'fałsz', url: 'https://example.org', published_at: '2026-11-20'}}]}));
+  // A matched post gets a badge that names the publication (fact-checker, rating, date, link). It is not covered:
+  // the overlay is an opt-in setting.
+  const matched = {id: 'pick', level: 'wysokie', risk: .9, match: {claim: 'Przykładowe twierdzenie', publisher: 'Źródło testowe', verdict: 'false', verdict_raw: 'fałsz', url: 'https://example.org', published_at: '2026-11-20'}};
+  const tweets = page.locator('[data-testid="tweetText"]');
+  await pickAt(0);
+  await page.evaluate(matched => window.quickReplies.pop()({ok: true, data: [matched]}), matched);
+  await reply(result);
+  await page.keyboard.press('Escape');
+  const badge = tweets.first().locator('prawdowid-ui .badge');
+  await badge.waitFor();
+  assert.equal(await page.locator('prawdowid-ui .ov').count(), 0);
+  assert.match(await badge.innerText(), /Źródło testowe.*„fałsz”.*20\.11\.2026/s);
+  assert.equal(await badge.locator('a').getAttribute('href'), 'https://example.org/');
+  assert.equal(await badge.locator('button[data-a="analiza"]').isVisible(), true);
+  await screenshot('matched-post-badge');
+  // With the overlay switched on in the popup, a strongly matched post uses the same flat window style and can
+  // always be revealed.
+  await page.evaluate(() => window.storageChanged({mode: {newValue: 'zaslon'}}));
+  await pickAt(1);
+  await page.evaluate(matched => window.quickReplies.pop()({ok: true, data: [matched]}), matched);
   await reply(result);
   await page.keyboard.press('Escape');
   const overlay = page.locator('prawdowid-ui .ov');
   await overlay.waitFor();
   await screenshot('blocked-post');
+  assert.match(await overlay.innerText(), /Źródło testowe/);
+  assert.equal(await overlay.locator('.meta a').getAttribute('href'), 'https://example.org/');
   assert.equal(await overlay.locator('[data-a="pokaz"]').isVisible(), true);
   await overlay.locator('[data-a="pokaz"]').click();
   assert.equal(await overlay.count(), 0);
-  assert.equal(await page.locator('prawdowid-ui .badge').isVisible(), true);
+  assert.equal(await tweets.nth(1).locator('prawdowid-ui .badge').isVisible(), true);
+  await page.evaluate(() => window.storageChanged({mode: {newValue: 'oznacz'}}));
   // Restore the floating UI if a page replaces/removes its root node.
   await page.evaluate(() => [...document.querySelectorAll('prawdowid-ui')].find(h => h.shadowRoot.querySelector('.fab')).remove());
   await page.locator('prawdowid-ui .fab').waitFor();

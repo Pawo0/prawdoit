@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Prawdowid — sprawdź, zanim udostępnisz",
   "short_name": "Prawdowid",
-  "version": "0.1.0",
-  "description": "Oznacza treści zbieżne z informacjami już obalonymi przez fact-checkerów i źródła urzędowe. Pokazuje źródła — nie jest sędzią prawdy.",
+  "version": "0.2.0",
+  "description": "Pokazuje przy treściach oceny fact-checkerów dotyczące podobnych informacji — zawsze ze źródłem. Nie jest sędzią prawdy.",
   "default_locale": "pl",
   "icons": {
     "48": "icons/icon48.png",

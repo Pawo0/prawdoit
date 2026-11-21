@@ -1,0 +1,242 @@
+{
+ "args": {
+  "official": 300,
+  "verbatim": 200,
+  "loo": 100,
+  "tier2": true,
+  "sets": "corpus/(official|rated-true)",
+  "seed": 20261121
+ },
+ "index": {
+  "documents": 4382,
+  "chunks": 21494,
+  "factchecked_claims": 3085,
+  "domains": 23,
+  "publishers": 58,
+  "by_type": {
+   "official": 1297,
+   "incident": 331,
+   "factcheck": 2754
+  },
+  "by_publisher": {
+   "Demagog": 1309,
+   "FakeNews.pl": 886,
+   "Ministerstwo Spraw Zagranicznych": 517,
+   "EUvsDisinfo (EEAS East StratCom Task Force)": 300,
+   "Konkret24 (TVN24)": 290,
+   "Stowarzyszenie Pravda": 269,
+   "Ministerstwo Spraw Wewnętrznych i Administracji (RSO) / KPRM (gov.pl)": 96,
+   "Główny Urząd Statystyczny": 64,
+   "Rządowe Centrum Bezpieczeństwa": 56,
+   "Główny Inspektorat Sanitarny": 38,
+   "Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy": 38,
+   "CERT Polska (NASK)": 37,
+   "Ministerstwo Infrastruktury": 37,
+   "Ministerstwo Spraw Wewnętrznych i Administracji": 35,
+   "Ministerstwo Obrony Narodowej": 34,
+   "Sejm RP — ISAP / Dziennik Ustaw (ELI API)": 33,
+   "CheckFirst": 31,
+   "Komenda Główna Państwowej Straży Pożarnej": 30,
+   "Kancelaria Prezesa Rady Ministrów": 30,
+   "Unia Europejska — EUR-Lex (Urząd Publikacji UE)": 30,
+   "Państwowa Agencja Atomistyki": 30,
+   "Urząd Morski w Szczecinie": 20,
+   "Urząd do Spraw Cudzoziemców": 17,
+   "Ministerstwo Klimatu i Środowiska": 17,
+   "Komenda Główna Policji": 16,
+   "Narodowy Bank Polski": 13,
+   "Komenda Główna Straży Ochrony Kolei": 10,
+   "Komenda Wojewódzka Policji z siedzibą w Radomiu": 10,
+   "Główny Urząd Statystyczny — Bank Danych Lokalnych": 10,
+   "Urząd Morski w Gdyni": 10,
+   "Państwowe Gospodarstwo Wodne Wody Polskie": 10,
+   "Zakład Ubezpieczeń Społecznych": 7,
+   "Ministerstwo Cyfryzacji": 6,
+   "Komenda Główna Straży Granicznej": 4,
+   "Narodowy Fundusz Zdrowia": 4,
+   "Ministerstwo Zdrowia": 4,
+   "Ministerstwo Rolnictwa i Rozwoju Wsi": 4,
+   "Urząd Regulacji Energetyki": 3,
+   "Ministerstwo Finansów": 3,
+   "Ministerstwo Edukacji Narodowej": 3,
+   "Generalna Dyrekcja Dróg Krajowych i Autostrad": 2,
+   "Ministerstwo Kultury i Dziedzictwa Narodowego": 2,
+   "Ministerstwo Energii": 2,
+   "Polska we Włoszech": 1,
+   "Łódzki Urząd Wojewódzki w Łodzi": 1,
+   "Mazowiecki Urząd Wojewódzki w Warszawie": 1,
+   "Ministerstwo Rodziny, Pracy i Polityki Społecznej": 1,
+   "Akademia Policji w Szczytnie": 1,
+   "Centralny Instytut Ochrony Pracy – Państwowy Instytut Badawczy": 1,
+   "Ministerstwo Nauki i Szkolnictwa Wyższego": 1,
+   "Centrum Naukowo-Badawcze Ochrony Przeciwpożarowej im. Józefa Tuliszkowskiego - PIB": 1,
+   "Gdyńskie Centrum Zdrowia": 1,
+   "Krajowe Biuro Wyborcze": 1,
+   "Ministerstwo Sprawiedliwości": 1,
+   "Agencja Restrukturyzacji i Modernizacji Rolnictwa": 1,
+   "Instytut Nafty i Gazu - Państwowy Instytut Badawczy": 1,
+   "Minister Koordynator Służb Specjalnych": 1,
+   "Główny Urząd Statystyczny — Dziedzinowa Baza Wiedzy": 1
+  },
+  "files": {
+   "cert_komunikaty.jsonl": 20,
+   "checkfirst.jsonl": 31,
+   "demagog.jsonl": 1294,
+   "euvsdisinfo.jsonl": 300,
+   "fakenews_pl.jsonl": 883,
+   "gddkia_informacja_drogowa.jsonl": 1,
+   "gis_ostrzezenia.jsonl": 30,
+   "imgw_ostrzezenia.jsonl": 36,
+   "kgpsp_aktualnosci.jsonl": 30,
+   "kgsok_aktualnosci.jsonl": 10,
+   "konkret24.jsonl": 290,
+   "kprm_wydarzenia.jsonl": 30,
+   "kwp_radom_aktualnosci.jsonl": 10,
+   "live_web.jsonl": 25,
+   "mi_aktualnosci.jsonl": 30,
+   "mi_informacje_dla_obywateli.jsonl": 3,
+   "mon_aktualnosci.jsonl": 30,
+   "mswia_aktualnosci.jsonl": 30,
+   "mswia_rso_informacje.jsonl": 1,
+   "msz_odyseusz.jsonl": 200,
+   "official_cert.jsonl": 17,
+   "official_dane.jsonl": 47,
+   "official_eli.jsonl": 33,
+   "official_eurlex.jsonl": 30,
+   "official_govpl_msz.jsonl": 310,
+   "official_govpl_myths.jsonl": 95,
+   "official_gus.jsonl": 72,
+   "official_nbp.jsonl": 13,
+   "paa_aktualnosci.jsonl": 30,
+   "policja_aktualnosci.jsonl": 15,
+   "pravda.jsonl": 269,
+   "rcb_komunikaty.jsonl": 30,
+   "rcb_raport_dobowy.jsonl": 1,
+   "rso_ostrzezenia.jsonl": 96,
+   "umgdy_aktualnosci.jsonl": 10,
+   "ums_aktualnosci.jsonl": 19,
+   "ums_warunki_zeglugi.jsonl": 1,
+   "wody_polskie_komunikaty_nawigacyjne.jsonl": 10
+  },
+  "excluded_files": [
+   "official_ec_pl.jsonl",
+   "official_eurostat.jsonl",
+   "official_pkw.jsonl"
+  ],
+  "malformed_skipped": 0,
+  "build_seconds": 5.4,
+  "embed_model": "sdadas/mmlw-retrieval-e5-small"
+ },
+ "nli_gate": 0.8,
+ "conflict_margin": 0.03,
+ "cpus": 8,
+ "sets": [
+  {
+   "set": "corpus/rated-true",
+   "kind": "N",
+   "n": 127,
+   "note": "every claim a fact-checker rated true, word for word",
+   "states": {
+    "candidate": 127
+   },
+   "match": 0,
+   "candidate": 127,
+   "none": 0,
+   "routed": 127,
+   "suppressed_by_conflict": 1,
+   "near_miss": 119,
+   "priority_ge_0.6": 120,
+   "match_ci": [
+    0.0,
+    0.02936069262375269
+   ],
+   "routed_ci": [
+    0.9706393073762474,
+    1.0
+   ],
+   "visible": [],
+   "conflicts": [
+    {
+     "id": "demagog:wypowiedzi/moc-farm-wiatrowych-o-ile-wzrosla-za-rzadow-pis",
+     "text": "W 2015 r. moc wiatraków wynosiła niespełna 5 GW, w 2023 r. – ponad 10 GW. Jeśli chodzi o całość OZE w Polsce, od końca 2015 r. do końca września 2023 r. moc zai",
+     "debunked": "Otóż od 2015 r. przybyło ponad 1,5 GW mocy zainstalowanej w wietrze na lądzie, dzisiaj jest to moc ponad 7 GW mocy zains",
+     "true": "W 2015 r. moc wiatraków wynosiła niespełna 5 GW, w 2023 r. – ponad 10 GW. Jeśli chodzi o całość OZE w Polsce, od końca 2",
+     "sim_debunked": 0.898,
+     "sim_true": 1.0
+    }
+   ]
+  },
+  {
+   "set": "corpus/official-sentences",
+   "kind": "N",
+   "n": 300,
+   "note": "random sentences from MSZ (gov.pl), MON and KPRM news: ordinary true content",
+   "states": {
+    "candidate": 298,
+    "none": 2
+   },
+   "match": 0,
+   "candidate": 298,
+   "none": 2,
+   "routed": 298,
+   "suppressed_by_conflict": 0,
+   "near_miss": 250,
+   "priority_ge_0.6": 250,
+   "match_ci": [
+    0.0,
+    0.012643429997735661
+   ],
+   "routed_ci": [
+    0.9760219257685385,
+    0.9981698899670289
+   ],
+   "visible": [],
+   "conflicts": []
+  }
+ ],
+ "gate": {
+  "items": 427,
+  "nli_pairs_old_gate": 466,
+  "nli_pairs_new_gate": 168,
+  "legacy_fields_differ": [],
+  "changed_by_conflict_rule": 1
+ },
+ "latency_batch16": {
+  "old": {
+   "n_batches": 25,
+   "p50_s": 9.169,
+   "p95_s": 14.582,
+   "mean_s": 9.072
+  },
+  "new": {
+   "n_batches": 25,
+   "p50_s": 2.36,
+   "p95_s": 6.431,
+   "mean_s": 2.943
+  }
+ },
+ "tier2": [
+  {
+   "set": "corpus/rated-true",
+   "kind": "N",
+   "n": 127,
+   "tier2_false_or_misleading": 3,
+   "tier2_badge": 3,
+   "dropped_by_tier1": 0,
+   "badge_and_near_miss_candidate": 3,
+   "latency_s_p50": 0.798,
+   "latency_s_p95": 2.972
+  },
+  {
+   "set": "corpus/official-sentences",
+   "kind": "N",
+   "n": 300,
+   "tier2_false_or_misleading": 11,
+   "tier2_badge": 11,
+   "dropped_by_tier1": 0,
+   "badge_and_near_miss_candidate": 10,
+   "latency_s_p50": 0.547,
+   "latency_s_p95": 1.785
+  }
+ ]
+}
