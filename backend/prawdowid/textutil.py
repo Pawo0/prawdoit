@@ -86,7 +86,9 @@ _OPINION = re.compile(
     r"nienawidzę|kocham|powin(?:ien|na|no|ni|ny)|należy|trzeba by|najlepsz\w*|najgorsz\w*|beznadziejn\w*|"
     r"wspaniał\w*|okropn\w*|skandal\w*|hańb\w*|żenujące|głupi\w*|piękn\w*|brzydk\w*|zdrajc\w*|obrzydliw\w*|"
     r"naj(?:piękn|wspanialsz|fajn|cudown|gorsz|lepsz|głupsz|mądrzejsz|brzydsz|okropniejsz)\w*|nie umywa|"
-    r"genialn\w*|fatalny\w*|fatalna|cudown\w*|super\b|beznadzie\w*)\b",
+    r"genialn\w*|fatalny\w*|fatalna|cudown\w*|super\b|beznadzie\w*|"
+    r"jedyn\w* sensown\w*|sensown\w*|fanaberi\w*|bzdur\w*|absurd\w*|"
+    r"byłob[yi]|byłaby|byłyby|gdyby|powinno się)\b",
     re.IGNORECASE,
 )
 _PREDICTION = re.compile(r"\b(będzie|będą|zostanie|zostaną|wkrótce|za rok|za miesiąc|w przyszłym|prognoz\w*)\b", re.I)
@@ -140,7 +142,11 @@ def content_words(s: str) -> list[str]:
     return [w for w in re.findall(r"[a-ząćęłńóśźż0-9]+", s.lower()) if w not in STOP and w not in _META and len(w) > 2]
 
 
+_LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat)\b[^.!?]{0,40}[!.]+\s*", re.I)
+
+
 def claim_kind(s: str) -> str:
+    s = _LEADIN.sub("", s) or s  # "Skandal we Wrocławiu! <fact>" — the exclamation is not the claim
     if _OPINION.search(s) and not _NUMBER.search(s):
         return "opinia"
     if is_question(s):

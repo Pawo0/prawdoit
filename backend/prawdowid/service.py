@@ -22,7 +22,7 @@ from .schemas import CheckRequest, CheckResult, QuickMatch, QuickRequest, QuickR
 from .security import ResolveError, UnsafeURL, neutralize, scan
 from .signals import sprawdz_signals
 from .schemas import RULES_VERSION
-from .textutil import mask_pii, normalize_ws, short, split_sentences
+from .textutil import mask_pii, normalize_ws, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.service")
 
@@ -101,7 +101,9 @@ def run_check(req: CheckRequest) -> CheckResult:
                                 "Zdarzenie zostało zapisane.")
         clean = neutralize(text)
         claims = extract_claims(clean, max_claims=3)
-        if not claims or not any(len(c.query.split()) >= 3 for c in claims):
+        vocab = INDEX.bm25.postings if INDEX.bm25 else {}
+        known = [t for t in tokens(clean) if t in vocab and not t[0].isdigit()]
+        if not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
             res.status = "doprecyzuj"
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")

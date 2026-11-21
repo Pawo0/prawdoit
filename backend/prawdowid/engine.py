@@ -206,6 +206,10 @@ def same_subject(claim: str, title: str) -> bool:
     """Gate for structured official cards: a card about another period, currency or legal act is IRRELEVANT
     to the claim (not contradicting it)."""
     if _ACT.search(title):
+        subj_years = set(re.findall(r"\bw\s+((?:19|20)\d\d)\s*r", title))  # "…stawki godzinowej w 2027 r."
+        claim_years = set(re.findall(r"\b((?:19|20)\d\d)\b", claim))
+        if subj_years and claim_years and not (subj_years & claim_years):
+            return False  # the act regulates another year
         nums = re.findall(r"\b(\d{4}/\d{1,5})\b", claim)
         if nums:
             return any(n in title for n in nums)
@@ -236,7 +240,10 @@ def legal_date_stance(claim: str, title: str, text: str) -> str | None:
     cd = _dates(claim)
     if not cd:
         return None
-    if re.search(r"wesz\w* w życie|wchodzi w życie|wejdzie w życie|obowiązuje od|^\s*od\s+\d{1,2}\s+\w+\s+\d{4}", claim, re.I):
+    explicit = re.search(r"wesz\w* w życie|wchodzi w życie|wejdzie w życie", claim, re.I)
+    # "od <data>" / "obowiązuje od" may mean "applies from" (≠ entry into force) — only for claims about the law itself
+    about_law = re.search(r"ustaw\w*|rozporządz\w*|przepis\w*|kodeks\w*|obowiązuje od", claim, re.I)
+    if explicit or (about_law and re.search(r"^\s*od\s+\d{1,2}\s+\w+\s+\d{4}|obowiązuje od", claim, re.I)):
         m = re.search(r"wejście w życie:\s*(\d{4}-\d{2}-\d{2})", text)
         if m:
             return "zgodne" if _dates(m.group(1))[0] in cd else "niezgodne"
@@ -263,6 +270,32 @@ def _anchor_text(claim: str, d) -> str:
     return " ".join(x for _, _, x in sorted(best, key=lambda t: t[1]))
 
 
+_WORD = re.compile(r"[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+")
+
+
+def _bound_values(claim: str, source: str, unit: str) -> list[float]:
+    """Numbers (in the claim's unit) that directly follow the claim's MOST SPECIFIC subject word in the source,
+    e.g. 'stopa referencyjna: 3,75%' — so a value printed elsewhere on the card (lombard 4,25%) cannot confirm it."""
+    anchors = _anchors(claim)
+    from .textutil import strip_pl
+    occ: dict[str, list[int]] = {}
+    for m in _WORD.finditer(source):
+        st = strip_pl(m.group(0))[:6]
+        if st in anchors:
+            occ.setdefault(st, []).append(m.end())
+    nums = [(m.start(), float(m.group(1).replace(",", ".")), _unit(m.group(2))) for m in _NUM.finditer(source)]
+    bound: dict[str, list[float]] = {}
+    for a, ends in occ.items():
+        for e in ends:
+            nxt = next(((p, v) for p, v, u in nums if e <= p <= e + 90 and u == unit), None)
+            if nxt:
+                bound.setdefault(a, []).append(nxt[1])
+    if not bound:
+        return []
+    rarest = min(len(occ[a]) for a in bound)
+    return [v for a in bound if len(occ[a]) == rarest for v in bound[a]]
+
+
 def numeric_stance(claim: str, source: str) -> str | None:
     """Deterministic check of a numeric claim against an official fact card. Applies only when the claim's year and
     month (if given) also appear in the source — otherwise we would compare different periods."""
@@ -277,7 +310,7 @@ def numeric_stance(claim: str, source: str) -> str | None:
     op = ">" if re.search(r"przekrocz\w*|ponad|powyżej|więcej niż|wyższ\w* niż", claim, re.I) else \
          "<" if re.search(r"poniżej|mniej niż|niższ\w* niż|nie przekrocz\w*", claim, re.I) else "="
     for v, u in cn:
-        same_unit = [x for x, su in sn if su == u]
+        same_unit = _bound_values(claim, source, u) or [x for x, su in sn if su == u]
         if not same_unit:
             continue
         if op == "=":
