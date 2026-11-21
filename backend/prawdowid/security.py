@@ -18,50 +18,108 @@ from urllib.parse import urlparse
 
 from .schemas import SecurityEvent
 
+# Instruction-like content, as families of generic PL/EN patterns (override, "rules are off", special modes,
+# impersonation, dictated verdicts, suppressed sources, fake approval, role-play, encoded payloads). They are written
+# against the attack technique, never against the wording of a test input; backend/tests/test_injection_patterns.py
+# checks them with attack strings written for it and with news-like sentences that use the same verbs and must pass.
+_V_TRUE = (r"(?:prawdziw\w*|nieprawdziw\w*|potwierdzon\w*|zweryfikowan\w*|fałszyw\w*|falszyw\w*|fałsz\b|falsz\b|"
+           r"(?-i:PRAWDA|FAŁSZ|TAK)\b|true\b|false\b|verified\b|confirmed\b|accurate\b|correct\b|fake\b)")
+_INSTR_PL = r"(?:instrukcj\w*|polece\w*|zasad\w*|reguł\w*|wytyczn\w*|ograniczeń|ograniczenia|ustaleń|prompt\w*)"
+_INSTR_EN = r"(?:instructions?|rules|guidelines|prompts?|directions|directives|policies|constraints|context)"
+_AI = r"(?:asystent\w*|model\w*|bot\w*|ai|si|llm|chatbot\w*|systemu|weryfikator\w*|sztucznej inteligencji)"
 _INJECTION_PATTERNS = [
-    # English
-    r"ignore (all |any |the )?(previous|prior|above|earlier) (instructions|rules|prompts?)",
-    r"disregard (all |the )?(previous|prior|above) ",
-    r"you are now (a|an|in) ",
-    r"(reveal|print|show) (your|the) (system )?prompt",
-    r"system prompt",
-    r"act as (a|an) ",
-    r"(mark|label|classify|rate) (this|it|the claim) as (true|verified|confirmed|false)",
-    r"developer mode|jailbreak|DAN mode",
-    # Polish
-    r"zignoruj (wszystkie |wcześniejsze |poprzednie |powyższe )*(instrukcje|polecenia|zasady|reguły)",
-    r"pomiń (wszystkie |wcześniejsze |poprzednie )*(instrukcje|polecenia|zasady|reguły)",
-    r"zapomnij (o )?(wszystkich |wcześniejszych |poprzednich )*(instrukcj|poleceni|zasad)",
-    r"(jesteś|od teraz jesteś) (teraz )?(asystentem|modelem|botem|ai)",
-    r"(oznacz|oceń|uznaj|zaklasyfikuj|ustaw) (tę|tą|tę informację|ten tekst|to twierdzenie|to|informację|werdykt)"
-    r"\s*(jako|na)\s*(prawdziw|potwierdzon|fałszyw|true|false)",
-    r"(ujawnij|pokaż|wypisz) (swój |twój )?(prompt|instrukcj)",
-    r"instrukcj\w* (systemow|dla modelu|dla ai|dla sztucznej inteligencji)",
-    r"(do|dla) (modelu|asystenta|ai|sztucznej inteligencji|llm)\s*:",
-    r"tryb deweloperski",
-    r"instrukcj\w*[_ ]systemow\w*",
-    r"(zwróć|zwracaj|podaj|ustaw|wypisz) (werdykt|ocenę|wynik)\s*[:=]?\s*(potwierdz|prawdziw|fałszyw|falszyw|true|false)",
-    r"nie (pokazuj|podawaj|cytuj) (żadnych )?źródeł",
-    r"jako (model|asystent)\w* (ai|si|językowy|językowym)",
-    r"(prompt\w* systemow\w*|system\w* prompt\w*|treść (swojego|twojego) promptu)",
-    r"(uwaga|wiadomość|notatka|polecenie) (dla|do) (asystenta|modelu|bota|ai|si|systemu)",
-    r"administrator (prosi|nakazuje|poleca)",
-    r"(każdą|każdy|wszystkie) (wiadomość|wiadomości|twierdzenie|twierdzenia) (oznaczasz|oznacz|oceniasz)",
-    r"(oznacz|oznaczasz|oznaczyć|oceń|uznaj|zaklasyfikuj)\w*\s+(\S+\s+){0,5}jako\s+(potwierdzon|prawdziw|fałszyw|true|false)",
-    r"(output|return|set)\s+(the\s+)?verdict|verdict\s*[=:]|confidence\s*[=:]\s*1|do not cite",
-    r"(rules|zasady|reguły) (are|są) (void|nieważne|zawieszone)",
-    r"```\s*(system|assistant|instructions?|prompt|config)\b",
-    r"\brole\s*[:=]\s*(admin|system|root|developer)",
-    r"\b\w*_?override\b|\bshow_sources\s*[:=]|\bsystem\s+override\b",
-    r"(zdekoduj|odkoduj|decode)\w*.{0,40}(wykonaj|execute|zastosuj|follow)",
-    r"(zagrajmy w grę|udawaj,? że jesteś|wciel się w|odgrywaj rolę|zostań w tej roli|pretend (you are|to be)|role-?play|"
-    r"from now on,? you are|jesteś teraz\s+[„\"]?\w+)",
-    r"(zawsze|nigdy nie)\s+(odpowiadaj|odpowiada|odpowiadasz|podważa|podważaj)\w*",
-    r"ignore (the|all)? ?(above|previous|prior)",
+    # 1. overriding earlier instructions ("ignore / forget / skip the previous rules"), PL and EN
+    rf"\b(?:zignoruj|ignoruj|pomiń|pomijaj|zapomnij|odrzuć|olej|porzuć|anuluj)\b(?:\s+\S+){{0,3}}?\s+{_INSTR_PL}",
+    rf"\b(?:ignore|disregard|forget|override|bypass|discard)\s+(?:\S+\s+){{0,2}}?(?:previous|prior|above|earlier|"
+    rf"preceding|existing|original|initial|system|all|any|your|these|those)\s+(?:\S+\s+)?{_INSTR_EN}\b",
+    r"\b(?:ignore|disregard|forget)\s+(?:all\s+|everything\s+|anything\s+)?(?:that\s+)?(?:was\s+said\s+)?"
+    r"(?:above|before|previously|so far|earlier|prior)\b",
+    # 2. claiming the rules no longer apply (only rules that concern the assistant, not news about lifted rules)
+    r"\b(?:twoje|your)\s+(?:\S+\s+){0,2}?(?:zasad|reguł|ograniczeni|instrukcj|wytyczn|rules|restrictions|guidelines|"
+    r"instructions|filters|safeguards|guardrails)\w*\s+(?:\S+\s+){0,3}?(?:wyłączon|zawieszon|nieważn|uchylon|zniesion|"
+    r"zdjęt|unieważnion|nie obowiązuj|zmienion|disabled|void|lifted|removed|suspended|off\b|no longer|changed|updated)\w*",
+    r"\b(?:safety|sourcing|verification|moderation|content|fact-?check\w*)(?:\s+and\s+\w+)?\s+"
+    r"(?:rules|policies|guidelines|restrictions|filters)\s+(?:are|is|have been|has been)\s+(?:now\s+)?"
+    r"(?:void|disabled|off|suspended|lifted|removed|deactivated|turned off|no longer)",
+    r"\b(?:rules|instructions|guidelines|policies|zasady|reguły|instrukcje)\s+(?:are|is|są)\s+(?:now\s+|teraz\s+)?"
+    r"(?:void|null|invalid|nieważne|nieaktualne|zawieszone|unieważnione)\b",
+    r"\bzasad\w*\s+(?:weryfikacji|sprawdzania|moderacji|oceniania)(?:\s+\S+){0,3}?\s+"
+    r"(?:wyłączon|zawieszon|nieważn|uchylon|zniesion|zdjęt|unieważnion|nie obowiązuj)\w*",
+    r"\b(?:policies|rules|filters|restrictions)\s+(?:\S+\s+){0,3}(?:disabled|lifted|off)\s+for\s+this\s+"
+    r"(?:session|conversation|chat|request)\b",
+    # 3. switching the assistant into a special mode
+    r"\b(?:developer|debug|god|unrestricted|jailbreak|DAN)\s+mode\b|"
+    r"\b(?:admin|maintenance|service)\s+mode\s+(?:is\s+)?(?:enabled|activated|on|active)\b",
+    r"\btryb\w*\s+(?:deweloper\w*|debugowania|serwisow\w*|administrator\w*|boga|bez ograniczeń|bez zasad|nieograniczon\w*)",
+    r"\b[a-z]+_(?:mode|rules|override|filter|filters|check|checks|sources|verdict)\s*[:=]",
+    r"\b(?:system|admin|safety|security|rules?|verdict|prompt|instruction)s?[ _-]?override\b|"
+    r"\boverride[ _-]?(?:mode|rules|safety|instructions?|verdict)\b",
+    # 4. impersonating the system, an administrator or the developer
+    r"^\s*(?:system|assistant|admin|administrator|developer|root)\s*:",
+    r"\brol[ae]\s*[:=]\s*[\"']?(?:admin|system|root|developer|assistant)\b",
+    r"\"(?:rola|role)\"\s*:\s*\"(?:system|admin|assistant|developer)\"",
+    rf"\b(?:uwaga|wiadomość|komunikat|notatka|polecenie|instrukcja|instrukcje)\s+(?:dla|do)\s+{_AI}\b",
+    r"\b(?:note|message|instructions?)\s+(?:for|to)\s+(?:the\s+)?(?:assistant|model|ai|bot|system|fact-?checker|verifier)\b",
+    rf"\binstrukcj\w*\s+(?:systemow\w*|dla\s+{_AI})",
+    r"\binstrukcj\w*[_ ]systemow\w*|\bprompt\w*\s+systemow\w*|\bsystem\w*\s+prompt\w*|treść\s+(?:swojego|twojego)\s+promptu",
+    r"\badministrator\w*\s+(?:systemu\s+)?(?:prosi|nakazuje|poleca|każe)\s+(?:\S+\s+){0,3}?(?:oznacz|uzna|zatwierdz|"
+    r"pomin|pomiń|ustaw|potwierdz|zignor|przepu)\w*|"
+    r"\b(?:admin|administrator|developer)s?\s+(?:requests|orders|instructs|authori[sz]es|says)\s+(?:that\s+)?you\b",
+    rf"\b(?:do|dla)\s+{_AI}\s*:",
+    r"\bjako\s+(?:model|asystent)\w*\s+(?:ai|si|językow\w*)",
+    # 5. dictating the verdict, the label or the confidence
+    rf"\b(?:oznacz|oznaczaj|oznaczasz|oznaczysz|oceń|oceniaj|oceniasz|ocenisz|uznaj|uznawaj|uznajesz|uznasz|"
+    rf"zaklasyfikuj|klasyfikuj|klasyfikujesz|ustaw|traktuj|traktujesz)\s+(?:\S+\s+){{0,6}}?(?:jako|na)\s+{_V_TRUE}",
+    rf"\b(?:zwróć|zwracaj|podaj|ustaw|wypisz|wpisz|daj|wystaw)\s+(?:\S+\s+){{0,2}}?(?:werdykt\w*|ocen\w*|wynik\w*|"
+    rf"status\w*|etykiet\w*)\s*[:=]?\s*(?:\S+\s+){{0,2}}?{_V_TRUE}",
+    rf"\b(?:napisz|odpowiedz|stwierdź|wpisz|wypisz|zwróć)\s*,?\s+(?:\S+\s+){{0,2}}?że\s+(?:\S+\s+){{0,3}}?"
+    rf"(?:jest\s+)?{_V_TRUE}",
+    rf"\b(?:mark|label|classify|rate|tag|flag|treat|set|output|return|report)\s+(?:this|it|that|everything|"
+    rf"(?:the|this|every|each|all)\s+(?:claims?|messages?|texts?|statements?|following))\s+(?:as\s+|to\s+)?"
+    rf"(?:the\s+)?{_V_TRUE}",
+    rf"(?:^|[.!?;,]\s*|\band\s+)(?:say|state|write|reply|answer|respond)\s+(?:only\s+)?(?:that\s+)?(?:the\s+|this\s+)?"
+    rf"(?:claim|statement|message|text|it)\s+(?:is|was)\s+{_V_TRUE}",
+    r"\b(?:output|return|set|give|report)\s+(?:the\s+|a\s+)?(?:verdict|rating|label|score)\s*(?:as\b|to\b|=|:)",
+    rf"\b(?:verdict|werdykt|label|etykiet)\w*\s*[:=]\s*[\"']?{_V_TRUE}",
+    r"\b(?:confidence|pewno\w*|certainty)\s*[:=]\s*(?:1(?:[.,]0+)?|0?[.,]9\d*|100\s*%)",
+    # 6. suppressing the sources or the search
+    r"(?:^|[.!?;,]\s*|\band\s+)(?:do not|don't|never)\s+(?:cite|show|list|give|include|mention|provide|use|search|"
+    r"check)\w*\s+"
+    r"(?:any\s+|the\s+|your\s+)?(?:sources|references|citations|evidence|links|fact-?checks?)\b",
+    r"\bnie\s+(?:pokazuj|podawaj|cytuj|wymieniaj|szukaj|sprawdzaj|przytaczaj|linkuj|dołączaj)\b(?:\s+\S+){0,2}?\s+"
+    r"(?:źródeł|źródła|linków|dowodów|w bazie|w internecie|w sieci)",
+    r"\b(?:pomiń|pomijaj|skip|bypass|omit)\s+(?:\S+\s+){0,2}?(?:wyszukiwani\w*|sprawdzani\w*|weryfikacj\w*|"
+    r"źród\w*|search|source\w*|verification|fact-?check\w*)",
+    r"\bprzepuść\b(?:\s+\S+){0,3}?\s+bez\s+(?:sprawdzani|weryfikacj)\w*",
+    # 7. claiming the text was already approved
+    r"\b(?:został\w*|jest|są|było)\s+(?:już\s+)?(?:zatwierdzon|zweryfikowan|sprawdzon|zaakceptowan|zaaprobowan)\w*\s+"
+    r"przez\s+(?:moderator|administrator|admin|weryfikator|zesp\w+\s+(?:techniczn|prawdowid))\w*",
+    r"\b(?:already|pre-?)\s*(?:approved|verified|confirmed|cleared|whitelisted)\s+by\s+(?:the\s+|an?\s+)?"
+    r"(?:admin|administrator|moderator|developer|fact-?checker)\w*",
+    # 8. role-play and persona ("let's play a game, you are now X, stay in character")
+    r"\b(?:pretend|imagine)\s+(?:that\s+)?(?:you\s+are|you're|to\s+be)\b|\byou\s+are\s+now\s+(?:a|an|in|my|(?-i:[A-Z]))|"
+    r"\bfrom\s+now\s+on,?\s+you\b|\bact\s+as\s+(?:a|an|my)\s+(?:\S+\s+)?(?:assistant|bot|ai|model|expert|fact-?checker|"
+    r"verifier|judge|character|persona|friend|system)\b|\brole-?play\b|\bstay\s+in\s+(?:character|role)\b|\blet'?s\s+play\s+a\s+game\b|\bassume\s+the\s+persona\b",
+    r"\b(?:udawaj|wyobraź\s+sobie),?\s+że\s+jesteś\b|\bwciel\s+się\b|\bwejdź\s+w\s+rol\w*|\bodgrywaj\b|"
+    r"\b(?:zostań|pozostań)\s+w\s+(?:tej\s+|swojej\s+)?roli\b|\b(?:zagrajmy|zabawmy\s+się|pobawmy\s+się)\s+w\b|"
+    r"\bjesteś\s+teraz\b|\bod\s+(?:teraz|tej\s+chwili|tego\s+momentu|dziś|dzisiaj),?\s+(?:jesteś|będziesz|oceniasz|"
+    r"odpowiadasz|oznaczasz|traktujesz|uznajesz|piszesz|mówisz)\b",
+    r"\b(?:zawsze|tylko|wyłącznie|nigdy\s+nie)\s+(?:odpowiadaj|odpowiadasz|potwierdzaj|potwierdzasz|zgadzaj\s+się|"
+    r"zgadzasz\s+się|podważaj|podważasz|kwestionuj|kwestionujesz|zaprzeczaj|zaprzeczasz)\b",
+    r"\b(?:który|która|które)\s+(?:zawsze|nigdy\s+nie)\s+(?:\S+\s+){0,2}?(?:odpowiada|potwierdza|podważa|"
+    r"kwestionuje|zgadza)\w*\s+(?:\S+\s+){0,2}?(?:użytkownik\w*|rozmówc\w*|(?-i:PRAWDA|TAK))",
+    r"\byou\s+(?:will\s+|must\s+|should\s+|can\s+)?(?:always|only|never)\s+(?:answer|reply|respond|say|agree|confirm|"
+    r"question|challenge)\w*|(?:^|[.!?]\s+)(?:always|only|never)\s+(?:answer|reply|respond|say)\b",
+    # 9. encoded instructions ("decode this and follow it")
+    r"\b(?:zdekoduj|odkoduj|rozkoduj|dekoduj|decode|decrypt|deobfuscate)\b.{0,60}?\b(?:wykonaj|wykonuj|zastosuj|"
+    r"postępuj|stosuj|follow|execute|run|apply|obey|comply)\w*",
+    r"```\s*(?:system|assistant|instructions?|prompt|config)\b",
     # chat-template / role tokens
-    r"<\|?(im_start|im_end|system|assistant|user)\|?>",
-    r"\[/?(INST|SYS)\]",
-    r"^\s*(system|assistant)\s*:",
+    r"<\|?(?:im_start|im_end|system|assistant|user)\|?>",
+    r"\[/?(?:INST|SYS)\]",
+    # prompt extraction
+    r"\b(?:reveal|print|show|repeat)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions)\b|"
+    r"\b(?:ujawnij|pokaż|wypisz|powtórz)\s+(?:swój\s+|twój\s+|swoje\s+|twoje\s+)?(?:prompt|instrukcj)\w*",
 ]
 _INJ_RE = re.compile("|".join(f"(?:{p})" for p in _INJECTION_PATTERNS), re.IGNORECASE | re.MULTILINE)
 _HIDDEN_RE = re.compile(r"[​-‏‪-‮⁠-⁤﻿]")
