@@ -80,5 +80,35 @@ class RelatedMaterial(unittest.TestCase):
         self.assertIn("Źródło: Demagog", reply)
 
 
+class LiveOutage(unittest.TestCase):
+    """Scenario J: a failed live stage is visible in the reply whatever the verdict."""
+
+    def _res(self, verdict: str, evidence: list[Evidence], status: str = "blad") -> CheckResult:
+        from prawdowid.schemas import LiveSearchInfo
+
+        res = CheckResult(id="abc", created_at="2026-11-21", channel="web", status="ok", input_kind="text",
+                          input_excerpt="", claims=[claim(verdict, evidence, strength_label="umiarkowana")],
+                          live_search=LiveSearchInfo(provider="google_factcheck", status=status,
+                                                     notice="Nie mogę teraz sprawdzić indeksu Google z powodu błędu dostępu."))
+        res.warnings.append(res.live_search.notice)
+        answer.finalize(res)
+        return res
+
+    def test_verdict_from_local_corpus_reports_the_outage(self):
+        e = ev(stance="przeczy", factcheck_claim="Wrocław jest jedynym miastem z takimi ulgami.",
+               factcheck_verdict_raw="Fałsz", factcheck_verdict="false", same_claim=True, similarity=0.85)
+        res = self._res("falszywe", [e])
+        line = res.claims[0].limitation_line
+        self.assertIn("niedostępne (błąd techniczny)", line)
+        self.assertIn("bardzo podobne", line)  # the verdict's own limitation is kept
+        self.assertIn("niedostępne (błąd techniczny)", chat_text(res))
+
+    def test_no_outage_no_notice(self):
+        e = ev(stance="przeczy", factcheck_claim="Wrocław jest jedynym miastem z takimi ulgami.",
+               factcheck_verdict_raw="Fałsz", factcheck_verdict="false", same_claim=True, similarity=0.95)
+        line = self._res("falszywe", [e], status="ok").claims[0].limitation_line
+        self.assertEqual(line, "Ograniczenie: ocena opiera się na jednym źródle.")
+
+
 if __name__ == "__main__":
     unittest.main()

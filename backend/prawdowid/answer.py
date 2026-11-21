@@ -283,22 +283,30 @@ def limitation_line(c: ClaimResult, live: str = "") -> str:
         if live in ("brak_wynikow", "ok"):
             return "Ograniczenie: przeszukano katalog źródeł i wybrane zaufane strony w internecie — mogło w nich zabraknąć tej sprawy."
         return "Ograniczenie: przeszukano tylko katalog zaufanych źródeł — mogło w nim zabraknąć tej sprawy."
+    why = _verdict_limitation(c)
+    if live == "blad":  # scenario J: an outage of the live stage is reported with every answer, not only abstentions
+        return ("Ograniczenie: wyszukiwanie na żywo (indeks Google lub zaufane strony) było niedostępne (błąd "
+                f"techniczny), więc wynik opiera się tylko na lokalnej bazie; poza tym {why}.")
+    return f"Ograniczenie: {why}."
+
+
+def _verdict_limitation(c: ClaimResult) -> str:
     if "HR:JEDNO_ZRODLO_ESKALACJA" in c.rules_fired:
-        return "Ograniczenie: temat wysokiego ryzyka, a ocena opiera się na jednym źródle — sprawa trafia do analityka."
+        return "temat wysokiego ryzyka, a ocena opiera się na jednym źródle — sprawa trafia do analityka"
     i = c.main_evidence
     e = c.evidence[i] if i is not None and i < len(c.evidence) else None
     pubs = {c.evidence[j].publisher for j in _decisive(c)}
     if e is not None and e.factcheck_claim and e.similarity < 0.9:
-        return "Ograniczenie: źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie."
+        return "źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie"
     if c.context_type == "NIEAKTUALNE":
-        return "Ograniczenie: dowód pochodzi sprzed ponad roku — sytuacja mogła się od tego czasu zmienić."
+        return "dowód pochodzi sprzed ponad roku — sytuacja mogła się od tego czasu zmienić"
     if c.missing_context:  # definitional note (CPI vs HICP …) — the answer already says it depends on the measure
-        return "Ograniczenie: twierdzenie nie mówi, o którą miarę wskaźnika chodzi — szczegóły w pełnej analizie."
+        return "twierdzenie nie mówi, o którą miarę wskaźnika chodzi — szczegóły w pełnej analizie"
     if len(pubs) <= 1:
-        return "Ograniczenie: ocena opiera się na jednym źródle."
+        return "ocena opiera się na jednym źródle"
     if e is not None and e.age_days is not None and e.age_days > 365:
-        return "Ograniczenie: najnowszy dowód ma ponad rok."
-    return "Ograniczenie: wynik odzwierciedla stan źródeł z dnia sprawdzenia."
+        return "najnowszy dowód ma ponad rok"
+    return "wynik odzwierciedla stan źródeł z dnia sprawdzenia"
 
 
 # ------------------------------------------------------------------ whole result
