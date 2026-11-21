@@ -60,6 +60,11 @@ class _Cand:
     nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
     explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
     archival: tuple[int, int] | None = None  # (year of the material per the analysis, year it is presented as)
+    # fact-check match: same (True = the user asserts the checked claim, False = its opposite), the verdict it implies
+    # for the user's claim, and whether it was matched through one sentence of the checked claim (claim_units)
+    same: bool | None = None
+    implied: str | None = None
+    via_unit: bool = False
 
 
 def _fmt_date(s: str | None) -> str:
@@ -623,6 +628,69 @@ def unit_match(c: _Cand, d, user_text: str) -> bool | None:
     return same_claim(c.unit_cos, c.nli_unit, c.nli_unit_rev or c.nli_unit, c.unit, user_text, d.source_type)
 
 
+# ------------------------------------------------------------------ consistency of fact-check matches
+# Each fact-check is matched to the user's text on its own (claim_match), so two analyses of ONE narrative can be read
+# with opposite polarity: one as "the user repeats it" (similarity alone), the other as "the user denies it" (NLI
+# contradiction both ways). Both are rated the same, so they then imply opposite verdicts and R2 reports a conflict that
+# no source holds. Analyses of one publisher, and analyses of the same checked claim, are therefore reconciled before
+# R1–R6: the match best backed by NLI decides; a weaker match that implies the opposite verdict from the same rating,
+# and a weaker same-publisher match that implies the same verdict (a duplicate), become context. Different ratings are
+# never reconciled (a true and a false rating are a real conflict), and agreeing analyses of different publishers stay
+# separate (independent confirmations).
+_NEGATION = re.compile(r"\b(nie|nigdy|żadn\w*|zadn\w*|bez)\b", re.I)
+
+
+def match_support(c: _Cand) -> tuple[int, float]:
+    """How well a fact-check match is backed: the number of NLI directions (user -> checked claim, checked claim ->
+    user) that state its polarity — entailment for "same", contradiction for "opposite" (a direction not computed
+    counts as not stating it) — then the similarity."""
+    fwd, rev = (c.nli_unit, c.nli_unit_rev) if c.via_unit else (c.nli_claim, c.nli_claim_rev)
+    key = "entail" if c.same else "contra"
+    return sum(1 for s in (fwd, rev) if s is not None and getattr(s, key) >= 0.5), c.claim_cos
+
+
+def same_checked_claim(a: str, b: str) -> bool:
+    """One checked claim restates the other: the content words of one contain the other's (a time or place
+    qualifier added, "Od 2025 roku X" / "X"), and both or neither are negated."""
+    ta, tb = set(tokens(a)), set(tokens(b))
+    small, big = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+    return len(small) >= 3 and small <= big and bool(_NEGATION.search(a)) == bool(_NEGATION.search(b))
+
+
+def consistent_matches(support: list, refute: list, misleading: list, evidence: list[Evidence]) -> list[str]:
+    """Reconcile the fact-check matches (see above) in place; returns audit notes for the polarity conflicts it
+    resolved (duplicates are collapsed silently)."""
+    buckets = {"falszywe": refute, "potwierdzone": support, "wprowadzajace_w_blad": misleading}
+    matched = [c for b in buckets.values() for c in b if c.same is not None and c.implied in buckets]
+    kept: list[_Cand] = []
+    notes: list[str] = []
+    for c in sorted(matched, key=match_support, reverse=True):
+        d = INDEX.docs[c.doc_idx]
+        drop = None
+        for k in kept:
+            dk = INDEX.docs[k.doc_idx]
+            same_pub = dk.publisher == d.publisher
+            if not (same_pub or same_checked_claim(dk.claim or "", d.claim or "")):
+                continue
+            if {k.implied, c.implied} == {"falszywe", "potwierdzone"} and dk.verdict == d.verdict:
+                drop = k
+                notes.append(f"Analizy „{short(dk.claim or dk.title, 90)}” i „{short(d.claim or d.title, 90)}” "
+                             f"({d.publisher}) mają tę samą ocenę, a dopasowania wskazywały przeciwne wnioski; przyjęto "
+                             "dopasowanie lepiej potwierdzone przez model NLI (pierwsze), drugie pokazano jako kontekst.")
+                break
+            if same_pub and k.implied == c.implied:
+                drop = k
+                break
+        if drop is None:
+            kept.append(c)
+            continue
+        buckets[c.implied].remove(c)
+        for e in evidence:
+            if e.doc_id == d.id and e.stance in ("przeczy", "popiera"):
+                e.stance = "kontekst"
+    return notes
+
+
 # ======================================================================================================== main
 def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     high_risk = bool(HIGH_RISK.search(claim.text))
@@ -738,12 +806,14 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 if same is not None:
                     differs = None  # the whole quote differed, the sentence the fact-checker ruled on does not
                     c.claim_cos = max(c.claim_cos, c.unit_cos)
+                    c.via_unit = True
                     by_unit.append((d, c.unit))
             if differs:
                 guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
+            c.same, c.implied = same, mapped
             if mapped is None and same is None and c.archival:  # R3a: the analysis dates the material earlier
                 refute.append(c); evidence.append(_evidence(c, "przeczy", max(c.claim_cos, c.cos), None)); continue
             if mapped == "falszywe":
@@ -769,9 +839,14 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 refute.append(c); evidence.append(_evidence(c, "przeczy", s_.contra, None))
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
+    resolved = consistent_matches(support, refute, misleading, evidence)
     res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
                   keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
     res.meta_question = getattr(claim, "meta", "") or None
+    if resolved:
+        res.rules_fired.append("P1:SPOJNE_DOPASOWANIA")
+        res.premises.append(Premise(label="Spójność dopasowań do analiz tego samego twierdzenia lub wydawcy",
+                                    value=" ".join(resolved), effect="0"))
     if definitional:
         note = definitional[0].definitional
         res.premises.append(Premise(label="Różne definicje wskaźnika", value=note, effect="-"))
