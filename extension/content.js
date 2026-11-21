@@ -11,7 +11,7 @@
   const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new Promise(res => chrome.runtime.sendMessage(msg, res));
   const host = location.hostname.replace(/^www\./, "");
   const isMobile = matchMedia("(pointer: coarse)").matches;
-  let S = {autoScan: true, mode: "zaslon", disabledSites: [], noticeSeen: false, apiBase: ""};
+  let S = {autoScan: true, mockMode: false, mode: "zaslon", disabledSites: [], noticeSeen: false, apiBase: ""};
 
   // ------------------------------------------------------------------ site adapters
   const txt = el => (el?.innerText || "").replace(/\s+/g, " ").trim();
@@ -88,15 +88,65 @@
         padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:94vw;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
   .pbar button{border-color:#fff;background:transparent;color:#fff}
   .pbar button.p{background:#fff;color:#101828}
-  .sheet{position:fixed;right:18px;bottom:82px;z-index:2147483602;width:min(440px,94vw);max-height:70vh;overflow:auto}
-  .v{display:inline-block;font-weight:800;border-radius:99px;padding:3px 10px;border:2px solid currentColor;margin:4px 0}
-  .v-falszywe{color:#b42318;background:#fef3f2}.v-wprowadzajace_w_blad{color:#b54708;background:#fffaeb}
-  .v-potwierdzone{color:#067647;background:#ecfdf3}.v-brak_dowodow{color:#475467;background:#f2f4f7}.v-nie_podlega_weryfikacji{color:#6941c6;background:#f4f3ff}
-  .src{font-size:12px;margin:6px 0;padding:6px 8px;background:#f9fafb;border-radius:8px}
-  .src a{color:#2f5d8a}
-  .spin{width:18px;height:18px;border:3px solid #d0d5dd;border-top-color:#1d3557;border-radius:50%;animation:s 1s linear infinite;display:inline-block;vertical-align:middle}
-  @keyframes s{to{transform:rotate(360deg)}}
   .notice{position:fixed;left:18px;bottom:18px;z-index:2147483600;max-width:380px}
+  /* On-demand verification: Macintosh window chrome + cobalt editorial typography.
+     Scoped to the extension's shadow root; no page styles or remote assets. */
+  .fab{border-radius:0;background:#443cf2;border:2px solid #191919;box-shadow:4px 4px 0 #191919}
+  .menu{border:2px solid #191919;border-radius:0;background:#f4f3eb;box-shadow:5px 5px 0 #191919}
+  .menu button{border-radius:0;background:transparent;color:#191919}
+  .menu button:hover{background:#e3e7d5}
+  .hl{border:2px solid #443cf2;background:rgba(68,60,242,.1);border-radius:0;transition:none}
+  .pbar{background:#f4f3eb;color:#191919;border:2px solid #191919;border-radius:0;box-shadow:4px 4px 0 #191919;padding:10px 14px}
+  .pbar button{background:#f4f3eb;color:#191919;border:1px solid #191919;border-radius:0}
+  .sheet{--ink:#191919;--paper:#f4f3eb;--blue:#443cf2;--sage:#e3e7d5;position:fixed;z-index:2147483602;
+    right:24px;bottom:90px;width:min(620px,calc(100vw - 48px));max-height:calc(100dvh - 120px);
+    display:flex;flex-direction:column;overflow:visible;border:2px solid var(--ink);color:var(--ink);background:var(--paper);
+    box-shadow:7px 7px 0 var(--ink);font-size:14px;line-height:1.5;color-scheme:light;isolation:isolate}
+  .sheet *{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .sheet button,.sheet a{touch-action:manipulation}
+  .sheet button{border:1.5px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);font-size:13px;padding:10px 14px;min-height:42px}
+  .sheet button:hover{background:var(--sage)}
+  .sheet button.p{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .sheet button.p:hover{background:#3027cf}
+  .sheet :focus-visible,.pbar :focus-visible,.menu :focus-visible{outline:3px solid #443cf2;outline-offset:3px}
+  .sheet .window-bar{display:flex;align-items:center;gap:10px;padding:7px 9px;border-bottom:2px solid var(--ink);flex-shrink:0}
+  .sheet .window-name{font:700 13px/1.2 ui-monospace,"Courier New",monospace;letter-spacing:.02em;white-space:nowrap}
+  .sheet .window-stripes{flex:1;height:14px;background:repeating-linear-gradient(to bottom,var(--ink) 0 1px,transparent 1px 3px)}
+  .sheet .window-close{padding:0;min-height:28px;width:28px;display:grid;place-items:center;font:22px/1 monospace}
+  .sheet .window-mark{width:14px;height:14px;border:2px solid var(--ink);box-shadow:inset 3px 3px 0 var(--paper);background:var(--blue)}
+  .sheet .sheet-body{overflow:auto;overscroll-behavior:contain;min-height:0;padding:24px;overflow-wrap:anywhere}
+  .sheet .eyebrow{font:700 11px/1.5 ui-monospace,"Courier New",monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .sheet .elapsed{white-space:nowrap}
+  .sheet .result-intro{display:flex;gap:18px;align-items:center;margin-bottom:20px}
+  .sheet .pixel-art{flex-shrink:0;width:76px;height:76px;color:var(--blue);display:grid;place-items:center;
+    background-color:var(--sage);background-image:radial-gradient(var(--blue) .65px,transparent .8px);background-size:4px 4px}
+  .sheet .pixel-art svg{width:58px;height:58px;shape-rendering:crispEdges;background:var(--paper)}
+  .sheet h2{color:var(--blue);font-size:27px;line-height:1.15;letter-spacing:-.035em;margin:0;font-weight:750}
+  .sheet h3{font-size:22px;line-height:1.2;letter-spacing:-.025em;margin:7px 0 12px;color:var(--blue)}
+  .sheet p{margin:10px 0}
+  .sheet .selected-text{margin:16px 0;padding:12px 14px;border-left:3px solid var(--blue);background:#eae9e2;font-size:13px;max-height:104px;overflow:auto}
+  .sheet .selected-label{font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:5px}
+  .sheet .loader-track{height:18px;border:1px solid var(--ink);padding:3px;overflow:hidden;margin:20px 0 10px}
+  .sheet .loader-blocks{width:36%;height:100%;background:repeating-linear-gradient(to right,var(--blue) 0 8px,transparent 8px 11px);animation:scan 1.6s steps(12) infinite}
+  .sheet .muted{color:#55554f;font-size:12px}
+  .sheet .claim-result{border-top:1px solid var(--ink);padding:18px 0}
+  .sheet .claim-result:last-child{padding-bottom:0}
+  .sheet .claim-text{margin:8px 0 12px;font-size:13px;color:#55554f}
+  .sheet .verdict-label{display:inline-block;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--sage);padding:3px 7px}
+  .sheet .strength{font-size:12px;margin:12px 0}
+  .sheet .sources-label{font:700 11px/1.5 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 7px}
+  .sheet .source{border:1px solid #c4c3ba;padding:10px 12px;margin-top:8px;font-size:12px;background:#faf9f3}
+  .sheet .source a{display:block;color:#3027cf;font-weight:650;text-decoration:underline;text-underline-offset:3px;margin:5px 0}
+  .sheet .source blockquote{margin:8px 0 0;border-left:2px solid #c4c3ba;padding-left:10px;color:#55554f}
+  .sheet .caveat{font-size:12px;padding:10px 12px;background:var(--sage);margin:12px 0}
+  .sheet .sheet-footer{padding:14px 24px 18px;border-top:1px solid var(--ink);flex-shrink:0}
+  .sheet .sheet-footer .row{margin:10px 0 0}
+  @keyframes scan{from{transform:translateX(-110%)}to{transform:translateX(290%)}}
+  @media(max-width:520px){.sheet{right:12px;bottom:82px;width:calc(100vw - 24px);max-height:calc(100dvh - 104px);box-shadow:4px 4px 0 var(--ink)}
+    .sheet .sheet-body{padding:18px}.sheet .sheet-footer{padding:12px 18px}.sheet h2{font-size:24px}
+    .sheet .pixel-art{width:54px;height:54px}.sheet .pixel-art svg{width:42px;height:42px}.sheet .result-intro{gap:12px}
+    .sheet .row button{flex:1}.sheet .window-name{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.sheet .loader-blocks{animation:none;width:100%;opacity:.65}}
   `;
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
   const fmtDate = s => { if (!s) return "b.d."; const [y, m, d] = s.slice(0, 10).split("-"); return d ? `${d}.${m}.${y}` : s; };
@@ -259,98 +309,139 @@
   }
   document.addEventListener("click", e => { if (menu && !isOurs(e.target)) closeMenu(); }, true);
 
-  // element picker (uBlock-style): hover highlights, click/tap selects, ⬆ expands to parent, Enter/Sprawdź confirms
-  let picking = false, hovered = null, selected = null, hl = null, pbar = null;
+  // Element picker: one click/tap immediately starts verification.
+  let picking = false, hovered = null, hl = null, pbar = null;
   function startPicker() {
-    picking = true; selected = null;
-    hl = document.createElement("div"); hl.className = "hl"; ui.root.append(hl);
+    stopPicker(); closeMenu(); closeSheet(false);
+    picking = true;
+    hl = document.createElement("div"); hl.className = "hl"; hl.hidden = true; ui.root.append(hl);
     pbar = document.createElement("div"); pbar.className = "pbar";
-    pbar.innerHTML = `<span>${isMobile ? "Dotknij" : "Kliknij"} treść do sprawdzenia</span><button data-p="up">⬆ Większy obszar</button><button class="p" data-p="ok" disabled>Sprawdź</button><button data-p="x">Anuluj</button>`;
-    pbar.addEventListener("click", e => {
-      const p = e.target.closest("button")?.dataset.p;
-      if (p === "x") stopPicker();
-      if (p === "up" && selected?.parentElement && selected.parentElement !== document.body) { selected = selected.parentElement; box(selected, true); }
-      if (p === "ok" && selected) { const el = selected; stopPicker(); checkElement(el); }
-    });
+    pbar.setAttribute("role", "status");
+    pbar.innerHTML = `<span>${isMobile ? "Dotknij" : "Kliknij"} fragment — sprawdzanie rozpocznie się od razu.</span><button data-p="x">Anuluj · Esc</button>`;
+    pbar.querySelector("button").addEventListener("click", stopPicker);
     ui.root.append(pbar);
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("click", onPick, true);
     document.addEventListener("keydown", onKey, true);
   }
   function stopPicker() {
-    picking = false; hl?.remove(); pbar?.remove(); hl = pbar = null;
+    picking = false; hovered = null; hl?.remove(); pbar?.remove(); hl = pbar = null;
     document.removeEventListener("mousemove", onMove, true);
     document.removeEventListener("click", onPick, true);
     document.removeEventListener("keydown", onKey, true);
   }
-  function box(el, sel) {
-    const r = el.getBoundingClientRect();
-    Object.assign(hl.style, {left: r.left - 3 + "px", top: r.top - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px"});
-    hl.classList.toggle("sel", !!sel);
-    pbar.querySelector('[data-p="ok"]').disabled = !selected;
-  }
   function onMove(e) {
-    if (!picking || selected || isOurs(e.target)) return;
-    hovered = e.target; box(hovered, false);
+    if (!picking || isOurs(e.target)) return;
+    hovered = e.target;
+    const r = hovered.getBoundingClientRect();
+    hl.hidden = false;
+    Object.assign(hl.style, {left: r.left - 3 + "px", top: r.top - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px"});
   }
   function onPick(e) {
     if (!picking || isOurs(e.target)) return;
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-    selected = e.target.closest("p, article, li, blockquote, h1, h2, h3, [role='article'], div") || e.target;
-    // grow tiny selections to something with enough text
+    let selected = e.target.closest("p, article, li, blockquote, h1, h2, h3, [role='article'], div") || e.target;
     while (selected.parentElement && txt(selected).length < 40 && selected.parentElement !== document.body) selected = selected.parentElement;
-    box(selected, true);
+    stopPicker();
+    checkElement(selected);
   }
   function onKey(e) {
-    if (e.key === "Escape") stopPicker();
-    if (e.key === "Enter" && selected) { const el = selected; stopPicker(); checkElement(el); }
+    if (e.key === "Escape") { e.preventDefault(); stopPicker(); fab.focus(); }
+    if (e.key === "Enter" && hovered) { e.preventDefault(); onPick({target: hovered, preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}}); }
   }
 
-  // ------------------------------------------------------------------ on-demand check → result sheet
-  let sheet = null;
-  function openSheet(html) {
-    sheet?.remove(); sheet = document.createElement("div"); sheet.className = "sheet";
-    sheet.innerHTML = `<div class="card" style="border-color:#1d3557">${html}</div>`; ui.root.append(sheet);
-    sheet.addEventListener("click", e => { const a = e.target.closest("[data-s]")?.dataset.s; if (a === "x") { sheet.remove(); sheet = null; } });
+  // ------------------------------------------------------------------ on-demand check → Macintosh result window
+  let sheet = null, checkVersion = 0, returnFocus = null;
+  const PIXEL_ART = `<div class="pixel-art" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M10 3h12v3h4v4h3v12h-3v4h-4v3H10v-3H6v-4H3V10h3V6h4V3Z" stroke="currentColor" stroke-width="2"/><path d="M12 11v-3h8v3h3v5h-4v4h-5v-6h5v-3h-7Zm2 12h5v4h-5z" fill="currentColor"/></svg></div>`;
+  function closeSheet(restoreFocus = true) {
+    checkVersion++; // Late replies must not reopen a dismissed or superseded window.
+    sheet?.remove(); sheet = null;
+    document.removeEventListener("keydown", onSheetKey, true);
+    if (restoreFocus) (returnFocus?.isConnected ? returnFocus : fab).focus();
+    returnFocus = null;
+  }
+  function onSheetKey(e) {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeSheet(); }
+  }
+  function openSheet(html, {title = "Wynik sprawdzenia", loading = false, footer = ""} = {}) {
+    const isNew = !sheet;
+    const focusWasInside = sheet?.contains(ui.root.activeElement);
+    if (!sheet) returnFocus = ui.root.activeElement || document.activeElement;
+    sheet?.remove(); sheet = document.createElement("section"); sheet.className = "sheet";
+    sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-label", `Prawdowid — ${title}`);
+    sheet.setAttribute("aria-busy", String(loading)); sheet.tabIndex = -1;
+    sheet.innerHTML = `<header class="window-bar"><span class="window-mark" aria-hidden="true"></span><span class="window-name">Prawdowid · ${esc(title)}</span><span class="window-stripes" aria-hidden="true"></span><button class="window-close" data-s="x" aria-label="Zamknij okno">×</button></header>
+      <div class="sheet-body">${html}</div>${footer ? `<footer class="sheet-footer">${footer}</footer>` : ""}`;
+    ui.root.append(sheet);
+    sheet.addEventListener("click", e => {
+      if (e.target.closest("[data-s]")?.dataset.s === "x") closeSheet();
+    });
+    document.addEventListener("keydown", onSheetKey, true);
+    // Keep keyboard focus inside the replacement, without stealing it back from the page.
+    if (isNew || focusWasInside) sheet.focus({preventScroll: true});
     return sheet;
+  }
+  function messageSheet(title, message, retry) {
+    const sh = openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>${esc(title)}</h2></div></div><p role="status">${esc(message)}</p>`, {
+      title, footer: `<div class="row">${retry ? '<button class="p" data-s="retry">Spróbuj ponownie</button>' : '<button class="p" data-s="pick">Wybierz inny fragment</button>'}<button data-s="x">Zamknij</button></div>`
+    });
+    sh.querySelector('[data-s="retry"]')?.addEventListener("click", retry);
+    sh.querySelector('[data-s="pick"]')?.addEventListener("click", startPicker);
   }
   function checkElement(el) {
     const t = txt(el);
     if (t.length < 15) {
       const hasImg = el.querySelector?.("img, video") || /^(IMG|VIDEO)$/.test(el.tagName);
-      openSheet(`<div class="hd" style="color:#1d3557">Prawdowid</div><p>${hasImg ? "Ten fragment to głównie obraz/wideo. Odczyt tekstu z obrazów (OCR) nie jest jeszcze włączony w prototypie — to ograniczenie techniczne, a nie ocena treści. Zaznacz tekst posta lub opis." : "Za mało tekstu do sprawdzenia — wybierz większy obszar."}</p><div class="row"><button data-s="x">Zamknij</button></div>`);
+      messageSheet("Wybierz fragment tekstu", hasImg ? "Ten fragment to głównie obraz lub wideo. Odczyt tekstu z obrazów (OCR) nie jest jeszcze włączony — to ograniczenie techniczne, a nie ocena treści. Wybierz tekst posta lub opis." : "Za mało tekstu do sprawdzenia. Wybierz większy fragment.");
       return;
     }
     checkText(t, el);
   }
   async function checkText(text, el) {
-    const t0 = performance.now();
-    openSheet(`<div class="hd" style="color:#1d3557"><span class="spin"></span> Sprawdzam…</div><div class="q">${esc(text.slice(0, 240))}${text.length > 240 ? "…" : ""}</div>`);
-    const [quick, full] = await Promise.all([send({type: "quick", items: [{id: "pick", text: text.slice(0, 1500)}]}), send({type: "check", text: text.slice(0, 6000)})]);
-    if (quick?.ok && el && quick.data[0].level !== "brak") render(el, quick.data[0], text);
+    const version = ++checkVersion, t0 = performance.now();
+    closeMenu();
+    openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>Sprawdzam, co mówią źródła.</h2></div></div>
+      <div class="selected-text"><span class="selected-label">Wybrany fragment</span>${esc(text.slice(0, 280))}${text.length > 280 ? "…" : ""}</div>
+      <div class="loader-track" role="progressbar" aria-label="Trwa sprawdzanie informacji"><div class="loader-blocks"></div></div>
+      <p role="status">${S.mockMode ? "Ładowanie przykładowego wyniku…" : "Trwa analiza treści i wyszukiwanie dowodów."}</p><p class="muted">${S.mockMode ? "Tryb demonstracyjny · tekst pozostaje w przeglądarce." : "Wysyłamy tylko tekst fragmentu, bez adresu strony."}</p>`, {title: S.mockMode ? "Demo · sprawdzanie…" : "Sprawdzanie…", loading: true});
+    // The optional quick annotation must never delay the full answer or turn its failure into an error.
+    if (el) send({type: "quick", items: [{id: "pick", text: text.slice(0, 1500)}]}).then(quick => {
+      if (version === checkVersion && quick?.ok && quick.data?.[0]?.level !== "brak" && quick.data?.[0]?.match) render(el, quick.data[0], text);
+    }).catch(() => {});
+    let full;
+    try { full = await send({type: "check", text: text.slice(0, 6000)}); }
+    catch { full = {ok: false}; }
+    if (version !== checkVersion) return;
     if (!full?.ok) {
-      openSheet(`<div class="hd">Błąd techniczny</div><p>Nie udało się połączyć z serwerem Prawdowida (${esc(full?.error)}). To nie jest ocena treści.</p><div class="row"><button data-s="x">Zamknij</button></div>`);
+      messageSheet("Nie udało się sprawdzić", "Nie udało się połączyć z serwerem Prawdowida. Spróbuj ponownie za chwilę. To błąd techniczny, a nie ocena treści.", () => checkText(text, el));
       return;
     }
     const res = full.data; const secs = ((performance.now() - t0) / 1000).toFixed(1);
     if (res.status !== "ok") {
-      openSheet(`<div class="hd" style="color:#1d3557">Prawdowid</div><p>${esc(res.status_message)}</p><div class="row"><button data-s="x">Zamknij</button></div>`);
+      messageSheet(res.status === "blad_techniczny" ? "Błąd techniczny" : res.status === "doprecyzuj" ? "Doprecyzuj pytanie" : "Poza zakresem", res.status_message || "Nie można wykonać tego sprawdzenia.", res.status === "blad_techniczny" ? () => checkText(text, el) : null);
       return;
     }
-    const claims = res.claims.map(c => {
-      const src = (c.evidence.filter(e => e.stance !== "kontekst").length ? c.evidence.filter(e => e.stance !== "kontekst") : c.evidence).slice(0, 2);
-      return `<div style="margin:8px 0 12px"><span class="v v-${c.verdict}">${esc(c.verdict_label)}</span>
-        ${!["brak_dowodow", "nie_podlega_weryfikacji"].includes(c.verdict) ? `<span class="meta"> · siła podstaw: ${esc(c.strength_label)}</span>` : ""}
-        <div class="meta" style="margin:4px 0">„${esc(c.claim.slice(0, 200))}”</div>
-        <div>${esc(c.explanation.slice(0, 420))}${c.explanation.length > 420 ? "…" : ""}</div>
-        ${src.map(e => `<div class="src"><b>${esc(e.publisher)}</b>, ${fmtDate(e.published_at)} — <a href="${safeUrl(e.url)}" target="_blank" rel="noopener nofollow">${esc(e.title.slice(0, 90))}</a></div>`).join("")}</div>`;
+    const claims = res.claims.map((c, i) => {
+      const relevant = c.evidence.filter(e => e.stance !== "kontekst");
+      const src = (relevant.length ? relevant : c.evidence).slice(0, 2);
+      return `<article class="claim-result"><span class="verdict-label">Twierdzenie ${String(i + 1).padStart(2, "0")}</span>
+        <h3>${esc(c.verdict_label)}</h3><div class="claim-text">„${esc(c.claim)}”</div>
+        <p>${esc(c.explanation)}</p>
+        ${!["brak_dowodow", "nie_podlega_weryfikacji"].includes(c.verdict) ? `<div class="strength">Siła podstaw: <b>${esc(c.strength_label)}</b></div>` : ""}
+        ${c.what_unknown ? `<p class="muted">Nie ustalono: ${esc(c.what_unknown)}</p>` : ""}
+        ${c.would_settle ? `<p class="muted">Co pomoże rozstrzygnąć: ${esc(c.would_settle)}</p>` : ""}
+        ${src.length ? `<div class="sources-label">Materiały źródłowe · ${src.length}${c.evidence.length > src.length ? ` z ${c.evidence.length}` : ""}</div>` : c.verdict !== "nie_podlega_weryfikacji" ? '<p class="muted">Nie znaleziono źródeł pozwalających rozstrzygnąć to twierdzenie.</p>' : ""}
+        ${src.map(e => `<div class="source"><b>${esc(e.publisher)}</b> · ${esc(fmtDate(e.published_at))}<a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(e.title)} ↗</a>${e.fragment ? `<blockquote>„${esc(e.fragment)}”</blockquote>` : ""}</div>`).join("")}
+        ${(c.limitations || []).map(l => `<p class="muted">${esc(l)}</p>`).join("")}</article>`;
     }).join("");
-    const sh = openSheet(`<div class="hd" style="color:#1d3557"><img src="${ICON}" width="20" height="20" alt=""> Prawdowid · ${esc(res.summary)}</div>
-      ${res.warnings.slice(0, 1).map(w => `<div class="meta" style="margin-top:6px">ℹ️ ${esc(w)}</div>`).join("")}
-      ${claims}
-      <div class="meta">Analiza: ${secs} s · źródła z jawnego katalogu · Prawdowid nie jest sędzią prawdy.</div>
-      <div class="row"><button class="p" data-s="full">Zobacz pełną analizę →</button><button data-s="x">Zamknij</button></div>`);
-    sh.querySelector('[data-s="full"]').addEventListener("click", () => send({type: "openAnalysis", id: res.id}));
+    const sh = openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Analiza zakończona · <span class="elapsed">${secs} s</span></div><h2>Sprawdź, zanim uwierzysz.</h2></div></div>
+      <p>${esc(res.summary)}</p>
+      ${res.warnings.map(w => `<div class="caveat">${esc(w)}</div>`).join("")}${claims}`, {
+      title: res.demo ? "Demo · przykładowy wynik" : "Wynik sprawdzenia",
+      footer: `<div class="muted">${res.demo ? "Dane testowe — to nie jest ocena wybranego tekstu." : "Oceniamy treść, nie autora ani portal. Poznaj dowody i ograniczenia."}</div><div class="row">${res.demo ? '<button class="p" data-s="pick">Sprawdź inny fragment</button>' : '<button class="p" data-s="full">Zobacz pełną analizę ↗</button>'}<button data-s="x">Zamknij</button></div>`
+    });
+    sh.querySelector('[data-s="full"]')?.addEventListener("click", () => send({type: "openAnalysis", id: res.id}));
+    sh.querySelector('[data-s="pick"]')?.addEventListener("click", startPicker);
   }
 
   // ------------------------------------------------------------------ first-run privacy notice + start
@@ -377,6 +468,9 @@
     scan();
     mo.observe(document.body, {childList: true, subtree: true});
   })();
-  api.storage?.onChanged?.addListener(ch => { for (const k in ch) S[k] = ch[k].newValue; });
+  api.storage?.onChanged?.addListener(ch => {
+    for (const k in ch) S[k] = ch[k].newValue;
+    if (ch.mockMode) closeSheet(); // Do not show a reply from the previous mode.
+  });
   api.runtime.onMessage.addListener(msg => { if (msg?.type === "startPicker") startPicker(); });
 })();

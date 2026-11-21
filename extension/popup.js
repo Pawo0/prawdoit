@@ -3,6 +3,23 @@ const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new 
 (async () => {
   const [tab] = await api.tabs.query({active: true, currentWindow: true});
   const s = (await send({type: "settings"})).data;
+  const mock = document.getElementById("mock");
+  mock.checked = !!s.mockMode;
+  const mockStatus = document.getElementById("mock-status");
+  mockStatus.textContent = s.mockMode ? "Włączony — wyniki są fikcyjne." : "Wyłączony — sprawdzanie wymaga serwera.";
+  mock.onchange = async () => {
+    mock.disabled = true;
+    const enabled = mock.checked;
+    try {
+      const result = await send({type: "setSettings", data: {mockMode: enabled}});
+      if (!result?.ok) throw new Error("save failed");
+      s.mockMode = enabled;
+      mockStatus.textContent = enabled ? "Włączony — wyniki są fikcyjne." : "Wyłączony — sprawdzanie wymaga serwera.";
+    } catch {
+      mock.checked = !!s.mockMode;
+      mockStatus.textContent = "Nie udało się zapisać ustawienia. Spróbuj ponownie.";
+    } finally { mock.disabled = false; }
+  };
   document.getElementById("auto").checked = s.autoScan;
   document.getElementById("mode").checked = s.mode === "zaslon";
   document.getElementById("api").value = s.apiBase;

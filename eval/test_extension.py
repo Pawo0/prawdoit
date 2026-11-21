@@ -78,12 +78,9 @@ def main() -> None:
         page.wait_for_timeout(300)
         box = target.bounding_box()
         page.mouse.move(box["x"] + 30, box["y"] + box["height"] / 2)
-        page.mouse.click(box["x"] + 40, box["y"] + box["height"] / 2)
-        page.wait_for_timeout(300)
-        ok_disabled = page.evaluate("""() => [...document.querySelectorAll('prawdowid-ui')].map(h => h.shadowRoot).find(r => r.querySelector('.pbar'))?.querySelector('[data-p=ok]')?.disabled""")
-        print("picker selection made:", ok_disabled is False)
         t1 = time.time()
-        page.evaluate("""() => { const r = [...document.querySelectorAll('prawdowid-ui')].map(h => h.shadowRoot).find(r => r.querySelector('.pbar')); r.querySelector('[data-p=ok]').click(); }""")
+        page.mouse.click(box["x"] + 40, box["y"] + box["height"] / 2)
+        assert not page.locator("prawdowid-ui .pbar").count(), "Picker should close after one click"
         page.wait_for_function("""() => [...document.querySelectorAll('prawdowid-ui')].some(h => h.shadowRoot.querySelector('.sheet [data-s=full]'))""", timeout=60000)
         sheet = page.evaluate("""() => [...document.querySelectorAll('prawdowid-ui')].map(h => h.shadowRoot.querySelector('.sheet')).find(Boolean).innerText""")
         report["picker"] = {"seconds": round(time.time() - t1, 1), "sheet": sheet[:600]}
