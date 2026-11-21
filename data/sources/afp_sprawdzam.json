@@ -1,0 +1,33 @@
+{
+  "id": "afp_sprawdzam",
+  "name": "AFP Sprawdzam — oceny przez Google Fact Check Tools API",
+  "publisher": "AFP Sprawdzam (Agence France-Presse)",
+  "url": "https://sprawdzam.afp.com/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "custom",
+  "params": {
+    "handler": "google_factcheck_feed",
+    "site": "sprawdzam.afp.com",
+    "max_age_days": 200,
+    "page_size": 100,
+    "max_pages": 5,
+    "delay": 1.0,
+    "key_env": "PRAWDOWID_GOOGLE_FACTCHECK_KEY",
+    "max_docs": 1000
+  },
+  "enabled": true,
+  "schedule_hours": 12,
+  "web_search": false,
+  "topics": [
+    "dezinformacja",
+    "zagranica"
+  ],
+  "language": "pl",
+  "license": "© Agence France-Presse — wszelkie prawa zastrzeżone. Pobieramy wyłącznie metadane ClaimReview udostępniane przez Google Fact Check Tools API (twierdzenie, ocena, tytuł, data, link) — warunki Google APIs; bez treści artykułu, strony sprawdzam.afp.com nie pobieramy.",
+  "qualification": "Polskojęzyczny serwis fact-checkingowy agencji AFP (sygnatariusz IFCN, weryfikacja EFCSN wg research/02_factcheck_sources.md). Serwis odpowiada automatom HTTP 403, więc jedyną dopuszczalną drogą jest baza weryfikatorów faktów Google wskazana przez organizatora: claims:search z filtrem reviewPublisherSiteFilter=sprawdzam.afp.com, od najnowszych, z ostatnich 200 dni. Rekord zawiera dosłowne pola ClaimReview wydawcy (tytuł oceny, sprawdzane twierdzenie, etykieta oceny), bez treści artykułu (tag claimreview-only) — cytat to tytuł lub sprawdzane twierdzenie obok oceny i linku. Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Bez wyszukiwania na żywo. Wymaga zmiennej PRAWDOWID_GOOGLE_FACTCHECK_KEY.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: „Baza weryfikatorów faktów” — Fact Check Tools API (developers.google.com/fact-check/tools/api/reference/rest), oceny wydawcy sprawdzam.afp.com; wydawca nie jest wymieniony z nazwy przez organizatora",
+  "added_by": "organizator (rules/resources.txt — baza weryfikatorów faktów)",
+  "added_at": "2026-11-21"
+}

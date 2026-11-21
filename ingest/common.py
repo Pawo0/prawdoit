@@ -215,8 +215,9 @@ _VERDICT_RULES: list[tuple[str, str | None]] = [
     ("w wiekszosci", "mixed"),
     ("manipulac", "misleading"), ("wprowadza w blad", "misleading"), ("wprowadzajac", "misleading"),
     ("brak kontekstu", "misleading"), ("brakujacy kontekst", "misleading"), ("brakuje kontekstu", "misleading"), ("bez kontekstu", "misleading"), ("missing context", "misleading"),
-    ("misleading", "misleading"), ("przesad", "misleading"), ("wyrwan", "misleading"),
+    ("misleading", "misleading"), ("przesad", "misleading"), ("wyrwan", "misleading"), ("mylac", "misleading"),
     ("zmanipulowan", "false"), ("przerobion", "false"), ("wygenerowan", "false"), ("deepfake", "false"),
+    ("obraz ai", "false"),  # AFP Sprawdzam: "Mylące", "Obraz AI" (seen in the Google Fact Check API, 2026-11-21)
     ("przerobk", "false"), ("nieprawdziw", "false"), ("falszyw", "false"), ("falsz", "false"), ("fake", "false"), ("nieprawda", "false"),
     ("disinformation", "false"), ("dezinformac", "false"), ("false", "false"), ("oszustwo", "false"),
     ("scam", "false"), ("altered", "false"),

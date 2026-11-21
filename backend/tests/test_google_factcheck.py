@@ -1,0 +1,340 @@
+"""Demagog "through the API" = Google Fact Check Tools API (claims:search), offline and without models.
+
+Nobody can call the real API without PRAWDOWID_GOOGLE_FACTCHECK_KEY, so this test fixes the contract with a mocked
+response shaped like Google's public reference (developers.google.com/fact-check/tools/api/reference/rest/v1alpha1/
+claims): Claim{text, claimant, claimDate, claimReview[]} and ClaimReview{publisher{name, site}, url, title,
+reviewDate, textualRating, languageCode}. It checks that
+  * the request carries query, languageCode=pl, the key, and — for the configured fact-checker sites — the
+    reviewPublisherSiteFilter parameter (one extra query per site, so Demagog is not crowded out of 10 results);
+  * only reviews published on a domain of an ENABLED registry source become evidence (SEO spam, foreign publishers
+    and disabled sources are merely counted);
+  * `textualRating` is mapped with exactly the rules used for the harvested corpus (ingest/common.py), including the
+    Demagog labels that differ from plain true/false;
+  * an outage is reported as a technical notice ("Nie mogę teraz sprawdzić indeksu Google…"), never as "no such
+    article", and a missing key leaves the provider inactive without any request;
+  * the key never appears in an error message.
+
+Run:  backend/.venv/bin/python backend/tests/test_google_factcheck.py      (or pytest backend/tests)
+"""
+from __future__ import annotations
+
+import ast
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+_TMP = tempfile.TemporaryDirectory()
+os.environ.setdefault("PRAWDOWID_RUNTIME_DIR", _TMP.name)  # the audit store opens its SQLite file on import
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from prawdowid import websearch as W  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
+KEY = "test-key-123"
+WROCLAW = "https://demagog.org.pl/wypowiedzi/darmowa-komunikacja-dla-65-latkow-tylko-we-wroclawiu-sprawdzamy/"
+
+# Shape per Google's reference; the Demagog review is the one from the organisers' scenarios G and J.
+RESPONSE = {"claims": [
+    {"text": "Wrocław był jedynym miastem w Polsce, w którym 65-latkowie jeździli komunikacją miejską za darmo.",
+     "claimant": "Polityk", "claimDate": "2026-10-01T00:00:00Z",
+     "claimReview": [{"publisher": {"name": "Demagog", "site": "demagog.org.pl"}, "url": WROCLAW,
+                      "title": "Darmowa komunikacja dla 65-latków tylko we Wrocławiu? Sprawdzamy",
+                      "reviewDate": "2026-10-03T00:00:00Z", "textualRating": "Fałsz", "languageCode": "pl"}]},
+    {"text": "Darmowa komunikacja dla seniorów — ranking miast",
+     "claimReview": [{"publisher": {"name": "seo-sreo.pl", "site": "seo-sreo.pl"}, "url": "https://seo-sreo.pl/ranking",
+                      "title": "Ranking", "textualRating": "Prawda", "languageCode": "pl"}]},
+    {"text": "Seniors ride for free only in Wrocław",
+     "claimReview": [{"publisher": {"name": "Example Fact Check", "site": "example.org"},
+                      "url": "https://example.org/fact-check/1", "textualRating": "False", "languageCode": "en"}]},
+    {"text": "Twierdzenie sprawdzone przez wyłączone źródło",
+     "claimReview": [{"publisher": {"name": "FakeNews.pl", "site": "fakenews.pl"}, "url": "https://fakenews.pl/x/",
+                      "title": "X", "textualRating": "Fałsz", "languageCode": "pl"}]},
+]}
+
+# Every distinct rating label in data/corpus/demagog.jsonl on 2026-11-21 (1,294 records) → class stored in the corpus.
+DEMAGOG_LABELS = {
+    "Fałsz": "false", "Falsz": "false", "Fałśz": "false", "Manipulacja": "misleading",
+    "Brakujący kontekst": "misleading", "Brak kontekstu": "misleading", "Prawda": "true",
+    "Częściowy fałsz": "mixed", "Częściowy Fałsz": "mixed", "Częściowa prawda": "mixed",
+    "Nieweryfikowalne": "unverifiable", "Przerobione zdjęcie": "false", "Przerobiony film": "false",
+    "Przerobione wideo": "false", "Przerobione nagranie": "false", "Przerobiony obraz": "false",
+    "Przerobione zdjęcia": "false", "Przerobione zdjęcie lub film": "false", "Przerobiona grafika": "false",
+    "Scam": "false", "Satyra": None,
+}
+
+
+def _source(sid: str, url: str, category: str, enabled: bool = True, **params) -> dict:
+    return {"id": sid, "name": sid, "publisher": sid.capitalize(), "url": url, "category": category,
+            "tier": 2 if category == "factcheck" else 1, "method": "reference_only", "params": params,
+            "enabled": enabled, "web_search": True, "license": f"licencja {sid}", "qualification": "test"}
+
+
+class _Resp:
+    def __init__(self, status: int = 200, body: dict | None = None):
+        self.status_code, self._body = status, body
+
+    def json(self):
+        if self._body is None:
+            raise ValueError("no json")
+        return self._body
+
+
+class GoogleFactCheckTest(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        d = Path(self.dir.name)
+        for s in (_source("demagog", "https://demagog.org.pl/", "factcheck"),
+                  _source("fakenews_pl", "https://fakenews.pl/", "factcheck", enabled=False),
+                  _source("gov", "https://www.gov.pl/", "official"),
+                  {**_source("google_factcheck", "https://toolbox.google.com/factcheck/explorer", "factcheck",
+                             publisher_sites=["demagog.org.pl", "fakenews.pl"]), "method": "google_factcheck"}):
+            (d / f"{s['id']}.json").write_text(json.dumps(s, ensure_ascii=False), encoding="utf-8")
+        self.calls: list[dict] = []
+        self.response = _Resp(200, RESPONSE)
+
+        def fake_get(url, **kw):
+            self.calls.append({"url": url, **kw})
+            return self.response
+
+        patches = [mock.patch.object(W, "SOURCES_DIR", d), mock.patch.object(W.httpx, "get", fake_get),
+                   mock.patch.object(W.store, "log_error", lambda *a, **k: None),
+                   mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": KEY, "PRAWDOWID_LIVE_SEARCH": "1",
+                                                "PRAWDOWID_FORCE_FAIL": ""})]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        self.addCleanup(self.dir.cleanup)
+        W._REG_CACHE.update(key=None, sources=[])
+        W._GFC_CACHE.clear()
+
+    # ---------------------------------------------------------------- rating labels
+    def test_rating_rules_are_the_ingest_rules(self):
+        tree = ast.parse((ROOT / "ingest" / "common.py").read_text(encoding="utf-8"))
+        node = next(n for n in ast.walk(tree) if isinstance(n, ast.AnnAssign)
+                    and getattr(n.target, "id", "") == "_VERDICT_RULES")
+        self.assertEqual([tuple(x) for x in ast.literal_eval(node.value)], W._VERDICT_RULES)
+
+    def test_demagog_labels_map_to_the_corpus_classes(self):
+        for label, expected in DEMAGOG_LABELS.items():
+            self.assertEqual(W.map_rating(label), expected, label)
+        for label, expected in (("W większości fałsz", "mixed"), ("W większości prawda", "mixed"),
+                                ("Brak dowodów", "unverifiable"), ("Mostly false", "false"), ("", None), (None, None)):
+            self.assertEqual(W.map_rating(label), expected, label)
+
+    # ---------------------------------------------------------------- request
+    def test_request_parameters(self):
+        claims = W.google_factcheck("Czy Wrocław był jedynym miastem z darmowymi przejazdami dla 65-latków?")
+        self.assertEqual(len(claims), 4)
+        call = self.calls[0]
+        self.assertEqual(call["url"], "https://factchecktools.googleapis.com/v1alpha1/claims:search")
+        self.assertEqual(call["params"]["languageCode"], "pl")
+        self.assertEqual(call["headers"]["X-Goog-Api-Key"], KEY)
+        self.assertNotIn("key", call["params"])  # never in the URL: request URLs are logged
+        self.assertIn("65-latków", call["params"]["query"])
+        self.assertNotIn("reviewPublisherSiteFilter", call["params"])
+        W.google_factcheck("darmowe przejazdy 65-latków", site="demagog.org.pl")
+        self.assertEqual(self.calls[1]["params"]["reviewPublisherSiteFilter"], "demagog.org.pl")
+
+    def test_publisher_sites_come_from_enabled_registry_sources_only(self):
+        self.assertEqual(W.google_publisher_sites(), ["demagog.org.pl"])  # fakenews.pl is disabled in this registry
+
+    # ---------------------------------------------------------------- evidence
+    def test_only_reviews_from_enabled_registry_domains_become_evidence(self):
+        docs, other = W.google_docs(RESPONSE["claims"] + RESPONSE["claims"][:1])  # duplicate review: kept once
+        self.assertEqual(other, 3)  # SEO spam, foreign publisher, disabled source
+        self.assertEqual(len(docs), 1)
+        d = docs[0]
+        self.assertEqual((d.domain, d.url, d.source_type, d.publisher), ("demagog.org.pl", WROCLAW, "factcheck", "Demagog"))
+        self.assertEqual((d.verdict_raw, d.verdict, d.published_at, d.language), ("Fałsz", "false", "2026-10-03", "pl"))
+        self.assertIn("65-latkowie", d.claim)
+        self.assertIn(d.claim, d.text)  # the quoted fragment is the publisher's own ClaimReview text
+        self.assertEqual(d.license, "licencja demagog")
+        self.assertTrue({"google_factcheck", "live_search", "registry:demagog", "tier:2"} <= set(d.tags))
+        self.assertTrue(d.retrieved_at)
+
+    def test_review_without_a_rating_is_not_evidence(self):
+        claim = json.loads(json.dumps(RESPONSE["claims"][0]))
+        claim["claimReview"][0].pop("textualRating")
+        self.assertEqual(W.google_docs([claim]), ([], 0))
+
+    # ---------------------------------------------------------------- orchestration (scenario J)
+    def _stage(self):
+        stage = W.LiveStage("test-check")
+        stage.start_google([SimpleNamespace(query="Wrocław jedynym miastem z darmowymi przejazdami dla 65-latków",
+                                            kind="fakt"),
+                            SimpleNamespace(query="Uważam, że to dobra decyzja", kind="opinia")])
+        return stage
+
+    def test_live_stage_sends_keywords_and_stops_at_the_first_hit(self):
+        stage = self._stage()
+        docs = stage._join_google()
+        self.assertEqual(len(self.calls), 1)  # first round answered; the opinion is never sent
+        q = self.calls[0]["params"]["query"]
+        self.assertLessEqual(len(q.split()), 4)  # keywords, not the sentence: the API returns nothing for sentences
+        self.assertIn("Wrocław", q)
+        self.assertNotIn("reviewPublisherSiteFilter", self.calls[0]["params"])
+        self.assertEqual([d.url for d in docs], [WROCLAW])
+        self.assertEqual((stage.google["status"], stage.google["n_results"]), ("ok", 1))
+        self.assertEqual(stage.warnings, [])
+
+    def test_query_rounds_go_from_specific_to_loose(self):
+        rounds = W.google_queries("Czy PAP usunęła depeszę o wypowiedzi Donalda Tuska przed powodzią?")
+        self.assertEqual(len(rounds[0]), 1)
+        self.assertEqual(len(rounds[0][0].split()), 4)
+        self.assertIn(["PAP usunęła depeszę o"], rounds)  # the claim's opening words, question particle dropped
+        self.assertTrue(all(len(q.split()) == 2 for q in rounds[-1]))
+        flat = [q for r in rounds for q in r]
+        self.assertEqual(len(flat), len(set(flat)))
+
+    def test_no_result_rounds_continue_and_a_crowded_page_is_repeated_for_the_publisher(self):
+        spam = {"claims": [RESPONSE["claims"][1]] * 10}
+
+        def fake_get(url, **kw):
+            self.calls.append({"url": url, **kw})
+            if kw["params"].get("reviewPublisherSiteFilter") == "demagog.org.pl":
+                return _Resp(200, {"claims": RESPONSE["claims"][:1]})
+            return _Resp(200, {} if len(self.calls) == 1 else spam)  # round 1: nothing; round 2: 10 other publishers
+
+        with mock.patch.object(W.httpx, "get", fake_get):
+            claims = W.google_search("Wrocław był jedynym miastem z darmowymi przejazdami dla 65-latków")
+        self.assertEqual([c["params"].get("reviewPublisherSiteFilter", "") for c in self.calls], ["", "", "demagog.org.pl"])
+        docs, other = W.google_docs(claims)
+        self.assertEqual(([d.url for d in docs], other), ([WROCLAW], 1))
+
+    def test_outage_is_a_notice_not_a_verdict(self):
+        self.response = _Resp(403, {"error": {"message": f"API key not valid: {KEY}"}})
+        stage = self._stage()
+        self.assertEqual(stage._join_google(), [])
+        self.assertEqual(stage.google["status"], "blad")
+        self.assertEqual(stage.warnings, [W.NOTICE_GOOGLE_FAIL])
+        self.assertIn("Nie mogę teraz sprawdzić indeksu Google", W.NOTICE_GOOGLE_FAIL)
+        with self.assertRaises(W.LiveError) as ctx:
+            W.google_factcheck("inne pytanie")
+        self.assertNotIn(KEY, str(ctx.exception))
+
+    def test_forced_failure_switch(self):
+        with mock.patch.dict(os.environ, {"PRAWDOWID_FORCE_FAIL": "google_factcheck", "PRAWDOWID_GOOGLE_FACTCHECK_KEY": ""}):
+            stage = self._stage()
+            self.assertEqual(stage._join_google(), [])
+        self.assertEqual(self.calls, [])
+        self.assertEqual(stage.warnings, [W.NOTICE_GOOGLE_FAIL])
+
+    def test_without_a_key_nothing_is_sent(self):
+        with mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": ""}):
+            stage = self._stage()
+            self.assertEqual(stage._join_google(), [])
+        self.assertEqual(self.calls, [])
+        self.assertIsNone(stage.google)  # provider inactive: no result and no notice (see research/10_organiser_sources.md)
+
+
+class GoogleFactCheckFeedTest(unittest.TestCase):
+    """The registry source that lists one publisher's recent reviews (source_handlers/google_factcheck_feed.py)."""
+
+    def setUp(self):
+        from datetime import date, timedelta
+
+        from prawdowid.source_handlers import google_factcheck_feed as G
+
+        self.G = G
+        self.today = date.today()
+        day = lambda n: (self.today - timedelta(days=n)).isoformat() + "T00:00:00Z"  # noqa: E731
+
+        def review(slug, title, claim, rating, age, site="demagog.org.pl", section="fake_news"):
+            url = (f"https://demagog.org.pl/{section}/{slug}/" if site == "demagog.org.pl"
+                   else f"https://{site}/{slug}")
+            return {"text": claim, "claimant": "użytkownicy", "claimDate": day(age + 3),
+                    "claimReview": [{"publisher": {"name": "X", "site": site}, "url": url, "title": title,
+                                     "reviewDate": day(age), "textualRating": rating, "languageCode": "pl"}]}
+
+        self.page1 = {"claims": [
+            review("most-krymski", "Zniszczony Most Krymski. Uważaj na przerobione zdjęcie", "Zniszczono most krymski.",
+                   "przerobione zdjęcie", 1),
+            review("juz-w-korpusie", "Tytuł", "Twierdzenie, które jest już w korpusie stron.", "Fałsz", 2),
+            review("stara-ocena", "Stara ocena", "Twierdzenie sprzed lat, które wróciło.", "Fałsz", 900),
+            {**review("inna", "Inny wydawca", "Twierdzenie ocenione przez dwóch wydawców.", "Fałsz", 2, site="fakenews.pl")},
+        ], "nextPageToken": "CGQ"}
+        self.page2 = {"claims": [
+            review("czesciowy", "Czy to prawda? Sprawdzamy", "Wypowiedź polityka o budżecie.", "częściowy fałsz", 5,
+                   section="wypowiedzi"),
+            review("bez-oceny", "Bez oceny", "Twierdzenie bez etykiety.", "", 5),
+        ]}
+        self.calls: list[dict] = []
+
+        def get(url, **kw):
+            self.calls.append({"url": url, **kw})
+            return _Resp(200, self.page2 if kw["params"].get("pageToken") else self.page1)
+
+        self.get = get
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        (Path(self.tmp.name) / "demagog.jsonl").write_text(
+            json.dumps({"url": "https://demagog.org.pl/fake_news/juz-w-korpusie/"}) + "\n", encoding="utf-8")
+        self.source = {"id": "demagog_google_api", "topics": ["dezinformacja"],
+                       "params": {"site": "demagog.org.pl", "max_age_days": 200, "delay": 0.5,
+                                  "dedupe_against": ["demagog"], "id_prefix": "demagog"}}
+        for p in (mock.patch.object(G, "settings", SimpleNamespace(corpus_dir=Path(self.tmp.name))),
+                  mock.patch.object(G.time, "sleep", lambda s: None),
+                  mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": KEY})):
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_pages_filters_and_record_shape(self):
+        recs = self.G.fetch(self.source, get=self.get)
+        self.assertEqual([c["params"].get("pageToken", "") for c in self.calls], ["", "CGQ"])
+        for c in self.calls:
+            self.assertEqual(c["params"]["reviewPublisherSiteFilter"], "demagog.org.pl")
+            self.assertEqual((c["params"]["languageCode"], c["params"]["maxAgeDays"]), ("pl", 200))
+            self.assertEqual(c["headers"]["X-Goog-Api-Key"], KEY)
+            self.assertNotIn("key", c["params"])
+        # kept: the new review of each page; dropped: already harvested page, old review, other publisher, no rating
+        self.assertEqual([r["id"] for r in recs], ["demagog:fake_news/most-krymski", "demagog:wypowiedzi/czesciowy"])
+        r = recs[0]
+        self.assertEqual(r["text"], "Zniszczony Most Krymski. Uważaj na przerobione zdjęcie\nZniszczono most krymski.")
+        self.assertEqual((r["claim"], r["verdict_raw"], r["verdict"]), ("Zniszczono most krymski.", "Przerobione zdjęcie", "false"))
+        self.assertEqual(recs[1]["verdict"], "mixed")
+        self.assertTrue({"claimreview-only", "via:api", "google_factcheck", "demagog_google_api"} <= set(r["tags"]))
+        self.assertEqual(r["published_at"], (self.today.fromordinal(self.today.toordinal() - 1)).isoformat())
+
+    def test_records_pass_the_corpus_schema_and_keep_the_shared_id(self):
+        from prawdowid.sources import fetchers
+
+        src = {**self.source, "category": "factcheck", "publisher": "Demagog", "license": "licencja", "language": "pl"}
+        out = [fetchers.normalize_record(r, src) for r in self.G.fetch(self.source, get=self.get)]
+        self.assertTrue(all(out))
+        self.assertEqual(out[0]["id"], "demagog:fake_news/most-krymski")  # same id as the page harvest → one copy
+        self.assertEqual((out[0]["publisher"], out[0]["source_type"], out[0]["domain"]),
+                         ("Demagog", "factcheck", "demagog.org.pl"))
+        other = fetchers.normalize_record({"id": "x:1", "url": "https://example.org/a", "text": "t"}, src)
+        self.assertEqual(other["id"], "demagog_google_api:x:1")  # foreign namespaces are still prefixed
+
+    def test_a_claim_that_restates_the_headline_gets_no_verdict(self):
+        claim = {"text": "Nagranie nie pokazuje uwolnienia czternastolatka rzekomo więzionego w piwnicy pod Kijowem"}
+        review = {"url": "https://sprawdzam.afp.com/doc.afp.com.X", "textualRating": "Fałsz", "reviewDate": "2026-11-18T00:00:00Z",
+                  "title": "Wideo nie pokazuje uwolnienia czternastolatka rzekomo więzionego w piwnicy pod Kijowem"}
+        rec = self.G.to_record(claim, review, "sprawdzam.afp.com")
+        self.assertEqual((rec["claim"], rec["verdict"], rec["verdict_raw"]), (None, None, "Fałsz"))
+        self.assertIn("claim-restates-title", rec["tags"])
+        asked = self.G.to_record({"text": "Kamizelki kuloodporne tylko dla Ukraińców"},
+                                 {**review, "title": "Kamizelki kuloodporne tylko dla Ukraińców? Przepisy są inne"},
+                                 "sprawdzam.afp.com")
+        self.assertEqual(asked["verdict"], "false")  # a question headline repeats the claim in order to answer it
+
+    def test_missing_key_and_refused_key_are_plain_errors_without_the_key(self):
+        with mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": ""}):
+            with self.assertRaises(self.G.ApiError) as ctx:
+                self.G.fetch(self.source, get=self.get)
+        self.assertIn("brak klucza", str(ctx.exception))
+        self.assertEqual(self.calls, [])
+        with self.assertRaises(self.G.ApiError) as ctx:
+            self.G.fetch(self.source, get=lambda url, **kw: _Resp(403, {"error": {"message": KEY}}))
+        self.assertNotIn(KEY, str(ctx.exception))
+        self.assertIn(self.G.ApiError, self.G.EXPECTED_ERRORS)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
