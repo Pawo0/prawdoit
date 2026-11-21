@@ -25,7 +25,7 @@ cd backend
 uv venv --python 3.12 .venv && source .venv/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu
 uv pip install -r requirements.txt
-uvicorn prawdowid.api:app --port 8000        # pierwszy start buduje indeks embeddingów (cache w data/index/)
+uvicorn prawdowid.api:app --port 8000        # start ~10 s: repo zawiera gotowy cache embeddingów (data/index/)
 ```
 Otwórz http://localhost:8000 · czat demo: http://localhost:8000/czat · panel analityka: http://localhost:8000/moderator
 (token demo: `demo-moderator`, zmień przez `PRAWDOWID_MODERATOR_TOKEN`).
