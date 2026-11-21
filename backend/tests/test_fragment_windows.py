@@ -57,6 +57,14 @@ class FragmentWindows(unittest.TestCase):
         self.assertEqual(split_sentences(s), ["Natomiast MPK [we Wrocławiu – przyp. Demagog] i tak nas sporo kosztuje.",
                                               "Drugie zdanie."])
 
+    def test_restated_claim_is_recognised(self):
+        from prawdowid.engine import _restates
+
+        claim = "Piątkowa depesza PAP - jak twierdzi poseł - została usunięta. Tusk wszedł w buty Cimoszewicza z 1997 r."
+        self.assertTrue(_restates("Piątkowa depesza PAP – jak twierdzi poseł – została usunięta.", claim))  # en dash
+        self.assertTrue(_restates("Tusk wszedł w buty Cimoszewicza z 1997 r. - W piątek premier mówił o powodzi.", claim))
+        self.assertFalse(_restates("Jak wyjaśnia redaktor naczelny PAP depesza nie została usunięta.", claim))
+
     def test_short_sentence_is_not_quoted_alone(self):
         self.assertNotIn("Demagog].", _fragment_windows(NOTE, NOTE))
 

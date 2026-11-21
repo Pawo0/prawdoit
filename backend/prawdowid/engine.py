@@ -79,14 +79,41 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
     windows = _fragment_windows(text, d.text or "")
+    head_tokens: set[str] = set()
+    if d.claim and d.source_type in ("factcheck", "incident"):
+        # A fact-check's text starts by restating the checked claim, which always overlaps the user's words most and
+        # wins the best chunk. Quoting it back proves nothing: the quote must be the analysis' finding. So the whole
+        # analysis is searched (the claim's own sentences left out) for the passage that shares most words with the
+        # user's claim AND with the fact-checker's headline, which states the finding ("Depesza PAP nie została
+        # usunięta"). The claim itself is quoted only when the record has nothing else.
+        own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
+        if own:
+            windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
     if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
 
     def score(w: str) -> float:
         wt = set(tokens(w))
-        return len(q_tokens & wt) / max(1, len(q_tokens)) - len(w) / 5000  # prefer shorter on ties
+        head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
+        return len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
 
-    return max(windows, key=score), cos
+    best = max(windows, key=score)
+    if head_tokens:  # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI)
+        best = best.lstrip("-–•* ") or best
+    return best, cos
+
+
+def _words(s: str) -> str:
+    return " ".join(re.findall(r"[^\W_]+", (s or "").lower()))
+
+
+def _restates(window: str, claim: str) -> bool:
+    """Is this quote (part of) the checked claim? Compared word by word, so a hyphen in the claim field and an en dash
+    in the text do not matter."""
+    w, c = _words(window), _words(claim)
+    if not w or w in c:
+        return True
+    return any(len(s) >= 20 and s in w for s in (_words(x) for x in split_sentences(claim)))
 
 
 def _squash(s: str) -> str:
