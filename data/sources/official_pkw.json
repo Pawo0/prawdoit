@@ -1,0 +1,26 @@
+{
+  "id": "official_pkw",
+  "name": "PKW — obwieszczenia o wynikach wyborów",
+  "publisher": "Państwowa Komisja Wyborcza",
+  "url": "https://pkw.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_pkw.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": false,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "wybory"
+  ],
+  "language": "pl",
+  "license": "Dokument urzędowy (obwieszczenie PKW, Dz.U.) — nie podlega prawu autorskiemu (art. 4 pr. aut.)",
+  "qualification": "Organ wyborczy; urzędowe obwieszczenia wyników wyborów publikowane w Dzienniku Ustaw. Kategoria A.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-21 decyzją zespołu: źródło spoza listy organizatora (rules/resources.txt). Można je włączyć w panelu /admin."
+}

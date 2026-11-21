@@ -1,0 +1,19 @@
+{
+  "id": "live_web",
+  "name": "Wyszukiwanie na żywo w zaufanych serwisach",
+  "publisher": "Różni wydawcy z rejestru źródeł (domeny z web_search=true)",
+  "url": "http://localhost:8000/zrodla",
+  "category": "official",
+  "tier": 1,
+  "method": "live_search",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [],
+  "language": "pl",
+  "license": "Każdy rekord ma licencję wpisu rejestru, z którego domeny pochodzi (pole license rekordu); krótkie fragmenty z podaniem źródła i linkiem.",
+  "qualification": "Dokumenty pobrane na żywo (backend/prawdowid/websearch.py), gdy korpus nie miał materiałów: wyłącznie z domen źródeł rejestru z enabled=true i web_search=true (wyszukiwarki serwisów gov.pl i WordPress, opcjonalnie SearXNG/Brave z filtrem site:) oraz oceny z Google Fact Check Tools API opublikowane w domenach z rejestru. Kategoria i poziom (tier) każdego rekordu pochodzą z pasującego wpisu rejestru (source_type, tag tier:N), nie z tego pliku. Treść skanowana pod kątem prompt injection; przy pobieraniu respektowany robots.txt.",
+  "added_by": "zespół Prawdowid (websearch.py)",
+  "added_at": "2026-11-21"
+}

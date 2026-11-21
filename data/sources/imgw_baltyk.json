@@ -1,0 +1,22 @@
+{
+  "id": "imgw_baltyk",
+  "name": "IMGW-PIB — serwis morski baltyk.imgw.pl",
+  "publisher": "Instytut Meteorologii i Gospodarki Wodnej – PIB",
+  "url": "https://baltyk.imgw.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": true,
+  "topics": [
+    "morze",
+    "pogoda"
+  ],
+  "language": "pl",
+  "license": "IMGW-PIB — dane publiczne z podaniem źródła",
+  "qualification": "Aplikacja JS (prognozy dla Bałtyku, 'Ładowanie…' bez treści w HTML). Ostrzeżenia sztormowe trafiają do rso_ostrzezenia i imgw_ostrzezenia.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

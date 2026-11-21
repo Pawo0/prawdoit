@@ -1,0 +1,30 @@
+{
+  "id": "cert_komunikaty",
+  "name": "CERT Polska — komunikaty dla użytkowników (moje.cert.pl)",
+  "publisher": "CERT Polska (NASK)",
+  "url": "https://moje.cert.pl/komunikaty/",
+  "category": "official",
+  "tier": 1,
+  "method": "html_list",
+  "params": {
+    "list_urls": [
+      "https://moje.cert.pl/komunikaty/",
+      "https://moje.cert.pl/komunikaty/?page=2"
+    ],
+    "link_regex": "^https://moje\\.cert\\.pl/komunikaty/\\d{4}/\\d+/[a-z0-9-]+/$",
+    "max_items": 20,
+    "min_text_chars": 200
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "cyber",
+    "oszustwa"
+  ],
+  "language": "pl",
+  "license": "© NASK / CERT Polska — brak otwartej licencji; krótkie fragmenty z przypisem i linkiem (prawo cytatu)",
+  "qualification": "Zespół CSIRT NASK: ostrzeżenia o kampaniach phishingowych i oszustwach. robots.txt zezwala tylko na /komunikaty/ (kanał RSS /advisories/feed/ jest zablokowany w robots.txt, więc nie jest używany). Zweryfikowano: 20 linków na 2 stronach listy, artykuł 1200–4200 znaków z datą.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

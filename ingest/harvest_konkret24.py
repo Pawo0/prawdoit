@@ -10,16 +10,22 @@ datePublished, description, author).
 Licence: © TVN S.A. — all rights reserved. We keep ONLY title, lead/description, a short
 excerpt (<= 700 chars) and the link (quotation/right-to-cite style use). No verdict labels
 are published by Konkret24, so verdict = null.
+
+Incremental (2026-11-21): records already in data/corpus/konkret24.jsonl are kept verbatim (the file never shrinks);
+their pages come from the raw cache (no request) and are still used to discover related links, so every run widens
+the crawl frontier. --max caps the number of NEW articles per run; progress is saved at checkpoints.
 """
 from __future__ import annotations
 
 import argparse
 import re
+import sys
 from collections import deque
+from pathlib import Path
 
 import trafilatura
 
-from common import (JsonlWriter, PoliteSession, clean_text, clip, iso_date, jsonld_blocks, log,
+from common import (IncrementalCorpus, PoliteSession, RunLock, clean_text, clip, iso_date, jsonld_blocks, log,
                     now_iso)
 
 SOURCE = "konkret24"
@@ -46,8 +52,22 @@ def main():
     ap.add_argument("--max", type=int, default=120)
     ap.add_argument("--excerpt", type=int, default=700)
     ap.add_argument("--delay", type=float, default=1.5)
+    ap.add_argument("--out", default=None, help="corpus file (default data/corpus/konkret24.jsonl)")
     args = ap.parse_args()
+    with RunLock(SOURCE) as got:
+        if not got:
+            log("[konkret24] another run holds the lock - nothing to do")
+            return 0
+        corpus = IncrementalCorpus(SOURCE, Path(args.out) if args.out else None)
+        try:
+            crawl(args, corpus)
+        finally:
+            corpus.save()
+        log(f"[konkret24] done: +{corpus.n_new} new, {len(corpus.records)} total")
+    return 0
 
+
+def crawl(args, corpus: IncrementalCorpus) -> None:
     sess = PoliteSession(SOURCE, delay=args.delay)
     queue: deque[str] = deque()
     seen: set[str] = set()
@@ -57,11 +77,18 @@ def main():
             if u not in seen:
                 seen.add(u)
                 queue.append(u)
-    log(f"[konkret24] {len(queue)} seed article urls")
+    for r in corpus.records:  # known articles: their (cached) pages still lead to related links
+        u = r.get("url") or ""
+        if ART_RE.match(u) and u not in seen:
+            seen.add(u)
+            queue.append(u)
+    log(f"[konkret24] {len(queue)} seed article urls ({corpus.n_existing} already stored)")
 
-    w = JsonlWriter(SOURCE)
-    while queue and w.n < args.max:
+    while queue and corpus.n_new < args.max:
         url = queue.popleft()
+        known = corpus.has_url(url)
+        if known and not sess.is_cached(url):
+            continue  # stored, page not cached: do not spend a request only on link discovery
         html = sess.get(url)
         if not html:
             continue
@@ -69,6 +96,8 @@ def main():
             if u not in seen:
                 seen.add(u)
                 queue.append(u)
+        if known:
+            continue
         art = next((b for b in jsonld_blocks(html) if b.get("@type") in ("NewsArticle", "Article")), {})
         title = clean_text(art.get("headline") or "")
         if not title:
@@ -90,7 +119,7 @@ def main():
             tags.append(f"autor:{au['name']}")
         if NEG.search(title + " " + lead):
             tags.append("debunk-signal-in-headline")
-        w.write({
+        corpus.add({
             "id": f"{SOURCE}:{num}",
             "source_type": "factcheck",
             "publisher": "Konkret24 (TVN24)",
@@ -108,9 +137,11 @@ def main():
             "verdict": None,
             "tags": tags,
         })
-    w.close()
+        if corpus._unsaved >= 100:
+            corpus.save()
+            log(f"  new={corpus.n_new} queue={len(queue)} {sess.stats}")
     log(f"[konkret24] stats {sess.stats}")
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

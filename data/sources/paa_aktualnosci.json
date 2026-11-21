@@ -1,0 +1,25 @@
+{
+  "id": "paa_aktualnosci",
+  "name": "Państwowa Agencja Atomistyki — aktualności",
+  "publisher": "Państwowa Agencja Atomistyki",
+  "url": "https://www.gov.pl/web/paa/aktualnosci2",
+  "category": "official",
+  "tier": 1,
+  "method": "govpl_list",
+  "params": {
+    "list_url": "https://www.gov.pl/web/paa/aktualnosci2",
+    "max_items": 30
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "promieniowanie",
+    "bezpieczenstwo"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Dozór jądrowy i ochrona radiologiczna; komunikaty o sytuacji radiacyjnej. Lista aktualności gov.pl (zweryfikowano: ≥10 pozycji z datą, paginacja ?page=N). Pokrywa URL-e: gov.pl/web/paa/panstwowa-agencja-atomistyki (lista pełna: /aktualnosci2).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

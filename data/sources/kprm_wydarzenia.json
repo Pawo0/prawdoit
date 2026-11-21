@@ -1,0 +1,24 @@
+{
+  "id": "kprm_wydarzenia",
+  "name": "Kancelaria Prezesa Rady Ministrów — wydarzenia",
+  "publisher": "Kancelaria Prezesa Rady Ministrów",
+  "url": "https://www.gov.pl/web/premier/wydarzenia",
+  "category": "official",
+  "tier": 1,
+  "method": "govpl_list",
+  "params": {
+    "list_url": "https://www.gov.pl/web/premier/wydarzenia",
+    "max_items": 30
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Oficjalne komunikaty Premiera i Rady Ministrów (/web/premier/aktualnosci przekierowuje tutaj). Lista aktualności gov.pl (zweryfikowano: ≥10 pozycji z datą, paginacja ?page=N). Pokrywa URL-e: gov.pl/web/premier.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

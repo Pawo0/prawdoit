@@ -3,7 +3,9 @@
   const form = document.getElementById('f'), q = document.getElementById('q');
   const results = document.getElementById('results'), out = document.getElementById('out');
   const submit = document.getElementById('go'), error = document.getElementById('form-error');
+  const copy = document.getElementById('copy-link'), copied = document.getElementById('copied');
   let mode = 'text', busy = false;
+  function hideLinks() { document.getElementById('result-link').hidden = true; copy.hidden = true; copied.textContent = ''; }
   function setMode(next) {
     mode = next;
     for (const key of ['text', 'url']) {
@@ -26,23 +28,29 @@
     if (mode === 'url' && !/^https?:\/\/\S+$/.test(text)) { error.textContent = 'Wklej pełny adres zaczynający się od https:// lub http://.'; error.hidden = false; q.focus(); return; }
     busy = true; submit.disabled = true; error.hidden = true;
     document.getElementById('again').disabled = true;
-    document.getElementById('result-link').hidden = true;
+    hideLinks();
     out.setAttribute('aria-busy', 'true');
-    out.innerHTML = '<section class="window"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Sprawdzanie informacji</span><span class="window-lines" aria-hidden="true"></span></div><div class="loading-window"><h2>Sprawdzanie informacji</h2><p role="status">Analizujemy treść i szukamy dowodów. Poczekaj chwilę.</p><div class="loading-track" role="progressbar" aria-label="Trwa sprawdzanie"><span></span></div></div></section>';
+    // "Sprawdzanie informacji" window (app.js): live stage from the async job, elapsed time and "Anuluj".
+    const wait = openWait({inline: out});
     showResults();
     try {
-      const res = await runCheck(text); renderResult(res, out);
-      if (res.status === 'ok' && res.id) { const link = document.getElementById('result-link'); link.href = '/analiza/' + encodeURIComponent(res.id); link.hidden = false; }
+      const res = await checkWithProgress(text, new URLSearchParams(location.search).get('ch') || 'web', wait); renderResult(res, out);
+      if (res.status === 'ok' && res.id) { const link = document.getElementById('result-link'); link.href = '/analiza/' + encodeURIComponent(res.id); link.hidden = false; copy.hidden = false; }
     }
-    catch { out.innerHTML = '<section class="window result-error" role="status"><h2>Nie udało się sprawdzić informacji.</h2><p>Nie można połączyć się z usługą. Spróbuj ponownie za chwilę.</p><p><b>To błąd techniczny, a nie ocena treści.</b></p></section>'; }
-    finally { busy = false; submit.disabled = false; document.getElementById('again').disabled = false; out.setAttribute('aria-busy', 'false'); results.focus({preventScroll: true}); }
+    catch (err) { renderTechError(out, err); }  // technical error or "Anuluj" — never shown as an assessment of the content
+    finally { wait.close(); busy = false; submit.disabled = false; document.getElementById('again').disabled = false; out.setAttribute('aria-busy', 'false'); results.focus({preventScroll: true}); }
   });
+  copy.onclick = async () => {
+    const url = document.getElementById('result-link').href;
+    try { await navigator.clipboard.writeText(url); copied.textContent = 'Skopiowano link.'; }
+    catch { copied.textContent = url; }
+  };
   document.getElementById('again').onclick = () => {
     if (busy) return;
     results.hidden = true; document.body.classList.remove('has-result'); q.focus();
   };
   document.getElementById('preview').onclick = () => {
-    document.getElementById('result-link').hidden = true;
+    hideLinks();
     const evidence = {title: 'Przykładowy komunikat źródłowy', publisher: 'Instytucja demonstracyjna', domain: 'example.org', url: 'https://example.org', published_at: '2026-11-20', retrieved_at: '2026-11-21', fragment: 'Wartość w omawianym okresie wynosiła 3%, a nie 8%. To fikcyjny cytat na potrzeby podglądu.', stance: 'przeczy', tier: 1, similarity: .9, stance_score: .95, license: 'Fikcyjne dane demonstracyjne'};
     renderResult({demo: true, status: 'ok', id: 'podglad', created_at: '2026-11-21', channel: 'podglad', input_excerpt: 'Przykładowa wiadomość podaje wartość 8%.', warnings: [], signals: [], security_events: [], claims: [{claim: 'Przykładowa wiadomość podaje wartość 8%.', kind: 'fakt', verdict: 'falszywe', verdict_label: 'Fałszywe', explanation: 'Podana liczba jest niezgodna z materiałem źródłowym. W dokumencie wskazano 3%, a nie 8%.', strength_label: 'mocna', premises: [], rules_fired: [], evidence: [evidence], limitations: ['To wyłącznie podgląd. Nie oceniono rzeczywistej informacji.']}]}, out);
     showResults();

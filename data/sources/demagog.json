@@ -1,0 +1,32 @@
+{
+  "id": "demagog",
+  "name": "Demagog — fact-checking",
+  "publisher": "Demagog",
+  "url": "https://demagog.org.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_demagog.py",
+    "args": [
+      "--all",
+      "--max-new",
+      "1500"
+    ],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "rzad",
+    "wybory",
+    "zdrowie"
+  ],
+  "language": "pl",
+  "license": "© Stowarzyszenie Demagog. 'Ogólne Warunki Licencji' (demagog.org.pl/zasady-udostepniania-tresci): non-commercial reuse allowed without modification (non-distorting shortening OK) with attribution 'Źródło informacji: www.demagog.org.pl' + link; commercial use needs consent. robots Content-Signal: search=yes, ai-train=no, use=reference -> RAG/citation only, never training.",
+  "qualification": "Polska organizacja fact-checkingowa, sygnatariusz IFCN i członek EFCSN; oceny wypowiedzi i fałszywych informacji z jawną metodologią i źródłami (ClaimReview). Kategoria B: liczy się tylko po dopasowaniu twierdzenia. robots: ai-train=no — tylko cytowanie, nigdy trenowanie.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

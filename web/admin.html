@@ -1,0 +1,250 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — źródła (administrator)</title>
+<style>
+[hidden]{display:none!important}
+.scroll{overflow-x:auto}
+td .row button{white-space:nowrap}
+.f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
+.f-grid label,.f-full label{display:block;font-weight:650;font-size:.9rem;margin-bottom:4px}
+.f-full{margin-top:12px}
+.adm input[type=text],.adm input[type=number],.adm input[type=password],.adm select,.adm textarea{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid #d0d5dd;background:#fff}
+.adm textarea{min-height:70px}
+textarea.code{font-family:ui-monospace,monospace;font-size:.85rem;min-height:120px}
+.topics{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.9rem}
+.topics label{font-weight:400;display:inline-flex;gap:4px;align-items:center}
+button.sm{padding:6px 10px;font-size:.85rem;border-radius:8px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 20px}
+.rules ul{margin:4px 0 0;padding-left:18px}.rules li{margin:3px 0}
+td.msg{max-width:340px;word-break:break-word}
+.sample{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#fcfcfd}
+</style></head><body>
+<main class="wrap adm" style="max-width:1200px">
+  <h1>Źródła — panel administratora</h1>
+  <p class="lead">Dodawaj i konfiguruj strony, z których Prawdowid pobiera dokumenty. Każde źródło to plik <span class="kbd">data/sources/&lt;id&gt;.json</span>; harmonogram pobiera je automatycznie, a indeks wyszukiwania odświeża się sam.</p>
+
+  <div class="card"><h2 style="margin-top:0">Zasady</h2><div class="rules">
+    <div><b>Kwalifikacja</b><ul>
+      <li>Urzędowe (poziom 1): organ właściwy dla tematu — komunikaty, akty prawne, dane publiczne — w zakresie swoich kompetencji.</li>
+      <li>Fact-checking (poziom 2) z weryfikacją IFCN lub EFCSN; bazy incydentów (poziom 3). Liczą się tylko po dopasowaniu twierdzenia.</li>
+      <li>Media (poziom 4): tylko kontekst, nigdy sama podstawa oceny.</li>
+      <li>Wymagane: znany wydawca, opis licencji i uzasadnienie kwalifikacji.</li></ul></div>
+    <div><b>Aktualizacja</b><ul>
+      <li>Harmonogram sprawdza źródła co minutę i pobiera te, dla których minęło „co ile godzin” (0 = tylko ręcznie). Po błędzie ponawia najwcześniej po 2 godz.</li>
+      <li>Pobieramy tylko nowe adresy. W pliku zostaje najwyżej <span class="kbd">max_docs</span> najnowszych dokumentów (domyślnie 500).</li>
+      <li>Po zmianie korpusu lub włączeniu/wyłączeniu źródła indeks przeładowuje się sam.</li></ul></div>
+    <div><b>Wykluczenia</b><ul>
+      <li>Nie pobieramy stron, których robots.txt zabrania dostępu lub jest niedostępny.</li>
+      <li>Nie obchodzimy zabezpieczeń: CAPTCHA, test antybotowy lub odmowa dostępu (HTTP 401/403/429) przerywa pobieranie.</li>
+      <li>Wykluczamy źródła bez wydawcy lub daty, treści generowane przez model i strony z zastrzeżeniem TDM.</li>
+      <li>Wyłączone źródło znika z wyszukiwania; usunięte — jego dokumenty trafiają do archiwum.</li></ul></div>
+  </div></div>
+
+  <form class="card row" id="lf">
+    <label for="tok">Token administratora</label><input id="tok" type="password" style="max-width:220px" placeholder="demo-admin">
+    <label for="who">Twoje imię (do dziennika zmian)</label><input id="who" type="text" style="max-width:220px" placeholder="np. Anna K.">
+    <button>Wejdź</button>
+  </form>
+  <div id="msg"></div>
+  <div id="app" hidden>
+    <div class="card" id="status"></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Źródła</h2>
+      <button class="secondary sm" id="new">+ Dodaj źródło</button></div>
+      <div class="scroll"><table id="src"><thead><tr><th>Nazwa</th><th>Kategoria</th><th>Metoda</th><th>Włączone</th><th>Harmonogram</th><th>Ostatnie uruchomienie</th><th>Dok.</th><th>Akcje</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card" id="formcard"><h2 style="margin-top:0" id="ftitle">Dodaj źródło</h2>
+      <div class="f-full"><label for="f-url">Adres strony (lista aktualności, komunikatów lub kanał RSS)</label>
+        <div class="row"><input id="f-url" type="text" style="flex:1;min-width:240px" placeholder="https://www.gov.pl/web/…/aktualnosci">
+        <button type="button" id="detect">Wykryj automatycznie</button></div></div>
+      <div id="detectout"></div>
+      <div class="f-grid" style="margin-top:12px">
+        <div><label for="f-id">Identyfikator (a-z, 0-9, _)</label><input id="f-id" type="text" placeholder="np. kgpsp_aktualnosci"></div>
+        <div><label for="f-name">Nazwa</label><input id="f-name" type="text"></div>
+        <div><label for="f-publisher">Wydawca (instytucja)</label><input id="f-publisher" type="text"></div>
+        <div><label for="f-category">Kategoria</label><select id="f-category">
+          <option value="official">urzędowe</option><option value="factcheck">fact-checking</option>
+          <option value="incident">baza incydentów</option><option value="media">media</option></select></div>
+        <div><label for="f-tier">Poziom wiarygodności</label><select id="f-tier">
+          <option value="1">1 — pierwotne / urzędowe</option><option value="2">2 — fact-checking IFCN/EFCSN</option>
+          <option value="3">3 — baza incydentów</option><option value="4">4 — media (kontekst)</option></select></div>
+        <div><label for="f-method">Sposób pobierania</label><select id="f-method"></select></div>
+        <div><label for="f-schedule">Co ile godzin pobierać (0 = ręcznie)</label><input id="f-schedule" type="number" min="0" step="0.5" value="6"></div>
+        <div><label for="f-language">Język (kod)</label><input id="f-language" type="text" value="pl"></div>
+        <div><label>&nbsp;</label><label style="font-weight:400"><input id="f-enabled" type="checkbox" checked> włączone (pobierane i w wyszukiwaniu)</label>
+          <label style="font-weight:400"><input id="f-web" type="checkbox" checked> domena może służyć w wyszukiwaniu na żywo</label></div>
+      </div>
+      <div class="f-full"><label for="f-params">Parametry metody (JSON)</label><div class="small muted" id="phint"></div>
+        <textarea id="f-params" class="code" spellcheck="false">{}</textarea></div>
+      <div class="f-full"><label>Tematy</label><div class="topics" id="f-topics"></div></div>
+      <div class="f-full"><label for="f-license">Licencja / warunki korzystania</label><textarea id="f-license" placeholder="np. CC BY-SA 4.0 — treści gov.pl; podać źródło"></textarea></div>
+      <div class="f-full"><label for="f-qual">Uzasadnienie kwalifikacji (dlaczego to źródło jest wiarygodne)</label><textarea id="f-qual" placeholder="np. organ właściwy dla … — komunikaty urzędowe"></textarea></div>
+      <div class="row" style="margin-top:14px">
+        <button type="button" class="secondary" id="test">Testuj</button>
+        <button type="button" id="save">Zapisz</button>
+        <button type="button" class="secondary" id="clear">Wyczyść</button>
+        <button type="button" class="secondary" id="del" hidden style="margin-left:auto;color:var(--f);border-color:var(--f)">Usuń źródło</button>
+      </div>
+      <div id="formout"></div>
+    </div>
+
+    <div class="card"><h2 style="margin-top:0">Ostatnie uruchomienia</h2><div class="scroll"><table id="runs"><thead><tr><th>Start</th><th>Źródło</th><th>Uruchomił</th><th>Status</th><th>Nowe</th><th>Razem</th><th>Komunikat</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card"><h2 style="margin-top:0">Dziennik zmian</h2><div class="scroll"><table id="changes"><thead><tr><th>Czas</th><th>Kto</th><th>Źródło</th><th>Zmiana</th><th>Pola</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+</main>
+<script>
+const CAT = {official: "urzędowe", factcheck: "fact-checking", incident: "baza incydentów", media: "media"};
+const METHOD = {rss: "kanał RSS/Atom", sitemap: "mapa strony (sitemap)", html_list: "lista linków na stronie", govpl_list: "aktualności gov.pl",
+  custom: "moduł własny (custom)", legacy_script: "skrypt ingest/ (legacy)", live_search: "wyszukiwanie na żywo", google_factcheck: "Google Fact Check API",
+  reference_only: "tylko link (bez pobierania)"};
+const HINT = {rss: "feed_url — adres kanału; max_items — ile najnowszych pozycji sprawdzać; fetch_full_text — true: pobierz pełny tekst artykułu.",
+  sitemap: "sitemap_url — adres mapy strony; url_regex — wzorzec adresów artykułów; max_items.",
+  html_list: "list_urls — lista stron z listą artykułów; link_regex — wzorzec linków do artykułów; max_items; min_text_chars — minimalna długość tekstu.",
+  govpl_list: "list_url — strona aktualności w serwisie gov.pl; max_items.",
+  custom: "handler — nazwa modułu w backend/prawdowid/source_handlers/ (funkcja fetch(source)); pozostałe parametry trafiają do modułu.",
+  legacy_script: "script — np. ingest/official_gus.py; args — lista argumentów; timeout_s.",
+  live_search: "Bez parametrów — dokumenty dodaje wyszukiwanie na żywo.", google_factcheck: "Bez parametrów — zapytania na żywo do Google Fact Check Tools.",
+  reference_only: "Bez parametrów — zaufany link i domena wyszukiwania, nic nie pobieramy."};
+const COMMON = " Dla każdej metody pobierającej: max_docs (domyślnie 500), max_chars (długość tekstu, domyślnie 4000), delay_s (odstęp między zapytaniami, min. 1,5 s).";
+const RUNST = {ok: ["popiera", "OK"], error: ["przeczy", "błąd"], skipped: ["", "pominięto"], running: ["kontekst", "trwa…"]};
+let VOCAB = null, DATA = null, editing = null;
+const $ = id => document.getElementById(id);
+const tok = () => sessionStorage.getItem("admtok");
+const H = (json = false) => ({"X-Admin-Token": tok() || "", "X-Admin-User": encodeURIComponent(sessionStorage.getItem("admuser") || ""), ...(json ? {"Content-Type": "application/json"} : {})});
+const when = s => s ? esc(s.replace("T", " ").slice(0, 16)) : "—";
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {...opts, headers: H(!!opts.body)});
+  let d = null; try { d = await r.json(); } catch {}
+  if (r.status === 401) { sessionStorage.removeItem("admtok"); $("app").hidden = true; throw new Error("Błędny token administratora."); }
+  if (!r.ok) { const det = d && d.detail; const e = new Error(typeof det === "string" ? det : (det && det.message) || ("Błąd HTTP " + r.status)); e.errors = det && det.errors; throw e; }
+  return d;
+}
+function showErr(el, e) { el.innerHTML = `<div class="err">${esc(e.message)}${e.errors ? "<ul>" + e.errors.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>" : ""}</div>`; }
+
+async function load() {
+  if (!tok()) return;
+  let d;
+  try { d = await api("/api/admin/sources"); } catch (e) { showErr($("msg"), e); return; }
+  $("msg").innerHTML = ""; $("app").hidden = false; DATA = d;
+  if (!VOCAB) { VOCAB = d.vocab; initForm(); }
+  const sc = d.scheduler, ix = d.index;
+  $("status").innerHTML = `<div class="row" style="justify-content:space-between"><div>
+     <b>Harmonogram:</b> ${sc.enabled ? (sc.alive ? "włączony" : "uruchamia się…") : "wyłączony (PRAWDOWID_SCHEDULER=0)"} ·
+     ${sc.running && sc.running.source_id ? `teraz pobiera: <b>${esc(sc.running.source_id)}</b> (od ${when(sc.running.started)})` : "nic nie jest teraz pobierane"} ·
+     <b>Indeks:</b> ${ix.documents ?? "—"} dokumentów, wczytany ${when(ix.loaded_at)}${ix.excluded_files.length ? ` · pominięte pliki (wyłączone źródła): ${ix.excluded_files.map(esc).join(", ")}` : ""}</div>
+     <button class="secondary sm" id="reload">Przeładuj indeks</button></div>`;
+  $("reload").onclick = async () => { try { const r = await api("/api/admin/reload", {method: "POST"}); $("msg").innerHTML = `<div class="info">Indeks przeładowany: ${r.documents ?? "—"} dokumentów.</div>`; load(); } catch (e) { showErr($("msg"), e); } };
+  $("src").querySelector("tbody").innerHTML = d.sources.map(s => {
+    const r = s.last_run, st = r ? (RUNST[r.status] || ["", r.status]) : null;
+    const sched = !s.schedule_hours ? "ręcznie" : `co ${s.schedule_hours} h`;
+    const next = s.next_run ? (new Date(s.next_run) <= new Date() ? "teraz" : when(s.next_run)) : "";
+    return `<tr><td><b>${esc(s.name)}</b><div class="small muted"><span class="kbd">${esc(s.id)}</span> · ${esc(s.publisher)}</div>
+        ${s.problems.length ? `<div class="small" style="color:var(--f)">Błędy konfiguracji: ${s.problems.map(esc).join("; ")}</div>` : ""}</td>
+      <td>${esc(CAT[s.category] || s.category)}<div class="small muted">poziom ${esc(s.tier)}</div></td>
+      <td class="small">${esc(METHOD[s.method] || s.method)}</td>
+      <td><input type="checkbox" data-toggle="${esc(s.id)}" ${s.enabled ? "checked" : ""} aria-label="włączone: ${esc(s.name)}"></td>
+      <td class="small">${sched}${next && s.enabled ? `<div class="muted">następne: ${next}</div>` : ""}</td>
+      <td class="small">${s.running ? '<span class="chip kontekst">trwa…</span>' : r ? `${when(r.started)} <span class="chip ${st[0]}">${esc(st[1])}</span>${r.status === "ok" ? ` +${r.n_new ?? 0}` : ""}<div class="muted" title="${esc(r.message)}">${esc((r.message || "").slice(0, 90))}</div>` : '<span class="muted">jeszcze nie uruchamiano</span>'}</td>
+      <td>${s.docs}</td>
+      <td><div class="row" style="gap:6px"><button class="secondary sm" data-edit="${esc(s.id)}">Edytuj</button>
+        ${["live_search", "google_factcheck", "reference_only"].includes(s.method) ? "" : `<button class="sm" data-run="${esc(s.id)}" ${s.running ? "disabled" : ""}>Uruchom teraz</button>`}</div></td></tr>`;
+  }).join("");
+  document.querySelectorAll("[data-toggle]").forEach(cb => cb.onchange = async () => {
+    try { await api(`/api/admin/sources/${cb.dataset.toggle}/${cb.checked ? "enable" : "disable"}`, {method: "POST"});
+      $("msg").innerHTML = `<div class="info">Źródło ${esc(cb.dataset.toggle)} ${cb.checked ? "włączone" : "wyłączone"}. Indeks przeładuje się w tle.</div>`; setTimeout(load, 1500);
+    } catch (e) { cb.checked = !cb.checked; showErr($("msg"), e); } });
+  document.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => edit(b.dataset.edit));
+  document.querySelectorAll("[data-run]").forEach(b => b.onclick = async () => {
+    try { const r = await api(`/api/admin/sources/${b.dataset.run}/run`, {method: "POST"}); $("msg").innerHTML = `<div class="info">${esc(r.message)}</div>`; setTimeout(load, 1500); }
+    catch (e) { showErr($("msg"), e); } });
+  const [runs, ch] = await Promise.all([api("/api/admin/runs?limit=30"), api("/api/admin/changes?limit=20")]);
+  $("runs").querySelector("tbody").innerHTML = runs.runs.map(r => { const st = RUNST[r.status] || ["", r.status];
+    return `<tr><td class="small">${when(r.started)}</td><td><span class="kbd small">${esc(r.source_id)}</span></td><td class="small">${esc(r.trigger)}</td><td><span class="chip ${st[0]}">${esc(st[1])}</span></td><td>${r.n_new ?? "—"}</td><td>${r.n_total ?? "—"}</td><td class="small msg">${esc(r.message)}</td></tr>`; }).join("") || '<tr><td colspan="7" class="muted">Brak uruchomień.</td></tr>';
+  $("changes").querySelector("tbody").innerHTML = ch.changes.map(c => `<tr><td class="small">${when(c.at)}</td><td>${esc(c.who)}</td><td><span class="kbd small">${esc(c.source_id)}</span></td><td>${esc({create: "dodano", update: "zmieniono", enable: "włączono", disable: "wyłączono", delete: "usunięto"}[c.action] || c.action)}</td><td class="small">${Object.keys(c.diff).map(esc).join(", ")}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Brak zmian.</td></tr>';
+}
+
+function initForm() {
+  $("f-method").innerHTML = VOCAB.methods.map(m => `<option value="${m}">${esc(METHOD[m] || m)}</option>`).join("");
+  $("f-topics").innerHTML = VOCAB.topics.map(t => `<label><input type="checkbox" value="${t}"> ${esc(t.replace("_", " / "))}</label>`).join("");
+  $("f-method").onchange = () => { methodHint(); const cur = $("f-params").value.trim();
+    if (!cur || cur === "{}" || !editing) $("f-params").value = JSON.stringify(template($("f-method").value), null, 2); };
+  $("f-category").onchange = () => { $("f-tier").value = {official: 1, factcheck: 2, incident: 3, media: 4}[$("f-category").value]; };
+  clearForm();
+}
+function template(m) { const spec = (VOCAB.params || {})[m] || {}; const o = {};
+  for (const [k, v] of Object.entries(spec)) o[k] = v.default ?? (k === "list_urls" ? [$("f-url").value || "https://"] : (k.endsWith("_url") ? ($("f-url").value || "") : ""));
+  return o; }
+function methodHint() { const m = $("f-method").value; $("phint").textContent = (HINT[m] || "") + (["live_search", "google_factcheck", "reference_only"].includes(m) ? "" : COMMON); }
+
+function fill(s) {
+  $("f-url").value = s.url || ""; $("f-id").value = s.id || ""; $("f-name").value = s.name || ""; $("f-publisher").value = s.publisher || "";
+  $("f-category").value = s.category || "official"; $("f-tier").value = String(s.tier || 1); $("f-method").value = s.method || "rss";
+  $("f-schedule").value = s.schedule_hours ?? 6; $("f-language").value = s.language || "pl"; $("f-enabled").checked = s.enabled !== false;
+  $("f-web").checked = !!s.web_search; $("f-params").value = JSON.stringify(s.params || {}, null, 2);
+  $("f-license").value = s.license || ""; $("f-qual").value = s.qualification || "";
+  document.querySelectorAll("#f-topics input").forEach(cb => cb.checked = (s.topics || []).includes(cb.value));
+  methodHint();
+}
+function collect() {
+  let params;
+  try { params = JSON.parse($("f-params").value || "{}"); } catch (e) { throw new Error("Parametry metody nie są poprawnym JSON: " + e.message); }
+  return {id: $("f-id").value.trim(), name: $("f-name").value.trim(), publisher: $("f-publisher").value.trim(), url: $("f-url").value.trim(),
+    category: $("f-category").value, tier: +$("f-tier").value, method: $("f-method").value, params,
+    enabled: $("f-enabled").checked, schedule_hours: +$("f-schedule").value, web_search: $("f-web").checked,
+    topics: [...document.querySelectorAll("#f-topics input:checked")].map(x => x.value), language: $("f-language").value.trim() || "pl",
+    license: $("f-license").value.trim(), qualification: $("f-qual").value.trim()};
+}
+function clearForm() { editing = null; $("ftitle").textContent = "Dodaj źródło"; $("f-id").disabled = false; $("del").hidden = true;
+  fill({method: "rss", params: {}, enabled: true, schedule_hours: 6, web_search: true, category: "official", tier: 1});
+  $("f-params").value = JSON.stringify(template("rss"), null, 2); $("detectout").innerHTML = ""; $("formout").innerHTML = ""; }
+async function edit(id) {
+  try { const d = await api("/api/admin/sources/" + id); editing = id; fill(d.source);
+    $("ftitle").textContent = "Edytuj źródło: " + d.source.name; $("f-id").disabled = true; $("del").hidden = false;
+    $("detectout").innerHTML = ""; $("formout").innerHTML = `<p class="small muted">Dokumentów w korpusie: ${d.docs}. Dodano: ${esc(d.source.added_at)} (${esc(d.source.added_by)}).</p>`;
+    $("formcard").scrollIntoView({behavior: "smooth"});
+  } catch (e) { showErr($("msg"), e); }
+}
+function renderTest(r) {
+  const head = r.ok ? `<div class="info">Test udany: ${r.records.length} przykładowe dokumenty · pobrano ${r.pages_fetched} stron w ${String(r.elapsed_s).replace(".", ",")} s. Nic nie zostało zapisane.</div>`
+                    : `<div class="err">Test nieudany${r.error ? ": " + esc(r.error) : "."}</div>`;
+  return head + (r.notes.length ? `<ul class="small muted">${r.notes.slice(0, 6).map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "") +
+    r.records.map(x => `<div class="sample"><b>${esc(x.title)}</b><div class="small muted"><a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.url)}</a> · data: ${fmtDate(x.published_at)} · ${x.text_chars} znaków</div><div class="small">${esc(x.text.slice(0, 300))}${x.text.length > 300 ? "…" : ""}</div></div>`).join("");
+}
+
+$("detect").onclick = async () => {
+  const url = $("f-url").value.trim(); if (!url) { $("detectout").innerHTML = '<div class="err">Wpisz adres strony.</div>'; return; }
+  $("detect").disabled = true; $("detectout").innerHTML = '<p><span class="spinner"></span> Sprawdzam stronę (robots.txt, RSS, mapa strony, linki)…</p>';
+  try { const r = await api("/api/admin/suggest", {method: "POST", body: JSON.stringify({url})});
+    if (!r.ok) { $("detectout").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+    const keep = editing ? {id: editing} : {}; fill({...r.config, ...keep});
+    $("detectout").innerHTML = `<div class="info"><b>${esc(METHOD[r.config.method] || r.config.method)}</b> — ${esc(r.explanation)}${r.exists && !editing ? " <b>Uwaga: źródło o tym identyfikatorze już istnieje — zmień id.</b>" : ""}
+      ${r.sample_urls.length ? `<div class="small">Przykłady: ${r.sample_urls.slice(0, 3).map(u => `<a href="${safeUrl(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join(" · ")}</div>` : ""}
+      <div class="small muted">Sprawdzono: ${r.checked.map(c => esc(c.method) + (c.error ? " (błąd)" : c.found !== undefined ? ` (${c.found})` : "")).join(" → ")}. Przejrzyj pola, wybierz tematy, kliknij „Testuj”, potem „Zapisz”.</div></div>`;
+  } catch (e) { showErr($("detectout"), e); } finally { $("detect").disabled = false; }
+};
+$("test").onclick = async () => {
+  let body; try { body = collect(); } catch (e) { showErr($("formout"), e); return; }
+  $("test").disabled = true; $("formout").innerHTML = '<p><span class="spinner"></span> Testuję (pobieram do 3 dokumentów z zachowaniem odstępów między zapytaniami)…</p>';
+  try { $("formout").innerHTML = renderTest(await api("/api/admin/test", {method: "POST", body: JSON.stringify(body)})); }
+  catch (e) { showErr($("formout"), e); } finally { $("test").disabled = false; }
+};
+$("save").onclick = async () => {
+  let body; try { body = collect(); } catch (e) { showErr($("formout"), e); return; }
+  try { const r = editing ? await api("/api/admin/sources/" + editing, {method: "PUT", body: JSON.stringify(body)})
+                          : await api("/api/admin/sources", {method: "POST", body: JSON.stringify(body)});
+    editing = r.source.id; $("f-id").disabled = true; $("del").hidden = false; $("ftitle").textContent = "Edytuj źródło: " + r.source.name;
+    $("formout").innerHTML = `<div class="info">Zapisano <span class="kbd">data/sources/${esc(r.source.id)}.json</span>. ${r.source.enabled && r.source.schedule_hours ? "Harmonogram pobierze źródło w ciągu minuty (jeśli jeszcze go nie pobierano) — albo kliknij „Uruchom teraz”." : ""}</div>`;
+    load();
+  } catch (e) { showErr($("formout"), e); }
+};
+$("del").onclick = async () => {
+  if (!editing || !confirm(`Usunąć źródło ${editing}? Jego dokumenty zostaną przeniesione do archiwum i znikną z wyszukiwania.`)) return;
+  try { const r = await api("/api/admin/sources/" + editing, {method: "DELETE"}); clearForm();
+    $("msg").innerHTML = `<div class="info">Usunięto źródło ${esc(r.deleted)}${r.corpus_archived_to ? ` (dokumenty w ${esc(r.corpus_archived_to)})` : ""}.</div>`; load();
+  } catch (e) { showErr($("formout"), e); }
+};
+$("clear").onclick = clearForm;
+$("new").onclick = () => { clearForm(); $("formcard").scrollIntoView({behavior: "smooth"}); $("f-url").focus(); };
+$("lf").onsubmit = e => { e.preventDefault(); sessionStorage.setItem("admtok", $("tok").value || "demo-admin"); sessionStorage.setItem("admuser", $("who").value.trim()); load(); };
+$("who").value = sessionStorage.getItem("admuser") || "";
+load(); setInterval(() => { if (tok() && !document.hidden) load(); }, 15000);
+</script></body></html>

@@ -123,10 +123,55 @@ _TRAILING_META = re.compile(r"\s*(to jak to (w końcu )?jest|czy to prawda|prawd
                             r"co wy na to|jak to jest)\s*\?*\s*$", re.I)
 
 
+# "Czy Demagog sprawdzał, czy X?", "Czy ktoś już weryfikował informację, że X?", "Czy fact-checkerzy ocenili, czy X?"
+# -> X: a question about whether somebody checked a claim is answered by checking the claim itself (the answer then
+# names who checked it). Only stripped when the verb is followed by "czy"/"że", so "Czy NIK zbadała wydatki…" stays.
+_CHECKED_BY = re.compile(
+    r"^\s*(?:czy\s+)?(?P<who>(?:[\w.-]+\s+){0,3}?)(?:już\s+|kiedyś\s+|ostatnio\s+)?"
+    r"(?:sprawdza\w*|sprawdzi\w*|zweryfikowa\w*|weryfikowa\w*|analizowa\w*|przeanalizowa\w*|ocenia\w*|ocenil\w*|"
+    r"ocenił\w*|zbada\w*|bada\w*|pisa\w*\s+o\s+tym|opisywa\w*)\s*(?:to|już)?,?\s*"
+    r"(?:czy|że|to,?\s+(?:czy|że)|informacj\w*,?\s+(?:że|o\s+tym,?\s+że)|twierdzeni\w*,?\s+że|tez\w*,?\s+że)\s+", re.I)
+
+
+# Sentences ABOUT a check rather than about the world: "Dlaczego w analizie Demagoga jest 650 mln zł?",
+# "Sprawdź też tę stronę: …". They stay in the text shown to the user but are left out of the retrieval query.
+_META_SENTENCE = re.compile(
+    r"^\s*(?:(?:a|i|to)\s+)?(?:dlaczego|czemu|skąd|jak\s+to\s+możliwe)\b[^.?!]*\b(?:analiz\w*|weryfikac\w*|"
+    r"fact-?check\w*|ocen\w*|sprawdz\w*|artyku\w*|tekś\w*|tekst\w*|raport\w*)"
+    r"|^\s*(?:proszę\s+|prosze\s+)?(?:sprawdź|sprawdz|zobacz|przeczytaj|oceń|ocen)\b(?:\s+\w+){0,3}?\s+"
+    r"(?:stron\w*|link\w*|artyku\w*|wpis\w*|post\w*|materiał\w*|adres\w*)\b[^.?!]*[.?!:]?\s*$", re.I)
+
+
+def is_meta_sentence(s: str) -> bool:
+    return bool(_META_SENTENCE.search(re.sub(r"https?://\S+", " ", s or "")))
+
+
+def split_meta(s: str) -> tuple[str, str]:
+    """(claim part, meta clauses) — also splits after an abbreviation the sentence splitter keeps
+    ('…700 mln zł. Dlaczego w analizie…?'). If everything is meta, the whole text stays the claim part."""
+    parts = re.split(r"(?<=[.?!:])\s+(?=[„\"(]?[A-ZĄĆĘŁŃÓŚŹŻ])", s or "")
+    keep = [x for x in parts if not is_meta_sentence(x)]
+    if not keep or len(keep) == len(parts):
+        return s, ""
+    return " ".join(keep), " ".join(x for x in parts if is_meta_sentence(x))
+
+
+def asks_who_checked(s: str) -> str | None:
+    """'Czy Demagog sprawdzał, czy X?' -> 'Demagog'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
+    s = _TRAILING_META.sub("", s.strip())
+    m = _CHECKED_BY.match(s) or _CHECKED_BY.match(_PREAMBLE.sub("", s))
+    return re.sub(r"\s+(to|już)$", "", m.group("who").strip(), flags=re.I) if m else None
+
+
 def strip_preamble(s: str) -> str:
     """'Słyszałam w telewizji, że X. To jak to w końcu jest?' -> 'X' (the reported claim itself)."""
     s = _TRAILING_META.sub("", s.strip())
-    return _PREAMBLE.sub("", s).strip()
+    for _ in range(3):  # "Czy to prawda, że Demagog sprawdzał, czy X" → X
+        t = _CHECKED_BY.sub("", _PREAMBLE.sub("", s)).strip()
+        if t == s or len(t) < 8:
+            break
+        s = t
+    return s.strip()
 
 
 def question_to_claim(s: str) -> str:

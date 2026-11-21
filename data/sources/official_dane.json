@@ -1,0 +1,26 @@
+{
+  "id": "official_dane",
+  "name": "dane.gov.pl — wybrane zbiory danych publicznych",
+  "publisher": "Instytucje publiczne — portal dane.gov.pl",
+  "url": "https://dane.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_dane.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": false,
+  "topics": [
+    "statystyka",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC0 1.0 lub CC BY 4.0 — dane.gov.pl (Regulamin §5, ustawa o otwartych danych); licencja podana przy każdym zbiorze",
+  "qualification": "Centralny portal otwartych danych; opisy zbiorów publikowanych przez instytucje publiczne (GUS, ZUS, NFZ, ministerstwa, KGSG…). Kategoria A w zakresie kompetencji wydawcy danego zbioru.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

@@ -1,0 +1,42 @@
+{
+  "id": "euvsdisinfo_mcp",
+  "name": "EUvsDisinfo — baza przypadków dezinformacji i analizy (serwer MCP)",
+  "publisher": "EUvsDisinfo (EEAS East StratCom Task Force)",
+  "url": "https://euvsdisinfo.eu/disinformation-cases/",
+  "category": "incident",
+  "tier": 3,
+  "method": "custom",
+  "params": {
+    "handler": "euvsdisinfo_mcp",
+    "endpoint": "https://euvsdisinfo-mcp-server.vercel.app/mcp",
+    "token_env": "PRAWDOWID_EUVSDISINFO_TOKEN",
+    "kinds": [
+      "cases",
+      "articles"
+    ],
+    "since": "2023-01-01",
+    "max_records": null,
+    "article_languages": [
+      "pl",
+      "en"
+    ],
+    "page_size": 100,
+    "delay": 1.0,
+    "max_docs": 8000
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "zagranica",
+    "ue",
+    "bezpieczenstwo",
+    "obronnosc"
+  ],
+  "language": "en",
+  "license": "EUvsDisinfo (EEAS East StratCom Task Force) — ponowne wykorzystanie dozwolone z podaniem źródła (nota prawna EEAS, decyzja Komisji 2011/833/UE); bez treści stron trzecich. Dostęp przez serwer MCP organizatora HackNation 2026 (token w zmiennej środowiskowej, nigdy w pliku).",
+  "qualification": "Baza EEAS East StratCom Task Force: przypadki prokremlowskiej dezinformacji z analizą (claim + obalenie) oraz artykuły analityczne EUvsDisinfo. Tier 3 = baza incydentów; werdykt 'false' to klasyfikacja EUvsDisinfo, nie ocena Prawdowida. Przypadki -> source_type incident, artykuły -> factcheck. Linki do mediów szerzących dezinformację tylko w surowym zrzucie (data/raw/euvsdisinfo_mcp/), nigdy jako dowód.",
+  "added_by": "organizator (rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf)",
+  "added_at": "2026-11-21"
+}

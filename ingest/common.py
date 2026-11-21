@@ -306,6 +306,23 @@ def jsonld_blocks(html: str) -> list:
 
 
 # --------------------------------------------------------------------------- output
+def normalize_record(rec: dict) -> dict:
+    """Enforce the corpus schema on one record (key set, enums, clipped text, cleaned verdict label)."""
+    rec = {k: rec.get(k) for k in SCHEMA_KEYS}
+    assert rec["source_type"] in SOURCE_TYPES, rec["source_type"]
+    assert rec["verdict"] in VERDICTS, rec["verdict"]
+    assert rec["id"] and rec["url"] and rec["title"], rec
+    rec["tags"] = [t for t in dict.fromkeys(rec.get("tags") or []) if t]
+    if rec["text"]:
+        rec["text"] = clip(rec["text"], MAX_TEXT)
+    if rec["verdict_raw"] and not rec["verdict_raw"].startswith("Disinformation"):
+        full = rec["verdict_raw"]
+        rec["verdict_raw"] = clean_label(full)
+        if rec["verdict"] is None:
+            rec["verdict"] = map_verdict(rec["verdict_raw"]) or map_verdict(full)
+    return rec
+
+
 class JsonlWriter:
     def __init__(self, source: str):
         CORPUS_DIR.mkdir(parents=True, exist_ok=True)
@@ -316,18 +333,7 @@ class JsonlWriter:
         self.n = 0
 
     def write(self, rec: dict) -> bool:
-        rec = {k: rec.get(k) for k in SCHEMA_KEYS}
-        assert rec["source_type"] in SOURCE_TYPES, rec["source_type"]
-        assert rec["verdict"] in VERDICTS, rec["verdict"]
-        assert rec["id"] and rec["url"] and rec["title"], rec
-        rec["tags"] = [t for t in dict.fromkeys(rec.get("tags") or []) if t]
-        if rec["text"]:
-            rec["text"] = clip(rec["text"], MAX_TEXT)
-        if rec["verdict_raw"] and not rec["verdict_raw"].startswith("Disinformation"):
-            full = rec["verdict_raw"]
-            rec["verdict_raw"] = clean_label(full)
-            if rec["verdict"] is None:
-                rec["verdict"] = map_verdict(rec["verdict_raw"]) or map_verdict(full)
+        rec = normalize_record(rec)
         if rec["id"] in self.ids:
             return False
         self.ids.add(rec["id"])
@@ -345,3 +351,110 @@ def sitemap_urls(xml: str | None) -> list[str]:
     if not xml:
         return []
     return [u.strip() for u in re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", xml)]
+
+
+def sitemap_entries(xml: str | None) -> list[tuple[str, str | None]]:
+    """(loc, lastmod) pairs of a sitemap, in document order. lastmod may be None."""
+    if not xml:
+        return []
+    out = []
+    for m in re.finditer(r"<url>(.*?)</url>", xml, re.S):
+        loc = re.search(r"<loc>\s*([^<\s]+)\s*</loc>", m.group(1))
+        if loc:
+            lm = re.search(r"<lastmod>\s*([^<\s]+)\s*</lastmod>", m.group(1))
+            out.append((loc.group(1), lm.group(1) if lm else None))
+    return out
+
+
+# --------------------------------------------------------------------------- incremental corpus files
+class IncrementalCorpus:
+    """Append-only view of data/corpus/<source>.jsonl for incremental harvesters.
+
+    Existing records are kept verbatim (a run never shrinks the file), new records are merged in, and the file is
+    rewritten atomically (tmp + rename) at checkpoints and at the end, so an interrupted/timed-out run keeps what it
+    already saved and a concurrent index load sees either the old or the new file, never a partial one.
+    """
+
+    def __init__(self, source: str, path: Path | None = None):
+        self.path = path or CORPUS_DIR / f"{source}.jsonl"
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.records: list[dict] = []
+        if self.path.exists():
+            for line in self.path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    try:
+                        self.records.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+        self.n_existing = len(self.records)
+        self.ids = {r.get("id") for r in self.records}
+        self.urls = {canonical_url(r.get("url") or "") for r in self.records}
+        self.n_new = 0
+        self._unsaved = 0
+
+    def has_url(self, url: str) -> bool:
+        return canonical_url(url) in self.urls
+
+    def add(self, rec: dict) -> bool:
+        rec = normalize_record(rec)
+        if rec["id"] in self.ids or canonical_url(rec["url"]) in self.urls:
+            return False
+        self.records.append(rec)
+        self.ids.add(rec["id"])
+        self.urls.add(canonical_url(rec["url"]))
+        self.n_new += 1
+        self._unsaved += 1
+        return True
+
+    def save(self, force: bool = False) -> None:
+        if not (self._unsaved or force):
+            return
+        # newest first; records without a date go last; stable for equal dates
+        recs = sorted(self.records, key=lambda r: r.get("published_at") or "", reverse=True)
+        tmp = self.path.with_suffix(".jsonl.tmp")
+        with tmp.open("w", encoding="utf-8") as fh:
+            for r in recs:
+                fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+        tmp.replace(self.path)
+        self._unsaved = 0
+        log(f"[saved] {len(recs)} records ({self.n_existing} before, +{self.n_new} new) -> {self.path}")
+
+
+def canonical_url(url: str) -> str:
+    u = url.strip().split("#", 1)[0]
+    u = re.sub(r"^http://", "https://", u)
+    return u.rstrip("/")
+
+
+class RunLock:
+    """Non-blocking per-source lock (data/runtime/harvest_<source>.lock): a second concurrent run of the same
+    harvester (CLI + scheduler) exits instead of hitting the site twice and racing on the corpus file."""
+
+    def __init__(self, source: str):
+        self.path = ROOT / "data" / "runtime" / f"harvest_{source}.lock"
+        self.fh = None
+
+    def __enter__(self) -> bool:
+        import fcntl
+        import signal
+
+        # SIGTERM (e.g. a stopped scheduler/CLI) -> KeyboardInterrupt, so `finally: corpus.save()` still runs
+        try:
+            signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
+        except ValueError:  # not in the main thread
+            pass
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.fh = open(self.path, "w")
+        try:
+            fcntl.flock(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            self.fh.close()
+            self.fh = None
+            return False
+        return True
+
+    def __exit__(self, *exc):
+        if self.fh:
+            self.fh.close()
+        return False

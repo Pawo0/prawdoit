@@ -1,0 +1,27 @@
+{
+  "id": "fakenews_pl",
+  "name": "FakeNews.pl — fact-checking",
+  "publisher": "FakeNews.pl",
+  "url": "https://fakenews.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_fakenews_pl.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "zdrowie",
+    "oszustwa"
+  ],
+  "language": "pl",
+  "license": "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Stored claim, verdict, excerpt (≤2500 chars) + link for citation.",
+  "qualification": "Serwis Fundacji „Przeciwdziałamy Dezinformacji”, sygnatariusz IFCN; artykuły z tezą, oceną i źródłami. Kategoria B: liczy się tylko po dopasowaniu twierdzenia; przechowujemy twierdzenie, ocenę i fragment z linkiem.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

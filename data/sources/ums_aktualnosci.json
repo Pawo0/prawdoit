@@ -1,0 +1,26 @@
+{
+  "id": "ums_aktualnosci",
+  "name": "Urząd Morski w Szczecinie — aktualności",
+  "publisher": "Urząd Morski w Szczecinie",
+  "url": "https://www.ums.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "rss",
+  "params": {
+    "feed_url": "https://www.ums.gov.pl/?format=feed&type=rss",
+    "max_items": 20,
+    "fetch_full_text": true
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "morze",
+    "bezpieczenstwo"
+  ],
+  "language": "pl",
+  "license": "Urząd Morski w Szczecinie — informacja publiczna; cytowanie z podaniem źródła",
+  "qualification": "Administracja morska (Pomorze Zachodnie). Joomla RSS z link rel=alternate; pełny tekst zweryfikowany (~3500 znaków, data).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

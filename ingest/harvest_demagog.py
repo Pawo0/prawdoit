@@ -10,19 +10,28 @@ robots.txt: `User-agent: * Allow: /` with Cloudflare Content-Signal
 `search=yes, ai-train=no, use=reference` -> we store claim + verdict + an excerpt
 with a link back (reference use, RAG grounding), never for model training.
 
-Selection: newest N from each section + older items whose slug matches popular
-myth topics (vaccines, 5G, refugees, Green Deal, migration pact, energy, elections...).
+Selection (incremental, 2026-11-21): every Polish URL of both sections (`wypowiedzi` = statements of politicians,
+`fake_news` = social-media fakes) whose sitemap <lastmod> is on/after --since (default 2022-01-01), or the whole
+archive with --all. lastmod >= publication date, so the date filter is a superset of "published since". URLs
+already present in data/corpus/demagog.jsonl are skipped (existing records are kept verbatim, the file never
+shrinks); new pages are fetched newest first and saved at checkpoints (atomic tmp + rename), so a run that hits
+the scheduler's timeout keeps its progress and the next run continues. --max-new caps network fetches per run.
+Pages already in the raw cache (data/raw/demagog/) cost no request. Measured 2026-11-21: ~6.5k wypowiedzi +
+~3.9k fake_news PL URLs; ~4.9k with lastmod >= 2022; ~1.45 s per uncached page (1.2 s polite delay + response) ->
+since-2022 ≈ 1.8 h, full archive ≈ 4 h once — so the scheduled run (data/sources/demagog.json: --all --max-new 1500)
+fills the archive newest-first in daily slices; after that a run fetches only the sitemaps + a handful of new pages.
 """
 from __future__ import annotations
 
 import argparse
 import re
+import sys
 
 import trafilatura
 from selectolax.lexbor import LexborHTMLParser
 
-from common import (JsonlWriter, PoliteSession, clean_text, clip, iso_date, jsonld_blocks, log,
-                    map_verdict, now_iso, sitemap_urls)
+from common import (IncrementalCorpus, PoliteSession, RunLock, clean_text, clip, iso_date, jsonld_blocks, log,
+                    map_verdict, now_iso, sitemap_entries, sitemap_urls)
 
 SOURCE = "demagog"
 BASE = "https://demagog.org.pl"
@@ -30,13 +39,6 @@ LICENSE = ("© Stowarzyszenie Demagog. 'Ogólne Warunki Licencji' (demagog.org.p
            "non-commercial reuse allowed without modification (non-distorting shortening OK) with attribution "
            "'Źródło informacji: www.demagog.org.pl' + link; commercial use needs consent. robots Content-Signal: "
            "search=yes, ai-train=no, use=reference -> RAG/citation only, never training.")
-
-TOPIC_RE = re.compile(
-    r"szczepi|covid|koronawir|pandemi|5g|uchodz|ukrain|zielon\w*-lad|green-deal|pakt\w*-migr|migra|"
-    r"imigr|ceny-pradu|prad|energi|gaz|wegiel|ets|klimat|wybor|wyborcz|glosowan|nato|rosj|"
-    r"bialorus|granic|euro|unia|ue-|-ue|bruksel|inflac|podatk|emeryt|aborc|smog|chemtrail|"
-    r"mrna|wht|who|grypa|ptasia|afryk|islam|mieszkan|800|ziemniak|owady|robak|cpk|elektrow|"
-    r"atom|samochod|spalin|zakaz|cenzur|dsa|ai-|sztuczn|deepfake|oszust|zboz|rolni", re.I)
 
 BOILERPLATE = [
     "Obalamy fałszywe informacje pojawiające się w mediach społecznościowych",
@@ -50,27 +52,30 @@ BOILERPLATE = [
 ]
 
 
-def pick_urls(sess: PoliteSession, n_recent: int, n_topic: int) -> list[str]:
+SECTIONS = ("wypowiedzi", "fake_news")
+
+
+def collect_urls(sess: PoliteSession, since: str | None) -> list[tuple[str, str]]:
+    """All Polish article URLs of both sections as (url, lastmod), newest lastmod first."""
     idx = sitemap_urls(sess.get(f"{BASE}/sitemap_index.xml", use_cache=False))
-    sections: dict[str, list[str]] = {"fake_news": [], "wypowiedzi": []}
+    if not idx:
+        raise RuntimeError("sitemap_index.xml unavailable")
+    entries: dict[str, str] = {}
     for sm in idx:
-        for sec in sections:
-            if f"/{sec}-sitemap" in sm:
-                urls = sitemap_urls(sess.get(sm, use_cache=False))
-                # Polish only (skip /en/ and /ua/ translations) and skip archive roots
-                urls = [u for u in urls if u.startswith(f"{BASE}/{sec}/") and u.rstrip("/") != f"{BASE}/{sec}"]
-                sections[sec].extend(urls)
-    chosen: list[str] = []
-    for sec, urls in sections.items():
-        log(f"[sitemap] {sec}: {len(urls)} PL urls")
-        # sitemap order is ascending by post id -> tail = newest
-        recent = urls[-n_recent:][::-1]
-        older = [u for u in urls[:-n_recent] if TOPIC_RE.search(u.rsplit("/", 2)[-2])]
-        # spread topical picks across the whole archive
-        step = max(1, len(older) // max(1, n_topic))
-        topical = older[::step][:n_topic]
-        chosen.extend(recent + topical)
-    return list(dict.fromkeys(chosen))
+        sec = next((x for x in SECTIONS if f"/{x}-sitemap" in sm), None)
+        if not sec:
+            continue
+        n = 0
+        for url, lastmod in sitemap_entries(sess.get(sm, use_cache=False)):
+            # Polish only (skip /en/ and /ua/ translations) and skip archive roots
+            if not url.startswith(f"{BASE}/{sec}/") or url.rstrip("/") == f"{BASE}/{sec}":
+                continue
+            n += 1
+            entries.setdefault(url, lastmod or "")
+        log(f"[sitemap] {sm.rsplit('/', 1)[-1]}: {n} PL urls")
+    picked = [(u, lm) for u, lm in entries.items() if not since or not lm or lm[:10] >= since]
+    log(f"[sitemap] {len(entries)} PL urls in total, {len(picked)} with lastmod >= {since or 'any'}")
+    return sorted(picked, key=lambda x: x[1], reverse=True)
 
 
 def parse(url: str, html: str) -> dict | None:
@@ -151,30 +156,67 @@ def parse(url: str, html: str) -> dict | None:
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--recent", type=int, default=130, help="newest items per section")
-    ap.add_argument("--topic", type=int, default=60, help="older topical items per section")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--since", default="2022-01-01", help="only sitemap entries with lastmod >= this date")
+    ap.add_argument("--all", action="store_true", help="whole archive (ignores --since)")
+    ap.add_argument("--max-new", type=int, default=0, help="cap on uncached page fetches per run (0 = no cap)")
+    ap.add_argument("--checkpoint", type=int, default=100, help="save the corpus file every N new records")
     ap.add_argument("--max-chars", type=int, default=3000)
     ap.add_argument("--delay", type=float, default=1.2)
+    ap.add_argument("--out", default=None, help="corpus file (default data/corpus/demagog.jsonl)")
+    ap.add_argument("--dry-run", action="store_true", help="only list/estimate, fetch no articles")
+    # pre-2026-11-21 sampling flags: accepted so old registry entries keep working, but a run is always incremental
+    ap.add_argument("--recent", type=int, help=argparse.SUPPRESS)
+    ap.add_argument("--topic", type=int, help=argparse.SUPPRESS)
     args = ap.parse_args()
+    if args.recent is not None or args.topic is not None:
+        log("[demagog] --recent/--topic are obsolete (sampling replaced by incremental harvest) - ignored")
 
-    sess = PoliteSession(SOURCE, delay=args.delay)
-    urls = pick_urls(sess, args.recent, args.topic)
-    log(f"[demagog] {len(urls)} urls selected")
-    w = JsonlWriter(SOURCE)
-    for i, u in enumerate(urls, 1):
-        html = sess.get(u)
-        if not html:
-            continue
-        rec = parse(u, html)
-        if rec:
-            rec["text"] = clip(rec["text"], args.max_chars)
-            w.write(rec)
-        if i % 25 == 0:
-            log(f"  {i}/{len(urls)} written={w.n} {sess.stats}")
-    w.close()
-    log(f"[demagog] stats {sess.stats}")
+    with RunLock(SOURCE) as got:
+        if not got:
+            log("[demagog] another harvest_demagog run holds the lock - nothing to do")
+            return 0
+        from pathlib import Path
+
+        corpus = IncrementalCorpus(SOURCE, Path(args.out) if args.out else None)
+        sess = PoliteSession(SOURCE, delay=args.delay)
+        urls = collect_urls(sess, None if args.all else args.since)
+        todo = [u for u, _ in urls if not corpus.has_url(u)]
+        cached = sum(1 for u in todo if sess.is_cached(u))
+        uncached = len(todo) - cached
+        if args.max_new:
+            uncached = min(uncached, args.max_new)
+        log(f"[demagog] {corpus.n_existing} records already in {corpus.path.name}; {len(todo)} new urls "
+            f"({cached} in raw cache); ~{uncached * sess.delay / 60:.0f} min of fetching at {sess.delay:.1f} s/page")
+        if args.dry_run:
+            return 0
+        fetched = 0
+        try:
+            for i, u in enumerate(todo, 1):
+                is_cached = sess.is_cached(u)
+                if not is_cached and args.max_new and fetched >= args.max_new:
+                    continue  # cap reached: still parse pages that are already cached
+                html = sess.get(u)
+                fetched += 0 if is_cached else 1
+                if not html:
+                    continue
+                try:
+                    rec = parse(u, html)
+                except Exception as e:  # noqa: BLE001 - one odd page must not stop a long harvest
+                    log(f"[parse error] {u}: {e}")
+                    continue
+                if rec:
+                    rec["text"] = clip(rec["text"], args.max_chars)
+                    corpus.add(rec)
+                    if corpus._unsaved >= args.checkpoint:
+                        corpus.save()
+                if i % 100 == 0:
+                    log(f"  {i}/{len(todo)} new={corpus.n_new} {sess.stats}")
+        finally:
+            corpus.save()
+        log(f"[demagog] done: +{corpus.n_new} new, {len(corpus.records)} total; stats {sess.stats}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

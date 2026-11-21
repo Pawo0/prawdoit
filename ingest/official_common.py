@@ -2,7 +2,8 @@
 
 Politeness rules enforced here:
   * fixed User-Agent "PrawdowidHackathonBot/0.1 (research prototype)"
-  * robots.txt checked per host (urllib.robotparser) before every fetch
+  * robots.txt checked per host before every fetch (RFC 9309 longest-match parser shared with the backend:
+    backend/prawdowid/robots.py; urllib.robotparser is first-match and misreads e.g. moje.cert.pl)
   * per-host minimum delay (default 1.2 s, raised to Crawl-delay when declared)
   * small retry with back-off on 429/5xx
 
@@ -24,7 +25,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.robotparser
+import importlib.util
 from pathlib import Path
 
 UA = "PrawdowidHackathonBot/0.1 (research prototype)"
@@ -33,8 +34,18 @@ CORPUS_DIR = ROOT / "data" / "corpus"
 MAX_TEXT = 4000
 DEFAULT_DELAY = 1.2
 
+
+def _load_robots_module():
+    spec = importlib.util.spec_from_file_location("prawdowid_robots", ROOT / "backend" / "prawdowid" / "robots.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+RobotsTxt = _load_robots_module().RobotsTxt
+
 _last_hit: dict[str, float] = {}
-_robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
+_robots: dict[str, "RobotsTxt | None"] = {}
 _host_delay: dict[str, float] = {}
 
 
@@ -59,7 +70,7 @@ def _robots_for(url: str):
     host = f"{p.scheme}://{p.netloc}"
     if host in _robots:
         return _robots[host]
-    rp = urllib.robotparser.RobotFileParser()
+    rp = RobotsTxt()
     rurl = host + "/robots.txt"
     try:
         req = urllib.request.Request(rurl, headers={"User-Agent": UA})

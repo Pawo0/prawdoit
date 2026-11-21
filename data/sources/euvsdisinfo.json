@@ -1,0 +1,34 @@
+{
+  "id": "euvsdisinfo",
+  "name": "EUvsDisinfo — baza przypadków dezinformacji (lista + mirror HF)",
+  "publisher": "EUvsDisinfo (EEAS East StratCom Task Force)",
+  "url": "https://euvsdisinfo.eu/disinformation-cases/",
+  "category": "incident",
+  "tier": 3,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_euvsdisinfo.py",
+    "args": [
+      "--max-cases",
+      "300",
+      "--delay",
+      "3",
+      "--hf",
+      "../data/raw/hf_euvsdisinfo/train-00000-of-00001.parquet"
+    ],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": false,
+  "topics": [
+    "dezinformacja",
+    "zagranica",
+    "ue"
+  ],
+  "language": "en",
+  "license": "EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded. Case text taken from HF mirror NLP-UniBW/eu_vs_disinfo (scrape of euvsdisinfo.eu, no licence of its own) because the site served a Cloudflare challenge.",
+  "qualification": "Instytucjonalna baza East StratCom Task Force (EEAS): przypadki prokremlowskiej dezinformacji z obaleniem. Kategoria B (baza incydentów). Treść przypadków z mirrora HF NLP-UniBW/eu_vs_disinfo, bo serwis pokazuje test Cloudflare (nie obchodzimy go); dlatego bez wyszukiwania na żywo.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

@@ -1,0 +1,28 @@
+{
+  "id": "mswia_rso_informacje",
+  "name": "MSWiA — Regionalny System Ostrzegania (opis usługi)",
+  "publisher": "Ministerstwo Spraw Wewnętrznych i Administracji",
+  "url": "https://www.gov.pl/web/mswia/regionalny-system-ostrzegania",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.gov.pl/web/mswia/regionalny-system-ostrzegania"
+    ],
+    "date_from_text": "latest"
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "bezpieczenstwo",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Oficjalny opis RSO (czym jest, jakie komunikaty, aplikacja). Bieżące komunikaty RSO: źródło rso_ostrzezenia.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

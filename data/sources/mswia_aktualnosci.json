@@ -1,0 +1,26 @@
+{
+  "id": "mswia_aktualnosci",
+  "name": "MSWiA — aktualności",
+  "publisher": "Ministerstwo Spraw Wewnętrznych i Administracji",
+  "url": "https://www.gov.pl/web/mswia/aktualnosci",
+  "category": "official",
+  "tier": 1,
+  "method": "govpl_list",
+  "params": {
+    "list_url": "https://www.gov.pl/web/mswia/aktualnosci",
+    "max_items": 30
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "bezpieczenstwo",
+    "prawo",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Organ właściwy dla spraw wewnętrznych (policja, straż graniczna, ochrona ludności, migracje). Lista aktualności gov.pl (zweryfikowano: ≥10 pozycji z datą, paginacja ?page=N). Pokrywa URL-e: gov.pl/web/mswia (strona główna; lista pełna: /aktualnosci).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

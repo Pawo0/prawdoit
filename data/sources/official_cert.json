@@ -1,0 +1,26 @@
+{
+  "id": "official_cert",
+  "name": "CERT Polska — ostrzeżenia i komunikaty",
+  "publisher": "CERT Polska (NASK)",
+  "url": "https://cert.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_cert.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "cyber",
+    "oszustwa"
+  ],
+  "language": "pl",
+  "license": "© NASK / CERT Polska — brak otwartej licencji; krótkie fragmenty z przypisem i linkiem (prawo cytatu); lista hole.cert.pl: dowolne użycie",
+  "qualification": "Krajowy zespół CSIRT działający w NASK-PIB; organ właściwy dla ostrzeżeń o zagrożeniach w sieci i kampaniach oszustw. Kategoria A w zakresie swoich kompetencji.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

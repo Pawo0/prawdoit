@@ -1,0 +1,21 @@
+{
+  "id": "google_factcheck",
+  "name": "Baza weryfikatorów faktów — Google Fact Check Explorer / Fact Check Tools API",
+  "publisher": "Google (agregator ClaimReview)",
+  "url": "https://toolbox.google.com/factcheck/explorer",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "google_factcheck",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [
+    "dezinformacja"
+  ],
+  "language": "pl",
+  "license": "Fact Check Tools API — warunki Google APIs; treść oznaczeń należy do wydawców fact-checków (cytat + link)",
+  "qualification": "Agregator oznaczeń ClaimReview publikowanych przez organizacje fact-checkingowe (w tym sygnatariuszy IFCN/EFCSN). Zapytania na żywo przez Fact Check Tools API (claims:search, developers.google.com/fact-check/tools/api); działa tylko, gdy ustawiona jest zmienna środowiskowa PRAWDOWID_GOOGLE_FACTCHECK_KEY. Werdykt pochodzi od wydawcy fact-checku, nie od Google. Pokrywa linie 'Baza weryfikatorów faktów' z resources.txt.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "policja_aktualnosci",
+  "name": "Policja — aktualności (KGP)",
+  "publisher": "Komenda Główna Policji",
+  "url": "https://policja.pl/pol/aktualnosci",
+  "category": "official",
+  "tier": 1,
+  "method": "rss",
+  "params": {
+    "feed_url": "https://policja.pl/dokumenty/rss/1-rss-1.rss",
+    "max_items": 30,
+    "fetch_full_text": true
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "bezpieczenstwo",
+    "oszustwa",
+    "prawo"
+  ],
+  "language": "pl",
+  "license": "© Komenda Główna Policji — informacja publiczna; cytowanie z podaniem źródła",
+  "qualification": "Oficjalne komunikaty Komendy Głównej Policji. RSS (link rel=alternate na stronie); pełny tekst ze strony artykułu (zweryfikowano: ~5000 znaków, data). robots.txt: tylko /ftp/ zablokowane.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

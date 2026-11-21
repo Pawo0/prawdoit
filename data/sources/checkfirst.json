@@ -1,0 +1,26 @@
+{
+  "id": "checkfirst",
+  "name": "CheckFirst — śledztwa o operacjach informacyjnych (FIMI)",
+  "publisher": "CheckFirst",
+  "url": "https://checkfirst.network/",
+  "category": "incident",
+  "tier": 3,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_checkfirst.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "zagranica"
+  ],
+  "language": "en",
+  "license": "© Check First Oy. Site policy (robots.txt/llms.txt): AI systems & RAG pipelines welcome to read, index and cite with attribution to CheckFirst + link. Quoted propaganda in reports is evidence, not CheckFirst's claim.",
+  "qualification": "Fińska firma badawcza analizująca zagraniczne operacje informacyjne (FIMI), m.in. sieć Pravda / Portal Kombat; raporty z metodologią i dowodami. Kategoria B (baza incydentów): liczy się tylko po dopasowaniu twierdzenia; cytowana propaganda to dowód, nie stanowisko CheckFirst.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

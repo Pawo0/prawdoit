@@ -1,0 +1,30 @@
+{
+  "id": "konkret24",
+  "name": "Konkret24 (TVN24) — fact-checking",
+  "publisher": "Konkret24 (TVN24)",
+  "url": "https://konkret24.tvn24.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_konkret24.py",
+    "args": [
+      "--max",
+      "300"
+    ],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": false,
+  "topics": [
+    "dezinformacja",
+    "rzad",
+    "zagranica"
+  ],
+  "language": "pl",
+  "license": "© TVN S.A. (Konkret24/TVN24), all rights reserved. Stored only title, lead and a short excerpt (≤700 chars) with link, for citation; full text must be read at source.",
+  "qualification": "Redakcja fact-checkingowa TVN24, sygnatariusz IFCN. Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Prawa zastrzeżone — przechowujemy tylko tytuł, lead i krótki fragment (≤ 700 znaków) z linkiem; bez wyszukiwania na żywo.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

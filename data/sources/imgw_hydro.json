@@ -1,0 +1,21 @@
+{
+  "id": "imgw_hydro",
+  "name": "IMGW-PIB — serwis hydrologiczny hydro.imgw.pl",
+  "publisher": "Instytut Meteorologii i Gospodarki Wodnej – PIB",
+  "url": "https://hydro.imgw.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": true,
+  "topics": [
+    "woda_powodz"
+  ],
+  "language": "pl",
+  "license": "IMGW-PIB — dane publiczne z podaniem źródła",
+  "qualification": "Aplikacja JS (stany wód, mapa). Ostrzeżenia hydrologiczne pobieramy z API danych publicznych: imgw_ostrzezenia.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

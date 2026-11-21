@@ -1,0 +1,21 @@
+{
+  "id": "imgw_meteo",
+  "name": "IMGW-PIB — serwis pogodowy meteo.imgw.pl",
+  "publisher": "Instytut Meteorologii i Gospodarki Wodnej – PIB",
+  "url": "https://meteo.imgw.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": true,
+  "topics": [
+    "pogoda"
+  ],
+  "language": "pl",
+  "license": "IMGW-PIB — dane publiczne z podaniem źródła",
+  "qualification": "Aplikacja JS (mapy, prognozy). Ostrzeżenia z tego serwisu pobieramy z API danych publicznych: imgw_ostrzezenia.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

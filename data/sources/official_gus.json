@@ -1,0 +1,26 @@
+{
+  "id": "official_gus",
+  "name": "GUS — karty danych statystycznych (wskaźniki, BDL, DBW)",
+  "publisher": "Główny Urząd Statystyczny",
+  "url": "https://stat.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_gus.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "statystyka",
+    "finanse"
+  ],
+  "language": "pl",
+  "license": "GUS — wykorzystanie dozwolone z podaniem źródła (stat.gov.pl/copyright); BDL i DBW: CC BY 4.0 (api.stat.gov.pl); podać źródło",
+  "qualification": "Centralny organ statystyki publicznej; oficjalne wskaźniki (inflacja, wynagrodzenia, ludność…) jako karty danych dla reguły liczbowej. Kategoria A.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

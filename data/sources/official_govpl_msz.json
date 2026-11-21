@@ -1,0 +1,30 @@
+{
+  "id": "official_govpl_msz",
+  "name": "Ministerstwo Spraw Zagranicznych — aktualności (gov.pl)",
+  "publisher": "Ministerstwo Spraw Zagranicznych",
+  "url": "https://www.gov.pl/web/dyplomacja/aktualnosci",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_govpl.py",
+    "args": [
+      "--only",
+      "msz"
+    ],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "zagranica",
+    "dezinformacja",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Organ właściwy dla polityki zagranicznej; komunikaty i oświadczenia MSZ oraz komunikacja strategiczna (przeciwdziałanie FIMI). Kategoria A w zakresie kompetencji.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

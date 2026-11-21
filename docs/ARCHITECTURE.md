@@ -19,11 +19,22 @@
  ┌──────────────────────────┐                          │ 7. Wyjaśnienie z szablonu (opcj. LLM tylko       │
  │ Panel analityka           │◄── /api/cases ───────────│    upraszcza język; walidacja wyjścia)           │
  │ (sprawy, metryki, eksport)│                          │ 8. Zapis przebiegu (SQLite), sprawy moderatora   │
- └──────────────────────────┘                          └──────────────────────────────────────────────────┘
-                                                                    ▲
- KORPUS (JSONL, jeden schemat)  ── ingest/*.py (harmonogram) ──────┘
-   kat. A: MSZ/gov.pl, ISAP/ELI, EUR-Lex, GUS/BDL, NBP, Eurostat, PKW, RCB, CERT Polska
-   kat. B: Demagog, FakeNews.pl, Stowarzyszenie Pravda, Konkret24, EUvsDisinfo, CheckFirst
+ └──────────────────────────┘                           ├──────────────────────────────────────────────────┤
+                                                        │ 4b. Brak dowodu w bazie → WYSZUKIWANIE NA ŻYWO   │
+ ┌──────────────────────────┐                           │    (websearch.py, budżet ~15 s): Google Fact     │
+ │ Panel źródeł /admin       │── /api/admin/* ──┐       │    Check API + wyszukiwarki zaufanych serwisów   │
+ │ (token X-Admin-Token)     │                  │       │    z rejestru → fetch (SSRF, robots.txt) → skan  │
+ └──────────────────────────┘                  ▼        │    injection → te same bramki V2/NLI/R1–R6       │
+ REJESTR ŹRÓDEŁ data/sources/<id>.json ──► HARMONOGRAM  │    → data/corpus/live_web.jsonl                  │
+ (licencja, kwalifikacja, schedule_hours,  (sources/,   │                                                  │
+                                                        └──────────────────────────────────────────────────┘
+  web_search, enabled)                      co N h) → pobiera (rss / sitemap / html / handler / skrypt)
+        │ lista domen dla 4b                          │
+        ▼                                             ▼
+ KORPUS data/corpus/<id>.jsonl (jeden schemat) → indeks (przeładowanie bez restartu) → rdzeń
+   kat. A: Odyseusz MSZ, gov.pl (RCB, RSO, MSWiA, PSP, GIS, PAA, MI, MON, KPRM…), IMGW, CERT, Policja, urzędy morskie,
+           ISAP/ELI, EUR-Lex, GUS/BDL, NBP, dane.gov.pl (Eurostat, PKW, KE PL — wyłączone decyzją zespołu)
+   kat. B: Demagog, FakeNews.pl, Stowarzyszenie Pravda, Konkret24, EUvsDisinfo (+ MCP), CheckFirst
 ```
 
 ## Przepływ danych
@@ -42,10 +53,20 @@
    organizacji + kontrola, czy użytkownik nie twierdzi czegoś przeciwnego (NLI sprzeczności → odwrócenie oceny).
 6. **Werdykt**: reguły R1–R6 (opis: `/metodologia`), siła podstaw jako tekst (mocna/umiarkowana), przesłanki,
    kody przyczyn wstrzymania, „co mogłoby to rozstrzygnąć”, ostrzeżenie o materiale archiwalnym.
+4b. **Wyszukiwanie na żywo** (tylko gdy baza nie dała dowodu; `PRAWDOWID_LIVE_SEARCH=0` wyłącza): równolegle Google Fact
+   Check API (z kluczem; tylko recenzje z domen rejestru stają się dowodem) i wyszukiwarki samych zaufanych serwisów
+   (gov.pl, WordPress REST: Demagog, FakeNews.pl, CheckFirst; opcjonalnie SearXNG/Brave z filtrem `site:`). Każdy serwis
+   ma jeden zegar (robots.txt + zapytania, 7 s), potem ≤ 5 stron jest pobieranych (SSRF, robots.txt, skan injection) i
+   ocenianych tymi samymi regułami. Wynik trafia do `live_web.jsonl` (następne pytanie = baza). Awaria/timeout → komunikat
+   „Nie mogę teraz…”, nigdy werdykt. Szczegóły: nagłówek `backend/prawdowid/websearch.py`.
 7. **Pętla informacji**: nierozstrzygnięte twierdzenia faktyczne i tematy wysokiego ryzyka z jednym źródłem →
    sprawa w kolejce analityka; podobne zgłoszenia (cos ≥ 0,86) łączone w jedną sprawę z licznikiem i priorytetem.
 8. **Audyt**: każde sprawdzenie (ID, czas, kanał, zamaskowane wejście, źródła, werdykty, czasy etapów, modele,
-   wersja reguł, zdarzenia bezpieczeństwa) w SQLite; retencja 30 dni; usuwanie sesji; eksport CSV/JSON.
+   wersja reguł, zdarzenia bezpieczeństwa, przebieg wyszukiwania na żywo, szacunkowy koszt) w SQLite; retencja 30 dni;
+   usuwanie sesji; eksport CSV/JSON. Model danych: [DATA_MODEL](DATA_MODEL.md).
+9. **Źródła**: rejestr `data/sources/<id>.json` (kontrakt: [SOURCE_REGISTRY](SOURCE_REGISTRY.md)) steruje tym, co jest
+   pobierane, indeksowane i przeszukiwane na żywo; harmonogram w procesie API pobiera źródła co `schedule_hours`,
+   a indeks przeładowuje się bez restartu. EUvsDisinfo przez MCP: [MCP_EUVSDISINFO](MCP_EUVSDISINFO.md).
 
 ## Szybka ścieżka wtyczki (`/api/quick`)
 Ręczne sprawdzanie: „Wybierz fragment” → kliknięcie/dotknięcie treści od razu uruchamia `/api/check`, bez dodatkowego
@@ -73,7 +94,8 @@ Wymiana modelu = zmiana zmiennej środowiskowej (`PRAWDOWID_EMBED_MODEL`, `PRAWD
 Kanały, korpus i reguły są niezależne od modelu.
 
 ## Najważniejsze ograniczenia
-- Zamknięty katalog źródeł: brak wyniku ≠ prawda/fałsz; nowe wydarzenia (< kilka godzin) zwykle → „brak dowodów”.
+- Zamknięty katalog źródeł (+ wyszukiwanie na żywo tylko w nim): brak wyniku ≠ prawda/fałsz; nowe wydarzenia
+  (< kilka godzin) zwykle → „brak dowodów”. Wyszukiwarki serwisów są wolne (2–6 s) i ubogie (tytuły) — część trafień ginie.
 - NLI na CPU jest słabe w porównywaniu liczb i dat — dlatego reguła liczbowa dla kart danych urzędowych.
 - Dopasowanie do fact-checków działa na poziomie twierdzeń; satyra, ironia i bardzo krótkie posty mogą być mylone.
 - Facebook/X zmieniają strukturę DOM — adaptery wtyczki wymagają utrzymania (fallback: przycisk „Wybierz fragment”).

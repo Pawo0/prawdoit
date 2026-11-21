@@ -5,13 +5,14 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import os
 import re
 import time
 from collections import OrderedDict
 from urllib.parse import urlparse
 from datetime import date, datetime, timezone
 
-from . import llm, store
+from . import llm, store, websearch
 from .claims import extract_claims
 from .config import settings
 from .engine import same_claim, verify_claim
@@ -32,6 +33,9 @@ HIGH_RISK = re.compile(
     re.IGNORECASE,
 )
 
+_NO_TEXT = ("Nie udało się odczytać treści strony (strona jest pusta albo blokuje automatyczny dostęp — takich "
+            "zabezpieczeń nie obchodzimy).")
+
 SUMMARY = {
     "falszywe": "Źródła przeczą tej informacji",
     "wprowadzajace_w_blad": "Wprowadza w błąd",
@@ -49,12 +53,28 @@ def engine_info() -> dict:
         "corpus_documents": INDEX.stats.get("documents"),
         "corpus_loaded_at": INDEX.loaded_at,
         "rules_version": RULES_VERSION,
-        "processing": "lokalnie (serwer własny); brak zewnętrznych API" if not llm.enabled() else f"LLM: {settings.llm_base_url}",
+        "processing": ("lokalnie (serwer własny)" + ("" if not llm.enabled() else f"; LLM: {settings.llm_base_url}")
+                       + ("; wyszukiwanie na żywo: tylko zaufane domeny z rejestru źródeł"
+                          + (" + Google Fact Check API" if os.environ.get("PRAWDOWID_GOOGLE_FACTCHECK_KEY") else "")
+                          if websearch.live_enabled() else "")),
     }
 
 
-def run_check(req: CheckRequest) -> CheckResult:
+def cost_estimate(res: CheckResult) -> dict:
+    """Estimated marginal cost of one answer (zł): wall time as CPU-time proxy × rate + LLM tokens × rate.
+    External APIs used here are free within their quotas (Google Fact Check, site search); they are counted, not priced."""
+    cpu = res.timings_ms.get("total_ms", 0) / 1000 * settings.cost_pln_per_cpu_s
+    tokens = sum(int(u.get("total_tokens") or 0) for u in res.engine.get("llm_calls", []))
+    llm_pln = tokens / 1000 * settings.cost_pln_per_1k_llm_tokens
+    ls = res.live_search
+    return {"pln": round(cpu + llm_pln, 6), "cpu_pln": round(cpu, 6), "llm_tokens": tokens, "llm_pln": round(llm_pln, 6),
+            "external_calls": len(ls.steps) if ls else 0}
+
+
+def run_check(req: CheckRequest, progress=None) -> CheckResult:
+    """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py)."""
     t_start = time.perf_counter()
+    websearch.emit(progress, "analiza")
     timings: dict[str, float] = {}
     cid = store.new_id()
     res = CheckResult(id=cid, created_at=store.now(), channel=req.channel, status="ok",
@@ -69,9 +89,12 @@ def run_check(req: CheckRequest) -> CheckResult:
 
     if url:
         t0 = time.perf_counter()
+        websearch.emit(progress, "pobieranie")
         try:
             page = fetch_url(url)
             res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
+            if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
+                raise FetchError(_NO_TEXT)
             res.security_events += scan(page["text"], "treść pobranej strony")
             text = normalize_ws(f"{page['title']}. {page['text']}" if page["title"] else page["text"])
             if page.get("date"):
@@ -90,6 +113,30 @@ def run_check(req: CheckRequest) -> CheckResult:
             store.log_error(cid, "fetch", str(e))
         timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
 
+    # a message with a link ("Czy X? Sprawdź też tę stronę: https://…"): the question stays the claim source, the page
+    # is fetched with the same SSRF guard, scanned for injected instructions (scenario E) and used for claims only
+    # when the message itself has none. A failed fetch is a notice, never a verdict and never a failed check.
+    page_text = ""
+    links = [] if url else re.findall(r"https?://[^\s<>\"'„”]+", text)
+    if links:
+        link = links[0].rstrip(".,;:!?)]}")
+        t0 = time.perf_counter()
+        websearch.emit(progress, "pobieranie")
+        try:
+            page = fetch_url(link)
+            res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
+            if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
+                raise FetchError(_NO_TEXT)
+            res.security_events += scan(page["text"], "treść strony podanej w wiadomości")
+            page_text = normalize_ws(f"{page['title']}. {page['text']}" if page["title"] else page["text"])
+        except UnsafeURL as e:
+            res.warnings.append(f"Nie pobrano strony z wiadomości: {e} Sprawdziłem tylko treść wiadomości.")
+        except (FetchError, ResolveError) as e:
+            res.warnings.append(f"Strona z wiadomości: {e} To błąd techniczny, a nie ocena treści — sprawdziłem "
+                                "tylko treść wiadomości.")
+            store.log_error(cid, "fetch", str(e))
+        timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
+
     res.input_excerpt = short(mask_pii(text or url), 500)
     domains = {urlparse(u).hostname or "" for u in re.findall(r"https?://\S+", f"{url} {req.text or ''}")}
     res.warnings += source_status_notices({d.removeprefix("www.") for d in domains if d})
@@ -99,8 +146,11 @@ def run_check(req: CheckRequest) -> CheckResult:
             res.warnings.append("W treści wykryto fragmenty przypominające polecenia dla systemu (np. „zignoruj "
                                 "instrukcje”). Potraktowaliśmy je jako zwykły tekst — nie wpływają na ocenę. "
                                 "Zdarzenie zostało zapisane.")
-        clean = neutralize(text)
+        clean = neutralize(re.sub(r"https?://\S+", " ", text) if page_text else text)
         claims = extract_claims(clean, max_claims=3)
+        if page_text and not any(len(c.query.split()) >= 3 for c in claims):
+            clean = neutralize(page_text)  # "Co z tym artykułem? <link>": the claims are on the linked page
+            claims = extract_claims(clean, max_claims=3)
         vocab = INDEX.bm25.postings if INDEX.bm25 else {}
         known = [t for t in tokens(clean) if t in vocab and not t[0].isdigit()]
         if not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
@@ -108,7 +158,10 @@ def run_check(req: CheckRequest) -> CheckResult:
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
         else:
+            live = websearch.LiveStage(cid, progress)  # Google Fact Check + trusted-domain fallback; never raises
             try:
+                websearch.emit(progress, "baza")
+                live.start_google(claims)
                 res.claims = [verify_claim(c, timings) for c in claims]
             except Exception as e:  # noqa: BLE001
                 log.exception("engine failure")
@@ -116,6 +169,11 @@ def run_check(req: CheckRequest) -> CheckResult:
                 res.status = "blad_techniczny"
                 res.status_message = "Wystąpił błąd techniczny podczas analizy. To nie jest ocena treści — spróbuj ponownie."
                 res.claims = []
+            if res.claims:
+                res.claims = live.finish(claims, res.claims, timings)
+                res.live_search = live.info()
+                res.security_events += live.events
+                res.warnings += live.warnings
 
     # optional LLM rephrasing of already-decided explanations
     if res.claims and llm.enabled():
@@ -161,8 +219,20 @@ def run_check(req: CheckRequest) -> CheckResult:
         except Exception as e:  # noqa: BLE001
             store.log_error(cid, "cases", repr(e))
 
+    # short answers (deterministic, from the fields above) + trusted pages for the explanation page
+    websearch.emit(progress, "odpowiedz")
+    try:
+        from . import answer, resources
+
+        answer.finalize(res)
+        res.resources = resources.resources_for(res)
+    except Exception as e:  # noqa: BLE001 — presentation layer must never turn into a failed check
+        log.exception("short answer failed")
+        store.log_error(cid, "answer", repr(e))
+
     timings["total_ms"] = (time.perf_counter() - t_start) * 1000
     res.timings_ms = {k: round(v, 1) for k, v in timings.items()}
+    res.engine["cost_estimate"] = cost_estimate(res)
     try:
         store.save_check(res.model_dump(), res.input_excerpt, req.session)
     except Exception as e:  # noqa: BLE001

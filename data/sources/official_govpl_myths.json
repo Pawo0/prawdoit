@@ -1,0 +1,33 @@
+{
+  "id": "official_govpl_myths",
+  "name": "gov.pl — strony ministerstw prostujące mity i dezinformację",
+  "publisher": "Ministerstwa i urzędy centralne (gov.pl)",
+  "url": "https://www.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_govpl.py",
+    "args": [
+      "--only",
+      "myths"
+    ],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "zdrowie",
+    "bezpieczenstwo",
+    "obronnosc",
+    "zywnosc",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Strony organów administracji rządowej (RCB, GIS, MZ, MKiŚ, MI, MON, MRiRW, MEN, UdSC, MC) prostujące fałszywe informacje w zakresie ich kompetencji; lista stron wybrana ręcznie z map serwisów. Kategoria A.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

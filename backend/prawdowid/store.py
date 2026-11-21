@@ -168,6 +168,9 @@ def stats() -> dict:
         "security_events": {r["kind"]: r["n"] for r in sec},
         "errors": {r["component"]: r["n"] for r in errs},
         "open_cases": q("SELECT COUNT(*) n FROM cases WHERE status != 'zamknięta'")[0]["n"],
+        # estimated marginal cost (CPU time × rate, docs/COSTS.md); LLM tokens are priced per check in result.engine
+        "cost_estimate_pln": {"per_check_median": round(float(np.median(lat)) / 1000 * settings.cost_pln_per_cpu_s, 6) if lat else None,
+                              "total": round(sum(lat) / 1000 * settings.cost_pln_per_cpu_s, 4)},
     }
 
 

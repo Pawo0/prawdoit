@@ -23,12 +23,12 @@ HF_URL="https://huggingface.co/datasets/NLP-UniBW/eu_vs_disinfo/resolve/main/dat
 run() {
   echo "=== $1 ($(date -u +%FT%TZ))"
   case "$1" in
-    demagog)     "${PY[@]}" harvest_demagog.py --recent 130 --topic 60 ;;
-    fakenews_pl) "${PY[@]}" harvest_fakenews_pl.py --max 500 ;;
+    demagog)     "${PY[@]}" harvest_demagog.py --since 2022-01-01 ;;   # incremental; --all = whole archive (~3.5 h once)
+    fakenews_pl) "${PY[@]}" harvest_fakenews_pl.py ;;                    # incremental, all fact-check posts
     feed)        "${PY[@]}" harvest_claimreview_feed.py ;;   # streams ~200 MB, keeps ~200 PL reviews
     pravda)      [ -s ../data/raw/claimreview_feed_pl.jsonl ] || run feed
                  "${PY[@]}" harvest_pravda.py ;;
-    konkret24)   "${PY[@]}" harvest_konkret24.py --max 120 ;;
+    konkret24)   "${PY[@]}" harvest_konkret24.py --max 300 ;;               # incremental: +300 new per run
     euvsdisinfo) if [ ! -s "$HF_PARQUET" ]; then             # ~44 MB fallback mirror
                    mkdir -p "$(dirname "$HF_PARQUET")"
                    curl -sSL -A "$UA" -o "$HF_PARQUET" "$HF_URL"

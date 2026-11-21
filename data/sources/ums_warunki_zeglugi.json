@@ -1,0 +1,29 @@
+{
+  "id": "ums_warunki_zeglugi",
+  "name": "Urząd Morski w Szczecinie — warunki żeglugi i komunikaty kapitanatów",
+  "publisher": "Urząd Morski w Szczecinie",
+  "url": "https://www.ums.gov.pl/bezpieczenstwo-morskie/warunki-zeglugi",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.ums.gov.pl/bezpieczenstwo-morskie/warunki-zeglugi"
+    ],
+    "date_from_text": "latest"
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "morze",
+    "transport",
+    "bezpieczenstwo"
+  ],
+  "language": "pl",
+  "license": "Urząd Morski w Szczecinie — informacja publiczna; cytowanie z podaniem źródła",
+  "qualification": "Administracja morska; strona zawiera wykaz obowiązujących komunikatów Kapitanów Portów (treść w PDF — zapisujemy tytuły/wykaz). robots.txt: Joomla, brak ograniczeń dla treści.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

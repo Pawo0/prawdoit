@@ -1,0 +1,25 @@
+{
+  "id": "official_nbp",
+  "name": "NBP — kursy walut i stopy procentowe",
+  "publisher": "Narodowy Bank Polski",
+  "url": "https://nbp.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_nbp.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "finanse"
+  ],
+  "language": "pl",
+  "license": "NBP — dane publiczne; wymagane podanie źródła z linkiem do www.nbp.pl",
+  "qualification": "Bank centralny; oficjalne kursy średnie i stopy procentowe z API NBP. Kategoria A.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

@@ -18,6 +18,7 @@ const fixture = {
  let release, response = fixture, requests = [];
  await page.route('http://localhost:5500/**', async route => {
   const url = new URL(route.request().url());
+  if (url.pathname === '/api/check/async') return route.fulfill({status: 404, json: {detail: 'Not Found'}}); // no async API in this mock: the page falls back to POST /api/check
   if (url.pathname === '/api/check' && route.request().method() === 'POST') {
    requests.push(route.request().postDataJSON()); await new Promise(r => release = r);
    return route.fulfill({json: response});
@@ -30,6 +31,7 @@ const fixture = {
   if (!file.startsWith(web + '/') || !existsSync(file)) return route.fulfill({status: 404, body: 'Not found'});
   await route.fulfill({contentType: types[extname(file)] || 'application/json', body: readFileSync(file)});
  });
+ let seen = 0; const pending = async () => { while (requests.length === seen) await new Promise(r => setTimeout(r, 10)); seen = requests.length; }; // the sync POST follows the async probe
  const shot = async name => { if (process.env.SCREENSHOT_DIR) { mkdirSync(process.env.SCREENSHOT_DIR, {recursive: true}); await page.screenshot({path: resolve(process.env.SCREENSHOT_DIR, name + '.png'), fullPage: true}); }};
  await page.goto('http://localhost:5500/');
  assert.equal(await page.locator('#hero-title').innerText(), 'PRAWDOWID');
@@ -46,7 +48,7 @@ const fixture = {
  await page.locator('#tab-url').click(); await page.locator('#q').fill('not a URL'); await page.locator('#go').click();
  assert.equal(await page.locator('#form-error').isVisible(), true); assert.equal(requests.length, 0);
  await page.locator('#q').fill('https://example.org'); await page.locator('#go').click();
- await page.locator('[role="progressbar"]').waitFor();
+ await page.locator('[role="progressbar"]').waitFor(); await pending();
  assert.equal(requests.length, 1); assert.equal(requests[0].url, 'https://example.org');
  await shot('loading'); release();
  await page.locator('.claim-card').waitFor();
@@ -66,7 +68,7 @@ const fixture = {
  assert.equal(await page.locator('.claim-card').count(), 2); assert.equal(await page.locator('#out script').count(), 0);
  await page.locator('#again').click(); await page.locator('#tab-text').click(); await page.locator('#q').fill('Pytanie testowe');
  response = {status: 'doprecyzuj', status_message: 'Podaj datę wydarzenia.'};
- await page.locator('#go').click(); await page.locator('[role="progressbar"]').waitFor(); release();
+ await page.locator('#go').click(); await page.locator('[role="progressbar"]').waitFor(); await pending(); release();
  await page.locator('.result-error').waitFor(); assert.equal(await page.locator('.claim-card').count(), 0);
  const ordered = structuredClone(fixture);
  ordered.claims = [

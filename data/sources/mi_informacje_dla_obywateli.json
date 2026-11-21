@@ -1,0 +1,31 @@
+{
+  "id": "mi_informacje_dla_obywateli",
+  "name": "Ministerstwo Infrastruktury — prawa pasażerów, infolinia, kontakt",
+  "publisher": "Ministerstwo Infrastruktury",
+  "url": "https://www.gov.pl/web/infrastruktura/prawa-pasazerow",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.gov.pl/web/infrastruktura/prawa-pasazerow",
+      "https://www.gov.pl/web/infrastruktura/infolinia-dla-obywatela",
+      "https://www.gov.pl/web/infrastruktura/dane-kontaktowe"
+    ],
+    "date_from_text": "latest"
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "transport",
+    "prawo",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Strony informacyjne MI (prawa pasażerów w transporcie drogowym/kolejowym/lotniczym/morskim, infolinia, kontakt). Pokrywa URL-e: gov.pl/web/infrastruktura/{prawa-pasazerow, infolinia-dla-obywatela, dane-kontaktowe}.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

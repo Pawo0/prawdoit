@@ -132,10 +132,12 @@ LISTINGS = [
 
 
 def parse_listing(html: str) -> list[dict]:
+    """News-list items (date, href, title, optional intro). The intro search is bounded to the current item —
+    an unbounded `.*?<div class="intro">` swallowed every following item when an item had no intro (kgpsp: 1 of 20)."""
     items = []
     for m in re.finditer(
             r'<span class="date">\s*([\d.]+)\s*</span>.*?<div class="title">\s*<a href="([^"]+)"[^>]*>(.*?)</a>'
-            r'(?:.*?<div class="intro">(.*?)</div>)?', html, flags=re.S):
+            r'(?:(?:(?!<span class="date">).)*?<div class="intro">(.*?)</div>)?', html, flags=re.S):
         date, href, title, intro = m.groups()
         items.append({"date": pl_date(date), "href": href, "title": html_to_text(title),
                       "intro": html_to_text(intro or "")})

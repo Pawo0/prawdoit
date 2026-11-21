@@ -1,0 +1,38 @@
+{
+  "id": "wody_polskie_komunikaty_nawigacyjne",
+  "name": "Wody Polskie — obowiązujące komunikaty nawigacyjne (10 RZGW)",
+  "publisher": "Państwowe Gospodarstwo Wodne Wody Polskie",
+  "url": "https://www.gov.pl/web/wody-polskie/komunikaty-nawigacyjne",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.gov.pl/web/wody-polskie-bialystok/aktualne-komunikaty-nawigacyjne-obowiazujace",
+      "https://www.gov.pl/web/wody-polskie-bydgoszcz/aktualne-test2",
+      "https://www.gov.pl/web/wody-polskie-gdansk/komunikaty-nawigacyjne-obowiazujace4",
+      "https://www.gov.pl/web/wody-polskie-gliwice/aktualne-komunikaty-nawigacyjne-obowiazujace",
+      "https://www.gov.pl/web/wody-polskie-krakow/aktualne-komunikaty-nawigacyjne2",
+      "https://www.gov.pl/web/wody-polskie-lublin/aktualne-komunikaty-nawigacyjne-obowiazujace",
+      "https://www.gov.pl/web/wody-polskie-poznan/aktualne-komunikaty-nawigacyjne-obowiazujace",
+      "https://www.gov.pl/web/wody-polskie-szczecin/obowiazujace-komunikaty-nawigacyjne",
+      "https://www.gov.pl/web/wody-polskie-warszawa/aktualne-komunikaty-nawigacyjne-obowiazujace",
+      "https://www.gov.pl/web/wody-polskie-wroclaw/komunikaty-nawigacyjne"
+    ],
+    "min_text_chars": 120,
+    "date_from_text": "latest"
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "woda_powodz",
+    "transport"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Zarządca śródlądowych dróg wodnych; komunikaty o zamknięciach i ograniczeniach żeglugi (np. Odra, Wisła). Strona z resources.txt to indeks — pobieramy 10 stron 'obowiązujące komunikaty' regionalnych zarządów (odnalezione ręcznie 2026-11-21; zmiana adresów = pusta strona, sprawdzić). Pokrywa URL: gov.pl/web/wody-polskie/komunikaty-nawigacyjne.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

@@ -14,7 +14,9 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__, store
+from .admin_api import public_registry, router as admin_router
 from .channels.meta import router as meta_router
+from .jobs import router as jobs_router
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .schemas import CheckRequest, CheckResult, QuickRequest, QuickResult
@@ -28,6 +30,8 @@ app = FastAPI(title="Prawdowid API", version=__version__,
 app.add_middleware(CORSMiddleware, allow_origin_regex=r"^(chrome-extension|moz-extension|safari-web-extension)://.*$|^http://localhost(:\d+)?$",
                    allow_methods=["GET", "POST", "DELETE"], allow_headers=["*"])
 app.include_router(meta_router)
+app.include_router(admin_router)  # source registry admin: /admin, /api/admin/*, background scheduler
+app.include_router(jobs_router)  # async checks for the waiting window: /api/check/async, /api/jobs/{id}
 
 _hits: dict[str, deque] = defaultdict(deque)
 
@@ -134,7 +138,7 @@ def api_sources():
         p["domains"] = sorted(p["domains"])
         p["licenses"] = [k for k, _ in p["licenses"].most_common(3)]
         out.append(p)
-    return {"stats": INDEX.stats, "publishers": out}
+    return {"stats": INDEX.stats, "publishers": out, "sources": public_registry()}  # sources: data/sources registry
 
 
 @app.get("/api/stats")

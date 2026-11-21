@@ -1,0 +1,25 @@
+{
+  "id": "rso_ostrzezenia",
+  "name": "Wyszukiwarka ostrzeżeń gov.pl — Regionalny System Ostrzegania (RSO)",
+  "publisher": "Ministerstwo Spraw Wewnętrznych i Administracji (RSO) / KPRM (gov.pl)",
+  "url": "https://www.gov.pl/web/gov/ostrzezenia",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "rso_ostrzezenia",
+    "voivodeship": "wszystkie",
+    "categories": ["meteorologiczne", "hydrologiczne", "informacje-drogowe", "ogolne"],
+    "include_water_levels": false,
+    "max_docs": 2000
+  },
+  "enabled": true,
+  "schedule_hours": 2,
+  "web_search": true,
+  "topics": ["bezpieczenstwo", "pogoda", "woda_powodz", "drogi", "kolej", "rzad"],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Oficjalne komunikaty ostrzegawcze RSO (MSWiA, wojewodowie, IMGW-PIB, GDDKiA, PKP PLK) wyświetlane na gov.pl/web/gov/ostrzezenia. Strona to aplikacja JS — pobieramy publiczne JSON API, z którego korzysta (/api/data/proxy/rso/komunikatyxml/wszystkie/{kategoria}/0). Jeden rekord na komunikat; historia zachowana. Pokrywa URL-e: gov.pl/web/gov/ostrzezenia (+ #/_/mazowieckie/wszystkie).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

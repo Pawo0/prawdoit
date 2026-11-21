@@ -1,0 +1,22 @@
+{
+  "id": "sar_morska_sluzba",
+  "name": "Morska Służba Poszukiwania i Ratownictwa (SAR)",
+  "publisher": "Morska Służba Poszukiwania i Ratownictwa",
+  "url": "https://www.sar.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [
+    "morze",
+    "bezpieczenstwo"
+  ],
+  "language": "pl",
+  "license": "MSPiR — informacja publiczna",
+  "qualification": "Ratownictwo morskie. Nie pobieramy: serwis chroniony Imperva/Incapsula (skrypt _Incapsula_Resource zamiast treści) — zabezpieczeń nie obchodzimy.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

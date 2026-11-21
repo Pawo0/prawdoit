@@ -1,0 +1,26 @@
+{
+  "id": "msz_odyseusz",
+  "name": "MSZ — informacje dla podróżujących i ostrzeżenia (Odyseusz, wszystkie kraje)",
+  "publisher": "Ministerstwo Spraw Zagranicznych",
+  "url": "https://odyseusz.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "msz_odyseusz",
+    "countries": [],
+    "refresh_all": false,
+    "sections": true,
+    "max_docs": 4000,
+    "max_chars": 4000
+  },
+  "enabled": true,
+  "schedule_hours": 12,
+  "web_search": true,
+  "topics": ["podroze", "zagranica", "bezpieczenstwo"],
+  "language": "pl",
+  "license": "Treści MSZ (odyseusz.gov.pl / gov.pl) — informacja publiczna; ponowne wykorzystanie z podaniem źródła (gov.pl/web/gov/warunki-korzystania: CC BY-SA 4.0)",
+  "qualification": "Organ właściwy: MSZ publikuje oficjalne profile krajów, komunikaty i poziomy ostrzeżeń dla podróżujących. gov.pl/web/dyplomacja/informacje-dla-podrozujacych i dawne podstrony krajów (np. /web/dyplomacja/wlochy) przekierowują do odyseusz.gov.pl. Pobieramy publiczne JSON API aplikacji (/api/v1/informacje/profile-panstw[/ISO]); każdy kraj: rekord komunikatu z datą aktualizacji (historia zachowana) + rekord na sekcję (bezpieczeństwo, podróżowanie, zdrowie, prawo). Pokrywa URL-e: odyseusz.gov.pl, gov.pl/web/dyplomacja/informacje-dla-podrozujacych.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

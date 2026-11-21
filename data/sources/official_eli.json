@@ -1,0 +1,25 @@
+{
+  "id": "official_eli",
+  "name": "ISAP / ELI — akty prawne (Dziennik Ustaw)",
+  "publisher": "Sejm RP — ISAP / Dziennik Ustaw (ELI API)",
+  "url": "https://isap.sejm.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_eli.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "prawo"
+  ],
+  "language": "pl",
+  "license": "Akt normatywny — nie podlega prawu autorskiemu (art. 4 pkt 1 pr. aut.); metadane: ELI API Sejmu RP (api.sejm.gov.pl), podać źródło",
+  "qualification": "Urzędowy publikator aktów normatywnych (Dziennik Ustaw) udostępniany przez Kancelarię Sejmu (API ELI). Tekst aktu jest źródłem pierwotnym (kategoria A).",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

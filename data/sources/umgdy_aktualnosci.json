@@ -1,0 +1,30 @@
+{
+  "id": "umgdy_aktualnosci",
+  "name": "Urząd Morski w Gdyni — aktualności",
+  "publisher": "Urząd Morski w Gdyni",
+  "url": "https://www.umgdy.gov.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "html_list",
+  "params": {
+    "list_urls": [
+      "https://www.umgdy.gov.pl/aktualnosci/"
+    ],
+    "link_regex": "^https://www\\.umgdy\\.gov\\.pl/aktualnosc/[a-z0-9-]+/?$",
+    "max_items": 20,
+    "min_text_chars": 300,
+    "date_regex": "<li class=\"list-inline-item\">\\s*(\\d{1,2}\\s+\\w+\\s+\\d{4})\\s*</li>"
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "morze",
+    "bezpieczenstwo"
+  ],
+  "language": "pl",
+  "license": "Urząd Morski w Gdyni — informacja publiczna; cytowanie z podaniem źródła",
+  "qualification": "Administracja morska (Pomorze Wschodnie). Kanał /feed/ jest pusty, więc lista HTML. Zweryfikowano: 10 linków, artykuł 5–9 tys. znaków; data publikacji z nagłówka artykułu (params.date_regex), bo data z metadanych to data modyfikacji serwisu.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

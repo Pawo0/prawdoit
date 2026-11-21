@@ -1,0 +1,22 @@
+{
+  "id": "portal_pasazera",
+  "name": "Portal Pasażera (PKP PLK) — rozkład i utrudnienia kolejowe",
+  "publisher": "PKP Polskie Linie Kolejowe S.A.",
+  "url": "https://portalpasazera.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [
+    "kolej",
+    "transport"
+  ],
+  "language": "pl",
+  "license": "PKP PLK — informacja publiczna",
+  "qualification": "Rozkład jazdy i utrudnienia w ruchu pociągów (aplikacja dynamiczna). Nie pobieramy: niekompletny łańcuch certyfikatów TLS (weryfikacja nie przechodzi — nie wyłączamy jej) i treść generowana dynamicznie. Utrudnienia kolejowe trafiają też do rso_ostrzezenia (kategoria ogolne).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

@@ -1,0 +1,28 @@
+{
+  "id": "gddkia_informacja_drogowa",
+  "name": "GDDKiA — Informacja drogowa 19 111",
+  "publisher": "Generalna Dyrekcja Dróg Krajowych i Autostrad",
+  "url": "https://www.gov.pl/web/gddkia/informacja-drogowa---19-111",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.gov.pl/web/gddkia/informacja-drogowa---19-111"
+    ],
+    "date_from_text": "latest"
+  },
+  "enabled": true,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "drogi",
+    "transport"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Opis całodobowej Informacji Drogowej GDDKiA (tel. 19 111, Punkty Informacji Drogowej).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

@@ -1,0 +1,28 @@
+{
+  "id": "official_eurostat",
+  "name": "Eurostat — porównawcze wskaźniki UE",
+  "publisher": "Eurostat (Komisja Europejska)",
+  "url": "https://ec.europa.eu/eurostat",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_eurostat.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": false,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "statystyka",
+    "ue",
+    "finanse"
+  ],
+  "language": "pl",
+  "license": "CC BY 4.0 — © European Union, Eurostat; podać źródło (kod zbioru, data dostępu)",
+  "qualification": "Urząd statystyczny UE; oficjalne, porównywalne dane (HICP, bezrobocie…) zapisane jako karty danych dla reguły liczbowej. Kategoria A.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-21 decyzją zespołu: źródło spoza listy organizatora (rules/resources.txt). Można je włączyć w panelu /admin."
+}

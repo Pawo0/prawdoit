@@ -1,0 +1,26 @@
+{
+  "id": "pravda",
+  "name": "Stowarzyszenie Pravda — fact-checking",
+  "publisher": "Stowarzyszenie Pravda",
+  "url": "https://pravda.org.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/harvest_pravda.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": true,
+  "schedule_hours": 24,
+  "web_search": true,
+  "topics": [
+    "dezinformacja",
+    "zdrowie"
+  ],
+  "language": "pl",
+  "license": "© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored claim, verdict, excerpt (≤2500 chars) + link for citation. Claim/verdict from Pravda's own ClaimReview markup (Google Fact Check Tools feed).",
+  "qualification": "Polska organizacja fact-checkingowa zweryfikowana przez EFCSN; oceny z własnym oznaczeniem ClaimReview (kanał Google Fact Check Tools). Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Skrypt wymaga data/raw/claimreview_feed_pl.jsonl (ingest/run_factchecks.sh feed).",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21"
+}

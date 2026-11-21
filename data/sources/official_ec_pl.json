@@ -1,0 +1,27 @@
+{
+  "id": "official_ec_pl",
+  "name": "Przedstawicielstwo KE w Polsce — aktualności i obalanie mitów",
+  "publisher": "Przedstawicielstwo Komisji Europejskiej w Polsce",
+  "url": "https://poland.representation.ec.europa.eu/",
+  "category": "official",
+  "tier": 1,
+  "method": "legacy_script",
+  "params": {
+    "script": "ingest/official_ec_pl.py",
+    "args": [],
+    "timeout_s": 3600
+  },
+  "enabled": false,
+  "schedule_hours": 168,
+  "web_search": true,
+  "topics": [
+    "ue",
+    "dezinformacja"
+  ],
+  "language": "pl",
+  "license": "© Unia Europejska, CC BY 4.0 (informacja prawna Komisji Europejskiej); podać źródło",
+  "qualification": "Oficjalne przedstawicielstwo Komisji Europejskiej w Polsce; komunikaty i sprostowania mitów o UE. Kategoria A dla stanowiska i działań Komisji.",
+  "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-21: źródło spoza listy organizatora (rules/resources.txt). Można je włączyć w panelu /admin."
+}

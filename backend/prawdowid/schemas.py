@@ -96,6 +96,11 @@ class ClaimResult(BaseModel):
     what_unknown: Optional[str] = None
     evidence: list[Evidence] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
+    # short answer layer (answer.py, deterministic) — the same text on the web, in chats and in the extension
+    short_answer: str = ""  # "Nie. Demagog ocenił twierdzenie „…” jako „Fałsz”."
+    basis_line: str = ""  # "Podstawa: mocna — 2 niezależne źródła, w tym urzędowe (…)."
+    limitation_line: str = ""  # "Ograniczenie: …"
+    main_evidence: Optional[int] = None  # index into `evidence` of the decisive source (the one link we show)
 
 
 RULES_VERSION = "1.0"
@@ -114,6 +119,16 @@ class CheckRequest(BaseModel):
     session: Optional[str] = None  # opaque, client-generated; lets the user delete their demo session
 
 
+class LiveSearchInfo(BaseModel):
+    """Live stage (websearch.py): Google Fact Check and/or trusted-domain search. A failure is never a verdict."""
+    provider: str  # google_factcheck | sitesearch | searxng | brave (joined with "+")
+    query: str = ""
+    n_results: int = 0  # documents added as candidate evidence
+    status: Literal["ok", "brak_wynikow", "blad"] = "brak_wynikow"
+    notice: str = ""  # plain-Polish notice for the user
+    steps: list[dict] = Field(default_factory=list)  # per provider: provider, query, n_results, status, notice
+
+
 class CheckResult(BaseModel):
     id: str
     created_at: str
@@ -125,6 +140,8 @@ class CheckResult(BaseModel):
     url_meta: Optional[dict] = None
     claims: list[ClaimResult] = Field(default_factory=list)
     summary: str = ""
+    short_answer: str = ""  # whole-result short answer (answer.py)
+    resources: list[dict] = Field(default_factory=list)  # ≤3 trusted pages for the topic: {title, url, why, topic}
     claims_overview: str = ""
     signals: list[dict] = Field(default_factory=list)  # SPRAWDŹ (NASK) educational signals — never affect verdicts
     warnings: list[str] = Field(default_factory=list)
@@ -133,6 +150,7 @@ class CheckResult(BaseModel):
     engine: dict = Field(default_factory=dict)
     case_id: Optional[str] = None
     case_status: Optional[str] = None  # "rekomendowane" vs "przekazane" — never claim forwarding that did not happen
+    live_search: Optional[LiveSearchInfo] = None  # None = live stage did not run (no key / not needed / disabled)
 
 
 class QuickItem(BaseModel):

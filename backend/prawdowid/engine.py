@@ -202,6 +202,24 @@ def measure_named(claim: str, title: str) -> bool:
     return all(rx_c.search(claim) for rx_t, rx_c in _QUALIFIED if rx_t.search(title))
 
 
+_ALTERNATIONS = (("sz", "ch"), ("cz", "c"), ("rz", "r"))
+
+
+def _alt_stems(toks) -> set[str]:
+    """Polish inflection changes stem consonants (Włochy → we Włoszech, Niemcy → w Niemczech, Węgry → na Węgrzech),
+    so prefix stems alone miss the match. Undo the common alternations, then compare 4-character prefixes.
+    Numbers are kept whole."""
+    out = set()
+    for t in toks:
+        if t[:1].isdigit():
+            out.add(t)
+            continue
+        for a, b in _ALTERNATIONS:
+            t = t.replace(a, b)
+        out.add(t[:4])
+    return out
+
+
 def same_subject(claim: str, title: str) -> bool:
     """Gate for structured official cards: a card about another period, currency or legal act is IRRELEVANT
     to the claim (not contradicting it)."""
@@ -219,7 +237,7 @@ def same_subject(claim: str, title: str) -> bool:
     head = re.split(r"[:—–]\s*\d", title)[0]  # e.g. "Ceny — transport — wrzesień 2026" / "Inflacja CPI w Polsce — marzec 2026"
     subj = _anchors(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head)) - {t for t in tokens(" ".join(_PL_MONTHS))}
     subj = {t for t in subj if not any(t.startswith(m[:4]) for m in _MONTHS_STEMS)}
-    if subj and not (subj & set(tokens(claim))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
+    if subj and not (_alt_stems(subj) & _alt_stems(tokens(claim))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
         return False  # the card is about another indicator (e.g. transport prices vs. headline inflation)
     cur = re.search(r"\b([A-Z]{3})/PLN\b", title)
     if cur:

@@ -10,12 +10,17 @@
     <li>Ocena nigdy nie wynika z samej domeny, autora, popularności ani liczby udostępnień — tylko z treści dowodów.</li>
     <li>Źródła są odświeżane skryptami pobierającymi (z poszanowaniem robots.txt i licencji); przechowujemy fragmenty i odnośniki, nie pełne kopie, chyba że licencja na to pozwala.</li>
   </ul></div>
-  <div class="card"><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div>
+  <div class="card"><h2 style="margin-top:0">Rejestr źródeł</h2>
+    <p class="small muted">Każde źródło ma jawny opis: wydawcę, poziom wiarygodności, licencję, uzasadnienie kwalifikacji i częstotliwość odświeżania. Wyłączone źródła nie są używane w ocenach.</p>
+    <div style="overflow-x:auto"><table id="reg"><thead><tr><th>Źródło</th><th>Poziom</th><th>Odświeżanie</th><th>Dok.</th><th>Dlaczego wiarygodne</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h2 style="margin-top:0">Wydawcy w indeksie</h2><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div>
 </main>
 <script>
 fetch("/api/sources").then(r => r.json()).then(d => {
   const s = d.stats;
   document.getElementById("stats").innerHTML = `<b>${s.documents}</b> dokumentów · <b>${s.domains}</b> domen · <b>${s.publishers}</b> wydawców · <b>${s.factchecked_claims}</b> zweryfikowanych twierdzeń · typy: ${Object.entries(s.by_type).map(([k,v]) => esc(k)+": "+v).join(", ")} · model wyszukiwania: <span class="kbd">${esc(s.embed_model)}</span>`;
+  const LVL = {1: "1 — urzędowe / pierwotne", 2: "2 — fact-checking", 3: "3 — baza incydentów", 4: "4 — media (kontekst)"};
+  document.querySelector("#reg tbody").innerHTML = (d.sources || []).map(r => `<tr${r.enabled ? "" : ' class="muted"'}><td><a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a><div class="small muted">${esc(r.publisher)}${r.enabled ? "" : " · wyłączone"}</div></td><td class="small">${esc(LVL[r.tier] || r.tier)}</td><td class="small">${r.schedule_hours ? "co " + esc(r.schedule_hours) + " h" : (["live_search", "google_factcheck", "reference_only"].includes(r.method) ? "na żywo / link" : "ręcznie")}<div class="muted">ostatnio: ${fmtDate(r.last_update)}</div></td><td>${r.docs}</td><td class="small">${esc(r.qualification)}</td><td class="small">${esc(shortLic(r.license))}</td></tr>`).join("");
   document.querySelector("#t tbody").innerHTML = d.publishers.map(p => `<tr><td>${esc(p.publisher)}</td><td>${esc(p.tier_label)}</td><td>${p.domains.map(esc).join("<br>")}</td><td>${p.documents}</td><td>${fmtDate(p.oldest)} – ${fmtDate(p.newest)}</td><td class="small">${p.licenses.map(esc).join("<br>")}</td></tr>`).join("");
 });
 </script></body></html>

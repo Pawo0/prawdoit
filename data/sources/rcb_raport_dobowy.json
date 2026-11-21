@@ -1,0 +1,35 @@
+{
+  "id": "rcb_raport_dobowy",
+  "name": "RCB — Raport dobowy (sytuacja kryzysowa w kraju)",
+  "publisher": "Rządowe Centrum Bezpieczeństwa",
+  "url": "https://www.gov.pl/web/rcb/raport-dobowy3",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "static_pages",
+    "pages": [
+      "https://www.gov.pl/web/rcb/raport-dobowy3"
+    ],
+    "history": "daily",
+    "date_from_text": true,
+    "max_chars": 8000,
+    "max_docs": 1000
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": true,
+  "topics": [
+    "bezpieczenstwo",
+    "pogoda",
+    "woda_powodz",
+    "powietrze",
+    "obronnosc",
+    "rzad"
+  ],
+  "language": "pl",
+  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "qualification": "Codzienny raport Krajowego Centrum Zarządzania Kryzysowego: ostrzeżenia meteo/hydro, jakość powietrza, zatrucia CO, wysłane Alerty RCB (z treścią SMS), stopnie alarmowe. Strona jest nadpisywana co dzień, więc zapisujemy migawkę na każdy dzień (data z treści raportu; url ?data=RRRR-MM-DD otwiera bieżącą wersję).",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

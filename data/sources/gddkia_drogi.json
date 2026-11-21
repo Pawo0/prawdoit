@@ -1,0 +1,22 @@
+{
+  "id": "gddkia_drogi",
+  "name": "GDDKiA — informacje drogowe, mapa i lista utrudnień",
+  "publisher": "Generalna Dyrekcja Dróg Krajowych i Autostrad",
+  "url": "https://drogi.gddkia.gov.pl/informacje-drogowe",
+  "category": "official",
+  "tier": 1,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [
+    "drogi",
+    "transport"
+  ],
+  "language": "pl",
+  "license": "GDDKiA — informacja publiczna",
+  "qualification": "Oficjalne utrudnienia na drogach krajowych. Nie pobieramy: serwis chroniony Imperva/Incapsula (strona 'Request unsuccessful. Incapsula incident') — zabezpieczeń nie obchodzimy; mapa to aplikacja JS. Utrudnienia drogowe trafiają też do rso_ostrzezenia (kategoria informacje-drogowe). Pokrywa URL-e: drogi.gddkia.gov.pl/{informacje-drogowe, mapy/mapa-informacji-drogowej, informacje-drogowe/lista-utrudnien}.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

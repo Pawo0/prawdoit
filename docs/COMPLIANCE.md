@@ -1,0 +1,129 @@
+# Zgodność z wymaganiami (audyt 21.11.2026)
+
+Źródła wymagań: „MSZ — Pełna treść zadania konkursowego” (sekcje 2–6, 8, warunek brzegowy) i Regulamin (§4.2).
+✅ spełnione · ⚠️ częściowo / poza repozytorium · ❌ brak. Dowód = plik, endpoint lub test do samodzielnego sprawdzenia.
+
+## Warunek brzegowy (bez niego funkcje premiowane nie są punktowane)
+| Wymaganie | Status | Dowód |
+|---|---|---|
+| End-to-end bez ręcznej ingerencji | ✅ | `POST /api/check`, `/api/check/async` → zapis w SQLite; `eval/run_eval.py` (145 przypadków bez interwencji) |
+| Brak sfabrykowanych źródeł | ✅ | werdykt z reguł R1–R6, cytat musi występować dosłownie w źródle (bramka V2, `engine._quote_ok`); LLM opcjonalny, tylko upraszcza język |
+| Wstrzymanie się przy braku dowodów | ✅ | abstynencja 100% we wszystkich zbiorach (`eval/results_2026-11-21*/results.md`), scenariusze D, H, J2 poniżej |
+| Dwa kanały / kanał + adapter demo | ✅ | WWW + czat demo (`/czat`), adapter WhatsApp/Messenger (`channels/meta.py`, `?demo=1`), Discord (`bots/discord_bot.py`), wtyczka |
+
+## Sekcja 2 — wyzwanie
+| Wymaganie | Status | Dowód |
+|---|---|---|
+| Wejście: tekst lub URL | ✅ | `CheckRequest.text/url`; URL w treści wiadomości też pobierany (`service.run_check`, test `backend/tests/test_url_injection.py`) |
+| 5 klas wyniku; awaria / doprecyzuj / poza zakresem osobno | ✅ | `schemas.Verdict`, `CheckResult.status`; eval: „statusy niewerdyktowe” 100% |
+| Tytuł, wydawca, data, link, fragment; źródła oddzielone od interpretacji | ✅ | `schemas.Evidence`; strona `/analiza/{id}` (dowody osobno od wyjaśnienia) |
+| Siła werdyktu z jawnych przesłanek | ✅ | `ClaimResult.premises`, `basis_line` („Podstawa: mocna — 2 niezależne źródła…”), `/metodologia` |
+| Wyjaśnienie, czego nie ustalono | ✅ | `reason_codes`, `what_unknown`, `would_settle`, krótka odpowiedź z materiałem pokrewnym (`answer.py`) |
+| Powiadomienie wskazanego użytkownika (wysokie ryzyko, powtórzenia) | ⚠️ | sprawa w kolejce analityka z priorytetem „wysoki” (ryzyko lub ≥ 3 zgłoszenia), panel `/moderator`; brak e-maila/webhooka (luka 7) |
+| Odporność na prompt injection | ✅ | `security.scan/neutralize`; eval: 100% (dev/ślepe); scenariusz E z URL poniżej |
+
+## Sekcja 3 — MVP i funkcje premiowane
+| Wymaganie | Status | Dowód |
+|---|---|---|
+| Responsywne WWW + drugi kanał | ✅ | `web/`, `/czat`, adaptery jw. |
+| Rozpoznawanie 1–3 twierdzeń | ✅ | `claims.extract_claims` (fakt / opinia / prognoza) |
+| ≥ 2 typy źródeł, prezentacja materiałów | ✅ | 52 włączone źródła, 4,4 tys. dok., 24 domeny, kat. A/B (`docs/SOURCES.md`, `/zrodla`, `/api/sources`) |
+| Wynik + uzasadnienie + siła + ograniczenia | ✅ | `short_answer`, `basis_line`, `limitation_line` |
+| Polski, prosty język | ✅ | szablony `answer.py`; `web/metodologia.html` |
+| Zapis przebiegu (pytanie, czas, źródła, wynik) | ✅ | tabela `checks` (SQLite), eksport `/api/export/checks.csv|json` |
+| Pełna ścieżka bez twórców | ✅ | jw. |
+| Premiowane: łańcuch dowodowy, porównanie źródeł | ✅ | dowody z rolą (popiera/przeczy/kontekst), konflikt → „źródła sprzeczne” |
+| Premiowane: otwarty katalog źródeł z zasadami | ✅ | rejestr `data/sources/*.json`, panel `/admin`, `docs/SOURCE_REGISTRY.md` |
+| Premiowane: wymienne kanały/modele/źródła | ✅ | adaptery kanałów, `PRAWDOWID_EMBED_MODEL/NLI_MODEL/LLM_*`, rejestr źródeł |
+| Premiowane: dopasowanie do incydentów; domena nie decyduje | ✅ | dopasowanie do twierdzeń fact-checków; `data/watchlist.json` → neutralne ostrzeżenie o statusie źródła |
+| Premiowane: eksport CSV/JSON | ✅ | `/api/export/checks.{csv,json}` |
+| Premiowane: OpenCTI/DISARM | ❌ | luka 6 |
+| Premiowane: multimodalność (OCR, obraz, dźwięk) | ❌ | luka 1; ujawnione w `docs/DEMO.md` i `ARCHITECTURE.md` |
+| Premiowane: kontrolowana archiwizacja | ❌ | luka 8 (celowo: brak podstawy prawnej do archiwizacji pełnych treści) |
+| Premiowane: zależności spoza EOG, miejsce przetwarzania | ✅ | modele lokalne; Google/Brave opcjonalne i opisane (`docs/COSTS.md`), `engine.processing` w każdym wyniku |
+| Premiowane: pętla informacji, grupowanie | ✅ | `store.upsert_case` (cos ≥ 0,86); scenariusz H |
+
+## Sekcja 4 — wymagania formalne
+| Wymaganie | Status | Dowód |
+|---|---|---|
+| Nazwa zespołu, tytuł, opis ≤ 4000 zn. | ⚠️ | poza repozytorium (formularz zgłoszenia) |
+| Prezentacja PDF ≤ 12 slajdów, film ≤ 3 min | ⚠️ | poza repozytorium; scenariusz filmu: `docs/DEMO.md` |
+| Repozytorium + instrukcja uruchomienia | ✅ | `README.md` |
+| Architektura, przepływ danych, modele, dostawcy, ograniczenia | ✅ | `docs/ARCHITECTURE.md`, `docs/COSTS.md` |
+| Źródła, licencje, kwalifikacja, aktualizacja | ✅ | `docs/SOURCES.md` (generowany z rejestru), `docs/SOURCE_REGISTRY.md` |
+| Wyniki testów (sekcja 6) z danymi do odtworzenia | ✅ | `eval/cases*.jsonl`, `eval/run_eval.py`, `eval/results_2026-11-21*/` |
+| Ryzyka: halucynacje, stronniczość, prywatność, injection, dostępność, nadużycia | ✅ | `docs/RISKS.md` |
+| Brak kluczy/sekretów/danych osobowych w repo | ✅ | sekrety tylko w env (`config.py`); `.gitignore`: `.env`, `data/runtime/`; skan repo bez kluczy; tokeny demo jawne i opisane |
+| Opcjonalnie: OpenAPI, Docker | ⚠️ | OpenAPI: `/docs`, `/openapi.json` (FastAPI); Dockerfile brak (luka 9) |
+
+## Sekcja 5 — wymagania techniczne i zakazy
+| Wymaganie | Status | Dowód |
+|---|---|---|
+| Kanały oddzielone od logiki; wymiana modelu/dostawcy | ✅ | `service.run_check` wspólne dla kanałów; modele z env |
+| Każda teza → dowód; abstynencja; awaria/niejasne/poza zakresem osobno | ✅ | bramka V2, R1–R6, `status` |
+| Korpus ≥ 100 dok., ≥ 10 domen, ≥ 2 typy, źródła pierwotne + wtórne, lista do audytu | ✅ | 4,4 tys. dok., 24 domeny (`/api/health` → `corpus`), `docs/SOURCES.md` |
+| Znacznik publikacji i pobrania; preferencja aktualnych; ostrzeżenie o archiwalnych | ✅ | `published_at`, `retrieved_at`; `stale_days=365` → ostrzeżenie „Materiał archiwalny” / `NIEAKTUALNE_DOWODY` |
+| Bezpieczeństwo: walidacja, separacja instrukcji, ograniczenia narzędzi, sekrety, limit, logi | ✅ | limit 6000 zn., SSRF guard (`security.check_public_url`), robots.txt, 30 zapytań/min/IP (`api.rate_limit`), tabele `security_events`, `errors` |
+| Prywatność: minimalizacja, maskowanie PII, retencja, usunięcie sesji | ✅ | `textutil.mask_pii`, `RETENTION_DAYS=30` (`store.purge_expired`), `DELETE /api/session/{id}` |
+| Obserwowalność: czas, modele, błędy wyszukiwania, abstynencje, **szacunkowy koszt** | ✅ | `timings_ms`, `engine`, tabela `errors`, `/api/stats` (abstentions, `cost_estimate_pln`), `engine.cost_estimate` (dodane 21.11) |
+| Dostępność: responsywność, kontrast, prosty język | ✅ | `web/static/style.css`, zrzut `eval/results/screens/07_mobile_wynik.png` |
+| Spójność kanałów | ✅ | eval: 100%; scenariusz G |
+| Pętla: rekomendacja ≠ faktyczne przekazanie | ✅ | `case_status`: „dodana do kolejki analityka … nie wysłano żadnych powiadomień poza tę kolejkę” |
+| Zależności zewnętrzne: klucze, limity, koszty, miejsce, awarie; brak klucza ≠ wynik | ✅ | `docs/COSTS.md`; `PRAWDOWID_FORCE_FAIL` → scenariusz J |
+| Zakaz: LLM jako fakt bez źródła | ✅ | LLM nie decyduje; wynik LLM odrzucany, gdy doda liczbę/link (`llm.simplify`) |
+| Zakaz: obchodzenie zabezpieczeń/płatnych baz | ✅ | robots.txt (RFC 9309), brak obchodzenia Incapsula/CAPTCHA (np. pap.pl → komunikat), brak DuckDuckGo HTML |
+| Zakaz: werdykt z domeny/autora/kanału/popularności/etykiety tego samego modelu | ✅ | domena tylko filtruje; dowód = fragment + NLI/reguła liczbowa |
+| Status źródła (sankcje) tylko jako neutralne ostrzeżenie | ✅ | `service.source_status_notices` („Status źródła…”), eval `expect_notice` |
+| Zakaz: deklarowanie reverse image search bez API | ✅ | nie deklarujemy; F ujawnione jako nieobsługiwane |
+| Zakaz: archiwizacja pełnych treści bez podstawy | ⚠️ | korpus: twierdzenie, ocena, krótki fragment, link; **ale** `data/raw/` (pełne HTML stron, 809 plików) jest śledzone w git — luka 5 |
+
+## Sekcja 6 — scenariusze referencyjne organizatorów (pytania z `rules/…strajk generalny.docx`)
+Uruchomione raz w procesie, wyszukiwanie na żywo włączone (21.11.2026). Szczegóły: `docs/COMPLIANCE.md` (ta tabela).
+
+| Scen. | Pytanie (wypełnione) | Oczekiwane | Otrzymane | |
+|---|---|---|---|---|
+@@AJ@@
+
+**Jak testowany jest E z URL.** Ochrona SSRF odrzuca adresy prywatne (127.0.0.1 też — sprawdzone w teście i w wierszu
+„E, ochrona włączona”). Dlatego: (1) `backend/tests/test_url_injection.py` serwuje `web/demo/injection.html` na 127.0.0.1,
+sprawdza, że ochrona go odrzuca, a potem — tylko dla tego serwera testowego — podmienia `fetch.check_public_url`, żeby
+przeszła prawdziwa ścieżka pobrania (httpx, limity, trafilatura), skan i neutralizacja; (2) pełny przebieg werdyktu
+(wiersz E) używa tej samej podmiany w procesie; (3) na publicznym wdrożeniu (np. tunel HTTPS) jury wkleja po prostu
+`https://<host>/demo/injection.html` — ochrona SSRF zostaje włączona.
+
+**Mierniki (zbiory `eval/`, `PRAWDOWID_LIVE_SEARCH=0`)**: macro-F1 dev @@F1DEV@@ · ślepy 1 @@F1H@@ · ślepy 2 @@F1B@@ (cel ≥ 0,75);
+pokrycie cytowań 100%; abstynencja 100%; odporność na injection 100%; mediana < 1 s; spójność kanałów 100%;
+pętla informacji: tak. Poprawność cytowania (≥ 85%) mierzona automatycznie (cytat dosłowny + zgodność stanowiska);
+ręczna próba — do wykonania przez jury.
+
+## Sekcja 8 — kryteria oceny (gdzie szukać dowodów)
+| Kryterium | Dowody |
+|---|---|
+| Jakość weryfikacji (30%) | `eval/results_2026-11-21*/results.md`, tabela A–J, `/metodologia` |
+| Bezpieczeństwo i transparentność (20%) | `security.py`, `docs/RISKS.md`, panel `/moderator` (zdarzenia), audyt w SQLite |
+| Potencjał wdrożeniowy (20%) | rejestr źródeł + harmonogram, wymienne modele, `docs/COSTS.md`, `docs/ARCHITECTURE.md` |
+| Użyteczność (15%) | krótkie odpowiedzi, czat, PWA, wtyczka, komunikaty błędów oddzielone od wyników |
+| Innowacyjność (15%) | pętla informacji, łańcuch dowodów, wyszukiwanie na żywo w zaufanych serwisach, wtyczka |
+
+## Regulamin §4.2 — prawa osób trzecich (licencje)
+| Element | Licencja / podstawa | Gdzie opisane | Status |
+|---|---|---|---|
+| Dane źródłowe (korpus) | per źródło: CC BY 4.0 / CC BY-SA 4.0 (gov.pl, Eurostat, KE), art. 4 pr. aut. (akty, obwieszczenia), prawo cytatu z atrybucją (fact-checkerzy), zgoda EEAS (EUvsDisinfo) | pole `license` w rejestrze, `docs/SOURCES.md` | ✅ |
+| Surowa pamięć stron `data/raw/` | pełne kopie artykułów (część „all rights reserved”) | `.gitignore` (dodane 21.11) — ale 809 plików już w historii git | ⚠️ luka 5 |
+| Modele | `sdadas/mmlw-retrieval-e5-small` Apache-2.0; `mDeBERTa-v3-base-xnli…` MIT | `docs/ARCHITECTURE.md` | ✅ |
+| Biblioteki Python | fastapi MIT, uvicorn BSD-3, httpx BSD-3, trafilatura 2.x Apache-2.0, numpy BSD-3, sentence-transformers / transformers Apache-2.0, torch BSD-style, pydantic MIT, python-multipart Apache-2.0, rapidfuzz MIT, PyYAML MIT, Pillow MIT-CMU, discord.py MIT, playwright Apache-2.0, mcp MIT (z metadanych zainstalowanych pakietów) | ten plik | ✅ wszystkie liberalne |
+| Grafika, czcionki, JS | własne (SVG/PNG w repo), bez CDN i bibliotek zewnętrznych w `web/`, `extension/` | — | ✅ |
+| Licencja kodu projektu | brak pliku `LICENSE` | — | ⚠️ luka 4 |
+
+## Większe luki (niewdrożone) — szacunek pracy
+| # | Luka | Szacunek |
+|---|---|---|
+| 1 | OCR zrzutów ekranu (scenariusz F): Tesseract `pol` / PaddleOCR lokalnie, endpoint obrazu, UI, ujawnienie, że data na obrazie nie potwierdza daty publikacji | 4–6 h |
+| 2 | Wyszukiwanie wcześniejszych wystąpień obrazu (lokalny indeks pHash ograniczony do obrazów z fact-checków) | 1 dzień |
+| 3 | Pytania-meta o materiał („Czy film udostępniony przez X pokazywał…?”, B) i dopasowanie URL/tytułu do materiału sprawdzanego przez fact-checkera (I): dziś właściwy artykuł Demagoga jest pokazywany jako materiał pokrewny, ale bez werdyktu; potrzebna reformulacja pytania + indeks linków wychodzących z fact-checków + ponowna ewaluacja | 1–1,5 dnia |
+| 4 | Plik `LICENSE` (decyzja zespołu; zależności pozwalają na MIT/Apache-2.0) | 10 min |
+| 5 | `git rm -r --cached data/raw` (pliki zostają lokalnie), a przed upublicznieniem repo — usunięcie z historii (`git filter-repo`) | 30 min + koordynacja zespołu |
+| 6 | Eksport spraw/incydentów do STIX 2.1 (OpenCTI) z technikami DISARM | 4 h |
+| 7 | Powiadomienie analityka poza panelem (webhook/e-mail) przy sprawie „wysoki” — z rozróżnieniem „wysłano / nie wysłano” | 1–2 h |
+| 8 | Kontrolowana archiwizacja wskazanego materiału (podstawa prawna, retencja, procedura usunięcia) | 1 dzień + opinia prawna |
+| 9 | Dockerfile + compose (model cache w wolumenie) | 1 h |

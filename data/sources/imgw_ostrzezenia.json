@@ -1,0 +1,23 @@
+{
+  "id": "imgw_ostrzezenia",
+  "name": "IMGW-PIB — ostrzeżenia meteorologiczne i hydrologiczne (dane publiczne)",
+  "publisher": "Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy",
+  "url": "https://danepubliczne.imgw.pl/",
+  "category": "official",
+  "tier": 1,
+  "method": "custom",
+  "params": {
+    "handler": "imgw_ostrzezenia",
+    "kinds": ["meteo", "hydro"],
+    "max_docs": 2000
+  },
+  "enabled": true,
+  "schedule_hours": 3,
+  "web_search": true,
+  "topics": ["pogoda", "woda_powodz", "bezpieczenstwo"],
+  "language": "pl",
+  "license": "Dane publiczne IMGW-PIB — wolne do ponownego wykorzystania z podaniem źródła: „Źródłem pochodzenia danych jest Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy” (danepubliczne.imgw.pl)",
+  "qualification": "IMGW-PIB to państwowa służba hydrologiczno-meteorologiczna — jedyny organ wydający urzędowe ostrzeżenia meteo i hydro. meteo.imgw.pl i hydro.imgw.pl to mapy JS, więc pobieramy te same ostrzeżenia z oficjalnego API danych publicznych (/api/data/warningsmeteo, /api/data/warningshydro). Jeden rekord na ostrzeżenie; historia zachowana.",
+  "added_by": "organizator (rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

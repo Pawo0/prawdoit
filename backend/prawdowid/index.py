@@ -86,6 +86,20 @@ class Embedder:
         return emb.astype(np.float32)
 
 
+_RELOAD_LOCK = threading.Lock()
+
+
+def _index_files(corpus_dir: Path) -> tuple[list[Path], list[str]]:
+    """Corpus files to load: enabled registry sources + files without a registry entry (see sources/registry.py)."""
+    try:
+        from .sources.registry import corpus_files_for_index
+
+        return corpus_files_for_index(corpus_dir)
+    except Exception:  # noqa: BLE001 — a broken registry must never empty the index
+        log.exception("source registry unreadable — loading every corpus file")
+        return sorted(corpus_dir.glob("*.jsonl")), []
+
+
 class CorpusIndex:
     def __init__(self) -> None:
         self.docs: list[SourceDoc] = []
@@ -109,7 +123,8 @@ class CorpusIndex:
         seen: set[str] = set()
         per_file: dict[str, int] = {}
         errors = 0
-        for f in sorted(corpus_dir.glob("*.jsonl")):
+        files, excluded = _index_files(corpus_dir)  # registry: only enabled sources (+ files with no entry)
+        for f in files:
             n = 0
             for line in f.read_text(encoding="utf-8").splitlines():
                 if not line.strip():
@@ -139,11 +154,27 @@ class CorpusIndex:
             "by_type": dict(Counter(d.source_type for d in docs)),
             "by_publisher": dict(Counter(d.publisher for d in docs).most_common()),
             "files": per_file,
+            "excluded_files": excluded,
             "malformed_skipped": errors,
             "build_seconds": round(time.time() - t0, 1),
             "embed_model": settings.embed_model,
         }
         log.info("index loaded: %s", self.stats)
+
+    def reload(self) -> dict:
+        """Hot reload (source scheduler / admin panel). Builds a fresh index off to the side, then swaps its state
+        into *this* object under a lock — other modules hold `INDEX` via `from .index import INDEX`, so the name
+        must never be rebound. Embeddings come from the incremental cache, so only new texts are embedded."""
+        with _RELOAD_LOCK:
+            fresh = CorpusIndex()
+            fresh.embedder = self.embedder  # reuse the loaded model
+            fresh.load()
+            with self._lock:
+                state = {k: v for k, v in fresh.__dict__.items() if k not in ("_lock", "embedder")}
+                if self.embedder is None:
+                    self.embedder = fresh.embedder
+                self.__dict__.update(state)
+        return self.stats
 
     def _build_chunks(self) -> None:
         chunks: list[Chunk] = []
@@ -263,6 +294,80 @@ class CorpusIndex:
 
     def doc_age(self, doc: SourceDoc) -> int | None:
         return _age_days(doc.published_at)
+
+    # ------------------------------------------------------------------ live additions (websearch.py)
+    def add_docs(self, records: list) -> int:
+        """Append documents at runtime (live search) without a full rebuild: only the new chunks/claims are embedded,
+        BM25 postings are extended. Records already indexed (same id or URL) are skipped. Returns how many were added.
+        Arrays are published after the lists they index, so concurrent readers never see out-of-range positions."""
+        if not _RELOAD_LOCK.acquire(timeout=5):
+            return 0  # a full reload is running; the docs are persisted and will be loaded by it/next start
+        try:
+            known_ids = {d.id for d in self.docs}
+            known_urls = {d.url.rstrip("/") for d in self.docs}
+            new: list[SourceDoc] = []
+            for r in records:
+                try:
+                    d = r.model_copy() if isinstance(r, SourceDoc) else SourceDoc(**r)
+                except Exception:  # noqa: BLE001
+                    continue
+                if d.id in known_ids or d.url.rstrip("/") in known_urls or not (d.text or d.claim):
+                    continue
+                d.text = normalize_ws(d.text)[:6000]
+                new.append(d)
+                known_ids.add(d.id)
+                known_urls.add(d.url.rstrip("/"))
+            if not new:
+                return 0
+            tmp = CorpusIndex()  # reuse the exact chunking rules of load()
+            tmp.docs = new
+            tmp._build_chunks()
+            base_doc, base_chunk = len(self.docs), len(self.chunks)
+            chunks = [Chunk(base_chunk + c.idx, base_doc + c.doc_idx, c.text) for c in tmp.chunks]
+            emb = self.get_embedder()
+            c_emb = emb.encode([c.text for c in chunks], settings.embed_passage_prefix)
+            claims = [(base_doc + i, normalize_ws(d.claim or d.title)[:500]) for i, d in enumerate(new)
+                      if d.source_type in ("factcheck", "incident") and (d.claim or d.title)]
+            q_emb = emb.encode([t for _, t in claims], settings.embed_query_prefix) if claims else None
+            self.docs.extend(new)
+            self.doc_chunks.extend([[base_chunk + i for i in ids] for ids in tmp.doc_chunks])
+            self.chunks.extend(chunks)
+            self.synthetic |= {base_chunk + i for i in tmp.synthetic}
+            self.chunk_emb = c_emb if self.chunk_emb is None or not len(self.chunk_emb) else np.vstack([self.chunk_emb, c_emb])
+            self.bm25 = _bm25_extend(self.bm25, [tokens(c.text) for c in chunks])
+            if claims:
+                self.claim_doc_idx.extend(i for i, _ in claims)
+                self.claim_texts.extend(t for _, t in claims)
+                self.claim_emb = q_emb if self.claim_emb is None or not len(self.claim_emb) else np.vstack([self.claim_emb, q_emb])
+                self.claim_bm25 = _bm25_extend(self.claim_bm25, [tokens(t) for _, t in claims])
+            self.stats.update(documents=len(self.docs), chunks=len(self.chunks), factchecked_claims=len(self.claim_texts),
+                              live_added=self.stats.get("live_added", 0) + len(new))
+            log.info("live docs added: %d (chunks %d)", len(new), len(chunks))
+            return len(new)
+        finally:
+            _RELOAD_LOCK.release()
+
+
+def _bm25_extend(bm: BM25 | None, docs_tokens: list[list[str]]) -> BM25:
+    """Extend a BM25 index in place (lens → idf → postings, so a concurrent search never misses a key)."""
+    if bm is None:
+        return BM25(docs_tokens)
+    base = bm.N
+    add: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    for j, toks in enumerate(docs_tokens):
+        for t, c in Counter(toks).items():
+            add[t].append((base + j, c))
+    lens = np.concatenate([bm.lens, np.array([len(t) for t in docs_tokens], dtype=np.float32)])
+    n = len(lens)
+    df = {t: len(p) for t, p in bm.postings.items()}
+    for t, p in add.items():
+        df[t] = df.get(t, 0) + len(p)
+    bm.lens = lens
+    bm.idf = {t: math.log(1 + (n - c + 0.5) / (c + 0.5)) for t, c in df.items()}
+    for t, p in add.items():
+        bm.postings[t].extend(p)
+    bm.N, bm.avgdl = n, float(lens.mean()) if n else 1.0
+    return bm
 
 
 INDEX = CorpusIndex()

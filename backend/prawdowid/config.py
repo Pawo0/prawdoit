@@ -19,6 +19,7 @@ class Settings:
     index_dir: Path = Path(_env("INDEX_DIR", str(ROOT / "data" / "index")))
     runtime_dir: Path = Path(_env("RUNTIME_DIR", str(ROOT / "data" / "runtime")))
     web_dir: Path = ROOT / "web"
+    sources_dir: Path = Path(_env("SOURCES_DIR", str(ROOT / "data" / "sources")))  # source registry (one JSON per source)
     public_base_url: str = _env("PUBLIC_URL", "http://localhost:8000")
 
     # --- models (swappable; any sentence-transformers / HF NLI model works) ---
@@ -58,6 +59,12 @@ class Settings:
     fb_page_token: str = _env("FB_PAGE_TOKEN", "")
     fb_verify_token: str = _env("FB_VERIFY_TOKEN", "")
     moderator_token: str = _env("MODERATOR_TOKEN", "demo-moderator")
+    admin_token: str = _env("ADMIN_TOKEN", "demo-admin")          # source registry admin panel (/admin)
+    scheduler: bool = _env("SCHEDULER", "1") == "1"                 # background fetching of registry sources
+
+    # --- cost estimate per answer (observability; docs/COSTS.md). CPU: 4 vCPU VPS ~120 zł/mies. -> zł per vCPU-second
+    cost_pln_per_cpu_s: float = float(_env("COST_PLN_PER_CPU_S", "0.0000116"))
+    cost_pln_per_1k_llm_tokens: float = float(_env("COST_PLN_PER_1K_LLM_TOKENS", "0"))  # 0 = local model / no LLM
 
     extra: dict = field(default_factory=dict)
 
