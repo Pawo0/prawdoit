@@ -362,3 +362,129 @@ backend/.venv/bin/python eval/bench_polish/compare.py baseline lemma_simplemma_p
 
 Extra packages used (installed outside `backend/.venv`): pystempel 2.0.0, simplemma 2.0.0, sortedcontainers 2.4.0,
 tqdm 4.70.1. Models: `sdadas/mmlw-roberta-base`, `sdadas/polish-reranker-base-ranknet` (Hugging Face cache).
+
+## 11. Follow-up, 21 Nov 2026 (evening): fragment fix, diacritics, agreement guard
+
+*Recommendations 1, 2 and 3c of §8, implemented and measured. Same machine, shared with other model runs, so
+latency rows are indicative only. Result files: `eval/bench_polish/results/eng0_baseline.json` … `eng4_all.json`.
+Every change was run on its own against a fresh baseline (isolated copy of the code, same corpus snapshot and index
+cache), then all together. The committed corpus gives the same 170 outcomes and the same 140 regression verdicts as
+the saved `baseline.json` / `baseline_regress.json`.*
+
+### 11.1 Outcome
+
+| Run | correct | abstained | false verdicts | on hard negatives | positives (ok / miss / false) | `cases` | `heldout` | `blind2` | latency p50 / p95 |
+|---|---|---|---|---|---|---|---|---|---|
+| baseline at `84047c3` (`eng0_baseline`) | 141 | 18 | 11 | 8 | 101 / 16 / 3 | 34/35, 0 false | 49/56, 2 false | 41/49, 0 false | 681 / 2029 ms |
+| fragment fix only (`eng1_fragment_only`) | 143 | 16 | 11 | 8 | 103 / 14 / 3 | 34/35, 0 false | 49/56, 2 false | 41/49, 0 false | 735 / 2269 ms |
+| `claim_kind` only (`eng2_kind_only`) | 142 | 17 | 11 | 8 | 102 / 15 / 3 | 34/35, 0 false | 49/56, 2 false | 41/49, 0 false | 863 / 2435 ms |
+| agreement guard only (`eng3_guard_only`) | 143 | 18 | 9 | 6 | 101 / 16 / 3 | 34/35, 0 false | 49/56, 2 false | 41/49, 0 false | 847 / 2264 ms |
+| **all three (`eng4_all`)** | 146 | 15 | 9 | 6 | 104 / 13 / 3 | 34/35, 0 false | 49/56, 2 false | 41/49, 0 false | 882 / 2850 ms |
+
+Paired against `eng0_baseline` (`compare.py`), every flipped item read by hand:
+
+| Change | Fixed | Broken | Regression sets |
+|---|---|---|---|
+| Fragment fix | `20-question`, `21-short` (quote gate no longer drops the gold document) | none | identical case by case |
+| `claim_kind` without diacritics | `01-nodiac` (was "prediction", not checked) | none | identical case by case |
+| Agreement guard | `01-hardneg` (numbers: "osiem lat" vs "22-letniej"), `10-hardneg` (names: Trzaskowski for Tusk) — both now "no evidence" | none | identical case by case; the guard fired on those two of 746 claim pairs and on no regression case |
+| All together | `01-nodiac`, `20-question`, `21-short`, `01-hardneg`, `10-hardneg` | none | identical case by case |
+
+Per phenomenon, only these cells moved (baseline → all): `question` 17 → 18 of 19; `nodiac` 16 → 17 of 18;
+`short` 16 → 17 of 18; `hardneg` 19 → 21 of 27. Macro-F1 0.827 → 0.855. The nine false verdicts left: `25-short`,
+`25-question`, `28-para` (positives, unchanged causes of §4) and `05`, `12`, `16`, `24`, `26`, `29-hardneg`.
+
+Latency moved with machine load, not with the changes: the five runs were 10–30 minutes apart and other model jobs
+shared the CPU. The guard itself takes about 1 ms per call (median 1.2 ms, p95 3.5 ms over 917 logged pairs, measured
+separately) and is called only for a candidate that would be accepted on similarity alone — about 60 of 750
+candidate pairs in a full run. None of the three changes adds a model call.
+
+### 11.2 Fragment selection (`engine._fragment_windows`)
+
+The diagnosis of §4 was reproduced before the fix: for `20-question` the chosen fragment was sentence 0 + sentence 2
+of the chunk, glued across the 9-character sentence "Demagog]."; for `21-short` sentences 2 and 4 across "160).".
+Each sentence was verbatim, the pair was not, and gate V2 dropped the document.
+
+Checking every passage of the corpus without models (19 138 passages, 119 061 candidate windows) showed a second
+cause of similar size: the sentence splitter consumes a closing quotation mark or bracket that follows the full stop,
+so two *adjacent* sentences joined with a space are not verbatim either. Old construction: 871 windows not verbatim
+(528 non-adjacent joins, 335 adjacent joins, 8 other), in 638 documents, 514 of them among the 3 085 fact-check and incident
+documents. New: 0. The new function uses the splitter only to locate sentence boundaries and cuts every window out of
+the whitespace-normalised source text (the normalisation gate V2 uses), so a window is verbatim by construction.
+Sentences of 15 characters or fewer are not quoted alone but take part in pairs. On the benchmark the "document
+dropped by V2" note appeared on 7 claims before and on none after.
+
+### 11.3 `claim_kind` without diacritics
+
+A text with no Polish diacritic at all is matched with the same patterns stripped of their diacritics; a text that
+has diacritics keeps the exact patterns (stripping there only adds ambiguity: *czuję / czuje*, *mają / 3 maja*).
+Measured on 2 356 corpus claims, with `claim_kind` of the original spelling as reference: after removing diacritics
+the old function agreed on 2 325, the new one on 2 354. Cost: a correctly spelled sentence that happens to contain no
+diacritic is read with the stripped patterns too — 1 of the 2 356 claims changes (*"Michael Carpenter zostanie nowym
+ambasadorem USA w Polsce"*, prediction → fact, because *Michael* ends like a past-tense verb, as *Michał* already
+did). `checkworthiness()`, `strip_preamble()` and the other preamble patterns still need diacritics; not changed, not
+measured.
+
+### 11.4 Agreement guard on the similarity-only route (`backend/prawdowid/agreement.py`, rule G1)
+
+**Rule.** `cos >= 0.88` alone still accepts "same claim" — unless the user's text and the checked claim disagree on
+a name or a number. Then only the similarity-only route is withdrawn: the pair is still accepted if it qualifies
+through `cos >= 0.86 and entailment >= 0.5` or `cos >= 0.80 and entailment >= 0.8 and lex >= 0.4`. When the guard
+decides, `rules_fired` gets `G1:ROZNE_NAZWY_LUB_LICZBY` and `limitations` gets a sentence naming the checked claim and
+what differed ("nazwy: „Rafałem Trzaskowskim” zamiast „Donaldem Tuskiem”"), so it is in the stored result.
+`/api/quick` gets the same decision through `same_claim()`.
+
+| Part of the rule | Principle |
+|---|---|
+| Disagreement is two-sided: each text must have a name or number the other lacks | A name or number on one side only is an omission or an addition, not a contradiction |
+| Names count only when they stand in the same place: the content word right before and right after is the same in both texts | Names have aliases ("na Narodowym" / "w Warszawie", "Polaków" / "w Polsce"); a different name in an otherwise identical frame is a swap, a different name in a reworded sentence usually is not |
+| A name is a capitalised word inside a sentence, an acronym, or a run of capitalised words; the first word of a sentence, and every word of a text typed without capitals (or all in capitals), is only "maybe a name"; at least one side of a swap must be a sure name | Capital letters are the only cue available without a model, and they are no cue at the start of a sentence or in lower-case typing |
+| A lower-case word in a text that does use capitals is not a name | "z premierem" for "z Donaldem Tuskiem" is a description, not another person |
+| A name of several words is matched by its last word; an acronym by its expansion | People are cited by surname; UE = Unia Europejska |
+| Word comparison: same first four letters after the existing consonant alternations, or a short stem that differs by a final vowel, or one typing error (in words under six letters only two swapped neighbours) | Inflection and typos must not look like another name; one changed letter in a short name can be another name (Iran / Irak) |
+| Numbers are compared by value wherever they stand: digits with separators, tys./mln/mld, numerals written out, "pół miliona"; a unit conflicts only with a different unit | A number has one value however it is written, and no aliases |
+| "ponad", "prawie" and similar words make a bound that agrees with numbers within one step of its leading digit | "ponad 90%" is not contradicted by "95%" |
+| The negation rule is not gated | It already needs NLI contradiction in both directions; the guard exists to demand NLI support where there is none |
+
+**Design iterations** (the first and third were evaluated offline, on the 749 claim pairs logged from one pipeline
+run of the benchmark and the three regression sets; only the second was run through the pipeline):
+
+1. *Names and numbers as two-sided sets, no position requirement.* Withdrew the shortcut from three hard negatives
+   (`01`, `10`, `16`) but also from `21-typo` ("Tuksa" / "Tuska") and from four pairs of three regression cases:
+   H04 ("na Narodowym … w rocznicę Powstania" vs "w Warszawie"), H11 ("Polaków" vs "w Polsce") and B2-18
+   ("ponad 90%" vs "95 proc."). Rejected.
+2. *Shipped:* same-place requirement for names, bounds for numbers, swapped-letters typo rule. Of the 58
+   similarity-only acceptances in the log it withdraws two, both hard negatives.
+3. *Not shipped:* two more stem alternations (t → ci, d → dzi) would make "w porcie" / "portów" the same word and
+   catch `16-hardneg` (port Gdańsk for Szczecin-Świnoujście). It changes exactly that one of the 749 pairs, so its
+   only evidence is one benchmark item.
+
+**Check that does not use benchmark items** (`eval/bench_polish/guard_check.py`, 2 050 Polish fact-checked claims,
+no model): a claim against a harmless rewrite of itself is read as a disagreement in 0 cases for lower case, no
+diacritics, both, capitals, first sentence only, surnames only, respelled numbers and question form, and in 1 of 369
+for "last sentence only" (a truncated editor's note). A claim against a copy with one name replaced in place is
+detected in 90.2% of 1 387 pairs (86.1% when the copy is lower-cased and stripped of diacritics); with one number
+replaced, in 96.8% of 375.
+
+**What the guard does not catch**, by construction:
+
+- the same names in swapped roles (`05-hardneg`: Ukraine cedes land to Poland);
+- another predicate with the same names and numbers (`29-hardneg`; `12-hardneg` "wypłacił 250 tys. zł" vs
+  "zamordował 250 tys." — the amounts are equal, and treating a missing unit as a conflict would misfire on
+  "2,8 mld" / "2,8 mld zł", which occur in one benchmark claim and its variants);
+- a name swapped inside a reworded sentence — it cannot be told from an alias without world knowledge (H04 keeps
+  its verdict; by the same rule a variant naming another city there would be accepted too — not tested);
+- two different names that are both the first word of their sentence;
+- the two negation-rule false verdicts (`24-hardneg`, `26-hardneg`): names and numbers are identical there.
+
+### 11.5 Limits of this result
+
+- The guard was designed on this benchmark and on the regression sets; its measured gain is 2 false verdicts on
+  27 hard negatives. Treat it as "no harm found, small gain", not as an estimate for real traffic. The corpus check
+  in 11.4 is the only evidence that does not come from the tuning data, and its swaps are synthetic.
+- Not verified: the UI rendering of the new `limitations` sentence; `/metodologia` does not describe G1 yet
+  (`web/` was out of scope); `/api/quick` was not run; URL cases of the regression sets (no network); live search.
+- Trace only: the BM25 rank of the gold claim for `09-para` is 31 in `eng0_baseline` and 32 in the four later runs
+  (a tie far below the cut-off); no outcome depends on it.
+- The two what-if rules of §5.4 (`--rule no_lex | bidir_nli`) were re-pointed at the restructured `same_claim`
+  source and checked on synthetic scores only; their benchmark rows were not re-run.
