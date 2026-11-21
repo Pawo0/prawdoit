@@ -20,6 +20,8 @@
   "language": "pl",
   "license": "Akt normatywny — nie podlega prawu autorskiemu (art. 4 pkt 1 pr. aut.); metadane: ELI API Sejmu RP (api.sejm.gov.pl), podać źródło",
   "qualification": "Urzędowy publikator aktów normatywnych (Dziennik Ustaw) udostępniany przez Kancelarię Sejmu (API ELI). Tekst aktu jest źródłem pierwotnym (kategoria A).",
+  "scope": "organiser_recommended",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): ISAP",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

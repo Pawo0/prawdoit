@@ -17,6 +17,8 @@
   "language": "pl",
   "license": "MSPiR — informacja publiczna",
   "qualification": "Ratownictwo morskie. Nie pobieramy: serwis chroniony Imperva/Incapsula (skrypt _Incapsula_Resource zamiast treści) — zabezpieczeń nie obchodzimy.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: sar.gov.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

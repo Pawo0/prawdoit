@@ -22,6 +22,8 @@
   "language": "pl",
   "license": "© Komenda Główna Policji — informacja publiczna; cytowanie z podaniem źródła",
   "qualification": "Oficjalne komunikaty Komendy Głównej Policji. RSS (link rel=alternate na stronie); pełny tekst ze strony artykułu (zweryfikowano: ~5000 znaków, data). robots.txt: tylko /ftp/ zablokowane.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: policja.pl/pol/aktualnosci",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

@@ -18,6 +18,8 @@
   "language": "pl",
   "license": "Dane publiczne IMGW-PIB — wolne do ponownego wykorzystania z podaniem źródła: „Źródłem pochodzenia danych jest Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy” (danepubliczne.imgw.pl)",
   "qualification": "IMGW-PIB to państwowa służba hydrologiczno-meteorologiczna — jedyny organ wydający urzędowe ostrzeżenia meteo i hydro. meteo.imgw.pl i hydro.imgw.pl to mapy JS, więc pobieramy te same ostrzeżenia z oficjalnego API danych publicznych (/api/data/warningsmeteo, /api/data/warningshydro). Jeden rekord na ostrzeżenie; historia zachowana.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: meteo.imgw.pl, hydro.imgw.pl — te same ostrzeżenia z oficjalnego API IMGW (danepubliczne.imgw.pl), bo serwisy z listy to mapy JS",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

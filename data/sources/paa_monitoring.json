@@ -16,6 +16,8 @@
   "language": "pl",
   "license": "PAA — informacja publiczna",
   "qualification": "Mapa pomiarów mocy dawki (aplikacja JS /maps-portal/, brak tekstu do pobrania). Zaufany link dla pytań o promieniowanie; komunikaty PAA: paa_aktualnosci.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: monitoring.paa.gov.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

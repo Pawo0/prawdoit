@@ -20,6 +20,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Organ właściwy dla ochrony przeciwpożarowej i ratownictwa; komunikaty urzędowe. Lista aktualności gov.pl (zweryfikowano: ≥10 pozycji z datą, paginacja ?page=N). Pokrywa URL-e: gov.pl/web/kgpsp/aktualnosci.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/kgpsp/aktualnosci",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

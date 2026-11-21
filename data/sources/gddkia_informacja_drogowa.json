@@ -23,6 +23,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Opis całodobowej Informacji Drogowej GDDKiA (tel. 19 111, Punkty Informacji Drogowej).",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/gddkia/informacja-drogowa---19-111",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

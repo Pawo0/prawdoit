@@ -20,6 +20,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Dozór jądrowy i ochrona radiologiczna; komunikaty o sytuacji radiacyjnej. Lista aktualności gov.pl (zweryfikowano: ≥10 pozycji z datą, paginacja ?page=N). Pokrywa URL-e: gov.pl/web/paa/panstwowa-agencja-atomistyki (lista pełna: /aktualnosci2).",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/paa/panstwowa-agencja-atomistyki",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

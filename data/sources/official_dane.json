@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "CC0 1.0 lub CC BY 4.0 — dane.gov.pl (Regulamin §5, ustawa o otwartych danych); licencja podana przy każdym zbiorze",
   "qualification": "Centralny portal otwartych danych; opisy zbiorów publikowanych przez instytucje publiczne (GUS, ZUS, NFZ, ministerstwa, KGSG…). Kategoria A w zakresie kompetencji wydawcy danego zbioru.",
+  "scope": "organiser_recommended",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): dane.gov.pl",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

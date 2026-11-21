@@ -17,6 +17,8 @@
   "language": "pl",
   "license": "IMGW-PIB — dane publiczne z podaniem źródła",
   "qualification": "Aplikacja JS (prognozy dla Bałtyku, 'Ładowanie…' bez treści w HTML). Ostrzeżenia sztormowe trafiają do rso_ostrzezenia i imgw_ostrzezenia.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: baltyk.imgw.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

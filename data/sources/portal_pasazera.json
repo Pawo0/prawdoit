@@ -17,6 +17,8 @@
   "language": "pl",
   "license": "PKP PLK — informacja publiczna",
   "qualification": "Rozkład jazdy i utrudnienia w ruchu pociągów (aplikacja dynamiczna). Nie pobieramy: niekompletny łańcuch certyfikatów TLS (weryfikacja nie przechodzi — nie wyłączamy jej) i treść generowana dynamicznie. Utrudnienia kolejowe trafiają też do rso_ostrzezenia (kategoria ogolne).",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: portalpasazera.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

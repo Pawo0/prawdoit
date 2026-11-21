@@ -30,6 +30,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Codzienny raport Krajowego Centrum Zarządzania Kryzysowego: ostrzeżenia meteo/hydro, jakość powietrza, zatrucia CO, wysłane Alerty RCB (z treścią SMS), stopnie alarmowe. Strona jest nadpisywana co dzień, więc zapisujemy migawkę na każdy dzień (data z treści raportu; url ?data=RRRR-MM-DD otwiera bieżącą wersję).",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/rcb/raport-dobowy3",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

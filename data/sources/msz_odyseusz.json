@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "Treści MSZ (odyseusz.gov.pl / gov.pl) — informacja publiczna; ponowne wykorzystanie z podaniem źródła (gov.pl/web/gov/warunki-korzystania: CC BY-SA 4.0)",
   "qualification": "Organ właściwy: MSZ publikuje oficjalne profile krajów, komunikaty i poziomy ostrzeżeń dla podróżujących. gov.pl/web/dyplomacja/informacje-dla-podrozujacych i dawne podstrony krajów (np. /web/dyplomacja/wlochy) przekierowują do odyseusz.gov.pl. Pobieramy publiczne JSON API aplikacji (/api/v1/informacje/profile-panstw[/ISO]); każdy kraj: rekord komunikatu z datą aktualizacji (historia zachowana) + rekord na sekcję (bezpieczeństwo, podróżowanie, zdrowie, prawo). Pokrywa URL-e: odyseusz.gov.pl, gov.pl/web/dyplomacja/informacje-dla-podrozujacych.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: odyseusz.gov.pl, gov.pl/web/dyplomacja/informacje-dla-podrozujacych; także rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx (scenariusz A: „Rządowy portal Odyseusz odsyła…”)",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

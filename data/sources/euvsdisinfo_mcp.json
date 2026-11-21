@@ -22,6 +22,7 @@
     ],
     "page_size": 100,
     "delay": 1.0,
+    "id_prefix": "euvsdisinfo",
     "max_docs": 8000
   },
   "enabled": true,
@@ -37,6 +38,8 @@
   "language": "en",
   "license": "EUvsDisinfo (EEAS East StratCom Task Force) — ponowne wykorzystanie dozwolone z podaniem źródła (nota prawna EEAS, decyzja Komisji 2011/833/UE); bez treści stron trzecich. Dostęp przez serwer MCP organizatora HackNation 2026 (token w zmiennej środowiskowej, nigdy w pliku).",
   "qualification": "Baza EEAS East StratCom Task Force: przypadki prokremlowskiej dezinformacji z analizą (claim + obalenie) oraz artykuły analityczne EUvsDisinfo. Tier 3 = baza incydentów; werdykt 'false' to klasyfikacja EUvsDisinfo, nie ocena Prawdowida. Przypadki -> source_type incident, artykuły -> factcheck. Linki do mediów szerzących dezinformację tylko w surowym zrzucie (data/raw/euvsdisinfo_mcp/), nigdy jako dowód.",
+  "scope": "organiser_implied",
+  "scope_basis": "rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf (serwer MCP organizatora, wymaga tokenu); także rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): EUvsDisinfo",
   "added_by": "organizator (rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf)",
   "added_at": "2026-11-21"
 }

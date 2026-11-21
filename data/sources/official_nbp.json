@@ -20,6 +20,8 @@
   "language": "pl",
   "license": "NBP — dane publiczne; wymagane podanie źródła z linkiem do www.nbp.pl",
   "qualification": "Bank centralny; oficjalne kursy średnie i stopy procentowe z API NBP. Kategoria A.",
+  "scope": "outside",
+  "scope_basis": "",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

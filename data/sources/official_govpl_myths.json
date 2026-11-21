@@ -28,6 +28,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Strony organów administracji rządowej (RCB, GIS, MZ, MKiŚ, MI, MON, MRiRW, MEN, UdSC, MC) prostujące fałszywe informacje w zakresie ich kompetencji; lista stron wybrana ręcznie z map serwisów. Kategoria A.",
+  "scope": "organiser_implied",
+  "scope_basis": "rules/resources.txt: nagłówek „Źródła aktualności i ostrzeżeń — domeny rządowe (to są przykłady)”; strony gov.pl prostujące fałszywe informacje — ok. połowa z serwisów z listy (rcb, gis, dyplomacja, infrastruktura, obrona-narodowa), reszta z innych serwisów gov.pl (klimat, udsc, zdrowie, rolnictwo, edukacja, cyfryzacja)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

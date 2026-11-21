@@ -18,6 +18,8 @@
   "language": "pl",
   "license": "UTK — informacja publiczna",
   "qualification": "Organ właściwy dla praw pasażerów kolei. Nie pobieramy: robots.txt blokuje wszystkie roboty poza Googlebotem ('User-agent: * Disallow: /'). web_search wyłączone z tego samego powodu.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: utk.gov.pl/pl/pasazerowie",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

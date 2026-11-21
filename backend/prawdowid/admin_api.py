@@ -227,7 +227,7 @@ def public_registry() -> list[dict]:
     sources, problems = registry.load_all()
     runs = state.last_runs()
     keys = ("id", "name", "publisher", "url", "category", "tier", "enabled", "topics", "language", "license",
-            "qualification", "schedule_hours", "method")
+            "qualification", "schedule_hours", "method", "scope", "scope_basis")
     out = []
     for sid, s in sources.items():
         if sid in problems:

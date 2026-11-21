@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "© Unia Europejska, EUR-Lex — ponowne wykorzystanie wg decyzji 2011/833/UE; streszczenia CC BY 4.0, metadane CC0; autentyczne są tylko teksty opublikowane w Dz.U. UE",
   "qualification": "Oficjalny serwis prawa UE prowadzony przez Urząd Publikacji UE; akty i streszczenia. Kategoria A; autentyczne są tylko teksty opublikowane w Dz.U. UE.",
+  "scope": "organiser_recommended",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): EUR-Lex",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

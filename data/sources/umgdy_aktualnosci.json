@@ -25,6 +25,8 @@
   "language": "pl",
   "license": "Urząd Morski w Gdyni — informacja publiczna; cytowanie z podaniem źródła",
   "qualification": "Administracja morska (Pomorze Wschodnie). Kanał /feed/ jest pusty, więc lista HTML. Zweryfikowano: 10 linków, artykuł 5–9 tys. znaków; data publikacji z nagłówka artykułu (params.date_regex), bo data z metadanych to data modyfikacji serwisu.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: umgdy.gov.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

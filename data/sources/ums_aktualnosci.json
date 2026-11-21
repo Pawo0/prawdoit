@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "Urząd Morski w Szczecinie — informacja publiczna; cytowanie z podaniem źródła",
   "qualification": "Administracja morska (Pomorze Zachodnie). Joomla RSS z link rel=alternate; pełny tekst zweryfikowany (~3500 znaków, data).",
+  "scope": "organiser_implied",
+  "scope_basis": "Aktualności tego samego serwisu co adres z listy: rules/resources.txt: ums.gov.pl/bezpieczenstwo-morskie/warunki-zeglugi",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

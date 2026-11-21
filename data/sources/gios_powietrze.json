@@ -17,6 +17,8 @@
   "language": "pl",
   "license": "GIOŚ — dane publiczne, z podaniem źródła",
   "qualification": "Portal pomiarów jakości powietrza (mapy i wykresy, dane liczbowe — brak komunikatów tekstowych). Zaufany link; dzienne podsumowanie PM10 jest w rcb_raport_dobowy.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: powietrze.gios.gov.pl/pjp/",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }
