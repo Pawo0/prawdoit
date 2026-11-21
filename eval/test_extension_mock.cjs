@@ -49,7 +49,7 @@ const plain = value => JSON.parse(JSON.stringify(value)); // replies are objects
   const defaults = (await send({type: 'settings'})).data;
   assert.equal(defaults.mockMode, false);
   assert.equal(defaults.mode, 'oznacz', 'covering posts is opt-in: the default is a badge');
-  assert.equal(defaults.autoVerify, true);
+  assert.equal(defaults.autoVerify, false, 'background checks are opt-in until their false-badge rate is acceptable');
   await send({type: 'setSettings', data: {mockMode: true}});
   assert.equal((await send({type: 'settings'})).data.mockMode, true);
   const quick = await send({type: 'quick', items: [{id: 'one', text: 'test'}]});

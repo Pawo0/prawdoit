@@ -28,7 +28,7 @@ const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new 
   document.getElementById("st").textContent = `Na tej karcie sprawdzono ${st.scanned} fragmentów, oznaczono ${st.flagged}.`;
   document.getElementById("auto").onchange = e => send({type: "setSettings", data: {autoScan: e.target.checked}});
   document.getElementById("mode").onchange = e => send({type: "setSettings", data: {mode: e.target.checked ? "zaslon" : "oznacz"}});
-  document.getElementById("autoverify").checked = s.autoVerify !== false;
+  document.getElementById("autoverify").checked = s.autoVerify === true;
   document.getElementById("autoverify").onchange = e => send({type: "setSettings", data: {autoVerify: e.target.checked}});
   document.getElementById("save").onclick = async () => {
     const status = document.getElementById("save-status");

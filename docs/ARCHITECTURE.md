@@ -94,7 +94,7 @@ Odpowiedź dla każdego fragmentu ma pole `state`:
 | `state` | Kiedy | Co widzi użytkownik | Co dalej |
 |---|---|---|---|
 | `none` | nic sprawdzalnego (opinia, za krótki tekst) | nic | — |
-| `candidate` | zdanie faktyczne, które pełne sprawdzenie mogłoby ocenić; `priority` 0–1 porządkuje kolejkę: bliskość ocenionego twierdzenia (cos 0,74–…, `NEAR_MISS`) > temat wysokiego ryzyka > „sprawdzalność” zdania | **nic** | najwyżej 3 na stronę trafiają w tle do poziomu 2 w trybie `auto` |
+| `candidate` | zdanie faktyczne, które pełne sprawdzenie mogłoby ocenić; `priority` 0–1 porządkuje kolejkę: bliskość ocenionego twierdzenia (cos 0,74–…, `NEAR_MISS`) > temat wysokiego ryzyka > „sprawdzalność” zdania | **nic** | po włączeniu opcji: najwyżej 3 na stronę trafiają w tle do poziomu 2 w trybie `auto` |
 | `match` | tekst powtarza twierdzenie ocenione przez nazwanego fact-checkera (`match`: wydawca, ocena, data, link) | oznaczenie: „Podobna informacja: Demagog — „Fałsz” (02.03.2026) ↗” + „Sprawdź” | kliknięcie „Sprawdź” = pełne sprawdzenie ręczne |
 
 - **Reguła konfliktu.** Jeżeli twierdzenie ocenione jako *prawda* jest równie blisko tekstu (cos w granicach 0,03 od
@@ -106,7 +106,8 @@ Odpowiedź dla każdego fragmentu ma pole `state`:
   (`PRAWDOWID_QUICK_CONCURRENCY`); gdy serwer jest zajęty dłużej niż 3 s, odpowiada 503 z `Retry-After`, a przy limicie
   429 z `Retry-After` — wtyczka czeka wskazany czas i **nigdy nie rysuje oznaczenia z błędu**.
 
-**Poziom 2 w tle — tryb `auto`** (`POST /api/check/async` z `mode: "auto"`). Ten sam potok co sprawdzenie ręczne
+**Poziom 2 w tle — tryb `auto`** (`POST /api/check/async` z `mode: "auto"`; we wtyczce **opcja, domyślnie
+wyłączona** — patrz pomiar niżej). Ten sam potok co sprawdzenie ręczne
 (te same reguły R1–R6 i dowody), ale tylko na lokalnej bazie i bez śladu po tekście:
 - bez wyszukiwania na żywo (wysłałoby treść twierdzenia do zewnętrznych wyszukiwarek), bez pobierania linków z tekstu,
   bez LLM;
@@ -120,12 +121,20 @@ Wtyczka pokazuje oznaczenie z poziomu 2 **tylko** dla rozstrzygającego werdyktu
 bez sprzecznych źródeł) z cytowanym, podlinkowanym źródłem: „Źródła przeczą tej informacji: FakeNews.pl, 14.05.2025 ↗”.
 „Brak dowodów”, opinia, błąd techniczny i przekroczony limit nie pokazują nic. Sprawdzenie ręczne tego samego fragmentu
 (z wyszukiwaniem na żywo) zastępuje oznaczenie automatyczne. Wtyczka uruchamia sprawdzenia w tle tylko wobec serwera,
-który zwraca `state` — starszy serwer potraktowałby je jak zwykłe sprawdzenia. Można je wyłączyć w panelu wtyczki.
+który zwraca `state` — starszy serwer potraktowałby je jak zwykłe sprawdzenia.
 
 **Zasłona** („kliknij, aby odsłonić”) jest ustawieniem do włączenia w panelu; domyślnie jest samo oznaczenie.
 
-Pomiar routera na danych z repozytorium (odzysk, fałszywe oznaczenia, oszczędzone wywołania NLI, czas paczki):
-`backend/.venv/bin/python eval/measure_router.py --tier2`; wyniki: `eval/results/router_measure.json` i `.md`.
+**Pomiar** na danych z repozytorium (`backend/.venv/bin/python eval/measure_router.py --tier2`; wyniki i warunki:
+`eval/results/router_measure.md`): poziom 1 kieruje dalej 100 % przeformułowań obalonych twierdzeń (159/159),
+od razu oznacza 68 % (108/159) i nie oznaczył żadnego z 569 tekstów, które oznaczenia mieć nie powinny (trudne
+negatywy, twierdzenia ocenione jako prawda, zdania z komunikatów urzędowych). Bramka NLI 0,80 zamiast 0,74: te same
+wyniki, 36–64 % mniej wywołań NLI. Stan `candidate` prawie niczego nie odsiewa (99 % zdań urzędowych) — jest filtrem
+kosztu, nie sygnałem. Sprawdzenie w tle dodaje oznaczenia dla co najmniej 19 z 159 przeformułowań, ale pełny potok
+wydaje też błędny werdykt „źródła przeczą” dla 3,7 % zwykłych zdań urzędowych (11/300), 2,4 % twierdzeń ocenionych
+jako prawda (3/127) i 26 % trudnych negatywów (7/27). Przy sprawdzeniu na życzenie użytkownik widzi źródła i sam
+ocenia; jako nieproszone oznaczenie to za dużo — dlatego sprawdzanie w tle jest opcją do włączenia w panelu wtyczki
+(`autoVerify` w `extension/background.js`), do czasu poprawy reguły dopasowania w silniku.
 
 ## Modele i dostawcy (wszystko lokalnie, CPU)
 | Rola | Model | Licencja | Uwagi |
@@ -151,10 +160,11 @@ Kanały, korpus i reguły są niezależne od modelu.
   Interfejs przywraca swój element po usunięciu przez stronę. Wstrzymanie ostrzeżeń nie usuwa lupki.
 - Kliknięcie lupki od razu uruchamia wybór fragmentu — bez menu pośredniego. Escape anuluje wybór.
 - Panel na pasku przeglądarki: oznaczenia przy treściach (wł./wył.), sprawdzanie w tle do 3 fragmentów na stronę
-  (wł./wył.), zasłony (domyślnie wyłączone), tryb demonstracyjny i adresy serwera/strony.
+  (domyślnie wyłączone), zasłony (domyślnie wyłączone), tryb demonstracyjny i adresy serwera/strony.
 - Automatyczny skan pozostaje ograniczony do dotychczas obsługiwanych portali, mediów społecznościowych i lokalnego demo.
   Na pozostałych witrynach treść jest wysyłana dopiero po ręcznym wyborze. Na obsługiwanych stronach automatyczny skan
-  zaczyna się po zaakceptowaniu informacji o działaniu (mówi też o sprawdzaniu w tle) lub wcześniejszym zapisaniu zgody.
+  zaczyna się po zaakceptowaniu informacji o działaniu (mówi o sprawdzaniu w tle, gdy jest włączone) lub wcześniejszym
+  zapisaniu zgody.
 - Oznaczenie to pasek w prawym górnym rogu fragmentu: tekst jest linkiem do publikacji źródłowej (wydawca, ocena, data),
   obok przycisk „Sprawdź”. Pełne zdanie („Podobną informację … ocenił(a) jako … To dopasowanie treści, a nie pełna
   weryfikacja”) jest w podpowiedzi i etykiecie dostępności. Przy krótkich fragmentach (nagłówek, jednowierszowy wpis)

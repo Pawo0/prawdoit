@@ -2,9 +2,9 @@
 // 1) Real-time: scans what is VISIBLE on screen (IntersectionObserver) on social media & news portals and sends only
 //    the text of each post/headline/paragraph to the Prawdowid server. The server is a ROUTER with three answers:
 //      none      → nothing is shown;
-//      candidate → nothing is shown; at most 3 per page view are checked in the background (full pipeline in "auto"
-//                  mode: local sources only, no live search, text not stored) and get a badge only if that check
-//                  ends with a decisive verdict that cites a source;
+//      candidate → nothing is shown. With the opt-in setting "autoVerify", at most 3 per page view are checked in
+//                  the background (full pipeline in "auto" mode: local sources only, no live search, text not
+//                  stored) and get a badge only if that check ends with a decisive verdict that cites a source;
 //      match     → a badge naming the fact-checker, its rating, the date and a link; a click runs the full check.
 //    A badge is therefore never shown without a named source. Covering the post is an opt-in setting.
 // 2) On demand: floating button (bottom-right) → "Wybierz fragment" element picker (like uBlock) → full analysis.
@@ -19,7 +19,7 @@
   const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new Promise(res => chrome.runtime.sendMessage(msg, res));
   const host = location.hostname.replace(/^www\./, "");
   const isMobile = matchMedia("(pointer: coarse)").matches;
-  let S = {autoScan: true, autoVerify: true, mockMode: false, mode: "oznacz", disabledSites: [], noticeSeen: false, apiBase: ""};
+  let S = {autoScan: true, autoVerify: false, mockMode: false, mode: "oznacz", disabledSites: [], noticeSeen: false, apiBase: ""};
 
   // ------------------------------------------------------------------ site adapters
   const txt = el => (el?.innerText || "").replace(/\s+/g, " ").trim();
@@ -550,7 +550,7 @@
   function notice() {
     const n = document.createElement("div"); n.className = "notice";
     n.innerHTML = `<div class="card"><div class="mini-title">Prawdowid · pierwsze uruchomienie</div><div class="hd">Prawdowid na tej stronie</div>
-      <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy pokazywać przy widocznych treściach oceny fact-checkerów dotyczące podobnych informacji — zawsze ze źródłem. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony. Najwyżej 3 fragmenty na stronę sprawdzamy dokładniej w tle: tylko w lokalnej bazie źródeł i bez zapisywania tekstu. Brak oznaczenia nie oznacza, że treść jest prawdziwa."}</p>
+      <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy pokazywać przy widocznych treściach oceny fact-checkerów dotyczące podobnych informacji — zawsze ze źródłem. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony." + (S.autoVerify ? " Najwyżej 3 fragmenty na stronę sprawdzamy dokładniej w tle: tylko w lokalnej bazie źródeł i bez zapisywania tekstu." : "") + " Brak oznaczenia nie oznacza, że treść jest prawdziwa."}</p>
       <div class="row"><button class="p" data-n="ok">Włącz ostrzeżenia</button><button data-n="off">Sprawdzam tylko ręcznie</button></div></div>`;
     n.addEventListener("click", async e => {
       const a = e.target.closest("button")?.dataset.n; if (!a) return;

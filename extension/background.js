@@ -4,7 +4,10 @@
 const api = globalThis.browser ?? globalThis.chrome;
 // mode: "oznacz" = badge with the source (default); "zaslon" = cover strongly matched posts — opt-in in the popup.
 // autoVerify: let the page send up to 3 unmarked fragments per page view to a background check (mode "auto").
-const DEFAULTS = {apiBase: "http://localhost:8000", demoWebBase: "http://localhost:5500", mockMode: false, autoScan: true, autoVerify: true, mode: "oznacz", minLevel: "srednie", disabledSites: [], noticeSeen: false};
+// Off by default: measured on repo data, the full check still gives a wrong "sources contradict" result for 3.7 % of
+// ordinary official sentences and 26 % of hard negatives (eval/results/router_measure.md) — acceptable when a person
+// asks and reads the sources, not as an unrequested mark. Switch on in the popup, or here once that rate is down.
+const DEFAULTS = {apiBase: "http://localhost:8000", demoWebBase: "http://localhost:5500", mockMode: false, autoScan: true, autoVerify: false, mode: "oznacz", minLevel: "srednie", disabledSites: [], noticeSeen: false};
 
 async function settings() { return Object.assign({}, DEFAULTS, await api.storage.local.get(Object.keys(DEFAULTS))); }
 
