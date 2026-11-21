@@ -36,24 +36,31 @@ Strona testowa: http://localhost:8000/demo/feed.html. Firefox (także Android): 
 **Discord:** `PRAWDOWID_DISCORD_TOKEN=... python bots/discord_bot.py` (instrukcja w pliku).
 **WhatsApp/Messenger:** zmienne `PRAWDOWID_WA_*`, `PRAWDOWID_FB_*` + publiczny HTTPS (np. `cloudflared tunnel --url http://localhost:8000`); bez nich działa adapter demonstracyjny z identycznym formatem webhooka.
 
-**Ewaluacja:** `backend/.venv/bin/python eval/run_eval.py` → `eval/results/results.md`.
+**Ewaluacja:** `backend/.venv/bin/python eval/run_eval.py [--cases eval/cases_heldout.jsonl|eval/cases_blind2.jsonl] [--out ...]`
+→ `results.md` / `results.json`. Test E2E wtyczki: `eval/test_extension.py`, portale: `eval/test_real_sites.py`.
 **Odświeżenie źródeł:** `ingest/run_factchecks.sh`, `ingest/run_official.sh`.
 
 ## Wyniki testów (sekcja 6 wyzwania)
-| Miernik | Cel MVP | Zbiór deweloperski (38) | Zbiór niezależny „held-out” (57) — 1. przebieg ślepy | po poprawkach ogólnych |
+Trzy zbiory (łącznie 145 przypadków, scenariusze A–J). Zbiory „ślepe” przygotowały niezależne agenty wyłącznie na podstawie
+korpusu i opisu wyzwania, bez wglądu w kod. **Uczciwą estymatą jakości są pierwsze przebiegi na zbiorach ślepych**
+(kolumny „1. przebieg”); kolejne kolumny pokazują wynik po poprawkach ogólnych (reguły, nie łatki pod przypadki).
+
+| Miernik | Cel MVP | Dev (38) | Ślepy 1 (57): 1. przebieg → po poprawkach | Ślepy 2 (50): 1. przebieg → po poprawkach |
 |---|---|---|---|---|
-| Trafność werdyktu (macro-F1) | ≥ 0,75 | 1,00 | **0,774** | 0,936 |
-| Pokrycie cytowań | ≥ 95% | 100% | 100% | 100% |
-| Wstrzymanie się przy braku dowodów | ≥ 80% | 100% | 100% | 100% |
-| Odporność na prompt injection | ≥ 90% | 100% | 60% | 100% |
-| Czas (mediana) | ≤ 30 s | 0,4 s | 0,5 s | 0,5 s |
+| Trafność werdyktu (macro-F1) | ≥ 0,75 | 1,00 | **0,774** → 0,936 | **0,747** → 0,901 |
+| Pokrycie cytowań | ≥ 95% | 100% | 100% → 100% | 100% → 100% |
+| Wstrzymanie się przy braku dowodów | ≥ 80% | 100% | 100% → 100% | 100% → 100% |
+| Odporność na prompt injection (instrukcja zignorowana **i** zdarzenie zapisane) | ≥ 90% | 100% | 60% → 100% | 25% → 100% |
+| Statusy niewerdyktowe (błąd / doprecyzuj) | — | 100% | 33% → 100% | 50% → 100% |
+| Czas (mediana / p95) | ≤ 30 s | 0,5 / 1,7 s | 0,5 / 2,2 s | 0,5 / 1,5 s |
 | Spójność kanałów (WWW vs WhatsApp-demo) | 100% | 100% | 100% | 100% |
 | Pętla informacji (deduplikacja spraw) | 100% | tak | tak | tak |
 
-Zbiór „held-out” napisał niezależny agent na podstawie korpusu, bez wglądu w kod. Kolejne poprawki były regułami
-ogólnymi (miary statystyczne, formy prompt injection, powitania), nie łatkami pod przypadki — ale po nich zbiór nie
-jest już w pełni ślepy; uczciwą estymatą jest 1. przebieg. Wszystkie pozostałe błędy to „brak dowodów” zamiast werdyktu
-(błąd bezpieczny), nie fałszywe werdykty. Wyniki: `eval/results*/results.md`; odtworzenie: sekcja „Ewaluacja”.
+Wszystkie pozostałe błędy to **„brak dowodów” zamiast werdyktu** (błąd bezpieczny) — przy parafrazach semantycznych
+(np. „ranny w strzelaninie” vs „postrzelony”). Żaden przypadek nie kończy się fałszywym werdyktem. We wszystkich próbach
+prompt injection werdykt nie podążył za instrukcją (także w 1. przebiegach); poprawki dotyczyły wykrywania i
+odnotowania nowych form ataku (komentarz HTML, blok ```system, base64, odgrywanie ról).
+Wyniki: `eval/results*/results.md` i `results.json`; odtworzenie: sekcja „Ewaluacja”.
 
 Szczegóły: [architektura](docs/ARCHITECTURE.md) · [źródła i licencje](docs/SOURCES.md) · [ryzyka](docs/RISKS.md) ·
 [koszty](docs/COSTS.md) · [scenariusz demo](docs/DEMO.md) · [podsumowanie researchu](docs/RESEARCH_SUMMARY.md) ·

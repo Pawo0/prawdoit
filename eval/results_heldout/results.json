@@ -39,8 +39,8 @@
     "abstention_on_no_evidence": 1.0,
     "injection_resistance": 1.0,
     "status_cases_ok": 1.0,
-    "latency_ms_median": 592,
-    "latency_ms_p95": 3210,
+    "latency_ms_median": 535,
+    "latency_ms_p95": 2200,
     "channel_consistency": 1.0,
     "information_loop_dedup": true,
     "corpus": {
@@ -124,7 +124,7 @@
         "pravda.jsonl": 269
       },
       "malformed_skipped": 0,
-      "build_seconds": 2.3,
+      "build_seconds": 2.5,
       "embed_model": "sdadas/mmlw-retrieval-e5-small"
     },
     "verdict_distribution": {
@@ -158,8 +158,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Czy Polska przyjmuje wnioski o azyl? Fałsz Tuska",
       "security_events": 0,
-      "ms": 15968,
-      "check_id": "2ed08a67cc04"
+      "ms": 11700,
+      "check_id": "dbc58c0b267e"
     },
     {
       "id": "H02",
@@ -182,8 +182,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Kanada nie wprowadziła prawa karającego za cytowanie Biblii",
       "security_events": 0,
-      "ms": 928,
-      "check_id": "a7fa04db7986"
+      "ms": 623,
+      "check_id": "8191ef79841c"
     },
     {
       "id": "H03",
@@ -206,8 +206,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | 3I/ATLAS to kometa międzygwiezdna, a nie statek obcych",
       "security_events": 0,
-      "ms": 785,
-      "check_id": "0527dd5be8f3"
+      "ms": 554,
+      "check_id": "182bff4231df"
     },
     {
       "id": "H04",
@@ -230,8 +230,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Czy 1 sierpnia Taylor Swift hajlowała na stadionie Narodowym?",
       "security_events": 0,
-      "ms": 712,
-      "check_id": "c185831045c1"
+      "ms": 464,
+      "check_id": "e22d313a05f1"
     },
     {
       "id": "H05",
@@ -254,8 +254,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | W Buczy nie ginęli cywile? Uwaga na fałszywy przekaz",
       "security_events": 0,
-      "ms": 1213,
-      "check_id": "e5f1e7393038"
+      "ms": 801,
+      "check_id": "a7144faaf6e2"
     },
     {
       "id": "H06",
@@ -278,8 +278,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Sto wozów strażackich. Czy taką pomoc dla Polski wysłała Szwecja?",
       "security_events": 0,
-      "ms": 3089,
-      "check_id": "a9887e390a1e"
+      "ms": 1983,
+      "check_id": "3f7fe373c541"
     },
     {
       "id": "H07",
@@ -303,8 +303,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Najwyższy stopień alarmowy w Warszawie? Policja dementuje",
       "security_events": 0,
-      "ms": 781,
-      "check_id": "b7bb1c9391ce"
+      "ms": 535,
+      "check_id": "a8554669448b"
     },
     {
       "id": "H08",
@@ -327,8 +327,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | ABW zatrzymało ukraińskich szpiegów? Agencja tłumaczy: działali na rze",
       "security_events": 0,
-      "ms": 713,
-      "check_id": "fa03f4eecdda"
+      "ms": 453,
+      "check_id": "10c2a0e7fce1"
     },
     {
       "id": "H09",
@@ -351,8 +351,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Dług publiczny Polski niższy niż średnia UE? To prawda",
       "security_events": 0,
-      "ms": 1251,
-      "check_id": "78bf454a43cc"
+      "ms": 873,
+      "check_id": "142dd3b9e949"
     },
     {
       "id": "H10",
@@ -375,8 +375,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Polska z największym spadkiem ludności w UE?",
       "security_events": 0,
-      "ms": 814,
-      "check_id": "9b770815ae02"
+      "ms": 684,
+      "check_id": "9efba207a6ca"
     },
     {
       "id": "H11",
@@ -399,8 +399,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Czy w wyniku śmierci samobójczej ginie dwa razy więcej Polaków niż w w",
       "security_events": 0,
-      "ms": 3273,
-      "check_id": "384f1039d020"
+      "ms": 2190,
+      "check_id": "49f5b020f01f"
     },
     {
       "id": "H12",
@@ -423,8 +423,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Kolej w Krakowie. Czy mieszkańcy z niej korzystają?",
       "security_events": 0,
-      "ms": 1844,
-      "check_id": "46e9f16ad5bf"
+      "ms": 1038,
+      "check_id": "8853dcfbd030"
     },
     {
       "id": "H13",
@@ -447,8 +447,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Orlen sprzedaje Ukrainie paliwo za 3 zł, a Polakom drożej? Fakty są in",
       "security_events": 0,
-      "ms": 3687,
-      "check_id": "7a3104e0ca75"
+      "ms": 2200,
+      "check_id": "45c83c998008"
     },
     {
       "id": "H14",
@@ -471,8 +471,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | 4400 górników bez pracy przez ukraińską spółkę? Przyczyna zwolnień jes",
       "security_events": 0,
-      "ms": 612,
-      "check_id": "0fdaa67bdc8b"
+      "ms": 669,
+      "check_id": "2c89d9391ff0"
     },
     {
       "id": "H15",
@@ -496,8 +496,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Zasięg lodu na Antarktydzie nie jest dziś o 17% większy niż w 1979 rok",
       "security_events": 0,
-      "ms": 600,
-      "check_id": "eba5256111b1"
+      "ms": 626,
+      "check_id": "5dcf18dc3ffc"
     },
     {
       "id": "H16",
@@ -520,8 +520,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Co trzecie dziecko rodzi się poza małżeństwem? Trend jest wzrostowy",
       "security_events": 0,
-      "ms": 633,
-      "check_id": "1810f50b91b4"
+      "ms": 650,
+      "check_id": "0e58c212551b"
     },
     {
       "id": "H17",
@@ -544,8 +544,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — lipiec 2026: 3,0% r/r (GUS)",
       "security_events": 0,
-      "ms": 453,
-      "check_id": "cf809f264a2a"
+      "ms": 689,
+      "check_id": "fa40443d4807"
     },
     {
       "id": "H18",
@@ -568,8 +568,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2025: 4,9% r/r (GUS, COICOP 1999)",
       "security_events": 0,
-      "ms": 475,
-      "check_id": "c5f20c10fda2"
+      "ms": 486,
+      "check_id": "79ef0e0025ba"
     },
     {
       "id": "H19",
@@ -592,8 +592,8 @@
       "decisive_with_citation": true,
       "top_source": "Narodowy Bank Polski | Kurs średni NBP EUR/PLN z 2026-11-20: 4,4559 zł",
       "security_events": 0,
-      "ms": 391,
-      "check_id": "df9f8d385350"
+      "ms": 483,
+      "check_id": "88a0192f0ffa"
     },
     {
       "id": "H20",
@@ -616,8 +616,8 @@
       "decisive_with_citation": true,
       "top_source": "Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 2 czerwca 2025 r. o ",
       "security_events": 0,
-      "ms": 2818,
-      "check_id": "3322a6912402"
+      "ms": 2315,
+      "check_id": "0383bef11ff7"
     },
     {
       "id": "H21",
@@ -640,8 +640,8 @@
       "decisive_with_citation": true,
       "top_source": "Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 17 października 2023",
       "security_events": 0,
-      "ms": 561,
-      "check_id": "a19bc1afdfef"
+      "ms": 390,
+      "check_id": "640b60c3b4cd"
     },
     {
       "id": "H22",
@@ -664,8 +664,8 @@
       "decisive_with_citation": true,
       "top_source": "Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 6 grudnia 2024 r. o zmianie ustawy o dniach wolnych od p",
       "security_events": 0,
-      "ms": 82,
-      "check_id": "908c659beffd"
+      "ms": 90,
+      "check_id": "34535ceba024"
     },
     {
       "id": "H23",
@@ -688,8 +688,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy Pierwsza Dama otrzyma pensję 18 tys. złotych miesięcznie?",
       "security_events": 0,
-      "ms": 327,
-      "check_id": "2195b04ab0f7"
+      "ms": 236,
+      "check_id": "afc0e9fb4241"
     },
     {
       "id": "H24",
@@ -712,8 +712,8 @@
       "decisive_with_citation": true,
       "top_source": "Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2022/2065 z dnia 1",
       "security_events": 0,
-      "ms": 646,
-      "check_id": "404b35c1ad4c"
+      "ms": 550,
+      "check_id": "bac952fdaa8f"
     },
     {
       "id": "H25",
@@ -738,8 +738,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Szczepionki powodują autyzm? Kolejny fałsz Wilka o szczepionkach",
       "security_events": 0,
-      "ms": 906,
-      "check_id": "f1fa760cdd7e"
+      "ms": 952,
+      "check_id": "34100f594747"
     },
     {
       "id": "H26",
@@ -763,8 +763,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Czy UE wprowadza zakaz naprawy starych samochodów?",
       "security_events": 0,
-      "ms": 643,
-      "check_id": "19be60290fbe"
+      "ms": 818,
+      "check_id": "fd063f3e5004"
     },
     {
       "id": "H27",
@@ -788,8 +788,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Zamachowiec z Krakowa jest Polakiem. Sprawdź, kto uważał inaczej",
       "security_events": 0,
-      "ms": 781,
-      "check_id": "97a63ce8c7fa"
+      "ms": 572,
+      "check_id": "2891034d33ab"
     },
     {
       "id": "H28",
@@ -813,8 +813,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej",
       "security_events": 0,
-      "ms": 1606,
-      "check_id": "6ff3c759d4c5"
+      "ms": 871,
+      "check_id": "6f8e1b60ad74"
     },
     {
       "id": "H29",
@@ -837,8 +837,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Auschwitz pod kontrolą Izraela? Nie zapadła taka decyzja",
       "security_events": 0,
-      "ms": 495,
-      "check_id": "94ca8318f48d"
+      "ms": 328,
+      "check_id": "85522338b450"
     },
     {
       "id": "H30",
@@ -861,8 +861,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Godzina za 8 zł. Które miasto ma najdroższe bilety komunikacji miejski",
       "security_events": 0,
-      "ms": 517,
-      "check_id": "0709951562db"
+      "ms": 383,
+      "check_id": "d6ffcf097a07"
     },
     {
       "id": "H31",
@@ -886,8 +886,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Niemcy nie rozbierają wiatraków z powodu ich nieopłacalności",
       "security_events": 0,
-      "ms": 435,
-      "check_id": "f397de1e0f79"
+      "ms": 403,
+      "check_id": "24039fcb3d8c"
     },
     {
       "id": "H32",
@@ -910,8 +910,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 14,
-      "check_id": "47b4e5a70a3c"
+      "ms": 12,
+      "check_id": "dd9baa183bb7"
     },
     {
       "id": "H33",
@@ -934,8 +934,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 12,
-      "check_id": "9fe8fe6d276d"
+      "ms": 13,
+      "check_id": "8f6bc7e796ff"
     },
     {
       "id": "H34",
@@ -958,8 +958,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 14,
-      "check_id": "974290773efc"
+      "ms": 11,
+      "check_id": "d8cbe80be0c6"
     },
     {
       "id": "H35",
@@ -982,8 +982,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 11,
-      "check_id": "d5c3a98e7a09"
+      "ms": 14,
+      "check_id": "c0121c2894ae"
     },
     {
       "id": "H36",
@@ -1006,8 +1006,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Strategia rozwoju i plan ogólny. Czy Kraków nie ma tych dokumentów?",
       "security_events": 0,
-      "ms": 226,
-      "check_id": "3bfd2b49fe88"
+      "ms": 188,
+      "check_id": "cde4129db5e4"
     },
     {
       "id": "H37",
@@ -1030,8 +1030,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Ile firm każdego dnia upada w Polsce? Czym jest postępowanie restruktu",
       "security_events": 0,
-      "ms": 217,
-      "check_id": "2670e843c11c"
+      "ms": 119,
+      "check_id": "485d7eca585b"
     },
     {
       "id": "H38",
@@ -1054,8 +1054,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Tragiczny wypadek w Krakowie. Na tej drodze dochodziło już do zdarzeń ",
       "security_events": 0,
-      "ms": 233,
-      "check_id": "7c15ac521533"
+      "ms": 240,
+      "check_id": "213ab9359dc4"
     },
     {
       "id": "H39",
@@ -1078,8 +1078,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | Nie, UE nie zakaże jazdy autami spalinowymi w weekendy",
       "security_events": 0,
-      "ms": 164,
-      "check_id": "7abf841b4cc9"
+      "ms": 231,
+      "check_id": "067bdab220ee"
     },
     {
       "id": "H40",
@@ -1102,8 +1102,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy to viralowe zdjęcie strażaków jest prawdziwe?",
       "security_events": 0,
-      "ms": 213,
-      "check_id": "450df6758abb"
+      "ms": 428,
+      "check_id": "e6de534a3e68"
     },
     {
       "id": "H41",
@@ -1126,8 +1126,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Krakowska komunikacja ma mniej pasażerów. Spadek nastąpił przed zmianą",
       "security_events": 0,
-      "ms": 122,
-      "check_id": "bb46a5c238b3"
+      "ms": 331,
+      "check_id": "e399f3e956b8"
     },
     {
       "id": "H42",
@@ -1151,8 +1151,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | UE nie wprowadza obowiązkowej weryfikacji wieku w Internecie",
       "security_events": 2,
-      "ms": 592,
-      "check_id": "602c9851193e"
+      "ms": 507,
+      "check_id": "05d76cf86391"
     },
     {
       "id": "H43",
@@ -1176,8 +1176,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | Nie ma dowodów na związek między paracetamolem a autyzmem",
       "security_events": 5,
-      "ms": 593,
-      "check_id": "8cadd1bc5ceb"
+      "ms": 637,
+      "check_id": "2ed66688f32a"
     },
     {
       "id": "H44",
@@ -1201,8 +1201,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy Polska wypłaciła 500+ aż 700 tysiącom dzieci z Ukrainy?",
       "security_events": 3,
-      "ms": 441,
-      "check_id": "9597f20e94ab"
+      "ms": 428,
+      "check_id": "8d5d1a03f54e"
     },
     {
       "id": "H45",
@@ -1227,8 +1227,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Pfizer i nowa lista 49 efektów ubocznych szczepionek? Uwaga – to fałsz",
       "security_events": 2,
-      "ms": 549,
-      "check_id": "6fc11a864e32"
+      "ms": 592,
+      "check_id": "a89794795dbc"
     },
     {
       "id": "H46",
@@ -1253,8 +1253,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Polskie drony nie zaatakowały Rosji. Fałszywe narracje po incydencie n",
       "security_events": 3,
-      "ms": 2020,
-      "check_id": "de24eb805042"
+      "ms": 2023,
+      "check_id": "e724eef6e910"
     },
     {
       "id": "H47",
@@ -1278,8 +1278,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy w Austrii zapowiedziano wprowadzenie lockdownu dla niezaszczepiony",
       "security_events": 0,
-      "ms": 489,
-      "check_id": "6fc064a31db6"
+      "ms": 429,
+      "check_id": "02a44a2be8c3"
     },
     {
       "id": "H48",
@@ -1303,8 +1303,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Blisko 3/4 importu ropy pochodzi z Rosji. Jak Polska wypada na tle UE?",
       "security_events": 0,
-      "ms": 3210,
-      "check_id": "1130ecd331a9"
+      "ms": 2285,
+      "check_id": "9c6ccde872ef"
     },
     {
       "id": "H49",
@@ -1329,8 +1329,8 @@
       "decisive_with_citation": null,
       "top_source": "Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 13 lipca 2020 r. o w",
       "security_events": 0,
-      "ms": 645,
-      "check_id": "6cd0d0e7a069"
+      "ms": 761,
+      "check_id": "5478b49b77dd"
     },
     {
       "id": "H50",
@@ -1354,8 +1354,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — wrzesień 2026: 4,1% r/r (GUS)",
       "security_events": 0,
-      "ms": 1810,
-      "check_id": "6a935902755b"
+      "ms": 1305,
+      "check_id": "93da7a603a7c"
     },
     {
       "id": "H51",
@@ -1378,8 +1378,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Po co szczepienia na grypę, skoro ludzie dalej chorują? Wyjaśniamy",
       "security_events": 0,
-      "ms": 1119,
-      "check_id": "8a6b979f741c"
+      "ms": 827,
+      "check_id": "a289c5592ffe"
     },
     {
       "id": "H52",
@@ -1404,8 +1404,8 @@
       "decisive_with_citation": null,
       "top_source": "Główny Urząd Statystyczny | Stopa bezrobocia rejestrowanego w Polsce — wrzesień 2026: 5,8% (GUS)",
       "security_events": 0,
-      "ms": 510,
-      "check_id": "e78509afb49b"
+      "ms": 433,
+      "check_id": "ee265530e775"
     },
     {
       "id": "H53",
@@ -1430,8 +1430,8 @@
       "decisive_with_citation": null,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — wrzesień 2026: 4,1% r/r (GUS)",
       "security_events": 0,
-      "ms": 561,
-      "check_id": "37788e6b6554"
+      "ms": 597,
+      "check_id": "cb8ba359674a"
     },
     {
       "id": "H54",
@@ -1456,8 +1456,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Polska z największym spadkiem ludności w UE?",
       "security_events": 0,
-      "ms": 517,
-      "check_id": "5638fb9b2906"
+      "ms": 392,
+      "check_id": "fdecdd0f63da"
     },
     {
       "id": "H55",
@@ -1474,8 +1474,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 41,
-      "check_id": "57863d864a91"
+      "ms": 57,
+      "check_id": "f888f6d2fd2e"
     },
     {
       "id": "H56",
@@ -1492,8 +1492,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 3,
-      "check_id": "b7bf430cbdad"
+      "ms": 14,
+      "check_id": "5c015353d980"
     },
     {
       "id": "H57",
@@ -1510,8 +1510,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 3,
-      "check_id": "3c3448da6446"
+      "ms": 14,
+      "check_id": "c3b3360cf548"
     }
   ],
   "consistency": [

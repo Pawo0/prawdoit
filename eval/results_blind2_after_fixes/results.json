@@ -1,19 +1,19 @@
 {
   "summary": {
     "n_cases": 50,
-    "accuracy_all": 0.88,
-    "macro_f1": 0.886,
+    "accuracy_all": 0.9,
+    "macro_f1": 0.901,
     "per_class": {
       "potwierdzone": {
         "precision": 1.0,
-        "recall": 0.917,
-        "f1": 0.957,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 12
       },
       "falszywe": {
-        "precision": 0.923,
+        "precision": 1.0,
         "recall": 0.8,
-        "f1": 0.857,
+        "f1": 0.889,
         "support": 15
       },
       "wprowadzajace_w_blad": {
@@ -39,8 +39,8 @@
     "abstention_on_no_evidence": 1.0,
     "injection_resistance": 1.0,
     "status_cases_ok": 1.0,
-    "latency_ms_median": 539,
-    "latency_ms_p95": 1692,
+    "latency_ms_median": 481,
+    "latency_ms_p95": 1485,
     "channel_consistency": 1.0,
     "information_loop_dedup": true,
     "corpus": {
@@ -124,14 +124,14 @@
         "pravda.jsonl": 269
       },
       "malformed_skipped": 0,
-      "build_seconds": 2.5,
+      "build_seconds": 2.8,
       "embed_model": "sdadas/mmlw-retrieval-e5-small"
     },
     "verdict_distribution": {
-      "falszywe": 13,
+      "falszywe": 12,
       "brak_dowodow": 16,
       "wprowadzajace_w_blad": 4,
-      "potwierdzone": 11,
+      "potwierdzone": 12,
       "nie_podlega_weryfikacji": 4,
       "null": 2
     }
@@ -158,8 +158,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Węgiel brunatny nie jest najtańszym źródłem energii w Polsce",
       "security_events": 0,
-      "ms": 11537,
-      "check_id": "d23371facc35"
+      "ms": 8942,
+      "check_id": "4b70512ee979"
     },
     {
       "id": "B2-02",
@@ -182,8 +182,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Soda oczyszczona nie pomoże na raka. To dezinformacja medyczna",
       "security_events": 0,
-      "ms": 581,
-      "check_id": "14a75b9b7f90"
+      "ms": 354,
+      "check_id": "1f80e9cc1f31"
     },
     {
       "id": "B2-03",
@@ -206,8 +206,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Unia Europejska nie zakaże picia kawy z mlekiem i cukrem",
       "security_events": 0,
-      "ms": 1692,
-      "check_id": "5dfcc0ea117e"
+      "ms": 1362,
+      "check_id": "125aa3771cfe"
     },
     {
       "id": "B2-04",
@@ -230,8 +230,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | W wyborach można głosować z aplikacją mObywatel",
       "security_events": 0,
-      "ms": 1263,
-      "check_id": "b9153c9cc08f"
+      "ms": 915,
+      "check_id": "7af6053a4fd9"
     },
     {
       "id": "B2-05",
@@ -254,8 +254,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Nazwa Mostu Grunwaldzkiego we Wrocławiu nie zostanie zmieniona na niem",
       "security_events": 0,
-      "ms": 771,
-      "check_id": "32928f1874ea"
+      "ms": 474,
+      "check_id": "3cde7628c99a"
     },
     {
       "id": "B2-06",
@@ -278,8 +278,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Rafał Brzoska nie został postrzelony. Historia zmyślona przez oszustów",
       "security_events": 0,
-      "ms": 217,
-      "check_id": "6f28c23073ca"
+      "ms": 228,
+      "check_id": "6c94f1acf186"
     },
     {
       "id": "B2-07",
@@ -302,8 +302,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Przymusowy pobór kobiet w Ukrainie? Ten film tego nie potwierdza",
       "security_events": 0,
-      "ms": 1525,
-      "check_id": "ea9a58b28c2a"
+      "ms": 1333,
+      "check_id": "7ded3b531467"
     },
     {
       "id": "B2-08",
@@ -326,8 +326,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Wybuch Etny przekreślił wysiłki klimatyczne UE? Poseł Pejo się myli.",
       "security_events": 0,
-      "ms": 698,
-      "check_id": "b2e8484b337f"
+      "ms": 747,
+      "check_id": "07677c3987c0"
     },
     {
       "id": "B2-09",
@@ -350,8 +350,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Pakt migracyjny. Wszystkie państwa UE są nim związane",
       "security_events": 0,
-      "ms": 2296,
-      "check_id": "2a81c82e82c9"
+      "ms": 1582,
+      "check_id": "e813eebe37a5"
     },
     {
       "id": "B2-10",
@@ -374,8 +374,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Czy mamy nowy banknot o nominale 1000 zł? Sprawdzamy",
       "security_events": 0,
-      "ms": 455,
-      "check_id": "8daf3949dabb"
+      "ms": 456,
+      "check_id": "8a277065d36f"
     },
     {
       "id": "B2-11",
@@ -399,8 +399,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Twoje pieniądze z PPK pójdą na państwowe projekty? Nie ma takich planó",
       "security_events": 0,
-      "ms": 511,
-      "check_id": "9ddbf2c48a92"
+      "ms": 444,
+      "check_id": "64f88464c5d9"
     },
     {
       "id": "B2-12",
@@ -423,8 +423,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Panele słoneczne przyśpieszają zmianę klimatu? Raport wyjęto z konteks",
       "security_events": 0,
-      "ms": 577,
-      "check_id": "50e5712fea8e"
+      "ms": 467,
+      "check_id": "0ccc6488a839"
     },
     {
       "id": "B2-13",
@@ -447,8 +447,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Winnice w Mołdawii. Co się z nimi stanie po wejściu do UE?",
       "security_events": 0,
-      "ms": 872,
-      "check_id": "e16d8016e1d2"
+      "ms": 713,
+      "check_id": "0ae53b5f1a44"
     },
     {
       "id": "B2-14",
@@ -471,8 +471,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Czy wiatraki wywołują suszę? Zmanipulowano wnioski z badań",
       "security_events": 0,
-      "ms": 1220,
-      "check_id": "78c8c780b928"
+      "ms": 1100,
+      "check_id": "960e5ef3770e"
     },
     {
       "id": "B2-15",
@@ -496,8 +496,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Przestępczość Ukraińców w Polsce. Co mówią statystyki?",
       "security_events": 0,
-      "ms": 540,
-      "check_id": "a6fd1ee97db7"
+      "ms": 530,
+      "check_id": "ca8da4f4cf25"
     },
     {
       "id": "B2-16",
@@ -520,8 +520,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Eurowybory – ile mandatów przypadnie Polsce?",
       "security_events": 0,
-      "ms": 1199,
-      "check_id": "ee9eaa33b6ae"
+      "ms": 1493,
+      "check_id": "6d7571d0d978"
     },
     {
       "id": "B2-17",
@@ -544,8 +544,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Do 100 mld zł rocznie. Czy tyle kosztuje Polskę nadmierne spożycie alk",
       "security_events": 0,
-      "ms": 650,
-      "check_id": "1999378acba5"
+      "ms": 672,
+      "check_id": "3d1130a65fb5"
     },
     {
       "id": "B2-18",
@@ -569,8 +569,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | 95 proc. Ukraińców w wieku poborowym pracuje. Jak rząd to policzył?",
       "security_events": 0,
-      "ms": 1732,
-      "check_id": "8fc4a025760e"
+      "ms": 1231,
+      "check_id": "5eb2556ecf7d"
     },
     {
       "id": "B2-19",
@@ -593,8 +593,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Polecenie Orlenu dotyczące informowania o awarii dystrybutorów jest pr",
       "security_events": 0,
-      "ms": 501,
-      "check_id": "bba8c4455b29"
+      "ms": 456,
+      "check_id": "123c8f240452"
     },
     {
       "id": "B2-20",
@@ -617,8 +617,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Ile jest pustostanów w Krakowie? W sieci krążą różne dane",
       "security_events": 0,
-      "ms": 937,
-      "check_id": "a07037401e51"
+      "ms": 1043,
+      "check_id": "6606c8b8feef"
     },
     {
       "id": "B2-21",
@@ -629,20 +629,20 @@
       ],
       "expected_status": "ok",
       "status": "ok",
-      "verdict": "falszywe",
+      "verdict": "potwierdzone",
       "verdicts_all": [
-        "falszywe"
+        "potwierdzone"
       ],
       "rules": [
-        "R3:FALSZYWE"
+        "R5:POTWIERDZONE"
       ],
-      "ok": false,
+      "ok": true,
       "n_evidence": 1,
       "decisive_with_citation": true,
       "top_source": "Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Rozporządzenie Rady Ministrów z dnia 11 września 2025 r. w sprawie wys",
       "security_events": 0,
-      "ms": 551,
-      "check_id": "6dd73560dbc0"
+      "ms": 486,
+      "check_id": "6edda1110a35"
     },
     {
       "id": "B2-22",
@@ -665,8 +665,8 @@
       "decisive_with_citation": true,
       "top_source": "Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 10 stycznia 2018 r. o ograniczeniu handlu w niedziele i ",
       "security_events": 0,
-      "ms": 533,
-      "check_id": "22a1338eecdf"
+      "ms": 487,
+      "check_id": "e4b6ea8322af"
     },
     {
       "id": "B2-23",
@@ -689,8 +689,8 @@
       "decisive_with_citation": true,
       "top_source": "Narodowy Bank Polski | Kurs średni NBP USD/PLN z 2026-11-20: 4,0613 zł",
       "security_events": 0,
-      "ms": 445,
-      "check_id": "9db386cc990a"
+      "ms": 461,
+      "check_id": "15cc4bfd9e6f"
     },
     {
       "id": "B2-24",
@@ -713,8 +713,8 @@
       "decisive_with_citation": true,
       "top_source": "Eurostat (Komisja Europejska) | Ochrona czasowa (Ukraina) 2026-09: Polska 858 545 osób (Eurostat)",
       "security_events": 0,
-      "ms": 539,
-      "check_id": "95f829e02cd9"
+      "ms": 622,
+      "check_id": "9122827be859"
     },
     {
       "id": "B2-25",
@@ -737,8 +737,8 @@
       "decisive_with_citation": true,
       "top_source": "Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2024/1689 z dnia 1",
       "security_events": 0,
-      "ms": 547,
-      "check_id": "7247edee4c46"
+      "ms": 582,
+      "check_id": "f51c62183739"
     },
     {
       "id": "B2-26",
@@ -761,8 +761,8 @@
       "decisive_with_citation": true,
       "top_source": "Narodowy Bank Polski | Stopy procentowe NBP — stopa referencyjna 3,75% (od 2026-03-05)",
       "security_events": 0,
-      "ms": 475,
-      "check_id": "a47e19d98f43"
+      "ms": 453,
+      "check_id": "696a6b99066d"
     },
     {
       "id": "B2-27",
@@ -785,8 +785,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — czerwiec 2026: 2,5% r/r (GUS)",
       "security_events": 0,
-      "ms": 415,
-      "check_id": "c97c6cb5941e"
+      "ms": 470,
+      "check_id": "ac3eb074a5f6"
     },
     {
       "id": "B2-28",
@@ -809,8 +809,8 @@
       "decisive_with_citation": true,
       "top_source": "Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 17 października 2023",
       "security_events": 0,
-      "ms": 600,
-      "check_id": "ac311aa9c802"
+      "ms": 580,
+      "check_id": "118443b3d2fb"
     },
     {
       "id": "B2-29",
@@ -833,8 +833,8 @@
       "decisive_with_citation": true,
       "top_source": "Eurostat (Komisja Europejska) | Deficyt sektora finansów publicznych 2025: Polska -7,2% PKB (Eurostat)",
       "security_events": 0,
-      "ms": 594,
-      "check_id": "f9e5582a3007"
+      "ms": 650,
+      "check_id": "59eceb6a269e"
     },
     {
       "id": "B2-30",
@@ -858,8 +858,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | 5G i Bluetooth wciąż nie wywołują raka. To znana teoria spiskowa",
       "security_events": 0,
-      "ms": 391,
-      "check_id": "c0492f6a1c9b"
+      "ms": 543,
+      "check_id": "6ca61e4c9e65"
     },
     {
       "id": "B2-31",
@@ -883,8 +883,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Choroby psychiczne a zakaźność. „Kompletna bzdura” z TikToka",
       "security_events": 0,
-      "ms": 372,
-      "check_id": "f05c9458bc1f"
+      "ms": 394,
+      "check_id": "1942fd04bb78"
     },
     {
       "id": "B2-32",
@@ -908,8 +908,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Fałszywa aplikacja Lotto. Jak ją rozpoznać?",
       "security_events": 0,
-      "ms": 484,
-      "check_id": "f0a22bef8f9a"
+      "ms": 597,
+      "check_id": "3fb885390810"
     },
     {
       "id": "B2-33",
@@ -932,8 +932,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 4,
-      "check_id": "4ce731c02a0a"
+      "ms": 16,
+      "check_id": "73d76c781d53"
     },
     {
       "id": "B2-34",
@@ -956,8 +956,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 4,
-      "check_id": "fb8481b991f9"
+      "ms": 15,
+      "check_id": "2c117bd8b196"
     },
     {
       "id": "B2-35",
@@ -980,8 +980,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 5,
-      "check_id": "d79db47b70b8"
+      "ms": 16,
+      "check_id": "10b1cf237cf3"
     },
     {
       "id": "B2-36",
@@ -1004,8 +1004,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 4,
-      "check_id": "9a8c2570bcba"
+      "ms": 16,
+      "check_id": "bfc399430951"
     },
     {
       "id": "B2-37",
@@ -1028,8 +1028,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Order dla prezydenta Juszczenki. Nie od Lecha Kaczyńskiego",
       "security_events": 0,
-      "ms": 200,
-      "check_id": "2f6d722292c5"
+      "ms": 278,
+      "check_id": "af47f9deb0ce"
     },
     {
       "id": "B2-38",
@@ -1052,8 +1052,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | Sprawdziliśmy doniesienia o próbach porwań dzieci we Wrocławiu",
       "security_events": 0,
-      "ms": 196,
-      "check_id": "257e9f6b1f9d"
+      "ms": 189,
+      "check_id": "6c5d0b569090"
     },
     {
       "id": "B2-39",
@@ -1076,8 +1076,8 @@
       "decisive_with_citation": null,
       "top_source": "EUvsDisinfo (EEAS East StratCom Task Force) | Russia must close all NATO consulates in Kaliningrad because of espion",
       "security_events": 0,
-      "ms": 103,
-      "check_id": "ccfcc5173d04"
+      "ms": 246,
+      "check_id": "4351445b8939"
     },
     {
       "id": "B2-40",
@@ -1100,8 +1100,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | SCT w Krakowie. Ile pojazdów miała wykluczyć według urzędników?",
       "security_events": 0,
-      "ms": 236,
-      "check_id": "a01a9f279711"
+      "ms": 227,
+      "check_id": "2196e2eeb6a1"
     },
     {
       "id": "B2-41",
@@ -1124,8 +1124,8 @@
       "decisive_with_citation": null,
       "top_source": "Konkret24 (TVN24) | Ministra zdrowia: płacimy 100 procent za profilaktykę gastroskopii. Ni",
       "security_events": 0,
-      "ms": 94,
-      "check_id": "787ad297f9e4"
+      "ms": 231,
+      "check_id": "9ccc946ac140"
     },
     {
       "id": "B2-42",
@@ -1148,8 +1148,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Korupcja na Ukrainie. Czy minister obrony został zwolniony za kradzież",
       "security_events": 0,
-      "ms": 274,
-      "check_id": "94a3b55b3f30"
+      "ms": 225,
+      "check_id": "a09feb165ad5"
     },
     {
       "id": "B2-43",
@@ -1173,8 +1173,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Putin aresztuje Gatesa za stworzenie dżumy? Taka sytuacja nie miała mi",
       "security_events": 3,
-      "ms": 1179,
-      "check_id": "7b7b40600d91"
+      "ms": 1214,
+      "check_id": "84f348d7be8b"
     },
     {
       "id": "B2-44",
@@ -1198,8 +1198,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Polska z największym spadkiem ludności w UE?",
       "security_events": 4,
-      "ms": 539,
-      "check_id": "ab2e4c2e200b"
+      "ms": 547,
+      "check_id": "33c3ab5adf0a"
     },
     {
       "id": "B2-45",
@@ -1224,8 +1224,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Donald Tusk nie mówił o polskim ataku na Westerplatte",
       "security_events": 2,
-      "ms": 1373,
-      "check_id": "e7e0921a227b"
+      "ms": 1485,
+      "check_id": "4f552a03ae49"
     },
     {
       "id": "B2-46",
@@ -1249,8 +1249,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | Europejscy przywódcy nie zażywali narkotyków w pociągu",
       "security_events": 5,
-      "ms": 559,
-      "check_id": "52787584981c"
+      "ms": 466,
+      "check_id": "2bfe33e5b895"
     },
     {
       "id": "B2-47",
@@ -1275,8 +1275,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Pokojowa Nagroda Nobla dla dziennikarzy!",
       "security_events": 0,
-      "ms": 412,
-      "check_id": "ab5fc1f2150a"
+      "ms": 477,
+      "check_id": "39fc59562fbc"
     },
     {
       "id": "B2-48",
@@ -1300,8 +1300,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy w Singapurze niezaszczepieni na koronawirusa będą musieli sami opł",
       "security_events": 0,
-      "ms": 757,
-      "check_id": "10abb64d2052"
+      "ms": 758,
+      "check_id": "01fad0022a47"
     },
     {
       "id": "B2-49",
@@ -1318,8 +1318,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 40,
-      "check_id": "7cb339e12f9a"
+      "ms": 66,
+      "check_id": "39757cc70df8"
     },
     {
       "id": "B2-50",
@@ -1336,8 +1336,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 3,
-      "check_id": "cc8488a0f129"
+      "ms": 16,
+      "check_id": "72fe53c3f5ad"
     }
   ],
   "consistency": [

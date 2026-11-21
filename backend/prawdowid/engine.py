@@ -191,7 +191,7 @@ def _competing_measure(claim: str, title: str) -> bool:
         if re.search(key, title, re.I):
             rx = re.compile(alt, re.I)
             return any(d.source_type == "official" and rx.search(d.title) and same_subject(claim, d.title)
-                       and numeric_stance(claim, f"{d.title}. {_anchor_text(claim, d)}") == "zgodne"
+                       and numeric_stance(claim, f"{d.title}. {d.text[:6000]}") == "zgodne"
                        for d in INDEX.docs)
     return False
 
@@ -273,51 +273,58 @@ def _anchor_text(claim: str, d) -> str:
 _WORD = re.compile(r"[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+")
 
 
-def _bound_values(claim: str, source: str, unit: str) -> list[float]:
-    """Numbers (in the claim's unit) that directly follow the claim's MOST SPECIFIC subject word in the source,
-    e.g. 'stopa referencyjna: 3,75%' — so a value printed elsewhere on the card (lombard 4,25%) cannot confirm it."""
-    anchors = _anchors(claim)
+def _bound_values(keys: set[str], source: str, unit: str) -> list[float]:
+    """Numbers (in `unit`) that directly follow the MOST SPECIFIC of `keys` in the source — key->value binding,
+    e.g. 'stopa referencyjna: 3,75%', so a value printed elsewhere on the card (lombard 4,25%) cannot match."""
     from .textutil import strip_pl
     occ: dict[str, list[int]] = {}
     for m in _WORD.finditer(source):
         st = strip_pl(m.group(0))[:6]
-        if st in anchors:
+        if st in keys:
             occ.setdefault(st, []).append(m.end())
     nums = [(m.start(), float(m.group(1).replace(",", ".")), _unit(m.group(2))) for m in _NUM.finditer(source)]
     bound: dict[str, list[float]] = {}
-    for a, ends in occ.items():
+    for k, ends in occ.items():
         for e in ends:
-            nxt = next(((p, v) for p, v, u in nums if e <= p <= e + 90 and u == unit), None)
-            if nxt:
-                bound.setdefault(a, []).append(nxt[1])
+            nxt = next((v for p, v, u in nums if e <= p <= e + 90 and u == unit), None)
+            if nxt is not None:
+                bound.setdefault(k, []).append(nxt)
     if not bound:
         return []
-    rarest = min(len(occ[a]) for a in bound)
-    return [v for a in bound if len(occ[a]) == rarest for v in bound[a]]
+    rarest = min(len(occ[k]) for k in bound)
+    return [v for k in bound if len(occ[k]) == rarest for v in bound[k]]
 
 
 def numeric_stance(claim: str, source: str) -> str | None:
-    """Deterministic check of a numeric claim against an official fact card. Applies only when the claim's year and
-    month (if given) also appear in the source — otherwise we would compare different periods."""
-    cn = _numbers(claim)
-    if not cn:
-        return None
+    """Deterministic check of numbers in a claim against an official card/act for the SAME period.
+    Each claimed number is paired with the words preceding it in the claim (its key) and compared only with numbers
+    bound to the same key in the source. Every checkable number must agree."""
     cy, cm = _date_keys(claim)
     sy, sm = _date_keys(source)
     if not cy or not cy <= sy or (cm and not cm <= sm):
         return None
     sn = _numbers(source)
-    op = ">" if re.search(r"przekrocz\w*|ponad|powyżej|więcej niż|wyższ\w* niż", claim, re.I) else \
-         "<" if re.search(r"poniżej|mniej niż|niższ\w* niż|nie przekrocz\w*", claim, re.I) else "="
-    for v, u in cn:
-        same_unit = _bound_values(claim, source, u) or [x for x, su in sn if su == u]
-        if not same_unit:
+    verdicts, prev = [], 0
+    for m in _NUM.finditer(claim):
+        v, u = float(m.group(1).replace(",", ".")), _unit(m.group(2))
+        keys = _anchors(claim[prev:m.start()]) or _anchors(claim)
+        prev = m.end()
+        cands = _bound_values(keys, source, u)
+        if not cands and len(source) < 700:  # short single-value fact card: any same-unit value
+            cands = [x for x, su in sn if su == u]
+        if not cands:
             continue
+        window = claim[max(0, m.start() - 40): m.start()]
+        op = ">" if re.search(r"przekrocz\w*|ponad|powyżej|więcej niż|wyższ\w* niż", window, re.I) else \
+             "<" if re.search(r"poniżej|mniej niż|niższ\w* niż|nie przekrocz\w*", window, re.I) else "="
         if op == "=":
-            return "zgodne" if any(abs(x - v) <= max(0.051, abs(v) * 0.005) for x in same_unit) else "niezgodne"
-        x = same_unit[0]  # the card's headline value comes first in the anchor sentence
-        return "zgodne" if (x > v if op == ">" else x < v) else "niezgodne"
-    return None
+            ok = any(abs(x - v) <= max(0.051, abs(v) * 0.005) for x in cands)
+        else:
+            ok = cands[0] > v if op == ">" else cands[0] < v
+        verdicts.append(ok)
+    if not verdicts:
+        return None
+    return "zgodne" if all(verdicts) else "niezgodne"
 
 
 def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
@@ -396,7 +403,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             continue
         num = None
         if _compatible(claim.query, d.title):
-            num = numeric_stance(claim.query, f"{d.title}. {_anchor_text(claim.query, d)}")
+            num = numeric_stance(claim.query, f"{d.title}. {d.text[:6000]}")
             if num == "niezgodne" and not measure_named(claim.query, d.title) and _competing_measure(claim.query, d.title):
                 num, c.definitional = None, True  # e.g. CPI vs HICP: different measure, not a contradiction
         num = num or legal_date_stance(claim.query, d.title, d.text)
