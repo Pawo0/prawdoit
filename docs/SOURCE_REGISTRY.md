@@ -90,9 +90,13 @@ Moduły `custom` dostarczane z projektem: `msz_odyseusz`, `rso_ostrzezenia`, `im
 wydawcy z Google Fact Check Tools API (`site`, `max_age_days` 200, `page_size` ≤ 100, `max_pages`, `key_env`,
 `dedupe_against` = identyfikatory korpusów, których adresy pomijamy). Rekord ma dosłowne pola ClaimReview wydawcy
 (tytuł oceny + sprawdzane twierdzenie, etykieta oceny), bez treści artykułu (tag `claimreview-only`). Wpisy:
-`demagog_google_api`, `afp_sprawdzam`. Parametr wspólny `id_prefix`: źródło, które dostarcza te same dokumenty co inne
-drugą drogą, zachowuje jego przestrzeń identyfikatorów (`demagog:…`, `euvsdisinfo:…`) — indeks ładuje pierwszy rekord
-o danym `id`, więc ta sama ocena nie trafia do bazy dwa razy.
+`demagog_google_api`, `afp_sprawdzam`, `fakenews_google_api`. Parametr wspólny `id_prefix`: źródło, które dostarcza te
+same dokumenty co inne drugą drogą, zachowuje jego przestrzeń identyfikatorów (`demagog:…`, `euvsdisinfo:…`) — indeks
+ładuje pierwszy rekord o danym `id`, więc ta sama ocena nie trafia do bazy dwa razy. Gdy identyfikatora nie da się
+odtworzyć (FakeNews.pl: numery wpisów), działa `dedupe_against`: adresy z korpusów tych źródeł są pomijane przy
+pobieraniu i usuwane z pliku przy każdym scaleniu (także po pustym uruchomieniu), ale tylko gdy indeks te korpusy
+ładuje (źródło włączone albo bez wpisu w rejestrze) — po wyłączeniu zbioru stron droga przez API dostarcza oceny sama.
+Adresy porównujemy po zdekodowaniu znaków `%XX` (`co%e2%82%82` w zbiorach stron = `co%E2%82%82` w API).
 
 Parametry wspólne dla metod pobierających: `max_docs` (ile najnowszych rekordów zostaje w pliku korpusu, domyślnie 500),
 `max_chars` (długość tekstu rekordu, domyślnie 4000), `delay_s` (odstęp między zapytaniami do hosta; tylko spowalnia —

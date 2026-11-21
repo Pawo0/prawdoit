@@ -25,7 +25,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
 
 import httpx
 
@@ -278,6 +278,13 @@ def extract_article(url: str, html: str) -> dict:
 def canonical(url: str) -> str:
     p = urlsplit(url.strip())
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path or "/", p.query, ""))
+
+
+def url_key(url: str) -> str:
+    """Comparison key for "the same page" across routes: canonical(), percent-escapes decoded and no trailing slash.
+    Measured 2026-11-21: the fakenews.pl and Demagog harvests store `co%e2%82%82`, the Google API `co%E2%82%82`."""
+    p = urlsplit(canonical(url))
+    return urlunsplit((p.scheme, p.netloc, unquote(p.path), p.query, "")).rstrip("/")
 
 
 def _domain(url: str) -> str:
@@ -686,17 +693,38 @@ def read_corpus(source_id: str) -> list[dict]:
     return out
 
 
+def urls_held_by(corpus_ids: list | None) -> set[str]:
+    """URL keys (url_key) of the records stored by these sources while the index loads them, i.e. the registry entry
+    is enabled or there is none (registry.corpus_files_for_index). A second route to the same documents — a Google
+    API feed next to a page harvest whose ids it cannot reproduce (fakenews.pl) — skips these at fetch time and drops
+    them at merge time (`params.dedupe_against`), so a review is indexed once in every registry configuration; when
+    the harvest is switched off, the feed keeps its own copy."""
+    out: set[str] = set()
+    for cid in corpus_ids or []:
+        if not isinstance(cid, str) or not registry.ID_RE.match(cid):
+            continue
+        entry = registry.get(cid)
+        if entry is not None and entry.get("enabled") is not True:
+            continue
+        for r in read_corpus(cid):
+            if r.get("url"):
+                out.add(url_key(r["url"]))
+    return out
+
+
 def merge_into_corpus(source: dict, records: list[dict]) -> tuple[int, int]:
-    """Merge new records into data/corpus/<id>.jsonl: dedupe by id and url, newest first, cap at max_docs.
+    """Merge new records into data/corpus/<id>.jsonl: dedupe by id and url, newest first, cap at max_docs; records
+    whose URL a source in `params.dedupe_against` holds are dropped (see urls_held_by).
     Atomic write (tmp + rename) so a concurrent index load sees either the old or the new file."""
     import os
 
     existing = read_corpus(source["id"])
     old_ids = {r.get("id") for r in existing}
+    held = urls_held_by((source.get("params") or {}).get("dedupe_against"))
     seen_ids, seen_urls, merged = set(), set(), []
     for r in records + existing:
         u = canonical(r.get("url") or "")
-        if r.get("id") in seen_ids or u in seen_urls:
+        if r.get("id") in seen_ids or u in seen_urls or (held and url_key(u) in held):
             continue
         seen_ids.add(r.get("id"))
         seen_urls.add(u)

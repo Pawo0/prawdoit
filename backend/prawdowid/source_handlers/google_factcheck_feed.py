@@ -9,8 +9,8 @@
 `query` may be omitted when the site filter is set, so the call lists a publisher's reviews, newest first (roughly:
 not strictly sorted) and paginated; `maxAgeDays` keeps it to recent material. This is the database the organisers
 name in rules/resources.txt ("Baza weryfikatorów faktów"); Demagog's own REST API answers 401. Measured 2026-11-21:
-demagog.org.pl 429 reviews in the last 200 days in 5 calls, sprawdzam.afp.com 74 in the last 400 days in 1 call,
-0.2–1.0 s per call, no throttling and no quota headers.
+demagog.org.pl 429 reviews in the last 200 days in 5 calls, fakenews.pl 19 and sprawdzam.afp.com 39 in 1 call each
+(74 AFP reviews in 400 days), 0.2–1.0 s per call, no throttling and no quota headers.
 
 What a record holds — and what may be quoted. The API gives the publisher's own ClaimReview fields and NO article
 text. A record's `text` is therefore exactly two verbatim strings written by the fact-checker: the review title and
@@ -19,8 +19,10 @@ the fact-checker's title or its wording of the checked claim, shown next to the 
 THAT the publisher checked this claim and how it rated it. It is not a passage of the article's reasoning, and the
 record says so in its tags (`claimreview-only`). Where the article itself is in the corpus (Demagog page harvest),
 that fuller record is used instead: URLs already present in the corpora named in `params.dedupe_against` are
-skipped, and Demagog records get the same id as the page harvest (`demagog:<section>/<slug>`), so the index keeps
-only the first one even if both files end up holding the same review.
+skipped while that source is loaded by the index (and dropped from this feed's file at merge time,
+fetchers.urls_held_by), and Demagog records get the same id as the page harvest (`demagog:<section>/<slug>`), so the
+index keeps only the first one even if both files end up holding the same review. FakeNews.pl's harvest uses post ids
+the API cannot give, so for it the URL rule alone keeps one copy.
 
 Key: environment variable named in `params.key_env` (default PRAWDOWID_GOOGLE_FACTCHECK_KEY) — never in a file,
 never in a log line or an error message. Without it the run ends with a plain "brak klucza" status.
@@ -30,7 +32,6 @@ between calls), key_env, dedupe_against (corpus ids whose URLs are skipped), id_
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
@@ -40,7 +41,6 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from ..config import settings
 
 log = logging.getLogger("prawdowid.sources.google_factcheck_feed")
 
@@ -73,20 +73,6 @@ def restates_title(claim: str, title: str) -> bool:
         return False
     a, b = (set(re.findall(r"\w{3,}", s.lower())) for s in (claim, title))
     return bool(a and b) and len(a & b) / len(a | b) >= 0.6
-
-
-def _known_urls(corpus_ids: list[str]) -> set[str]:
-    out: set[str] = set()
-    for cid in corpus_ids:
-        f = settings.corpus_dir / f"{cid}.jsonl"
-        if not re.fullmatch(r"[a-z0-9_]{2,64}", str(cid)) or not f.exists():
-            continue
-        for line in f.open(encoding="utf-8"):
-            try:
-                out.add((json.loads(line).get("url") or "").rstrip("/"))
-            except json.JSONDecodeError:
-                continue
-    return out
 
 
 def call(site: str, key: str, *, max_age_days: int, page_size: int, page_token: str = "", timeout: float = 20.0,
@@ -146,8 +132,9 @@ def to_record(claim: dict, review: dict, site: str) -> dict | None:
         rec["tags"].append("claim-restates-title")
     if site == "demagog.org.pl":  # same id as ingest/harvest_demagog.py, so the index never holds both copies
         m = re.match(r"^/(wypowiedzi|fake_news)/([^/]+)/?$", urlsplit(url).path)
-        if m:
-            rec["id"] = f"demagog:{m.group(1)}/{m.group(2)}"
+        if m:  # the harvest keeps the site's lower-case escapes (co%e2%82%82); the API sends upper case
+            slug = re.sub(r"%[0-9A-F]{2}", lambda e: e.group(0).lower(), m.group(2))
+            rec["id"] = f"demagog:{m.group(1)}/{slug}"
     return rec
 
 
@@ -164,7 +151,10 @@ def fetch(source: dict, get=httpx.get) -> list[dict]:
     page_size = max(1, min(int(p.get("page_size") or 100), 100)) if not limit else min(20, max(5, 2 * limit))
     max_pages = 1 if limit else max(1, min(int(p.get("max_pages") or 10), MAX_PAGES_CAP))
     delay = max(0.5, float(p.get("delay") or 1.0))
-    skip = {u.rstrip("/") for u in source.get("_known_urls") or []} | _known_urls(list(p.get("dedupe_against") or []))
+    from ..sources.fetchers import url_key, urls_held_by
+
+    # already stored here, or held by a source the index loads that reaches the same publisher another way
+    skip = {url_key(u) for u in source.get("_known_urls") or []} | urls_held_by(p.get("dedupe_against"))
     max_age = int(p.get("max_age_days") or 200)
     # maxAgeDays counts from the newer of claim date and review date, so the API also returns old reviews of claims
     # that resurfaced; the knowledge base wants recent reviews, hence the same limit on the review date here
@@ -180,7 +170,7 @@ def fetch(source: dict, get=httpx.get) -> list[dict]:
                 if not rec:
                     continue
                 n_reviews += 1
-                u = rec["url"].rstrip("/")
+                u = url_key(rec["url"])
                 if u in skip or u in seen or (rec["published_at"] or "9999") < oldest:
                     continue
                 seen.add(u)

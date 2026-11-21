@@ -67,6 +67,26 @@ DEMAGOG_LABELS = {
     "Scam": "false", "Satyra": None,
 }
 
+# Every distinct `textualRating` the API itself returned on 2026-11-21 for the three Polish publishers it covers
+# (claims:search, reviewPublisherSiteFilter=<site>, languageCode=pl, maxAgeDays=200: 429 + 19 + 39 reviews). The
+# labels are free text in mixed case; each must land in the class the harvested corpus gives the same wording.
+API_LABELS = {
+    "demagog.org.pl": {
+        "Fałsz": "false", "fałsz": "false", "Falsz": "false", "Fałśz": "false",
+        "Manipulacja": "misleading", "manipulacja": "misleading",
+        "Brakujący kontekst": "misleading", "brakujący kontekst": "misleading",
+        "Brak kontekstu": "misleading", "brak kontekstu": "misleading",
+        "Częściowa prawda": "mixed", "częściowa prawda": "mixed",
+        "Częściowy fałsz": "mixed", "częściowy fałsz": "mixed", "Częściowy Fałsz": "mixed",
+        "Prawda": "true", "prawda": "true", "Nieweryfikowalne": "unverifiable",
+        "Przerobione zdjęcie": "false", "przerobione zdjęcie": "false", "Przerobione zdjęcia": "false",
+        "Przerobiony film": "false", "przerobiony film": "false", "Przerobione wideo": "false",
+        "przerobione zdjęcie lub film": "false", "Satyra": None},
+    "fakenews.pl": {"Fałsz": "false", "fałsz": "false", "manipulacja": "misleading", "Brak kontekstu": "misleading"},
+    "sprawdzam.afp.com": {"Fałsz": "false", "Obraz AI": "false", "Mylące": "misleading",
+                          "Przerobione wideo": "false", "Brak kontekstu": "misleading"},
+}
+
 
 def _source(sid: str, url: str, category: str, enabled: bool = True, **params) -> dict:
     return {"id": sid, "name": sid, "publisher": sid.capitalize(), "url": url, "category": category,
@@ -125,6 +145,15 @@ class GoogleFactCheckTest(unittest.TestCase):
         for label, expected in (("W większości fałsz", "mixed"), ("W większości prawda", "mixed"),
                                 ("Brak dowodów", "unverifiable"), ("Mostly false", "false"), ("", None), (None, None)):
             self.assertEqual(W.map_rating(label), expected, label)
+
+    def test_every_label_the_api_returned_maps_to_its_class(self):
+        self.assertEqual(len(API_LABELS["demagog.org.pl"]), 26)
+        for site, labels in API_LABELS.items():
+            for label, expected in labels.items():
+                self.assertEqual(W.map_rating(label), expected, f"{site}: {label!r}")
+        # a lower-case API label means the same as the capitalised corpus label
+        for label, expected in DEMAGOG_LABELS.items():
+            self.assertEqual(W.map_rating(label.lower()), expected, label.lower())
 
     # ---------------------------------------------------------------- request
     def test_request_parameters(self):
@@ -277,7 +306,11 @@ class GoogleFactCheckFeedTest(unittest.TestCase):
         self.source = {"id": "demagog_google_api", "topics": ["dezinformacja"],
                        "params": {"site": "demagog.org.pl", "max_age_days": 200, "delay": 0.5,
                                   "dedupe_against": ["demagog"], "id_prefix": "demagog"}}
-        for p in (mock.patch.object(G, "settings", SimpleNamespace(corpus_dir=Path(self.tmp.name))),
+        from prawdowid.sources import registry
+
+        # no registry file for "demagog" in this directory = a corpus file the index loads anyway
+        tmp_dirs = SimpleNamespace(corpus_dir=Path(self.tmp.name), sources_dir=Path(self.tmp.name))
+        for p in (mock.patch.object(registry, "settings", tmp_dirs),
                   mock.patch.object(G.time, "sleep", lambda s: None),
                   mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": KEY})):
             p.start()
@@ -334,6 +367,94 @@ class GoogleFactCheckFeedTest(unittest.TestCase):
             self.G.fetch(self.source, get=lambda url, **kw: _Resp(403, {"error": {"message": KEY}}))
         self.assertNotIn(KEY, str(ctx.exception))
         self.assertIn(self.G.ApiError, self.G.EXPECTED_ERRORS)
+
+    def test_lower_case_label_is_stored_capitalised_with_the_same_class(self):
+        for label in ("fałsz", "manipulacja", "brakujący kontekst", "przerobione zdjęcie lub film"):
+            rec = self.G.to_record({"text": "Minister zapowiedział podwyżkę podatku od wszystkich samochodów."},
+                                   {"url": "https://fakenews.pl/polityka/x/", "textualRating": label,
+                                    "title": "Czy minister zapowiedział podwyżkę?", "reviewDate": "2026-10-01T00:00:00Z"},
+                                   "fakenews.pl")
+            self.assertEqual(rec["verdict_raw"], label[0].upper() + label[1:])
+            self.assertEqual(rec["verdict"], W.map_rating(label))
+
+    def test_demagog_id_keeps_the_harvests_lower_case_escapes(self):
+        # the page harvest stores "demagog:wypowiedzi/emisja-co%e2%82%82-…"; the API sends the URL with "%E2%82%82"
+        rec = self.G.to_record({"text": "Emisja dwutlenku węgla na mieszkańca w Polsce jest najniższa w Unii."},
+                               {"url": "https://demagog.org.pl/wypowiedzi/emisja-co%E2%82%82-w-przeliczeniu/",
+                                "textualRating": "Fałsz", "title": "Emisja CO₂ w przeliczeniu na mieszkańca",
+                                "reviewDate": "2026-10-01T00:00:00Z"}, "demagog.org.pl")
+        self.assertEqual(rec["id"], "demagog:wypowiedzi/emisja-co%e2%82%82-w-przeliczeniu")
+
+
+class SecondRouteDedupeTest(unittest.TestCase):
+    """A publisher reached through the API AND by a page harvest with ids of its own (fakenews.pl: numeric post ids,
+    the API gives only the URL). Only sources the index loads count; their URLs are skipped at fetch time and pruned
+    from the API feed's file at merge time, so one review is indexed once in every registry configuration."""
+
+    def setUp(self):
+        from prawdowid.source_handlers import google_factcheck_feed as G
+        from prawdowid.sources import fetchers, registry
+
+        self.F, self.G = fetchers, G
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.src_dir, self.corpus = root / "sources", root / "corpus"
+        self.src_dir.mkdir()
+        self.corpus.mkdir()
+        for p in (mock.patch.object(registry, "settings", SimpleNamespace(sources_dir=self.src_dir, corpus_dir=self.corpus)),
+                  mock.patch.object(G.time, "sleep", lambda s: None),
+                  mock.patch.dict(os.environ, {"PRAWDOWID_GOOGLE_FACTCHECK_KEY": KEY})):
+            p.start()
+            self.addCleanup(p.stop)
+        self._harvest(enabled=True)
+        (self.corpus / "fakenews_pl.jsonl").write_text(
+            json.dumps({"id": "fakenews_pl:25674", "url": "https://fakenews.pl/srodowisko/farmy/"}) + "\n", encoding="utf-8")
+        self.feed = {"id": "fakenews_google_api", "category": "factcheck", "publisher": "FakeNews.pl", "license": "l",
+                     "language": "pl", "params": {"site": "fakenews.pl", "dedupe_against": ["fakenews_pl"],
+                                                  "max_age_days": 200, "max_docs": 100}}
+
+    def _harvest(self, enabled: bool) -> None:
+        (self.src_dir / "fakenews_pl.json").write_text(json.dumps({"id": "fakenews_pl", "enabled": enabled}), encoding="utf-8")
+
+    def _api(self, *slugs):
+        from datetime import date
+
+        claims = [{"text": f"Twierdzenie numer {i} krążące w sieci.", "claimReview": [{
+            "url": f"https://fakenews.pl/srodowisko/{s}/", "title": f"Ocena {i}", "textualRating": "fałsz",
+            "reviewDate": date.today().isoformat() + "T00:00:00Z", "languageCode": "pl"}]} for i, s in enumerate(slugs)]
+        return lambda url, **kw: _Resp(200, {"claims": claims})
+
+    def test_only_sources_the_index_loads_count(self):
+        self.assertEqual(self.F.urls_held_by(["fakenews_pl"]), {"https://fakenews.pl/srodowisko/farmy"})
+        self._harvest(enabled=False)
+        self.assertEqual(self.F.urls_held_by(["fakenews_pl"]), set())
+        (self.corpus / "bez_wpisu.jsonl").write_text(json.dumps({"url": "https://FakeNews.pl/x/#a"}) + "\n", encoding="utf-8")
+        self.assertEqual(self.F.urls_held_by(["bez_wpisu", "../etc", None]), {"https://fakenews.pl/x"})
+
+    def test_fetch_skips_the_harvested_review_unless_the_harvest_is_off(self):
+        get = self._api("farmy", "nowa")
+        self.assertEqual([r["url"] for r in self.G.fetch(self.feed, get=get)], ["https://fakenews.pl/srodowisko/nowa/"])
+        self._harvest(enabled=False)
+        self.assertEqual(len(self.G.fetch(self.feed, get=get)), 2)
+
+    def test_percent_escapes_in_either_case_are_the_same_page(self):
+        # measured 2026-11-21: fakenews_pl held ".../emisji-co%e2%82%82-…/", the API listed ".../emisji-co%E2%82%82-…/"
+        (self.corpus / "fakenews_pl.jsonl").write_text(
+            json.dumps({"id": "fakenews_pl:1", "url": "https://fakenews.pl/srodowisko/emisji-co%e2%82%82/"}) + "\n",
+            encoding="utf-8")
+        self.assertEqual(self.G.fetch(self.feed, get=self._api("emisji-co%E2%82%82")), [])
+        self.assertEqual(self.F.url_key("https://fakenews.pl/a/co%E2%82%82/"), self.F.url_key("https://fakenews.pl/a/co₂"))
+        self.assertNotEqual(self.F.url_key("https://fakenews.pl/a/?p=1"), self.F.url_key("https://fakenews.pl/a/?p=2"))
+
+    def test_merge_prunes_a_stored_copy_once_the_harvest_has_it(self):
+        row = lambda slug, d: {"id": f"fakenews_google_api:{slug}", "url": f"https://fakenews.pl/srodowisko/{slug}/",  # noqa: E731
+                               "published_at": d}
+        (self.corpus / "fakenews_google_api.jsonl").write_text(
+            json.dumps(row("farmy", "2026-11-13")) + "\n" + json.dumps(row("starsza", "2026-09-01")) + "\n", encoding="utf-8")
+        self.assertEqual(self.F.merge_into_corpus(self.feed, [row("nowa", "2026-11-20")]), (1, 2))
+        self.assertEqual([r["id"] for r in self.F.read_corpus("fakenews_google_api")],
+                         ["fakenews_google_api:nowa", "fakenews_google_api:starsza"])  # newest first, harvested copy gone
 
 
 if __name__ == "__main__":

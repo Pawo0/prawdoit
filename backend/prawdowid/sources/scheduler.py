@@ -131,7 +131,7 @@ def _run_locked(src: dict, trigger: str) -> dict:
         else:
             ctx = fetchers.Ctx(known_urls={fetchers.canonical(r.get("url") or "") for r in fetchers.read_corpus(sid)})
             recs = fetchers.fetch_source(src, ctx)
-            if recs:
+            if recs or (src.get("params") or {}).get("dedupe_against"):  # an empty run still prunes duplicates
                 n_new, n_total = fetchers.merge_into_corpus(src, recs)
             else:
                 n_total = registry.count_docs(sid)
