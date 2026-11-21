@@ -23,7 +23,7 @@ pokazuje, co mówią źródła.
 
 ## Docker — backend i strona WWW
 
-Skopiuj `.env.example` do `.env`, ustaw prywatny `PRAWDOWID_MODERATOR_TOKEN`, następnie uruchom:
+Skopiuj `.env.example` do `.env`, ustaw prywatne `PRAWDOWID_MODERATOR_TOKEN` i `PRAWDOWID_ADMIN_TOKEN`, następnie uruchom:
 
 ```bash
 docker compose up -d --build

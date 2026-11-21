@@ -13,10 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/backend
 
 WORKDIR /app
-# libgomp is required by the CPU numerical libraries; tesseract-ocr(-pol) reads screenshots (ocr.py, ~20 MB).
-# No compiler or browser in the image.
+# libgomp is required by the CPU numerical libraries. No compiler or browser in the image.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libgomp1 tesseract-ocr tesseract-ocr-pol \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 prawdowid \
     && useradd --uid 10001 --gid prawdowid --create-home prawdowid \
@@ -29,13 +28,27 @@ RUN python -m pip install 'torch==2.15.0' --index-url https://download.pytorch.o
     && python -m pip install -r /app/backend/requirements-container.txt \
     && python -m pip check
 
+COPY ingest/requirements-container.txt /app/ingest/requirements-container.txt
+# Keep OCR/harvester additions separate from the large ML dependency cache.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-pol \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install -r /app/ingest/requirements-container.txt \
+    && python -m pip check
+COPY ingest/*.py /app/ingest/
+
 COPY backend/prawdowid /app/backend/prawdowid
 COPY bots/discord_bot.py /app/bots/discord_bot.py
 COPY web /app/web
-COPY data/corpus /app/data/corpus
+COPY data/corpus /app/seed/corpus
+COPY data/sources /app/seed/sources
 COPY data/index /app/data/index
 COPY data/watchlist.json /app/data/watchlist.json
 COPY docker/start.py docker/healthcheck.py /app/docker/
+RUN ln -s /var/lib/prawdowid/corpus /app/data/corpus \
+    && ln -s /var/lib/prawdowid/sources /app/data/sources \
+    && mkdir -p /app/data/raw \
+    && chown prawdowid:prawdowid /app/data/raw
 
 USER prawdowid
 EXPOSE 8000

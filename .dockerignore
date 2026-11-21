@@ -7,11 +7,16 @@
 !backend/prawdowid/**
 !bots/
 !bots/discord_bot.py
+!ingest/
+!ingest/*.py
+!ingest/requirements-container.txt
 !web/
 !web/**
 !data/
 !data/corpus/
 !data/corpus/**
+!data/sources/
+!data/sources/*.json
 !data/index/
 !data/index/*.npy
 !data/index/*.keys.json
