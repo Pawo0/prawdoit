@@ -53,6 +53,8 @@ function chatReply(res) {
   if (res.security_events?.length) L.push("\nℹ️ W treści była instrukcja skierowana do systemu — zignorowałem ją i zapisałem zdarzenie. Nie wpływa na ocenę.");
   const other = res.warnings.filter(w => !w.startsWith("W treści wykryto") && w !== res.live_search?.notice);
   if (other.length) L.push("\nℹ️ " + cut(other[0], 200));
+  const off = res.engine?.unavailable || [];  // same rule as channels/formatting.py
+  if (off.length && res.claims.some(c => c.verdict === "brak_dowodow")) L.push("\nℹ️ " + cut(off[0], 200));
   if (res.case_id) L.push(`\n📨 Sprawa ${res.case_id} trafiła do kolejki analityka.`);
   L.push(`\nPełna analiza i wszystkie źródła: ${location.origin}/analiza/${res.id}`);
   L.push("(Odpowiedź automatyczna — zajrzyj do źródła.)");

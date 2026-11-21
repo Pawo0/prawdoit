@@ -11,7 +11,7 @@ reviewDate, textualRating, languageCode}. It checks that
   * `textualRating` is mapped with exactly the rules used for the harvested corpus (ingest/common.py), including the
     Demagog labels that differ from plain true/false;
   * an outage is reported as a technical notice ("Nie mogę teraz sprawdzić indeksu Google…"), never as "no such
-    article", and a missing key leaves the provider inactive without any request;
+    article", and a missing key leaves the provider inactive without any request — reported as `nieaktywne`;
   * the key never appears in an error message.
 
 Run:  backend/.venv/bin/python backend/tests/test_google_factcheck.py      (or pytest backend/tests)
@@ -258,7 +258,13 @@ class GoogleFactCheckTest(unittest.TestCase):
             stage = self._stage()
             self.assertEqual(stage._join_google(), [])
         self.assertEqual(self.calls, [])
-        self.assertIsNone(stage.google)  # provider inactive: no result and no notice (see research/10_organiser_sources.md)
+        # provider inactive: no request and no "no reviews" result, but the result says why (rules §5: a missing key
+        # must not look like a result) — a `nieaktywne` step and a line for engine.unavailable, not a user warning
+        self.assertEqual(stage.google["status"], "nieaktywne")
+        self.assertEqual(stage.google["notice"], W.NOTICE_GOOGLE_OFF)
+        self.assertEqual(stage.inactive(), [W.NOTICE_GOOGLE_OFF])
+        self.assertEqual(stage.warnings, [])
+        self.assertEqual(stage.info().status, "nieaktywne")
 
 
 class GoogleFactCheckFeedTest(unittest.TestCase):

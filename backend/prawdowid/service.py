@@ -51,13 +51,16 @@ def engine_info() -> dict:
         "embed_model": settings.embed_model,
         "nli_model": NLI_MODEL.name,
         "llm": settings.llm_model if llm.enabled() else None,
+        "llm_status": ("skonfigurowany — tylko upraszcza język gotowego wyjaśnienia" if llm.enabled()
+                       else "nieskonfigurowany — wyjaśnienia z szablonów"),
         "corpus_documents": INDEX.stats.get("documents"),
         "corpus_loaded_at": INDEX.loaded_at,
         "rules_version": RULES_VERSION,
         "processing": ("lokalnie (serwer własny)" + ("" if not llm.enabled() else f"; LLM: {settings.llm_base_url}")
                        + ("; wyszukiwanie na żywo: tylko zaufane domeny z rejestru źródeł"
-                          + (" + Google Fact Check API" if os.environ.get("PRAWDOWID_GOOGLE_FACTCHECK_KEY") else "")
-                          if websearch.live_enabled() else "")),
+                          + (" + Google Fact Check API" if os.environ.get("PRAWDOWID_GOOGLE_FACTCHECK_KEY")
+                             else " (Google Fact Check nieaktywne: brak klucza API)")
+                          if websearch.live_enabled() else "; wyszukiwanie na żywo wyłączone")),
     }
 
 
@@ -69,7 +72,7 @@ def cost_estimate(res: CheckResult) -> dict:
     llm_pln = tokens / 1000 * settings.cost_pln_per_1k_llm_tokens
     ls = res.live_search
     return {"pln": round(cpu + llm_pln, 6), "cpu_pln": round(cpu, 6), "llm_tokens": tokens, "llm_pln": round(llm_pln, 6),
-            "external_calls": len(ls.steps) if ls else 0}
+            "external_calls": sum(s.get("status") != "nieaktywne" for s in ls.steps) if ls else 0}
 
 
 TASK_MESSAGE = ("To prośba o napisanie lub przetłumaczenie tekstu, a nie informacja do sprawdzenia, więc nie wydajemy "
@@ -139,6 +142,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     # (policy: textutil.mask_pii, docs/COMPLIANCE.md). URLs stay as typed so links can be fetched.
     text, ocr_text = mask_pii(text), mask_pii(ocr_text)
     user_text = mask_pii(req.text or "")
+    unavailable: list[str] = []  # dependencies that did not run (config, key, outage) — engine.unavailable, shown in UI
     url = "" if auto else (req.url or "").strip()  # auto: text only, nothing is fetched on the user's behalf
     # a bare URL pasted as text
     if not url and not auto and re.fullmatch(r"https?://\S+", text):
@@ -235,6 +239,11 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             live = websearch.LiveStage(cid, progress)  # Google Fact Check + trusted-domain fallback; never raises
             if auto or req.live_search is False:
                 live.enabled = False  # start_google() and finish() are then no-ops: local corpus only
+                unavailable.append("Wyszukiwanie na żywo nie było używane w tym sprawdzeniu ("
+                                   + ("sprawdzenie w tle z wtyczki" if auto else "wyłączone w zapytaniu")
+                                   + ") — sprawdzono tylko lokalną bazę źródeł.")
+            elif not live.enabled:
+                unavailable.append(websearch.NOTICE_LIVE_OFF)
             try:
                 websearch.emit(progress, "baza")
                 live.start_google(claims)
@@ -250,6 +259,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                 res.live_search = live.info()
                 res.security_events += live.events
                 res.warnings += live.warnings
+                unavailable += live.inactive()
 
     # optional LLM rephrasing of already-decided explanations
     if res.claims and llm.enabled() and not auto:  # auto: the text is not sent to the LLM endpoint
@@ -260,7 +270,18 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                 res.engine.setdefault("llm_calls", []).append(usage)
                 if txt:
                     c.explanation = txt
+        calls = res.engine.get("llm_calls", [])
+        errors = sorted({u["error"] for u in calls if u.get("error")})
+        if errors:  # an outage is said out loud; the deterministic explanation stays and the verdict is unchanged
+            unavailable.append(f"Model językowy był niedostępny (błąd techniczny: {', '.join(errors)}) — wyjaśnienie "
+                               "pochodzi z szablonu, werdykt bez zmian.")
+            store.log_error(cid, "llm", ", ".join(errors))
+        if any(u.get("rejected") for u in calls):
+            unavailable.append("Tekst modelu językowego odrzucono w walidacji (np. nowe liczby lub linki) — "
+                               "wyjaśnienie pochodzi z szablonu.")
         timings["llm_ms"] = (time.perf_counter() - t0) * 1000
+    if unavailable:
+        res.engine["unavailable"] = list(dict.fromkeys(unavailable))
 
     # claim decomposition overview + SPRAWDŹ educational signals (never affect verdicts)
     if res.claims:

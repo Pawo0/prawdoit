@@ -137,7 +137,7 @@ class LiveSearchInfo(BaseModel):
     provider: str  # google_factcheck | sitesearch | searxng | brave (joined with "+")
     query: str = ""
     n_results: int = 0  # documents added as candidate evidence
-    status: Literal["ok", "brak_wynikow", "blad"] = "brak_wynikow"
+    status: Literal["ok", "brak_wynikow", "blad", "nieaktywne"] = "brak_wynikow"  # nieaktywne: not configured
     notice: str = ""  # plain-Polish notice for the user
     steps: list[dict] = Field(default_factory=list)  # per provider: provider, query, n_results, status, notice
 

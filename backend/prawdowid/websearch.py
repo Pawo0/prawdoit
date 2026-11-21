@@ -7,7 +7,8 @@ Used by service.run_check. Two providers:
    per fact-checker site listed in `params.publisher_sites` of data/sources/google_factcheck.json (Demagog), sent
    with `reviewPublisherSiteFilter` — this is the API route to Demagog's reviews. Only reviews published on a
    domain from the source registry become evidence (the Polish part of Google's ClaimReview index also contains SEO
-   spam — see ingest/harvest_claimreview_feed.py); others are only counted. Missing key = silently inactive.
+   spam — see ingest/harvest_claimreview_feed.py); others are only counted. Missing key = the provider is inactive
+   and the result says so (a `nieaktywne` step in `live_search.steps` and a line in `engine.unavailable`).
 
 2. **Trusted-domain web search**, used only when the corpus (and Google) produced no usable evidence for a factual
    claim. Allowed domains = hosts of `data/sources/*.json` entries with `enabled` and `web_search` true (small
@@ -873,6 +874,10 @@ NOTICE_GOOGLE_FAIL = ("Nie mogę teraz sprawdzić indeksu Google z powodu błęd
                       "Odpowiedź opiera się na lokalnej bazie źródeł.")
 NOTICE_WEB_FAIL = ("Nie mogę teraz przeszukać zaufanych stron w internecie z powodu błędu dostępu. "
                    "Odpowiedź opiera się na lokalnej bazie źródeł.")
+NOTICE_GOOGLE_OFF = ("Indeksu Google Fact Check nie sprawdzano: na serwerze nie skonfigurowano klucza API "
+                     "(ustawienie serwera, nie ocena treści).")
+NOTICE_LIVE_OFF = ("Wyszukiwanie na żywo (Google Fact Check, zaufane strony) jest wyłączone na tym serwerze — "
+                   "sprawdzono tylko lokalną bazę źródeł.")
 NOTICE_BOTH_FAIL = ("Nie mogę teraz sprawdzić indeksu Google ani przeszukać zaufanych stron w internecie z powodu błędu "
                     "dostępu. Odpowiedź opiera się na lokalnej bazie źródeł.")
 
@@ -900,10 +905,15 @@ class LiveStage:
 
     # -------------------------------------------------- Google (parallel to the local search)
     def start_google(self, claims: list) -> None:
-        if not self.enabled or not (_env("GOOGLE_FACTCHECK_KEY") or forced_fail("google_factcheck")):
-            return  # missing key = provider silently inactive
+        if not self.enabled:
+            return
         queries = [c.query for c in claims if c.kind == "fakt"]
         if not queries:
+            return
+        if not (_env("GOOGLE_FACTCHECK_KEY") or forced_fail("google_factcheck")):
+            # missing key: the provider is inactive, and the result says so (never an empty "no reviews" answer)
+            self.google = dict(provider="google_factcheck", query="", n_results=0, status="nieaktywne",
+                               notice=NOTICE_GOOGLE_OFF, elapsed_ms=0.0)
             return
         # per claim: keyword rounds, each a general query + one per configured fact-checker site (Demagog), so the
         # publisher the organisers' scenarios rely on is not crowded out of the 10 results (see google_search)
@@ -1043,12 +1053,17 @@ class LiveStage:
                         elapsed_ms=round((time.perf_counter() - self.t_web) * 1000, 1))
         self.warnings.append(notice)
 
+    def inactive(self) -> list[str]:
+        """Providers that did not run because of the server configuration (for `engine.unavailable`)."""
+        return [s["notice"] for s in (self.google, self.web) if s and s.get("status") == "nieaktywne"]
+
     def info(self) -> LiveSearchInfo | None:
         steps = [s for s in (self.google, self.web) if s]
         if not steps:
             return None
         main = self.web or self.google
-        notices = [s["notice"] for s in steps if s.get("notice")]
+        # an inactive provider is reported in its step and in engine.unavailable; it is the notice only when nothing ran
+        notices = [s["notice"] for s in steps if s.get("notice") and (s.get("status") != "nieaktywne" or s is main)]
         if notices == [NOTICE_GOOGLE_FAIL, NOTICE_WEB_FAIL]:
             notices = [NOTICE_BOTH_FAIL]
         return LiveSearchInfo(provider=main["provider"], query=main["query"], n_results=main["n_results"],

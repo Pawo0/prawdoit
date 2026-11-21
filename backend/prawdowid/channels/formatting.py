@@ -85,6 +85,9 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms
     other = [w for w in res.warnings if not w.startswith("W treści wykryto") and w != live_notice]
     if other and not sms:
         lines.append(f"\nℹ️ {short(other[0], 200)}")
+    off = res.engine.get("unavailable") or []
+    if off and not sms and any(c.verdict == "brak_dowodow" for c in res.claims):  # absence must not read as a result
+        lines.append(f"\nℹ️ {short(off[0], 200)}")
     if res.case_id:
         lines.append(f"\n📨 Sprawa {res.case_id} trafiła do kolejki analityka.")
     lines.append(f"\nPełna analiza i wszystkie źródła: {link}")

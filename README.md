@@ -74,7 +74,7 @@ historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), mod
 | `PRAWDOWID_DEV_MODE` | `0` | `1` = tylko lokalnie: puste tokeny zastępują jawne `demo-moderator` / `demo-admin`; kontener odmawia startu z `1` |
 | `PRAWDOWID_SCHEDULER` | `1` | `0` = harmonogram pobierania źródeł wyłączony (np. w testach) |
 | `PRAWDOWID_LIVE_SEARCH` | `1` | `0` = bez wyszukiwania na żywo (powtarzalna ewaluacja, praca offline) |
-| `PRAWDOWID_GOOGLE_FACTCHECK_KEY` | — | klucz Google Fact Check Tools API; bez klucza dostawca jest nieaktywny |
+| `PRAWDOWID_GOOGLE_FACTCHECK_KEY` | — | klucz Google Fact Check Tools API; bez klucza dostawca jest nieaktywny, a każdy wynik to mówi (`engine.unavailable`, krok `nieaktywne` w `live_search`) |
 | `PRAWDOWID_SEARXNG_URL` | — | własna instancja SearXNG (JSON API) jako dodatkowa wyszukiwarka z filtrem `site:` |
 | `PRAWDOWID_BRAVE_KEY` | — | klucz Brave Search API (j.w.) |
 | `PRAWDOWID_FORCE_FAIL` | — | symulacja awarii do demo/testów, np. `google_factcheck,websearch` (scenariusz J) |

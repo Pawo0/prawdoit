@@ -280,6 +280,7 @@ function renderResult(res, el, {full = false} = {}) {
   el.innerHTML = `
     ${res.demo ? '<div class="demo-banner"><b>Przykładowy wynik.</b> Dane są fikcyjne — to podgląd wyglądu, bez sprawdzania przez serwer.</div>' : ""}
     ${warnings.map(w => `<div class="warn">${esc(w)}</div>`).join("")}
+    ${(res.engine?.unavailable || []).map(w => `<div class="info small">Nie użyto: ${esc(w)}</div>`).join("")}
     ${full && orderedClaims.length > 1 && res.claims_overview ? `<p class="muted">${esc(res.claims_overview)}</p>` : ""}
     ${orderedClaims.map((c, i) => renderClaim(c, i, orderedClaims.length, full)).join("")}
     ${full ? renderResources(res.resources) : ""}
@@ -296,6 +297,7 @@ function renderResult(res, el, {full = false} = {}) {
       <tr><th>Kanał</th><td>${esc(res.channel)}</td></tr>
       <tr><th>Czasy etapów [ms]</th><td>${Object.entries(res.timings_ms || {}).map(([k, v]) => `${esc(k)}: ${Math.round(v)}`).join(" · ")}</td></tr>
       <tr><th>Modele</th><td>embedding: ${esc(res.engine?.embed_model)} · NLI: ${esc(res.engine?.nli_model)} · LLM: ${esc(res.engine?.llm || "nieużywany (wyjaśnienia z szablonów)")}</td></tr>
+      <tr><th>Wyszukiwanie na żywo</th><td>${(res.live_search?.steps || []).map(s => esc(`${s.provider}: ${s.status}${s.n_results ? ` (${s.n_results})` : ""}`)).join(" · ") || "nie uruchomiono"}${(res.engine?.unavailable || []).length ? "<br>" + res.engine.unavailable.map(esc).join("<br>") : ""}</td></tr>
       <tr><th>Korpus</th><td>${esc(res.engine?.corpus_documents)} dokumentów (wczytano ${esc(res.engine?.corpus_loaded_at)})</td></tr>
       <tr><th>Wersja reguł / przetwarzanie</th><td>${esc(res.engine?.rules_version)} · ${esc(res.engine?.processing)}</td></tr>
       <tr><th>Zdarzenia bezpieczeństwa</th><td>${res.security_events?.length ? res.security_events.map(e => esc(e.kind + " — " + e.where)).join("<br>") : "brak"}</td></tr></table>
