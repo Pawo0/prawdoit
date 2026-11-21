@@ -265,6 +265,28 @@ def checkworthiness(s: str) -> float:
     return max(0.0, min(1.0, score))
 
 
+# an amount with its unit: "700 mln zł", "3,3 proc.", "207,9 mln" (engine.numeric_stance uses the same pattern)
+AMOUNT_RX = re.compile(r"(\d+(?:[.,]\d+)?)\s*(%|proc\w*|zł\b|złotych|zl\b|mln|mld|tys)", re.I)
+
+
+def amount_unit(u: str) -> str:
+    u = u.lower()
+    return "%" if u.startswith(("%", "proc")) else "zł" if u.startswith(("zł", "zl")) else u
+
+
+def amounts(s: str) -> list[tuple[float, str, str]]:
+    """(value, unit, the amount as written incl. a following 'zł') for every amount in the text."""
+    out = []
+    for m in AMOUNT_RX.finditer(s or ""):
+        lit = m.group(0) + (re.match(r"\s*(zł|złotych)\b", s[m.end():]) or [""])[0] if amount_unit(m.group(2)) != "zł" else m.group(0)
+        out.append((float(m.group(1).replace(",", ".")), amount_unit(m.group(2)), lit.strip()))
+    return out
+
+
+def same_amount(a: tuple, b: tuple) -> bool:
+    return a[1] == b[1] and abs(a[0] - b[0]) <= max(0.051, abs(a[0]) * 0.005)
+
+
 def is_time_sensitive(s: str) -> bool:
     return bool(_TEMPORAL_NOW.search(s))
 

@@ -142,5 +142,48 @@ class WhoCheckedQuestion(unittest.TestCase):
         self.assertTrue(c.short_answer.startswith("Tak, Demagog to sprawdził i ocenił"), c.short_answer)
 
 
+class AskedNumber(unittest.TestCase):
+    """'Czy X wydaje około 700 mln zł? Dlaczego w analizie Demagoga jest 650 mln zł?' (organisers' scenario C)."""
+
+    CLAIM = ("To rezygnacja z przychodów z tytułu biletów, a to jest w 7 mld budżecie naprawdę skromna kwota – 200 mln "
+             "zł około. Natomiast MPK [we Wrocławiu – przyp. Demagog] i tak nas kosztuje bodajże ok. 700 mln zł.")
+    TEXT = (CLAIM + "\n- W 2023 roku do budżetu Wrocławia wpłynęło 207,9 mln zł z tytułu sprzedaży biletów na transport "
+            "miejski, co stanowiło 3,3 proc. dochodów budżetowych (6,38 mld zł).\n- Z miejskiej kasy na transport "
+            "zbiorowy przeznaczono 650 mln zł. Wpływy z biletów pozwalały więc kompensować ok. ⅓ wydatków.")
+
+    def test_engine_quotes_the_passage_with_the_asked_number_and_its_year(self):
+        from prawdowid.engine import asked_number_fragment
+        from prawdowid.textutil import amounts
+
+        frag = asked_number_fragment(self.TEXT, self.CLAIM, amounts("Dlaczego jest 650 mln zł?"))
+        self.assertIn("650 mln zł", frag)
+        self.assertIn("2023", frag)  # the neighbouring sentence that states the period
+        self.assertIsNone(asked_number_fragment(self.TEXT, self.CLAIM, amounts("Dlaczego jest 900 mln zł?")))
+
+    def test_answer_explains_both_figures_from_the_evidence(self):
+        frag = "W 2023 roku do budżetu wpłynęło 207,9 mln zł. - Z miejskiej kasy na transport zbiorowy przeznaczono 650 mln zł."
+        e = ev(factcheck_claim=self.CLAIM, factcheck_verdict_raw="Częściowa prawda", factcheck_verdict="mixed",
+               fragment=frag)
+        meta = "Dlaczego w analizie Demagoga jest 650 mln zł?"
+        c = claim("brak_dowodow", [e], text=f"Czy Wrocław wydaje na komunikację około 700 mln zł. {meta}",
+                  meta_question=meta)
+        reply = chat_text(result(c))
+        a = c.short_answer
+        self.assertTrue(a.startswith("700 mln zł to przybliżona kwota z ocenianej wypowiedzi"), a)
+        self.assertIn("650 mln zł", a)
+        self.assertIn("2023", a)
+        self.assertIn("nie są dwa sprzeczne pomiary", a)
+        self.assertIn("„Częściowa prawda”", a)
+        self.assertEqual(c.related_evidence, 0)
+        self.assertIn(e.url, reply)
+
+    def test_no_meta_question_no_explanation(self):
+        e = ev(factcheck_claim=self.CLAIM, factcheck_verdict_raw="Częściowa prawda", factcheck_verdict="mixed",
+               fragment="Z miejskiej kasy na transport zbiorowy przeznaczono 650 mln zł.")
+        c = claim("brak_dowodow", [e], text="Czy Wrocław wydaje na komunikację około 700 mln zł?")
+        result(c)
+        self.assertNotIn("sprzeczne pomiary", c.short_answer)
+
+
 if __name__ == "__main__":
     unittest.main()

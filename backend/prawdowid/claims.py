@@ -16,6 +16,7 @@ class Claim:
     query: str  # normalised form used for retrieval (questions turned into statements)
     kind: str  # fakt | opinia | pytanie | prognoza
     score: float
+    meta: str = ""  # sentences about the check itself ("Dlaczego w analizie Demagoga jest 650 mln zł?"), not in the query
 
 
 def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
@@ -31,12 +32,12 @@ def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
         if len(content_words(joined)) < 2:
             return []  # greeting / meta request without a checkable statement -> ask to clarify
         # a sentence about the check itself ("Dlaczego w analizie … jest 650 mln zł?") is not part of the claim
-        kept, _meta = split_meta(" ".join(sents))
+        kept, meta = split_meta(" ".join(sents))
         core = strip_preamble(clean(kept) or joined)
         kind = claim_kind(core)
         q = question_to_claim(core) if is_question(core) else core
         k = "fakt" if kind == "pytanie" else kind  # a yes/no question about a fact is checked as a fact
-        return [Claim(joined, q, k, checkworthiness(q))]
+        return [Claim(joined, q, k, checkworthiness(q), meta)]
 
     cands: list[Claim] = []
     for s in sents:
@@ -59,4 +60,7 @@ def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
     asked = next((clean(s) for s in sents if checked_question(clean(s)) is not None), None)
     if asked:
         chosen = [Claim(f"{asked} {c.text}", c.query, c.kind, c.score) for c in chosen]
+    meta = " ".join(clean(s) for s in sents if is_meta_sentence(clean(s)) and checked_question(clean(s)) is None)
+    if meta:
+        chosen = [Claim(c.text, c.query, c.kind, c.score, meta) for c in chosen]
     return chosen

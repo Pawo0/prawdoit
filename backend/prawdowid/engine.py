@@ -22,7 +22,7 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import is_time_sensitive, normalize_ws, short, split_sentences, tokens
+from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.engine")
 
@@ -56,6 +56,7 @@ class _Cand:
     nli_unit: object | None = None  # NLI(user claim -> unit)
     nli_unit_rev: object | None = None  # NLI(unit -> user claim)
     nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
+    explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
 
 
 def _fmt_date(s: str | None) -> str:
@@ -120,6 +121,19 @@ def _fragment_windows(passage: str, source: str, max_len: int = 520, min_len: in
         a, b = singles[0]
         windows = [src[a:a + max_len]]
     return windows
+
+
+_YEAR_RX = re.compile(r"\b(19|20)\d\d\b")
+
+
+def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str | None:
+    """'Dlaczego w analizie jest 650 mln zł?': the verbatim passage of the analysis that gives the asked number.
+    Sentences of the checked claim itself are skipped. Among the passages that contain the number, the one that also
+    states its period (a year) is preferred, so the quote shows what the figure refers to; then the shortest."""
+    in_claim = _squash(claim_text)
+    hits = [w for w in _fragment_windows(text, text)
+            if w not in in_claim and any(same_amount(a, x) for a in asked for x in amounts(w))]
+    return min(hits, key=lambda w: (not _YEAR_RX.search(w), len(w))) if hits else None
 
 
 def _relevance(q_tokens: set[str], text: str) -> float:
@@ -514,6 +528,16 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     q_tokens = set(tokens(claim.query))
     for c in ranked:
         c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
+    # "Czy X wydaje 700 mln zł? Dlaczego w analizie jest 650 mln zł?": an analysis of a statement that gave the user's
+    # number quotes the passage with the asked number instead (the answer layer explains the two figures)
+    stated = amounts(claim.query)
+    asked = [a for a in amounts(getattr(claim, "meta", "")) if not any(same_amount(a, x) for x in stated)]
+    for c in ranked if asked and stated else []:
+        d = INDEX.docs[c.doc_idx]
+        if d.source_type == "factcheck" and d.claim and any(same_amount(x, y) for x in stated for y in amounts(d.claim)):
+            frag = asked_number_fragment(d.text or "", d.claim, asked)
+            if frag:
+                c.fragment, c.explains = frag, True
     _claim_units(ranked, q_emb)
     timings["fragments_ms"] = timings.get("fragments_ms", 0) + (time.perf_counter() - t0) * 1000
     t0 = time.perf_counter()
@@ -588,7 +612,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 misleading.append(c); evidence.append(_evidence(c, "kontekst", c.claim_cos, same)); continue
             if mapped == "brak_dowodow":
                 unverif.append(c)
-            if max(c.claim_cos, c.frag_cos) >= 0.70:
+            if max(c.claim_cos, c.frag_cos) >= 0.70 or c.explains:
                 evidence.append(_evidence(c, "kontekst", max(c.claim_cos, c.frag_cos), same))
         elif c.definitional:
             evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
@@ -603,7 +627,9 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 refute.append(c); evidence.append(_evidence(c, "przeczy", s_.contra, None))
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
-    res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk)
+    res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
+                  keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
+    res.meta_question = getattr(claim, "meta", "") or None
     if definitional:
         d0 = INDEX.docs[definitional[0].doc_idx]
         note = (f"Wartość zależy od przyjętej miary: {d0.publisher} („{short(d0.title, 80)}”) podaje inną liczbę dla innej "
@@ -648,7 +674,10 @@ def _score(c: _Cand) -> float:
     return c.claim_cos
 
 
-def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[Evidence], high_risk: bool) -> ClaimResult:
+def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[Evidence], high_risk: bool,
+            keep: set[str] = frozenset()) -> ClaimResult:
+    """keep: doc ids of context items that answer the user's question about the check (asked_number_fragment);
+    they are listed before other context items, so the evidence cut cannot drop them."""
     premises: list[Premise] = []
     rules: list[str] = []
     reasons: list[str] = []
@@ -741,7 +770,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
         rules.append("R6:BRAK_DOWODOW")
 
     order = {"przeczy": 0, "popiera": 0, "kontekst": 1, "neutralne": 2}
-    evidence.sort(key=lambda e: (order[e.stance], e.tier, -e.similarity))
+    evidence.sort(key=lambda e: (order[e.stance], e.doc_id not in keep, e.tier, -e.similarity))
     evidence = evidence[: settings.top_k_evidence]
     limitations.append("Odpowiedź opiera się wyłącznie na jawnym katalogu źródeł (zob. „Źródła”); brak wyniku nie oznacza, "
                        "że informacja jest prawdziwa lub fałszywa.")

@@ -104,6 +104,9 @@ class ClaimResult(BaseModel):
     # abstentions only: index into `evidence` of the item the short answer names as related material (never decisive;
     # shown with its link so the reader can open it, labelled as not settling the claim)
     related_evidence: Optional[int] = None
+    # a sentence of the message about the check itself, kept out of the query ("Dlaczego w analizie Demagoga jest
+    # 650 mln zł?"); when it names a number, the engine quotes the passage of the analysis that gives it
+    meta_question: Optional[str] = None
 
 
 RULES_VERSION = "1.0"
