@@ -15,12 +15,12 @@
  │ Adapter demo (czat WWW)   │──┤   (?demo=1)           │    twierdzeń już sprawdzonych (PFCR)             │
  │ Discord bot (proces)      │──┘   POST /api/chat-reply│ 5. Fragment dosłowny (bramka V2) + stanowisko:   │
  └──────────────────────────┘                          │    NLI mDeBERTa-v3 / reguła liczbowa (dane GUS…) │
-                                                        │ 6. Werdykt: reguły R1–R6 (jawne, wersjonowane)   │
+                                                        │ 6. Werdykt: reguły R1–R6 + R3a/M1/M2/G1/HR       │
  ┌──────────────────────────┐                          │ 7. Wyjaśnienie z szablonu (opcj. LLM tylko       │
  │ Panel analityka           │◄── /api/cases ───────────│    upraszcza język; walidacja wyjścia)           │
  │ (sprawy, metryki, eksport)│                          │ 8. Zapis przebiegu (SQLite), sprawy moderatora   │
  └──────────────────────────┘                           ├──────────────────────────────────────────────────┤
-                                                        │ 4b. Brak dowodu w bazie → WYSZUKIWANIE NA ŻYWO   │
+                                                        │ 4b. WYSZUKIWANIE NA ŻYWO (równolegle z 4.)       │
  ┌──────────────────────────┐                           │    (websearch.py, budżet ~15 s): Google Fact     │
  │ Panel źródeł /admin       │── /api/admin/* ──┐       │    Check API + wyszukiwarki zaufanych serwisów   │
  │ (token X-Admin-Token)     │                  │       │    z rejestru → fetch (SSRF, robots.txt) → skan  │
@@ -47,24 +47,41 @@
    przekierowań), treść traktowana jako **niezaufane dane**.
 2. **Bezpieczeństwo**: wzorce poleceń (PL/EN, tokeny szablonów czatu, ukryte znaki) → zdarzenie `prompt_injection`
    w dzienniku + neutralizacja fragmentu. Instrukcje są kodem, treść jest danymi — żaden tekst nie zmienia reguł.
-3. **Twierdzenia**: do 3 najbardziej „sprawdzalnych” zdań (liczby, nazwy własne, czasowniki faktów); opinie i prognozy
+3. **Twierdzenia**: do 3 najbardziej „sprawdzalnych” zdań (liczby, nazwy własne, czasowniki faktów); krótki tekst
+   (≤ 2 zdania i ≤ 400 znaków) to zawsze jedno twierdzenie (`claims._extract`); opinie i prognozy
    → „nie podlega weryfikacji”; pytania („Czy…?”) zamieniane na twierdzenia. Prośba o wykonanie zadania zamiast
    informacji („napisz wiersz…”, „przetłumacz…”, „wygeneruj kod…”, bez słów typu „czy”, „prawda”, „sprawdź”) dostaje
    status `poza_zakresem` bez werdyktu (`textutil.is_task_request`); brak sprawdzalnego zdania → `doprecyzuj`.
 4. **Wyszukiwanie**: hybryda BM25 (prosty stemming prefiksowy dla polskiego) + gęste embeddingi, fuzja RRF; osobny
-   indeks twierdzeń sprawdzonych przez fact-checkerów (dopasowanie semantyczne, próg 0,82 lub 0,74 + NLI).
+   indeks twierdzeń sprawdzonych przez fact-checkerów. Kandydatem jest twierdzenie z cos ≥ 0,68
+   (`claim_match_soft` 0,74 − 0,06). O tym, czy to **to samo** twierdzenie, decyduje `engine.claim_match` (progi
+   w kodzie): cos ≥ 0,86 i entailment NLI ≥ 0,5 (≥ 0,8 dla baz incydentów) albo cos ≥ 0,80, entailment ≥ 0,8 i wspólne
+   słowa ≥ 0,4; samo podobieństwo cos ≥ 0,88 tylko wtedy, gdy nazwy i liczby się zgadzają (reguła G1); sprzeczność NLI
+   ≥ 0,5 w którąkolwiek stronę blokuje „to samo”, a cos ≥ 0,85 ze sprzecznością ≥ 0,80 w obie strony oznacza
+   twierdzenie przeciwne. Poniżej tych progów dopasowanie jest tylko kontekstem.
 5. **Dowody**: dla każdego źródła wybierany jest 1–2-zdaniowy fragment najbardziej zbieżny z twierdzeniem; ten sam
    fragment jest cytowany i oceniany. Cytat musi występować dosłownie w źródle (bramka V2). Stanowisko: NLI (≥ 0,70)
    albo deterministyczne porównanie liczb z kartą danych urzędowych dla tego samego okresu. Fact-check: werdykt
    organizacji + kontrola, czy użytkownik nie twierdzi czegoś przeciwnego (NLI sprzeczności → odwrócenie oceny).
 6. **Werdykt**: reguły R1–R6 (opis: `/metodologia`), siła podstaw jako tekst (mocna/umiarkowana), przesłanki,
-   kody przyczyn wstrzymania, „co mogłoby to rozstrzygnąć”, ostrzeżenie o materiale archiwalnym.
-4b. **Wyszukiwanie na żywo** (tylko gdy baza nie dała dowodu; `PRAWDOWID_LIVE_SEARCH=0` wyłącza): równolegle Google Fact
-   Check API (z kluczem; tylko recenzje z domen rejestru stają się dowodem) i wyszukiwarki samych zaufanych serwisów
+   kody przyczyn wstrzymania, „co mogłoby to rozstrzygnąć”, ostrzeżenie o materiale archiwalnym. Reguły uzupełniające
+   (w `rules_fired`): **R3a** — fałsz, bo materiał jest starszy, niż twierdzi tekst (kontekst `FALSZYWY_KONTEKST`);
+   **M1** — dopasowanie do jednego zdania sprawdzonej wypowiedzi; **M2** — „czy to ten sam materiał” (porównanie
+   nagłówka i daty linku z analizami, `provenance.py`); **G1** — bardzo podobne twierdzenie odrzucone, bo różni się
+   nazwą lub liczbą; **HR** — temat wysokiego ryzyka z jednym źródłem kat. B → sprawa dla analityka.
+   Krótka odpowiedź (`short_answer`, `answer.py`) jest zawsze z szablonu; opcjonalny LLM zmienia tylko pole
+   `explanation`, a jego tekst odrzucamy, gdy dodaje liczby lub linki.
+4b. **Wyszukiwanie na żywo** (`PRAWDOWID_LIVE_SEARCH=0` wyłącza). Google Fact Check API (tylko z kluczem; tylko
+   recenzje z domen rejestru stają się dowodem) startuje **równolegle z wyszukiwaniem lokalnym** dla każdego twierdzenia
+   faktycznego; gdy coś zwróci, wszystkie twierdzenia są oceniane ponownie. Wyszukiwarki samych zaufanych serwisów
+   działają tylko dla twierdzeń, które po bazie zostały bez dowodu (najwyżej 2, `MAX_FALLBACK_CLAIMS`):
    (gov.pl, WordPress REST: Demagog, FakeNews.pl, CheckFirst; opcjonalnie SearXNG/Brave z filtrem `site:`). Każdy serwis
    ma jeden zegar (robots.txt + zapytania, 7 s), potem ≤ 5 stron jest pobieranych (SSRF, robots.txt, skan injection) i
    ocenianych tymi samymi regułami. Wynik trafia do `live_web.jsonl` (następne pytanie = baza). Awaria/timeout → komunikat
-   „…jest teraz niedostępny (błąd techniczny)…”, nigdy werdykt. Szczegóły: nagłówek `backend/prawdowid/websearch.py`.
+   „…jest teraz niedostępny (błąd techniczny)…”, nigdy werdykt. Gdy krok nie działał (brak klucza Google, wyszukiwanie
+   wyłączone na serwerze lub w tym żądaniu, LLM niedostępny lub odrzucony w walidacji), wynik mówi to wprost:
+   `engine.unavailable`, `live_search.status = "nieaktywne"`, `engine.llm_status`, wiersz „Nie użyto: …” w interfejsie.
+   Szczegóły: nagłówek `backend/prawdowid/websearch.py`.
 7. **Pętla informacji**: nierozstrzygnięte twierdzenia faktyczne i tematy wysokiego ryzyka z jednym źródłem →
    sprawa w kolejce analityka; podobne zgłoszenia (cos ≥ 0,86) łączone w jedną sprawę z licznikiem i priorytetem.
 8. **Audyt**: każde sprawdzenie (ID, czas, kanał, zamaskowane wejście, źródła, werdykty, czasy etapów, modele,

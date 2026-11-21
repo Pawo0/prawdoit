@@ -41,10 +41,12 @@ class Settings:
     # --- retrieval / decision thresholds (explicit, documented in /metodologia) ---
     top_k_retrieval: int = 40
     top_k_evidence: int = 6
-    claim_match_threshold: float = float(_env("CLAIM_MATCH_T", "0.82"))   # cosine: same claim as a fact-check
-    claim_match_soft: float = float(_env("CLAIM_MATCH_SOFT", "0.74"))     # related claim, needs NLI agreement
+    # cosine of a related fact-checked claim: retrieval candidates from claim_match_soft - 0.06, router near-miss.
+    # Whether it is the SAME claim is decided by engine.claim_match (cosine + NLI cutoffs in code, docs/ARCHITECTURE.md
+    # step 4). The unused `claim_match_threshold` (0.82, env CLAIM_MATCH_T) and `nli_weak` (0.50) were removed
+    # 2026-11-22; nothing read them.
+    claim_match_soft: float = float(_env("CLAIM_MATCH_SOFT", "0.74"))
     nli_strong: float = 0.70
-    nli_weak: float = 0.50
     stale_days: int = 365  # evidence older than this for time-sensitive claims -> archival warning
 
     # --- safety ---
