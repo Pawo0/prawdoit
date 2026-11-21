@@ -276,18 +276,32 @@ class CorpusIndex:
         return [(i, s, float(cos[i]) if len(cos) else 0.0) for i, s in ranked]
 
     def match_claims(self, q_emb: np.ndarray, query: str, k: int = 8) -> list[tuple[int, float]]:
-        """Nearest fact-checked claims: (doc_idx, cosine). Lexical hits are re-scored with cosine."""
+        """Nearest fact-checked claims: (doc_idx, cosine of the doc's closest row), one result per document.
+        WHICH k documents are returned is decided by reciprocal-rank fusion of the dense and the lexical (BM25)
+        ranking, as in search_chunks — re-sorting their union by cosine alone would drop every lexical hit; the
+        cosine of each returned document is what the decision step uses."""
         if self.claim_emb is None or not len(self.claim_emb):
             return []
         cos = self.claim_emb @ q_emb
-        cand = set(np.argsort(-cos)[:2 * k].tolist())  # a doc may have two rows (claim, headline): one result per doc
-        if self.claim_bm25:
-            cand |= {i for i, _ in self.claim_bm25.search(tokens(query), k=2 * k)}
+        dense = np.argsort(-cos)[:2 * k].tolist()  # a doc may have two rows (claim, headline)
+        lexical = [i for i, _ in self.claim_bm25.search(tokens(query), k=2 * k)] if self.claim_bm25 else []
         best: dict[int, float] = {}
-        for i in cand:
-            di = self.claim_doc_idx[i]
-            best[di] = max(best.get(di, -1.0), float(cos[i]))
-        return sorted(best.items(), key=lambda x: -x[1])[:k]
+        fused: dict[int, float] = defaultdict(float)
+        for rows in (dense, lexical):
+            seen: list[int] = []
+            for i in rows:
+                di = self.claim_doc_idx[i]
+                best[di] = max(best.get(di, -1.0), float(cos[i]))
+                if di not in seen:
+                    fused[di] += 1.0 / (60 + len(seen))
+                    seen.append(di)
+        for di in best:  # a lexical hit on one row: the doc's closest row still sets its cosine
+            r = self.claim_row.get(di)
+            for i in (r, r + 1) if r is not None else ():
+                if i < len(self.claim_doc_idx) and self.claim_doc_idx[i] == di:
+                    best[di] = max(best[di], float(cos[i]))
+        top = sorted(fused, key=lambda di: (-fused[di], -best[di]))[:k]
+        return sorted(((di, best[di]) for di in top), key=lambda x: -x[1])
 
     def checked_claim_cos(self, doc_idx: int, q_emb: np.ndarray) -> float:
         """Cosine to the doc's checked claim itself (not its headline): what claim matching rules on."""

@@ -108,6 +108,26 @@ class HeadlineRows(unittest.TestCase):
         self.assertAlmostEqual(res[0][1], 1.0)
         self.assertAlmostEqual(idx.checked_claim_cos(0, q), 0.0)  # its checked claim is not close
 
+    def test_lexical_hit_survives_fusion(self):
+        # 10 docs; the query is closest (dense) to docs 0..8, while doc 9 is the only lexical hit: re-sorting the
+        # union by cosine would cut doc 9 at k=8, rank fusion keeps it, with its own cosine
+        idx = CorpusIndex()
+        idx.docs = [SIMILAR] * 10
+        idx.claim_doc_idx = list(range(10))
+        idx.claim_row = {i: i for i in range(10)}
+        q = np.array([1.0, 0.0], dtype=np.float32)
+        idx.claim_emb = np.array([[1.0 - 0.01 * i, 0.1] for i in range(9)] + [[0.3, 0.95]], dtype=np.float32)
+
+        class Lexical:
+            def search(self, toks, k):
+                return [(9, 5.0)]
+        idx.claim_bm25 = Lexical()
+        res = idx.match_claims(q, "słowo", k=8)
+        self.assertIn(9, [d for d, _ in res])
+        self.assertEqual(len(res), 8)
+        self.assertAlmostEqual(dict(res)[9], 0.3, places=5)
+        self.assertEqual([d for d, _ in res][0], 0)  # still sorted by cosine
+
     def test_batch_path_uses_checked_claims_only(self):
         idx = self.make_index()
         q = np.array([[0.0, 1.0, 0.0]], dtype=np.float32)
