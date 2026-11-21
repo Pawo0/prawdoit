@@ -57,7 +57,7 @@ jawnie, skąd się wziął (analiza i pomiary: `research/10_organiser_sources.md
 |---|---|---|
 | `organiser_listed` | adres lub baza z `rules/resources.txt` | Odyseusz, RCB, RSO, IMGW, policja.pl, moje.cert.pl, Google Fact Check |
 | `organiser_implied` | źródło użyte w scenariuszach referencyjnych lub instrukcjach organizatora albo ten sam serwis/instytucja co adres z listy | Demagog, PAP, EUvsDisinfo, aktualności MSZ, cert.pl |
-| `organiser_recommended` | wymienione tylko wśród „rekomendowanych punktów odniesienia” w treści zadania (sekcja 7) | dane.gov.pl, ISAP, EUR-Lex, FakeNews.pl, Konkret24, Pravda, Check First |
+| `organiser_recommended` | wymienione tylko wśród „rekomendowanych punktów odniesienia” w treści zadania (sekcja 7), także ogólnie („korpusy organizacji IFCN/EFCSN”) | dane.gov.pl, ISAP, EUR-Lex, FakeNews.pl i AFP Sprawdzam (obie drogi, także przez bazę Google: organizator wskazał bazę, nie tych wydawców), Konkret24, Pravda, Check First |
 | `outside` | dodane przez zespół, organizator ich nie wymienia | GUS, NBP, Eurostat, PKW, Przedstawicielstwo KE |
 
 - Formularz panelu `/admin` nie ma pola zakresu, więc dodane w nim źródło dostaje `outside`. Zakres organizatora wpisuje
