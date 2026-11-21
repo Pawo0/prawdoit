@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from .linefilter import drop_metadata_lines
 from .textutil import (checked_question, checkworthiness, claim_kind, content_words, is_meta_sentence, is_question,
                        normalize_ws, question_to_claim, split_meta, split_sentences, strip_preamble)
 
@@ -21,6 +22,7 @@ class Claim:
 
 def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
     text = normalize_ws(text)
+    text = drop_metadata_lines(text)  # author / date / handle / interface / OCR-debris lines are not claims
     if not text:
         return []
     sents = [s.strip() for s in split_sentences(text) if len(s.strip()) > 3]
