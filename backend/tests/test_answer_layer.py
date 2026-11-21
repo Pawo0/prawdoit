@@ -110,5 +110,37 @@ class LiveOutage(unittest.TestCase):
         self.assertEqual(line, "Ograniczenie: ocena opiera się na jednym źródle.")
 
 
+class WhoCheckedQuestion(unittest.TestCase):
+    """'Czy Demagog to sprawdzał? <claim>' asks WHETHER it was checked (organisers' scenario F)."""
+
+    def test_question_sentence_is_kept_out_of_the_query(self):
+        from prawdowid.claims import extract_claims
+
+        for text in ("Czy Demagog to sprawdzał? Depesza PAP ze słowami premiera została usunięta! 15 września 2024",
+                     "Czy Demagog to sprawdzał? Depesza PAP ze słowami premiera została usunięta!",
+                     "Depesza PAP ze słowami premiera została usunięta! Czy ktoś już to zweryfikował?"):
+            cs = extract_claims(text)
+            self.assertEqual(len(cs), 1, text)
+            self.assertEqual(cs[0].query.rstrip("!"), "Depesza PAP ze słowami premiera została usunięta", text)
+            self.assertIn("Czy", cs[0].text)
+
+    def test_not_a_who_checked_question(self):
+        from prawdowid.textutil import checked_question
+
+        self.assertEqual(checked_question("Czy Demagog to sprawdzał?"), "Demagog")
+        self.assertEqual(checked_question("Czy ktoś już to zweryfikował?"), "ktoś")
+        for s in ("Czy NIK zbadała wydatki?", "Czy szczepionki zawierają chipy?", "Czy to prawda?",
+                  "Czy Demagog sprawdzał, czy Wrocław był jedynym miastem?"):
+            self.assertIsNone(checked_question(s), s)
+
+    def test_answer_opens_with_yes_it_was_checked(self):
+        e = ev(stance="przeczy", factcheck_claim="Depesza PAP została usunięta.", factcheck_verdict_raw="Fałsz",
+               factcheck_verdict="false", same_claim=True, similarity=0.9)
+        c = claim("falszywe", [e], text="Czy Demagog to sprawdzał? Depesza PAP została usunięta!",
+                  strength_label="umiarkowana")
+        result(c)
+        self.assertTrue(c.short_answer.startswith("Tak, Demagog to sprawdził i ocenił"), c.short_answer)
+
+
 if __name__ == "__main__":
     unittest.main()

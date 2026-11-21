@@ -4,8 +4,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .textutil import (checkworthiness, claim_kind, content_words, is_meta_sentence, is_question, normalize_ws,
-                       question_to_claim, split_meta, split_sentences, strip_preamble)
+from .textutil import (checked_question, checkworthiness, claim_kind, content_words, is_meta_sentence, is_question,
+                       normalize_ws, question_to_claim, split_meta, split_sentences, strip_preamble)
 
 _NOISE = re.compile(r"(https?://\S+|#\w+|@\w+|\b(udostępnij|udostępniaj|przekaż dalej|share|pilne!+|zobacz)\b)", re.I)
 
@@ -53,4 +53,10 @@ def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
         chosen = sorted(cands, key=lambda c: -c.score)[:1]
     # keep original order for readability
     order = {id(c): i for i, c in enumerate(cands)}
-    return sorted(chosen, key=lambda c: order[id(c)])
+    chosen = sorted(chosen, key=lambda c: order[id(c)])
+    # "Czy Demagog to sprawdzał? <claim> <date>": the question about who checked it stays out of the query, but is
+    # kept in the text shown with each claim, so the answer can say "Tak, Demagog to sprawdził…" (answer.py)
+    asked = next((clean(s) for s in sents if checked_question(clean(s)) is not None), None)
+    if asked:
+        chosen = [Claim(f"{asked} {c.text}", c.query, c.kind, c.score) for c in chosen]
+    return chosen
