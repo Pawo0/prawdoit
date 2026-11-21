@@ -1,0 +1,6431 @@
+{
+ "summary": {
+  "n": 170,
+  "correct": 134,
+  "abstain_miss": 22,
+  "false_verdicts": 14,
+  "accuracy": 0.788,
+  "macro_f1": 0.787,
+  "group_pos": {
+   "n": 120,
+   "correct": 93,
+   "abstain_miss": 20,
+   "false_verdict": 7
+  },
+  "group_neg": {
+   "n": 15,
+   "correct": 13,
+   "abstain_miss": 2,
+   "false_verdict": 0
+  },
+  "group_hardneg": {
+   "n": 27,
+   "correct": 25,
+   "abstain_miss": 0,
+   "false_verdict": 2
+  },
+  "group_unverifiable": {
+   "n": 8,
+   "correct": 3,
+   "abstain_miss": 0,
+   "false_verdict": 5
+  },
+  "by_type": {
+   "inflect": {
+    "n": 19,
+    "correct": 15,
+    "abstain_miss": 2,
+    "false_verdict": 2
+   },
+   "question": {
+    "n": 19,
+    "correct": 13,
+    "abstain_miss": 3,
+    "false_verdict": 3
+   },
+   "nodiac": {
+    "n": 18,
+    "correct": 14,
+    "abstain_miss": 4,
+    "false_verdict": 0
+   },
+   "colloq": {
+    "n": 18,
+    "correct": 15,
+    "abstain_miss": 2,
+    "false_verdict": 1
+   },
+   "para": {
+    "n": 18,
+    "correct": 14,
+    "abstain_miss": 2,
+    "false_verdict": 2
+   },
+   "short": {
+    "n": 18,
+    "correct": 13,
+    "abstain_miss": 3,
+    "false_verdict": 2
+   },
+   "typo": {
+    "n": 18,
+    "correct": 12,
+    "abstain_miss": 4,
+    "false_verdict": 2
+   },
+   "neg": {
+    "n": 15,
+    "correct": 13,
+    "abstain_miss": 2,
+    "false_verdict": 0
+   },
+   "hardneg": {
+    "n": 27,
+    "correct": 25,
+    "abstain_miss": 0,
+    "false_verdict": 2
+   }
+  },
+  "retrieval_n": 0,
+  "retrieval": {
+   "claim_dense_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   },
+   "claim_bm25_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   },
+   "match_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   },
+   "chunk_bm25_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   },
+   "chunk_dense_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   },
+   "chunk_hybrid_rank": {
+    "R@1": 0.0,
+    "R@5": 0.0,
+    "MRR": 0.0
+   }
+  },
+  "retrieval_by_type": {},
+  "failure_stage": {},
+  "latency_ms": {
+   "p50": 1190,
+   "p95": 3417,
+   "max": 6381
+  },
+  "setup": {
+   "analyzer": "prefix6",
+   "rule": "bidir_nli",
+   "no_alt": false,
+   "embed_model": "default",
+   "analyzer_load_s": 0.29,
+   "analyzer_rss_mb": 39,
+   "index_build_s": 4.2,
+   "models_load_s": 8.9,
+   "peak_rss_mb": 3287,
+   "documents": 4382,
+   "chunks": 21494,
+   "claims": 3085
+  }
+ },
+ "rows": [
+  {
+   "id": "01-inflect",
+   "seed": 1,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Gwałt na policjantce nie został zakwalifikowany jako przestępstwo, a policjanta, który się go dopuścił, zwolnią z aresztu i wróci on do pracy.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1026.8,
+   "timings": {
+    "retrieval_ms": 51.9,
+    "fragments_ms": 8.1,
+    "nli_ms": 944.3,
+    "total_ms": 1026.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje"
+   ]
+  },
+  {
+   "id": "01-question",
+   "seed": 1,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że gwałtu na policjantce nie zakwalifikowano jako przestępstwo, a sprawca zostanie zwolniony z aresztu i wróci do pracy?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1165.2,
+   "timings": {
+    "retrieval_ms": 34.9,
+    "fragments_ms": 5.2,
+    "nli_ms": 1100.1,
+    "total_ms": 1164.8
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "01-nodiac",
+   "seed": 1,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "gwaltu na policjantce nie zakwalifikowano jako przestepstwo, policjant ktory dopuscil sie gwaltu zostanie zwolniony z aresztu i wroci do pracy",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+   "pred": "nie_podlega_weryfikacji",
+   "outcome": "abstain",
+   "ms": 2.6,
+   "timings": {
+    "total_ms": 2.4
+   },
+   "verdicts_all": [
+    "nie_podlega_weryfikacji"
+   ],
+   "rules": [
+    "R1:NIE_PODLEGA_WERYFIKACJI"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "01-colloq",
+   "seed": 1,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Policjant zgwałcił koleżankę z pracy i nic mu nie zrobią – nie uznali tego za przestępstwo, wypuszczą go z aresztu i normalnie wróci do roboty.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 754.6,
+   "timings": {
+    "retrieval_ms": 39.4,
+    "fragments_ms": 5.3,
+    "nli_ms": 700.8,
+    "total_ms": 754.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje"
+   ]
+  },
+  {
+   "id": "02-para",
+   "seed": 2,
+   "type": "para",
+   "group": "pos",
+   "text": "Spoty przeciwko Nawrockiemu najpierw ukazały się w internecie, a dopiero potem sięgnęli po nie politycy tacy jak Szłapka i Nitras.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 549.0,
+   "timings": {
+    "retrieval_ms": 61.6,
+    "fragments_ms": 8.0,
+    "nli_ms": 469.9,
+    "total_ms": 548.4
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film"
+   ]
+  },
+  {
+   "id": "02-short",
+   "seed": 2,
+   "type": "short",
+   "group": "pos",
+   "text": "Reklamy najpierw pojawiły się w necie, dopiero później wykorzystali je Szłapka i Nitras.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 482.6,
+   "timings": {
+    "retrieval_ms": 53.6,
+    "fragments_ms": 7.7,
+    "nli_ms": 412.0,
+    "total_ms": 482.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film"
+   ]
+  },
+  {
+   "id": "02-typo",
+   "seed": 2,
+   "type": "typo",
+   "group": "pos",
+   "text": "Najpierw sie pojawiły te rekalmy w necie, a pózniej różni ludzie, np. Adam Szłapka i Sławomir Nitras, je wykorzytywali.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 536.0,
+   "timings": {
+    "retrieval_ms": 58.7,
+    "fragments_ms": 7.5,
+    "nli_ms": 460.1,
+    "total_ms": 535.4
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film"
+   ]
+  },
+  {
+   "id": "02-inflect",
+   "seed": 2,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Te reklamy pojawiły się w necie najpierw, a różni ludzie, tacy jak Adam Szłapka czy Sławomir Nitras, wykorzystali je później.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 540.3,
+   "timings": {
+    "retrieval_ms": 70.6,
+    "fragments_ms": 13.9,
+    "nli_ms": 446.1,
+    "total_ms": 539.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film"
+   ]
+  },
+  {
+   "id": "03-question",
+   "seed": 3,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że COVID-19 to zaplanowane ludobójstwo?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 661.3,
+   "timings": {
+    "retrieval_ms": 44.1,
+    "fragments_ms": 7.0,
+    "nli_ms": 595.4,
+    "total_ms": 660.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo"
+   ]
+  },
+  {
+   "id": "03-nodiac",
+   "seed": 3,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "covid-19 to zaplanowane ludobojstwo",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 573.4,
+   "timings": {
+    "retrieval_ms": 43.5,
+    "fragments_ms": 7.1,
+    "nli_ms": 514.3,
+    "total_ms": 572.8
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo"
+   ]
+  },
+  {
+   "id": "03-colloq",
+   "seed": 3,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Cała ta pandemia covida to było ludobójstwo zaplanowane z góry, nikt mi nie wmówi, że nie.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 831.2,
+   "timings": {
+    "retrieval_ms": 35.9,
+    "fragments_ms": 6.8,
+    "nli_ms": 758.2,
+    "total_ms": 830.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+    "demagog:fake_news/teorie-spiskowe-lacza-katastrofe-samolotu-ze-szczepieniami"
+   ]
+  },
+  {
+   "id": "03-para",
+   "seed": 3,
+   "type": "para",
+   "group": "pos",
+   "text": "Pandemię koronawirusa wywołano celowo, żeby masowo wymordować ludzi.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 747.7,
+   "timings": {
+    "retrieval_ms": 35.0,
+    "fragments_ms": 7.8,
+    "nli_ms": 672.7,
+    "total_ms": 747.1
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/teorie-spiskowe-lacza-katastrofe-samolotu-ze-szczepieniami"
+   ]
+  },
+  {
+   "id": "04-short",
+   "seed": 4,
+   "type": "short",
+   "group": "pos",
+   "text": "Małżeństwa ze zwierzętami są legalne w niektórych krajach.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 374.9,
+   "timings": {
+    "retrieval_ms": 33.9,
+    "fragments_ms": 7.5,
+    "nli_ms": 326.8,
+    "total_ms": 374.4
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz"
+   ]
+  },
+  {
+   "id": "04-typo",
+   "seed": 4,
+   "type": "typo",
+   "group": "pos",
+   "text": "Są kraje, w któych można zawżeć małżeństwo ze zwięrzeciem.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1372.5,
+   "timings": {
+    "retrieval_ms": 32.2,
+    "fragments_ms": 7.1,
+    "nli_ms": 1324.6,
+    "total_ms": 1371.8
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+    "fakenews_pl:4188"
+   ]
+  },
+  {
+   "id": "04-inflect",
+   "seed": 4,
+   "type": "inflect",
+   "group": "pos",
+   "text": "W pewnych krajach zawiera się małżeństwa ze zwierzętami.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 392.8,
+   "timings": {
+    "retrieval_ms": 32.9,
+    "fragments_ms": 7.1,
+    "nli_ms": 346.7,
+    "total_ms": 392.2
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz"
+   ]
+  },
+  {
+   "id": "04-question",
+   "seed": 4,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy są kraje, w których można zawrzeć małżeństwo ze zwierzęciem?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 410.4,
+   "timings": {
+    "retrieval_ms": 33.1,
+    "fragments_ms": 14.3,
+    "nli_ms": 355.5,
+    "total_ms": 409.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz"
+   ]
+  },
+  {
+   "id": "05-nodiac",
+   "seed": 5,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "polska odda ukrainie czesc terytorium w zamian za zakonczenie wojny",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 6381.0,
+   "timings": {
+    "retrieval_ms": 79.2,
+    "fragments_ms": 8.0,
+    "nli_ms": 6284.3,
+    "total_ms": 6380.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+    "euvsdisinfo:poland-will-demand-territorial-concessions-from-ukraine-in-exchange-for-military-aid",
+    "demagog:fake_news/polak-na-donbasie-powraca-mezczyzna-nadal-szerzy-propagande"
+   ]
+  },
+  {
+   "id": "05-colloq",
+   "seed": 5,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Podobno mamy oddać Ukraińcom kawałek Polski, żeby wojna się wreszcie skończyła.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 2062.1,
+   "timings": {
+    "retrieval_ms": 83.3,
+    "fragments_ms": 7.1,
+    "nli_ms": 1960.7,
+    "total_ms": 2061.2
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+    "euvsdisinfo:poland-will-demand-territorial-concessions-from-ukraine-in-exchange-for-military-aid"
+   ]
+  },
+  {
+   "id": "05-para",
+   "seed": 5,
+   "type": "para",
+   "group": "pos",
+   "text": "Warszawa zrzeknie się fragmentu swoich ziem na rzecz Kijowa, aby doprowadzić do pokoju.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 4242.8,
+   "timings": {
+    "retrieval_ms": 58.5,
+    "fragments_ms": 13.1,
+    "nli_ms": 4162.8,
+    "total_ms": 4242.1
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy"
+   ]
+  },
+  {
+   "id": "05-short",
+   "seed": 5,
+   "type": "short",
+   "group": "pos",
+   "text": "Polska odda Ukrainie część terytorium.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 4407.4,
+   "timings": {
+    "retrieval_ms": 74.4,
+    "fragments_ms": 7.6,
+    "nli_ms": 4317.2,
+    "total_ms": 4406.8
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+    "pravda:czesc-pkb-dla-ukrainy"
+   ]
+  },
+  {
+   "id": "06-typo",
+   "seed": 6,
+   "type": "typo",
+   "group": "pos",
+   "text": "Jesteśmy w zasadzie jedynym pańswtem na świecie, w którym są zaplanowane wybroy, ale ze względu na stan epidemi nie są przesuniete.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 526.7,
+   "timings": {
+    "retrieval_ms": 42.4,
+    "fragments_ms": 7.8,
+    "nli_ms": 440.0,
+    "total_ms": 526.2
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa"
+   ]
+  },
+  {
+   "id": "06-inflect",
+   "seed": 6,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Polska była w zasadzie jedynym państwem na świecie, które mimo stanu epidemii nie przesunęło zaplanowanych wyborów.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 803.2,
+   "timings": {
+    "retrieval_ms": 50.5,
+    "fragments_ms": 7.8,
+    "nli_ms": 706.9,
+    "total_ms": 802.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "06-question",
+   "seed": 6,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy Polska jest jedynym państwem na świecie, w którym zaplanowane wybory nie zostały przesunięte ze względu na stan epidemii?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 791.5,
+   "timings": {
+    "retrieval_ms": 62.0,
+    "fragments_ms": 7.4,
+    "nli_ms": 685.9,
+    "total_ms": 791.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "06-nodiac",
+   "seed": 6,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "jestesmy w zasadzie jedynym panstwem na swiecie w ktorym sa zaplanowane wybory ale te wybory ze wzgledu na stan epidemii nie sa przesuniete",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 532.2,
+   "timings": {
+    "retrieval_ms": 50.6,
+    "fragments_ms": 7.6,
+    "nli_ms": 439.3,
+    "total_ms": 531.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 1,
+   "decisive_sources": [
+    "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa"
+   ]
+  },
+  {
+   "id": "07-colloq",
+   "seed": 7,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Te Ukrainki w autobusie w Bielsku same się prosiły – opluły faceta i go prowokowały.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1033.2,
+   "timings": {
+    "retrieval_ms": 49.8,
+    "fragments_ms": 7.6,
+    "nli_ms": 965.1,
+    "total_ms": 1032.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji"
+   ]
+  },
+  {
+   "id": "07-para",
+   "seed": 7,
+   "type": "para",
+   "group": "pos",
+   "text": "Młode obywatelki Ukrainy jadące miejskim autobusem w Bielsku-Białej opluły mężczyznę i celowo go zaczepiały.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1347.3,
+   "timings": {
+    "retrieval_ms": 61.9,
+    "fragments_ms": 7.9,
+    "nli_ms": 1267.8,
+    "total_ms": 1346.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji"
+   ]
+  },
+  {
+   "id": "07-short",
+   "seed": 7,
+   "type": "short",
+   "group": "pos",
+   "text": "Ukrainki w Bielsku-Białej pluły na pasażera autobusu.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1481.9,
+   "timings": {
+    "retrieval_ms": 45.4,
+    "fragments_ms": 7.9,
+    "nli_ms": 1418.1,
+    "total_ms": 1481.2
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji"
+   ]
+  },
+  {
+   "id": "07-typo",
+   "seed": 7,
+   "type": "typo",
+   "group": "pos",
+   "text": "Ukrainki z autobsu w Bielsku-Białej pluly i prowkowały pasażera.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1320.3,
+   "timings": {
+    "retrieval_ms": 46.9,
+    "fragments_ms": 8.3,
+    "nli_ms": 1233.3,
+    "total_ms": 1319.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "08-inflect",
+   "seed": 8,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Prezydentowi Francji Emmanuelowi Macronowi Karol Nawrocki powiedział na forum publicznym, że Polska nie potrzebuje nauczycieli, bo sama jest lekcją.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 2435.0,
+   "timings": {
+    "retrieval_ms": 61.6,
+    "fragments_ms": 7.1,
+    "nli_ms": 2356.5,
+    "total_ms": 2434.4
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+    "euvsdisinfo:the-eu-did-not-hack-the-polish-elections-because-nawrocki-wants-to-arm-ukraine"
+   ]
+  },
+  {
+   "id": "08-question",
+   "seed": 8,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy Karol Nawrocki powiedział do Emmanuela Macrona: „Polska nie potrzebuje nauczycieli. Polska sama jest lekcją”?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1197.9,
+   "timings": {
+    "retrieval_ms": 43.8,
+    "fragments_ms": 6.8,
+    "nli_ms": 1138.5,
+    "total_ms": 1197.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona"
+   ]
+  },
+  {
+   "id": "08-nodiac",
+   "seed": 8,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "karol nawrocki powiedzial na forum publicznym do prezydenta francji emmanuela macrona: polska nie potrzebuje nauczycieli, polska sama jest lekcja",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 2651.6,
+   "timings": {
+    "retrieval_ms": 58.9,
+    "fragments_ms": 7.2,
+    "nli_ms": 2575.8,
+    "total_ms": 2651.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "euvsdisinfo:the-eu-did-not-hack-the-polish-elections-because-nawrocki-wants-to-arm-ukraine"
+   ]
+  },
+  {
+   "id": "08-colloq",
+   "seed": 8,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Nawrocki ładnie zgasił Macrona – powiedział mu prosto w oczy, że Polska nie potrzebuje nauczycieli, bo sama jest lekcją.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 3314.9,
+   "timings": {
+    "retrieval_ms": 47.4,
+    "fragments_ms": 7.5,
+    "nli_ms": 3250.8,
+    "total_ms": 3314.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+    "euvsdisinfo:the-eu-did-not-hack-the-polish-elections-because-nawrocki-wants-to-arm-ukraine"
+   ]
+  },
+  {
+   "id": "09-para",
+   "seed": 9,
+   "type": "para",
+   "group": "pos",
+   "text": "Preparaty na koronawirusa są groźne dla zdrowia: po ich podaniu zachorowań przybywa, a w składzie mają grafen oraz pasożyta Trypanosoma cruzi.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1211.9,
+   "timings": {
+    "retrieval_ms": 42.5,
+    "fragments_ms": 7.9,
+    "nli_ms": 1152.5,
+    "total_ms": 1211.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "fakenews_pl:7263",
+    "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv"
+   ]
+  },
+  {
+   "id": "09-short",
+   "seed": 9,
+   "type": "short",
+   "group": "pos",
+   "text": "Szczepionki na COVID zawierają grafen i świdrowca amerykańskiego.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1468.9,
+   "timings": {
+    "retrieval_ms": 41.2,
+    "fragments_ms": 8.2,
+    "nli_ms": 1411.3,
+    "total_ms": 1468.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "fakenews_pl:7263",
+    "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv"
+   ]
+  },
+  {
+   "id": "09-typo",
+   "seed": 9,
+   "type": "typo",
+   "group": "pos",
+   "text": "Szczepionki przeciw COVID-19 nie są bezpeiczne. Zwiekszają liczbę zakażen, a także zawierają grafne i świdrowca amerykanskiego.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1166.6,
+   "timings": {
+    "retrieval_ms": 61.6,
+    "fragments_ms": 7.9,
+    "nli_ms": 1063.9,
+    "total_ms": 1166.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "fakenews_pl:7263"
+   ]
+  },
+  {
+   "id": "09-inflect",
+   "seed": 9,
+   "type": "inflect",
+   "group": "pos",
+   "text": "W szczepionkach przeciw COVID-19, które nie są bezpieczne i zwiększyły liczbę zakażeń, znajduje się grafen oraz świdrowiec amerykański.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1792.4,
+   "timings": {
+    "retrieval_ms": 64.7,
+    "fragments_ms": 8.0,
+    "nli_ms": 1709.9,
+    "total_ms": 1791.8
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+    "fakenews_pl:7263"
+   ]
+  },
+  {
+   "id": "10-question",
+   "seed": 10,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że Dominik Tarczyński skonfrontował się z Donaldem Tuskiem w debacie na żywo?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 693.1,
+   "timings": {
+    "retrieval_ms": 52.5,
+    "fragments_ms": 14.6,
+    "nli_ms": 616.4,
+    "total_ms": 692.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia"
+   ]
+  },
+  {
+   "id": "10-nodiac",
+   "seed": 10,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "dominik tarczynski skonfrontowal sie z donaldem tuskiem w debacie na zywo",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 430.1,
+   "timings": {
+    "retrieval_ms": 46.6,
+    "fragments_ms": 5.4,
+    "nli_ms": 369.9,
+    "total_ms": 429.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia"
+   ]
+  },
+  {
+   "id": "10-colloq",
+   "seed": 10,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Tarczyński zaorał Tuska w debacie na żywo, podobno premier nie wiedział, co powiedzieć.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 499.3,
+   "timings": {
+    "retrieval_ms": 49.2,
+    "fragments_ms": 14.0,
+    "nli_ms": 427.9,
+    "total_ms": 498.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia"
+   ]
+  },
+  {
+   "id": "10-para",
+   "seed": 10,
+   "type": "para",
+   "group": "pos",
+   "text": "Europoseł Tarczyński starł się z premierem Tuskiem podczas transmitowanej dyskusji na wizji.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 3417.3,
+   "timings": {
+    "retrieval_ms": 40.6,
+    "fragments_ms": 18.2,
+    "nli_ms": 3349.4,
+    "total_ms": 3416.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia"
+   ]
+  },
+  {
+   "id": "11-short",
+   "seed": 11,
+   "type": "short",
+   "group": "pos",
+   "text": "Salon Gier na Automatach to kasyno online Totalizatora Sportowego.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1151.4,
+   "timings": {
+    "retrieval_ms": 51.8,
+    "fragments_ms": 5.3,
+    "nli_ms": 1083.0,
+    "total_ms": 1150.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno"
+   ]
+  },
+  {
+   "id": "11-typo",
+   "seed": 11,
+   "type": "typo",
+   "group": "pos",
+   "text": "W sieci istneije kasyno online o nazwie Salon Gier na Atuomatach pod patronatem Totalizatora Sportwego.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1585.5,
+   "timings": {
+    "retrieval_ms": 54.1,
+    "fragments_ms": 14.5,
+    "nli_ms": 1507.4,
+    "total_ms": 1585.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+    "demagog:fake_news/nowe-legalne-kasyno-pod-szyldem-lotto-uwazaj-to-oszustwo"
+   ]
+  },
+  {
+   "id": "11-inflect",
+   "seed": 11,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Kasynu online Salon Gier na Automatach, działającemu w sieci, patronuje Totalizator Sportowy.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1467.6,
+   "timings": {
+    "retrieval_ms": 69.3,
+    "fragments_ms": 7.5,
+    "nli_ms": 1376.3,
+    "total_ms": 1466.9
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+    "demagog:fake_news/nowe-legalne-kasyno-pod-szyldem-lotto-uwazaj-to-oszustwo"
+   ]
+  },
+  {
+   "id": "11-question",
+   "seed": 11,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy kasyno online Salon Gier na Automatach działa pod patronatem Totalizatora Sportowego?",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 910.1,
+   "timings": {
+    "retrieval_ms": 64.2,
+    "fragments_ms": 18.8,
+    "nli_ms": 816.8,
+    "total_ms": 909.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+    "demagog:fake_news/nowe-legalne-kasyno-pod-szyldem-lotto-uwazaj-to-oszustwo"
+   ]
+  },
+  {
+   "id": "12-nodiac",
+   "seed": 12,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "podczas pandemii covid-19 rzad zamordowal ponad 250 tys. polakow",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1171.8,
+   "timings": {
+    "retrieval_ms": 48.5,
+    "fragments_ms": 7.8,
+    "nli_ms": 1066.8,
+    "total_ms": 1170.9
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "12-colloq",
+   "seed": 12,
+   "type": "colloq",
+   "group": "pos",
+   "text": "W czasie covida rządzący mają na sumieniu ponad 250 tysięcy Polaków, po prostu ich wykończyli.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1701.9,
+   "timings": {
+    "retrieval_ms": 71.7,
+    "fragments_ms": 18.4,
+    "nli_ms": 1596.7,
+    "total_ms": 1701.0
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+    "euvsdisinfo:polish-historical-policy-disrespects-belarus"
+   ]
+  },
+  {
+   "id": "12-para",
+   "seed": 12,
+   "type": "para",
+   "group": "pos",
+   "text": "W trakcie epidemii koronawirusa władze celowo uśmierciły przeszło ćwierć miliona obywateli Polski.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 430.0,
+   "timings": {
+    "retrieval_ms": 60.1,
+    "fragments_ms": 8.0,
+    "nli_ms": 327.4,
+    "total_ms": 429.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja"
+   ]
+  },
+  {
+   "id": "12-short",
+   "seed": 12,
+   "type": "short",
+   "group": "pos",
+   "text": "Rząd zamordował 250 tys. Polaków w pandemii.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 978.3,
+   "timings": {
+    "retrieval_ms": 39.2,
+    "fragments_ms": 8.5,
+    "nli_ms": 889.9,
+    "total_ms": 977.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "13-typo",
+   "seed": 13,
+   "type": "typo",
+   "group": "pos",
+   "text": "Ujawnione przez dyrektorkę amerykanskiego wywiadu narodowego Tulsi Gabard dokumenty dowodzą, że w labolatoriach biologicznych w Ukrainie tworzono broń biologiczna.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 1252.3,
+   "timings": {
+    "retrieval_ms": 147.6,
+    "fragments_ms": 14.3,
+    "nli_ms": 1079.6,
+    "total_ms": 1251.7
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "fakenews_pl:18009"
+   ]
+  },
+  {
+   "id": "13-inflect",
+   "seed": 13,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Dokumenty, które ujawniła dyrektorka amerykańskiego wywiadu narodowego Tulsi Gabbard, są dowodem na tworzenie broni biologicznej w ukraińskich laboratoriach biologicznych.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 792.4,
+   "timings": {
+    "retrieval_ms": 104.5,
+    "fragments_ms": 9.4,
+    "nli_ms": 668.5,
+    "total_ms": 791.8
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono"
+   ]
+  },
+  {
+   "id": "13-question",
+   "seed": 13,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy dokumenty ujawnione przez Tulsi Gabbard dowodzą, że w laboratoriach biologicznych w Ukrainie tworzono broń biologiczną?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 793.5,
+   "timings": {
+    "retrieval_ms": 57.3,
+    "fragments_ms": 7.1,
+    "nli_ms": 720.4,
+    "total_ms": 792.9
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "fakenews_pl:18009",
+    "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono"
+   ]
+  },
+  {
+   "id": "13-nodiac",
+   "seed": 13,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "ujawnione przez dyrektorke amerykanskiego wywiadu narodowego tulsi gabbard dokumenty dowodza ze w laboratoriach biologicznych w ukrainie tworzono bron biologiczna",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1316.3,
+   "timings": {
+    "retrieval_ms": 64.1,
+    "fragments_ms": 7.3,
+    "nli_ms": 1199.5,
+    "total_ms": 1315.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "14-colloq",
+   "seed": 14,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Tusk palnął w Sejmie, że jak ktoś ukradł niezgodnie z procedurami, to musi oddać – czyli zgodnie z procedurami kraść wolno?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 709.1,
+   "timings": {
+    "retrieval_ms": 67.2,
+    "fragments_ms": 5.7,
+    "nli_ms": 626.2,
+    "total_ms": 708.5
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu"
+   ]
+  },
+  {
+   "id": "14-para",
+   "seed": 14,
+   "type": "para",
+   "group": "pos",
+   "text": "Premier stwierdził z mównicy sejmowej, że zwracać trzeba tylko to, co przywłaszczono wbrew procedurom.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 489.9,
+   "timings": {
+    "retrieval_ms": 61.4,
+    "fragments_ms": 14.3,
+    "nli_ms": 406.7,
+    "total_ms": 489.4
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu"
+   ]
+  },
+  {
+   "id": "14-short",
+   "seed": 14,
+   "type": "short",
+   "group": "pos",
+   "text": "Tusk: kto ukradł niezgodnie z procedurami, musi oddawać.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1517.1,
+   "timings": {
+    "retrieval_ms": 32.3,
+    "fragments_ms": 7.6,
+    "nli_ms": 1469.3,
+    "total_ms": 1516.6
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu"
+   ]
+  },
+  {
+   "id": "14-typo",
+   "seed": 14,
+   "type": "typo",
+   "group": "pos",
+   "text": "Donald Tusk podczas przemowienia w sejmie powiedzial: „Jeżeli ktoś cokolwiek ukardł niezgodnie z proceudrami, to oczywiście musi oddawać”",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1563.2,
+   "timings": {
+    "retrieval_ms": 41.1,
+    "fragments_ms": 8.5,
+    "nli_ms": 1476.2,
+    "total_ms": 1562.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "15-inflect",
+   "seed": 15,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Szczepienie ludzi przeciw COVID-19 było zbrodnią przeciwko ludzkości.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 1350.4,
+   "timings": {
+    "retrieval_ms": 48.3,
+    "fragments_ms": 7.3,
+    "nli_ms": 1285.5,
+    "total_ms": 1349.9
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo"
+   ]
+  },
+  {
+   "id": "15-question",
+   "seed": 15,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy szczepionki przeciw COVID-19 są zbrodnią przeciw ludzkości?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1206.3,
+   "timings": {
+    "retrieval_ms": 44.9,
+    "fragments_ms": 7.1,
+    "nli_ms": 1121.8,
+    "total_ms": 1205.7
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja"
+   ]
+  },
+  {
+   "id": "15-nodiac",
+   "seed": 15,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "szczepionki przeciw covid-19 sa zbrodnia przeciw ludzkosci",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1215.3,
+   "timings": {
+    "retrieval_ms": 51.5,
+    "fragments_ms": 6.8,
+    "nli_ms": 1129.3,
+    "total_ms": 1214.7
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja"
+   ]
+  },
+  {
+   "id": "15-colloq",
+   "seed": 15,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Te całe szczepionki na covid to zwykła zbrodnia przeciwko ludzkości, kiedyś ktoś za to odpowie.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 868.3,
+   "timings": {
+    "retrieval_ms": 48.9,
+    "fragments_ms": 7.1,
+    "nli_ms": 777.6,
+    "total_ms": 867.7
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja"
+   ]
+  },
+  {
+   "id": "16-para",
+   "seed": 16,
+   "type": "para",
+   "group": "pos",
+   "text": "Porty w Szczecinie i Świnoujściu obsłużyły w styczniu o ponad 40 procent mniej ładunków niż rok wcześniej.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 473.3,
+   "timings": {
+    "retrieval_ms": 40.9,
+    "fragments_ms": 8.2,
+    "nli_ms": 416.9,
+    "total_ms": 472.8
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem"
+   ]
+  },
+  {
+   "id": "16-short",
+   "seed": 16,
+   "type": "short",
+   "group": "pos",
+   "text": "Przeładunki w portach Szczecin-Świnoujście spadły w styczniu o ponad 40 proc.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 409.8,
+   "timings": {
+    "retrieval_ms": 37.3,
+    "fragments_ms": 6.8,
+    "nli_ms": 358.5,
+    "total_ms": 409.3
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem"
+   ]
+  },
+  {
+   "id": "16-typo",
+   "seed": 16,
+   "type": "typo",
+   "group": "pos",
+   "text": "W styczniu przeładnuki w zespole portów Szczecin-Swinoujście spadly o ponad 40 proc. w porównaniu z analogicznym miesiacem ubiegłego roku.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 523.2,
+   "timings": {
+    "retrieval_ms": 50.3,
+    "fragments_ms": 7.5,
+    "nli_ms": 455.6,
+    "total_ms": 522.7
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem"
+   ]
+  },
+  {
+   "id": "16-inflect",
+   "seed": 16,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Styczniowy spadek przeładunków w zespole portów Szczecin-Świnoujście wyniósł ponad 40 proc. względem analogicznego miesiąca ubiegłego roku.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 466.9,
+   "timings": {
+    "retrieval_ms": 53.6,
+    "fragments_ms": 13.2,
+    "nli_ms": 393.4,
+    "total_ms": 466.4
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem"
+   ]
+  },
+  {
+   "id": "17-question",
+   "seed": 17,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że NATO zawsze było agresorem – w Serbii, Iraku, Libii, Syrii i Afganistanie – a porozumień mińskich nie przestrzegała Ukraina, a nie Putin?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 2862.6,
+   "timings": {
+    "retrieval_ms": 63.3,
+    "fragments_ms": 7.5,
+    "nli_ms": 2757.5,
+    "total_ms": 2862.1
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy"
+   ]
+  },
+  {
+   "id": "17-nodiac",
+   "seed": 17,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "nato jest zawsze agresorem: w serbii, iraku, libii, syrii, afganistanie. to nie putin porzucil porozumienia minskie, to ukraina ich nigdy nie przestrzegala",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1736.1,
+   "timings": {
+    "retrieval_ms": 59.4,
+    "fragments_ms": 7.4,
+    "nli_ms": 1634.1,
+    "total_ms": 1735.5
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy"
+   ]
+  },
+  {
+   "id": "17-colloq",
+   "seed": 17,
+   "type": "colloq",
+   "group": "pos",
+   "text": "NATO zawsze napada pierwsze – Serbia, Irak, Libia, Syria, Afganistan. A porozumienia mińskie olała Ukraina, nie Putin.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 2847.6,
+   "timings": {
+    "retrieval_ms": 52.3,
+    "fragments_ms": 7.1,
+    "nli_ms": 2756.9,
+    "total_ms": 2847.0
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy"
+   ]
+  },
+  {
+   "id": "17-para",
+   "seed": 17,
+   "type": "para",
+   "group": "pos",
+   "text": "Sojusz Północnoatlantycki za każdym razem był stroną atakującą, a układy z Mińska złamał Kijów, nie Kreml.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 847.7,
+   "timings": {
+    "retrieval_ms": 44.4,
+    "fragments_ms": 6.6,
+    "nli_ms": 763.4,
+    "total_ms": 847.1
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy"
+   ]
+  },
+  {
+   "id": "18-short",
+   "seed": 18,
+   "type": "short",
+   "group": "pos",
+   "text": "Wpływy z VAT wzrosły w tym roku o 30 mld zł, więcej niż przez poprzednie 9 lat.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 809.7,
+   "timings": {
+    "retrieval_ms": 40.3,
+    "fragments_ms": 6.9,
+    "nli_ms": 725.9,
+    "total_ms": 809.1
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "18-typo",
+   "seed": 18,
+   "type": "typo",
+   "group": "pos",
+   "text": "Tylko w tym roku wpływy z podatku VAT wzorsły o 30 miliardów złotcyh. To więcej niz przez poprzednie dziewięć lat.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1473.8,
+   "timings": {
+    "retrieval_ms": 40.1,
+    "fragments_ms": 7.6,
+    "nli_ms": 1416.0,
+    "total_ms": 1473.1
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat"
+   ]
+  },
+  {
+   "id": "18-inflect",
+   "seed": 18,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Wzrost wpływów z podatku VAT o 30 miliardów złotych tylko w tym roku był większy niż w poprzednich dziewięciu latach.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1653.3,
+   "timings": {
+    "retrieval_ms": 65.7,
+    "fragments_ms": 14.2,
+    "nli_ms": 1562.9,
+    "total_ms": 1652.6
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat"
+   ]
+  },
+  {
+   "id": "18-question",
+   "seed": 18,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy wpływy z podatku VAT wzrosły w 2017 roku o 30 miliardów złotych, czyli więcej niż przez poprzednie dziewięć lat?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1795.9,
+   "timings": {
+    "retrieval_ms": 66.1,
+    "fragments_ms": 14.1,
+    "nli_ms": 1705.1,
+    "total_ms": 1795.2
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat"
+   ]
+  },
+  {
+   "id": "19-nodiac",
+   "seed": 19,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "chemtrails to prawda poniewaz tylko jeden samolot zostawial za soba biala smuge a lecial na tej samej wysokosci co drugi",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1449.3,
+   "timings": {
+    "retrieval_ms": 43.8,
+    "fragments_ms": 18.7,
+    "nli_ms": 1376.7,
+    "total_ms": 1448.7
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails"
+   ]
+  },
+  {
+   "id": "19-colloq",
+   "seed": 19,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Jak dwa samoloty lecą na tej samej wysokości i tylko jeden ciągnie za sobą smugę, to chyba jasne, że nas pryskają – chemtrails istnieją.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1584.3,
+   "timings": {
+    "retrieval_ms": 49.7,
+    "fragments_ms": 7.9,
+    "nli_ms": 1474.2,
+    "total_ms": 1583.5
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "19-para",
+   "seed": 19,
+   "type": "para",
+   "group": "pos",
+   "text": "Opryski chemiczne z samolotów są faktem: z dwóch maszyn na identycznym pułapie tylko jedna pozostawiała na niebie biały ślad.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1528.3,
+   "timings": {
+    "retrieval_ms": 43.4,
+    "fragments_ms": 7.9,
+    "nli_ms": 1461.1,
+    "total_ms": 1527.3
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails"
+   ]
+  },
+  {
+   "id": "19-short",
+   "seed": 19,
+   "type": "short",
+   "group": "pos",
+   "text": "Tylko jeden z dwóch samolotów zostawiał smugę – to dowód na chemtrails.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 2090.0,
+   "timings": {
+    "retrieval_ms": 67.5,
+    "fragments_ms": 32.2,
+    "nli_ms": 1973.1,
+    "total_ms": 2089.0
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails"
+   ]
+  },
+  {
+   "id": "20-typo",
+   "seed": 20,
+   "type": "typo",
+   "group": "pos",
+   "text": "Przed wojną funkcja Prokuratora Generlanego i Ministra Sprawiedliwosci była połączona. Po wojnie przez lata była połaczona. A potem wy ją rozdzieliliscie.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 2099.5,
+   "timings": {
+    "retrieval_ms": 182.8,
+    "fragments_ms": 30.0,
+    "nli_ms": 1842.1,
+    "total_ms": 2098.5
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad",
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA",
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata"
+   ]
+  },
+  {
+   "id": "20-inflect",
+   "seed": 20,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Funkcje Prokuratora Generalnego i Ministra Sprawiedliwości były połączone przed wojną i przez lata po wojnie, a dopiero potem zostały rozdzielone.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 866.1,
+   "timings": {
+    "retrieval_ms": 104.9,
+    "fragments_ms": 6.9,
+    "nli_ms": 696.3,
+    "total_ms": 865.1
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata"
+   ]
+  },
+  {
+   "id": "20-question",
+   "seed": 20,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy funkcja Prokuratora Generalnego i Ministra Sprawiedliwości była połączona przed wojną i przez lata po wojnie?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 873.9,
+   "timings": {
+    "retrieval_ms": 105.0,
+    "fragments_ms": 14.3,
+    "nli_ms": 709.6,
+    "total_ms": 873.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "20-nodiac",
+   "seed": 20,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "przed wojna przeciez byla polaczona funkcja prokuratora generalnego i ministra sprawiedliwosci. po wojnie przez lata byla polaczona. a potem wy ja rozdzieliliscie",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 920.7,
+   "timings": {
+    "retrieval_ms": 97.8,
+    "fragments_ms": 18.1,
+    "nli_ms": 756.4,
+    "total_ms": 920.1
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata"
+   ]
+  },
+  {
+   "id": "21-colloq",
+   "seed": 21,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Tusk za swoich poprzednich rządów, w latach 2007–2014, ze dwa–trzy razy sam ogłaszał wotum nieufności, dobrze to pamiętam.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1149.2,
+   "timings": {
+    "retrieval_ms": 60.9,
+    "fragments_ms": 8.0,
+    "nli_ms": 1066.5,
+    "total_ms": 1148.2
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy"
+   ]
+  },
+  {
+   "id": "21-para",
+   "seed": 21,
+   "type": "para",
+   "group": "pos",
+   "text": "W okresie 2007–2014 szef rządu Donald Tusk dwu- lub trzykrotnie sam poddawał swój gabinet pod głosowanie nad wotum nieufności.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 2264.5,
+   "timings": {
+    "retrieval_ms": 94.0,
+    "fragments_ms": 19.2,
+    "nli_ms": 2084.5,
+    "total_ms": 2262.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "21-short",
+   "seed": 21,
+   "type": "short",
+   "group": "pos",
+   "text": "Premier Tusk ogłaszał wotum nieufności 2–3 razy w kadencji 2007–2014.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 2795.1,
+   "timings": {
+    "retrieval_ms": 70.6,
+    "fragments_ms": 18.6,
+    "nli_ms": 2648.6,
+    "total_ms": 2794.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "21-typo",
+   "seed": 21,
+   "type": "typo",
+   "group": "pos",
+   "text": "Ja już jestem bardzo długo w polityce i pamietam wotum nieufnośći ogłaszane przez premiera Tuksa dwa, trzy razy w kadencji 2007–2014.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 892.5,
+   "timings": {
+    "retrieval_ms": 107.1,
+    "fragments_ms": 17.9,
+    "nli_ms": 710.1,
+    "total_ms": 891.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "22-inflect",
+   "seed": 22,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Płuca chorych na COVID-19 nie są palone przez respirator.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1278.3,
+   "timings": {
+    "retrieval_ms": 60.3,
+    "fragments_ms": 8.8,
+    "nli_ms": 1193.4,
+    "total_ms": 1277.3
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19"
+   ]
+  },
+  {
+   "id": "22-question",
+   "seed": 22,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że respiratory nie palą płuc chorych na COVID-19?",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 998.9,
+   "timings": {
+    "retrieval_ms": 56.4,
+    "fragments_ms": 8.2,
+    "nli_ms": 922.1,
+    "total_ms": 998.2
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19"
+   ]
+  },
+  {
+   "id": "22-nodiac",
+   "seed": 22,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "respiratory nie pala pluc chorych na covid-19",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1139.8,
+   "timings": {
+    "retrieval_ms": 51.6,
+    "fragments_ms": 12.7,
+    "nli_ms": 1061.5,
+    "total_ms": 1138.9
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19"
+   ]
+  },
+  {
+   "id": "22-colloq",
+   "seed": 22,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Respirator wcale nie pali płuc ludziom chorym na covida, to jakiś mit.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 645.0,
+   "timings": {
+    "retrieval_ms": 58.1,
+    "fragments_ms": 21.8,
+    "nli_ms": 519.4,
+    "total_ms": 644.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "23-para",
+   "seed": 23,
+   "type": "para",
+   "group": "pos",
+   "text": "Przedszkolakom w Słupsku kazano wykonywać ukraiński hymn narodowy.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1182.7,
+   "timings": {
+    "retrieval_ms": 107.2,
+    "fragments_ms": 7.9,
+    "nli_ms": 1056.5,
+    "total_ms": 1181.9
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja"
+   ]
+  },
+  {
+   "id": "23-short",
+   "seed": 23,
+   "type": "short",
+   "group": "pos",
+   "text": "Przedszkolaki zmuszano do śpiewania hymnu Ukrainy.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1489.8,
+   "timings": {
+    "retrieval_ms": 88.2,
+    "fragments_ms": 7.9,
+    "nli_ms": 1384.0,
+    "total_ms": 1488.9
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja"
+   ]
+  },
+  {
+   "id": "23-typo",
+   "seed": 23,
+   "type": "typo",
+   "group": "pos",
+   "text": "Dzieci z przeszkola były zmuszane do spiewania hymnu Ukriany",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 938.9,
+   "timings": {
+    "retrieval_ms": 61.8,
+    "fragments_ms": 14.0,
+    "nli_ms": 816.4,
+    "total_ms": 938.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "23-inflect",
+   "seed": 23,
+   "type": "inflect",
+   "group": "pos",
+   "text": "W przedszkolu zmuszono dzieci, by śpiewały hymn Ukrainy.",
+   "expected": "wprowadzajace_w_blad",
+   "gold_doc": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "correct",
+   "ms": 1137.1,
+   "timings": {
+    "retrieval_ms": 126.0,
+    "fragments_ms": 18.0,
+    "nli_ms": 982.9,
+    "total_ms": 1136.3
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja"
+   ]
+  },
+  {
+   "id": "24-question",
+   "seed": 24,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy Kraków ma najdroższy bilet godzinny w Polsce, kosztujący osiem złotych?",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 4305.6,
+   "timings": {
+    "retrieval_ms": 74.3,
+    "fragments_ms": 17.7,
+    "nli_ms": 4201.5,
+    "total_ms": 4304.8
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej"
+   ]
+  },
+  {
+   "id": "24-nodiac",
+   "seed": 24,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "mamy w krakowie najdrozszy bilet godzinny w polsce, bo kosztujacy az osiem zlotych",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 4347.4,
+   "timings": {
+    "retrieval_ms": 66.2,
+    "fragments_ms": 8.8,
+    "nli_ms": 4256.3,
+    "total_ms": 4346.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej"
+   ]
+  },
+  {
+   "id": "24-colloq",
+   "seed": 24,
+   "type": "colloq",
+   "group": "pos",
+   "text": "W Krakowie za godzinny bilet trzeba wybulić aż 8 zł – drożej nie ma nigdzie w Polsce.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 3284.6,
+   "timings": {
+    "retrieval_ms": 74.3,
+    "fragments_ms": 16.4,
+    "nli_ms": 3183.3,
+    "total_ms": 3284.0
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej"
+   ]
+  },
+  {
+   "id": "24-para",
+   "seed": 24,
+   "type": "para",
+   "group": "pos",
+   "text": "Nigdzie w kraju przejazd komunikacją miejską przez 60 minut nie jest tak kosztowny jak w Krakowie, gdzie płaci się za niego 8 zł.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 3885.4,
+   "timings": {
+    "retrieval_ms": 50.5,
+    "fragments_ms": 7.7,
+    "nli_ms": 3816.3,
+    "total_ms": 3884.8
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej"
+   ]
+  },
+  {
+   "id": "25-short",
+   "seed": 25,
+   "type": "short",
+   "group": "pos",
+   "text": "Ukraińcy wnieśli do gospodarki 15 mld zł i 2,7 proc. PKB w 2024, a na 800+ dostali 2,8 mld.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 2180.6,
+   "timings": {
+    "retrieval_ms": 65.6,
+    "fragments_ms": 7.8,
+    "nli_ms": 2095.8,
+    "total_ms": 2179.8
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "25-typo",
+   "seed": 25,
+   "type": "typo",
+   "group": "pos",
+   "text": "15 mld zł i 2,7 proc. wzrostu PKB w 2024 – tyle wniosły do naszej gosopdarki ciężko pracujace Ukrainki i Ukraińcy. 2,8 mld dalismy im w postaci 800+.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 865.5,
+   "timings": {
+    "retrieval_ms": 80.2,
+    "fragments_ms": 7.6,
+    "nli_ms": 765.7,
+    "total_ms": 864.7
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu"
+   ]
+  },
+  {
+   "id": "25-inflect",
+   "seed": 25,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Ciężko pracujący Ukraińcy i Ukrainki wnieśli w 2024 roku do naszej gospodarki 15 mld zł i 2,7 proc. wzrostu PKB, a w postaci 800+ dano im 2,8 mld.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 2406.2,
+   "timings": {
+    "retrieval_ms": 91.2,
+    "fragments_ms": 8.1,
+    "nli_ms": 2249.8,
+    "total_ms": 2405.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "25-question",
+   "seed": 25,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy to prawda, że Ukraińcy wnieśli w 2024 roku do polskiej gospodarki 15 mld zł i 2,7 proc. wzrostu PKB, a w ramach 800+ dostali 2,8 mld zł?",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 1972.4,
+   "timings": {
+    "retrieval_ms": 95.6,
+    "fragments_ms": 7.6,
+    "nli_ms": 1856.8,
+    "total_ms": 1971.6
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "pravda:czesc-pkb-dla-ukrainy",
+    "demagog:fake_news/czy-pomoc-ukrainie-kosztowala-nas-ponad-800-mld-zl-wykres-ai-z-bledami"
+   ]
+  },
+  {
+   "id": "26-nodiac",
+   "seed": 26,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "polska umiera. to w naszym kraju w 2023 roku byl najwiekszy spadek ludnosci w calej unii europejskiej",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1314.6,
+   "timings": {
+    "retrieval_ms": 63.4,
+    "fragments_ms": 6.6,
+    "nli_ms": 1208.0,
+    "total_ms": 1314.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "26-colloq",
+   "seed": 26,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Wyludniamy się na potęgę – w 2023 ubyło nas najwięcej ze wszystkich krajów Unii.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 509.4,
+   "timings": {
+    "retrieval_ms": 55.5,
+    "fragments_ms": 8.2,
+    "nli_ms": 436.4,
+    "total_ms": 508.7
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue"
+   ]
+  },
+  {
+   "id": "26-para",
+   "seed": 26,
+   "type": "para",
+   "group": "pos",
+   "text": "Żadne państwo członkowskie UE nie straciło w 2023 r. tylu mieszkańców co Polska.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2697.9,
+   "timings": {
+    "retrieval_ms": 85.6,
+    "fragments_ms": 14.4,
+    "nli_ms": 2589.5,
+    "total_ms": 2697.2
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue"
+   ]
+  },
+  {
+   "id": "26-short",
+   "seed": 26,
+   "type": "short",
+   "group": "pos",
+   "text": "Polska miała w 2023 r. największy spadek ludności w UE.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 995.4,
+   "timings": {
+    "retrieval_ms": 71.4,
+    "fragments_ms": 9.5,
+    "nli_ms": 905.7,
+    "total_ms": 994.5
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue"
+   ]
+  },
+  {
+   "id": "27-typo",
+   "seed": 27,
+   "type": "typo",
+   "group": "pos",
+   "text": "Poziom aktywnosci zawodowej wśród Ukrainek, choć oczywiście także Ukraińców, jest bardzo wyskoi. To jest powyzej 70%, czyli tak jak wśród obywateli Polski.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2220.1,
+   "timings": {
+    "retrieval_ms": 77.9,
+    "fragments_ms": 7.5,
+    "nli_ms": 2123.0,
+    "total_ms": 2219.4
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy"
+   ]
+  },
+  {
+   "id": "27-inflect",
+   "seed": 27,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Aktywność zawodowa Ukrainek i Ukraińców jest na bardzo wysokim poziomie – przekracza 70%, podobnie jak u obywateli Polski.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 870.7,
+   "timings": {
+    "retrieval_ms": 98.0,
+    "fragments_ms": 7.8,
+    "nli_ms": 753.9,
+    "total_ms": 869.9
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy"
+   ]
+  },
+  {
+   "id": "27-question",
+   "seed": 27,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy poziom aktywności zawodowej wśród Ukrainek i Ukraińców w Polsce jest powyżej 70%, czyli tak jak wśród obywateli Polski?",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1042.3,
+   "timings": {
+    "retrieval_ms": 84.2,
+    "fragments_ms": 8.1,
+    "nli_ms": 939.2,
+    "total_ms": 1041.5
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy"
+   ]
+  },
+  {
+   "id": "27-nodiac",
+   "seed": 27,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "poziom aktywnosci zawodowej wsrod ukrainek, choc oczywiscie takze ukraincow, jest bardzo wysoki. to jest powyzej 70%, czyli tak jak wsrod obywateli polski",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2148.5,
+   "timings": {
+    "retrieval_ms": 100.3,
+    "fragments_ms": 7.7,
+    "nli_ms": 2030.1,
+    "total_ms": 2147.8
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy"
+   ]
+  },
+  {
+   "id": "28-colloq",
+   "seed": 28,
+   "type": "colloq",
+   "group": "pos",
+   "text": "Zarabiamy coraz więcej, a wóda prawie nie drożeje, więc alkohol jest dziś dużo łatwiej dostępny dla portfela niż kiedyś.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 1270.0,
+   "timings": {
+    "retrieval_ms": 37.3,
+    "fragments_ms": 7.5,
+    "nli_ms": 1216.3,
+    "total_ms": 1269.4
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE",
+    "R4:WPROWADZAJACE_W_BLAD(NIEAKTUALNE)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend"
+   ]
+  },
+  {
+   "id": "28-para",
+   "seed": 28,
+   "type": "para",
+   "group": "pos",
+   "text": "Pensje w Polsce zwiększały się ostatnio znacznie prędzej, niż drożały napoje wyskokowe, przez co trunki są dziś o wiele bardziej przystępne cenowo.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 778.1,
+   "timings": {
+    "retrieval_ms": 46.7,
+    "fragments_ms": 6.3,
+    "nli_ms": 715.4,
+    "total_ms": 777.4
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE",
+    "R4:WPROWADZAJACE_W_BLAD(NIEAKTUALNE)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend"
+   ]
+  },
+  {
+   "id": "28-short",
+   "seed": 28,
+   "type": "short",
+   "group": "pos",
+   "text": "Dochody Polaków rosły szybciej niż ceny alkoholu, więc alkohol stał się bardziej dostępny.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1098.3,
+   "timings": {
+    "retrieval_ms": 36.1,
+    "fragments_ms": 6.5,
+    "nli_ms": 1047.0,
+    "total_ms": 1097.7
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend"
+   ]
+  },
+  {
+   "id": "28-typo",
+   "seed": 28,
+   "type": "typo",
+   "group": "pos",
+   "text": "Dochody Polaków w ostatnich latach rosły dużo szybicej niż ceny na alkochol, co sprawiło, że alkohol stał się dużo bardziej dostepny cenowo, niż był wcześniej.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1080.3,
+   "timings": {
+    "retrieval_ms": 57.2,
+    "fragments_ms": 6.6,
+    "nli_ms": 1006.7,
+    "total_ms": 1079.7
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend"
+   ]
+  },
+  {
+   "id": "29-inflect",
+   "seed": 29,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Dziesiątki milionów obywateli Unii Europejskiej jest wiary muzułmańskiej.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1862.7,
+   "timings": {
+    "retrieval_ms": 47.5,
+    "fragments_ms": 8.7,
+    "nli_ms": 1799.0,
+    "total_ms": 1862.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej"
+   ]
+  },
+  {
+   "id": "29-question",
+   "seed": 29,
+   "type": "question",
+   "group": "pos",
+   "text": "Czy w Unii Europejskiej są dziesiątki milionów obywateli wiary muzułmańskiej?",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 617.9,
+   "timings": {
+    "retrieval_ms": 54.9,
+    "fragments_ms": 9.0,
+    "nli_ms": 546.5,
+    "total_ms": 617.3
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej"
+   ]
+  },
+  {
+   "id": "29-nodiac",
+   "seed": 29,
+   "type": "nodiac",
+   "group": "pos",
+   "text": "mamy w unii europejskiej dziesiatki milionow obywateli ktorzy sa wiary muzulmanskiej",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 552.4,
+   "timings": {
+    "retrieval_ms": 50.0,
+    "fragments_ms": 7.8,
+    "nli_ms": 483.5,
+    "total_ms": 551.6
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej"
+   ]
+  },
+  {
+   "id": "29-colloq",
+   "seed": 29,
+   "type": "colloq",
+   "group": "pos",
+   "text": "W Unii mieszka już kilkadziesiąt milionów muzułmanów, i to z unijnym obywatelstwem.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1555.6,
+   "timings": {
+    "retrieval_ms": 96.5,
+    "fragments_ms": 7.9,
+    "nli_ms": 1442.8,
+    "total_ms": 1555.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej"
+   ]
+  },
+  {
+   "id": "30-para",
+   "seed": 30,
+   "type": "para",
+   "group": "pos",
+   "text": "W Krakowie niemal 2 tys. lokali gminnych stoi pustych, czyli ponad jedna dziesiąta z mniej więcej 15 tys. mieszkań należących do miasta.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 2303.2,
+   "timings": {
+    "retrieval_ms": 64.4,
+    "fragments_ms": 14.0,
+    "nli_ms": 2184.4,
+    "total_ms": 2302.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "30-short",
+   "seed": 30,
+   "type": "short",
+   "group": "pos",
+   "text": "Kraków ma prawie 2 tys. pustostanów, ponad 10 proc. mieszkań komunalnych.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1546.8,
+   "timings": {
+    "retrieval_ms": 42.6,
+    "fragments_ms": 7.4,
+    "nli_ms": 1487.9,
+    "total_ms": 1546.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane"
+   ]
+  },
+  {
+   "id": "30-typo",
+   "seed": 30,
+   "type": "typo",
+   "group": "pos",
+   "text": "Kraków posiada prawie 2 tysiące pustosatnów. To więcej niż 10 proc. całego zasobu mieszkan komunlanych miasta, który liczy około 15 tysięcy lokali.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2062.2,
+   "timings": {
+    "retrieval_ms": 57.7,
+    "fragments_ms": 8.0,
+    "nli_ms": 1986.1,
+    "total_ms": 2061.6
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane"
+   ]
+  },
+  {
+   "id": "30-inflect",
+   "seed": 30,
+   "type": "inflect",
+   "group": "pos",
+   "text": "Prawie 2 tysiące pustostanów, które posiada Kraków, stanowi więcej niż 10 proc. zasobu mieszkań komunalnych miasta, liczącego około 15 tysięcy lokali.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2066.3,
+   "timings": {
+    "retrieval_ms": 64.5,
+    "fragments_ms": 7.8,
+    "nli_ms": 1979.8,
+    "total_ms": 2065.6
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane"
+   ]
+  },
+  {
+   "id": "31-question",
+   "seed": 31,
+   "type": "question",
+   "group": "unverifiable",
+   "text": "Czy statystyki wskazują, że w Krakowie są większe korki niż w Warszawie?",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 2144.5,
+   "timings": {
+    "retrieval_ms": 48.5,
+    "fragments_ms": 8.3,
+    "nli_ms": 2052.7,
+    "total_ms": 2143.9
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "FACTCHECK_NIEWERYFIKOWALNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "31-nodiac",
+   "seed": 31,
+   "type": "nodiac",
+   "group": "unverifiable",
+   "text": "krakow to jest drugie najwieksze miasto w polsce. przemieszczanie sie samochodami jest po prostu niemozliwe. mamy statystyki, wskazuja na to, ze mamy wieksze korki niz w warszawie",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 2381.0,
+   "timings": {
+    "retrieval_ms": 60.8,
+    "fragments_ms": 5.4,
+    "nli_ms": 2270.6,
+    "total_ms": 2380.4
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "FACTCHECK_NIEWERYFIKOWALNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "31-colloq",
+   "seed": 31,
+   "type": "colloq",
+   "group": "unverifiable",
+   "text": "Po Krakowie nie da się jeździć autem, korki są tam gorsze niż w Warszawie – tak wychodzi ze statystyk.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1502.8,
+   "timings": {
+    "retrieval_ms": 33.9,
+    "fragments_ms": 8.4,
+    "nli_ms": 1427.3,
+    "total_ms": 1502.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "FACTCHECK_NIEWERYFIKOWALNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "31-para",
+   "seed": 31,
+   "type": "para",
+   "group": "unverifiable",
+   "text": "Z danych wynika, że stolica Małopolski jest bardziej zakorkowana od stolicy kraju.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 739.3,
+   "timings": {
+    "retrieval_ms": 41.0,
+    "fragments_ms": 8.9,
+    "nli_ms": 680.1,
+    "total_ms": 738.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malopolska-gielda-rolna-inwestycji-nie-porzucono-dla-ukrainy"
+   ]
+  },
+  {
+   "id": "32-short",
+   "seed": 32,
+   "type": "short",
+   "group": "unverifiable",
+   "text": "Dania ma 50 proc. energii z wiatraków, a ceny wzrosły tam o 30–40 proc.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 1912.6,
+   "timings": {
+    "retrieval_ms": 42.6,
+    "fragments_ms": 7.5,
+    "nli_ms": 1853.8,
+    "total_ms": 1912.0
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+    "demagog:wypowiedzi/im-wiecej-wiatrakow-tym-wyzsze-ceny-pradu-manipulacja-posla-pis"
+   ]
+  },
+  {
+   "id": "32-typo",
+   "seed": 32,
+   "type": "typo",
+   "group": "unverifiable",
+   "text": "W Danii 50 proc. energi pozyskiwanej jest z wiatarków, gdzie cena wzrosla 30 do 40 proc.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 865.1,
+   "timings": {
+    "retrieval_ms": 48.1,
+    "fragments_ms": 7.3,
+    "nli_ms": 801.1,
+    "total_ms": 864.4
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/im-wiecej-wiatrakow-tym-wyzsze-ceny-pradu-manipulacja-posla-pis"
+   ]
+  },
+  {
+   "id": "32-inflect",
+   "seed": 32,
+   "type": "inflect",
+   "group": "unverifiable",
+   "text": "Dania pozyskuje z wiatraków 50 proc. energii, a ceny wzrosły tam o 30 do 40 proc.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 1646.1,
+   "timings": {
+    "retrieval_ms": 54.4,
+    "fragments_ms": 17.5,
+    "nli_ms": 1565.0,
+    "total_ms": 1645.5
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+    "demagog:wypowiedzi/im-wiecej-wiatrakow-tym-wyzsze-ceny-pradu-manipulacja-posla-pis"
+   ]
+  },
+  {
+   "id": "32-question",
+   "seed": 32,
+   "type": "question",
+   "group": "unverifiable",
+   "text": "Czy w Danii 50 proc. energii pochodzi z wiatraków, a cena wzrosła o 30–40 proc.?",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+   "pred": "wprowadzajace_w_blad",
+   "outcome": "false_verdict",
+   "ms": 2250.3,
+   "timings": {
+    "retrieval_ms": 54.9,
+    "fragments_ms": 8.2,
+    "nli_ms": 2177.5,
+    "total_ms": 2249.6
+   },
+   "verdicts_all": [
+    "wprowadzajace_w_blad"
+   ],
+   "rules": [
+    "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+    "demagog:wypowiedzi/im-wiecej-wiatrakow-tym-wyzsze-ceny-pradu-manipulacja-posla-pis"
+   ]
+  },
+  {
+   "id": "03-neg",
+   "seed": 3,
+   "type": "neg",
+   "group": "neg",
+   "text": "COVID-19 nie jest zaplanowanym ludobójstwem.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 578.9,
+   "timings": {
+    "retrieval_ms": 44.5,
+    "fragments_ms": 18.5,
+    "nli_ms": 508.0,
+    "total_ms": 578.3
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo"
+   ]
+  },
+  {
+   "id": "04-neg",
+   "seed": 4,
+   "type": "neg",
+   "group": "neg",
+   "text": "Nie ma krajów, w których można zawrzeć małżeństwo ze zwierzęciem.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 421.9,
+   "timings": {
+    "retrieval_ms": 45.4,
+    "fragments_ms": 14.2,
+    "nli_ms": 355.8,
+    "total_ms": 421.3
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz"
+   ]
+  },
+  {
+   "id": "05-neg",
+   "seed": 5,
+   "type": "neg",
+   "group": "neg",
+   "text": "Polska nie odda Ukrainie żadnej części terytorium w zamian za zakończenie wojny.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 2203.3,
+   "timings": {
+    "retrieval_ms": 73.8,
+    "fragments_ms": 7.6,
+    "nli_ms": 2092.4,
+    "total_ms": 2202.7
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy"
+   ]
+  },
+  {
+   "id": "06-neg",
+   "seed": 6,
+   "type": "neg",
+   "group": "neg",
+   "text": "Polska nie jest jedynym państwem na świecie, które nie przesunęło wyborów mimo epidemii.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 930.1,
+   "timings": {
+    "retrieval_ms": 66.4,
+    "fragments_ms": 13.3,
+    "nli_ms": 816.2,
+    "total_ms": 929.3
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE",
+    "HR:JEDNO_ZRODLO_ESKALACJA"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa"
+   ]
+  },
+  {
+   "id": "07-neg",
+   "seed": 7,
+   "type": "neg",
+   "group": "neg",
+   "text": "Ukrainki z autobusu w Bielsku-Białej nie pluły ani nie prowokowały pasażera.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 1819.7,
+   "timings": {
+    "retrieval_ms": 79.4,
+    "fragments_ms": 14.4,
+    "nli_ms": 1716.1,
+    "total_ms": 1819.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji"
+   ]
+  },
+  {
+   "id": "08-neg",
+   "seed": 8,
+   "type": "neg",
+   "group": "neg",
+   "text": "Karol Nawrocki nie powiedział do Emmanuela Macrona, że Polska nie potrzebuje nauczycieli i sama jest lekcją.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1212.5,
+   "timings": {
+    "retrieval_ms": 56.6,
+    "fragments_ms": 10.8,
+    "nli_ms": 1109.0,
+    "total_ms": 1211.8
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "09-neg",
+   "seed": 9,
+   "type": "neg",
+   "group": "neg",
+   "text": "Szczepionki przeciw COVID-19 są bezpieczne i nie zawierają grafenu ani świdrowca amerykańskiego.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 983.6,
+   "timings": {
+    "retrieval_ms": 72.6,
+    "fragments_ms": 7.7,
+    "nli_ms": 894.4,
+    "total_ms": 983.0
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+    "fakenews_pl:7263",
+    "fakenews_pl:17040"
+   ]
+  },
+  {
+   "id": "10-neg",
+   "seed": 10,
+   "type": "neg",
+   "group": "neg",
+   "text": "Dominik Tarczyński nie skonfrontował się z Donaldem Tuskiem w debacie na żywo – takiej debaty nie było.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 661.0,
+   "timings": {
+    "retrieval_ms": 43.9,
+    "fragments_ms": 7.8,
+    "nli_ms": 599.6,
+    "total_ms": 660.4
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia"
+   ]
+  },
+  {
+   "id": "11-neg",
+   "seed": 11,
+   "type": "neg",
+   "group": "neg",
+   "text": "Kasyno online Salon Gier na Automatach nie działa pod patronatem Totalizatora Sportowego.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "potwierdzone",
+   "outcome": "correct",
+   "ms": 787.7,
+   "timings": {
+    "retrieval_ms": 39.7,
+    "fragments_ms": 8.1,
+    "nli_ms": 731.0,
+    "total_ms": 787.1
+   },
+   "verdicts_all": [
+    "potwierdzone"
+   ],
+   "rules": [
+    "R5:POTWIERDZONE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+    "demagog:fake_news/nowe-legalne-kasyno-pod-szyldem-lotto-uwazaj-to-oszustwo"
+   ]
+  },
+  {
+   "id": "12-neg",
+   "seed": 12,
+   "type": "neg",
+   "group": "neg",
+   "text": "Rząd nie zamordował 250 tys. Polaków podczas pandemii COVID-19.",
+   "expected": "potwierdzone",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "brak_dowodow",
+   "outcome": "abstain",
+   "ms": 1142.2,
+   "timings": {
+    "retrieval_ms": 52.2,
+    "fragments_ms": 7.9,
+    "nli_ms": 1048.6,
+    "total_ms": 1141.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "24-neg",
+   "seed": 24,
+   "type": "neg",
+   "group": "neg",
+   "text": "Kraków nie ma najdroższego biletu godzinnego w Polsce.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 2581.1,
+   "timings": {
+    "retrieval_ms": 40.0,
+    "fragments_ms": 8.1,
+    "nli_ms": 2523.6,
+    "total_ms": 2580.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+    "demagog:wypowiedzi/krakowska-komunikacja-ma-mniej-pasazerow-spadek-nastapil-przed-zmiana-cen-biletow"
+   ]
+  },
+  {
+   "id": "26-neg",
+   "seed": 26,
+   "type": "neg",
+   "group": "neg",
+   "text": "W 2023 roku Polska nie miała największego spadku ludności w Unii Europejskiej.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 622.2,
+   "timings": {
+    "retrieval_ms": 51.6,
+    "fragments_ms": 7.5,
+    "nli_ms": 554.8,
+    "total_ms": 621.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue"
+   ]
+  },
+  {
+   "id": "27-neg",
+   "seed": 27,
+   "type": "neg",
+   "group": "neg",
+   "text": "Poziom aktywności zawodowej Ukrainek i Ukraińców w Polsce jest niski, znacznie poniżej 70%.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1419.2,
+   "timings": {
+    "retrieval_ms": 59.4,
+    "fragments_ms": 7.4,
+    "nli_ms": 1342.3,
+    "total_ms": 1418.5
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy"
+   ]
+  },
+  {
+   "id": "28-neg",
+   "seed": 28,
+   "type": "neg",
+   "group": "neg",
+   "text": "Ceny alkoholu rosły w ostatnich latach szybciej niż dochody Polaków, więc alkohol stał się mniej dostępny.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 939.4,
+   "timings": {
+    "retrieval_ms": 66.5,
+    "fragments_ms": 12.9,
+    "nli_ms": 849.9,
+    "total_ms": 938.8
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend"
+   ]
+  },
+  {
+   "id": "29-neg",
+   "seed": 29,
+   "type": "neg",
+   "group": "neg",
+   "text": "W Unii Europejskiej nie ma dziesiątek milionów obywateli wiary muzułmańskiej.",
+   "expected": "falszywe",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "falszywe",
+   "outcome": "correct",
+   "ms": 1555.2,
+   "timings": {
+    "retrieval_ms": 53.8,
+    "fragments_ms": 8.5,
+    "nli_ms": 1483.8,
+    "total_ms": 1554.6
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej"
+   ]
+  },
+  {
+   "id": "01-hardneg",
+   "seed": 1,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Policjant podejrzany o gwałt na policjantce w Piasecznie został skazany na osiem lat więzienia.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1529.3,
+   "timings": {
+    "retrieval_ms": 48.4,
+    "fragments_ms": 7.7,
+    "nli_ms": 1440.6,
+    "total_ms": 1528.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "02-hardneg",
+   "seed": 2,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Adam Szłapka i Sławomir Nitras sami zapłacili za reklamy przeciwko Nawrockiemu na Facebooku.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 750.0,
+   "timings": {
+    "retrieval_ms": 49.5,
+    "fragments_ms": 6.6,
+    "nli_ms": 639.2,
+    "total_ms": 749.1
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "04-hardneg",
+   "seed": 4,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Marek Suski zaproponował w Sejmie ustawę zakazującą trzymania zwierząt w mieszkaniach.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1030.8,
+   "timings": {
+    "retrieval_ms": 52.0,
+    "fragments_ms": 7.3,
+    "nli_ms": 937.4,
+    "total_ms": 1030.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "05-hardneg",
+   "seed": 5,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Ukraina odda Polsce część swojego terytorium w zamian za pomoc wojskową.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 2649.5,
+   "timings": {
+    "retrieval_ms": 61.5,
+    "fragments_ms": 7.7,
+    "nli_ms": 2546.3,
+    "total_ms": 2649.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "06-hardneg",
+   "seed": 6,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Polska przesunęła wybory prezydenckie w 2020 roku o dwa lata ze względu na stan epidemii.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1148.7,
+   "timings": {
+    "retrieval_ms": 45.7,
+    "fragments_ms": 6.8,
+    "nli_ms": 1062.7,
+    "total_ms": 1148.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "07-hardneg",
+   "seed": 7,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Kierowca autobusu w Bielsku-Białej został zwolniony z pracy za wyproszenie Ukrainek z pojazdu.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1053.1,
+   "timings": {
+    "retrieval_ms": 63.3,
+    "fragments_ms": 8.1,
+    "nli_ms": 946.5,
+    "total_ms": 1052.4
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "08-hardneg",
+   "seed": 8,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Emmanuel Macron powiedział Karolowi Nawrockiemu, że Francja nie potrzebuje polskich pracowników.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1358.8,
+   "timings": {
+    "retrieval_ms": 49.8,
+    "fragments_ms": 7.3,
+    "nli_ms": 1270.1,
+    "total_ms": 1358.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "10-hardneg",
+   "seed": 10,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Dominik Tarczyński skonfrontował się z Rafałem Trzaskowskim w debacie na żywo.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 568.6,
+   "timings": {
+    "retrieval_ms": 35.1,
+    "fragments_ms": 7.8,
+    "nli_ms": 493.7,
+    "total_ms": 568.1
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "11-hardneg",
+   "seed": 11,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Totalizator Sportowy zamknął swoje legalne kasyno online Total Casino.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 467.9,
+   "timings": {
+    "retrieval_ms": 33.1,
+    "fragments_ms": 7.7,
+    "nli_ms": 396.3,
+    "total_ms": 467.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "12-hardneg",
+   "seed": 12,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Podczas pandemii COVID-19 rząd wypłacił ponad 250 tys. zł odszkodowania każdej rodzinie zmarłego.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 531.1,
+   "timings": {
+    "retrieval_ms": 44.8,
+    "fragments_ms": 7.9,
+    "nli_ms": 443.8,
+    "total_ms": 530.5
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "13-hardneg",
+   "seed": 13,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Tulsi Gabbard ujawniła dokumenty dowodzące, że w laboratoriach w Polsce tworzono broń biologiczną.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1871.2,
+   "timings": {
+    "retrieval_ms": 40.1,
+    "fragments_ms": 8.2,
+    "nli_ms": 1790.0,
+    "total_ms": 1870.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "14-hardneg",
+   "seed": 14,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Donald Tusk podczas przemówienia w Sejmie powiedział, że podatki trzeba płacić zgodnie z procedurami.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1096.8,
+   "timings": {
+    "retrieval_ms": 42.9,
+    "fragments_ms": 7.2,
+    "nli_ms": 1014.8,
+    "total_ms": 1096.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "16-hardneg",
+   "seed": 16,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "W styczniu przeładunki w porcie Gdańsk spadły o ponad 40 proc. w porównaniu z ubiegłym rokiem.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 739.9,
+   "timings": {
+    "retrieval_ms": 39.0,
+    "fragments_ms": 6.8,
+    "nli_ms": 663.3,
+    "total_ms": 739.4
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "18-hardneg",
+   "seed": 18,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Tylko w tym roku wpływy z podatku PIT spadły o 30 miliardów złotych.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1092.1,
+   "timings": {
+    "retrieval_ms": 43.4,
+    "fragments_ms": 7.2,
+    "nli_ms": 1005.9,
+    "total_ms": 1091.6
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "19-hardneg",
+   "seed": 19,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Dwa samoloty pasażerskie zderzyły się w powietrzu, bo leciały na tej samej wysokości.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 765.0,
+   "timings": {
+    "retrieval_ms": 33.6,
+    "fragments_ms": 8.0,
+    "nli_ms": 691.5,
+    "total_ms": 764.4
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "20-hardneg",
+   "seed": 20,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Funkcje Prezydenta i Prokuratora Generalnego były połączone przed wojną.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 500.7,
+   "timings": {
+    "retrieval_ms": 55.2,
+    "fragments_ms": 13.7,
+    "nli_ms": 404.2,
+    "total_ms": 500.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "21-hardneg",
+   "seed": 21,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Premier Tusk w kadencji 2007–2014 trzy razy podawał się do dymisji.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1783.8,
+   "timings": {
+    "retrieval_ms": 50.9,
+    "fragments_ms": 11.2,
+    "nli_ms": 1690.1,
+    "total_ms": 1783.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 1,
+   "decisive_sources": []
+  },
+  {
+   "id": "23-hardneg",
+   "seed": 23,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Dzieci z przedszkola w Słupsku były zmuszane do nauki języka ukraińskiego zamiast angielskiego.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 4060.1,
+   "timings": {
+    "retrieval_ms": 62.0,
+    "fragments_ms": 7.1,
+    "nli_ms": 3954.5,
+    "total_ms": 4059.5
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "24-hardneg",
+   "seed": 24,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "W Krakowie bilet miesięczny na komunikację miejską jest najtańszy w Polsce i kosztuje osiem złotych.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 3913.8,
+   "timings": {
+    "retrieval_ms": 63.2,
+    "fragments_ms": 13.4,
+    "nli_ms": 3825.7,
+    "total_ms": 3913.2
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej"
+   ]
+  },
+  {
+   "id": "25-hardneg",
+   "seed": 25,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Ukraińcy pracujący w Polsce wysłali w 2024 roku za granicę 15 mld zł.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1396.0,
+   "timings": {
+    "retrieval_ms": 66.3,
+    "fragments_ms": 8.0,
+    "nli_ms": 1279.4,
+    "total_ms": 1395.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "26-hardneg",
+   "seed": 26,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "W 2023 roku w Polsce urodziło się najwięcej dzieci w całej Unii Europejskiej.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+   "pred": "falszywe",
+   "outcome": "false_verdict",
+   "ms": 1072.1,
+   "timings": {
+    "retrieval_ms": 63.4,
+    "fragments_ms": 7.0,
+    "nli_ms": 989.9,
+    "total_ms": 1071.3
+   },
+   "verdicts_all": [
+    "falszywe"
+   ],
+   "rules": [
+    "R3:FALSZYWE"
+   ],
+   "reason_codes": [],
+   "quote_gate_skips": 0,
+   "decisive_sources": [
+    "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue"
+   ]
+  },
+  {
+   "id": "27-hardneg",
+   "seed": 27,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Ponad 70% Ukrainek mieszkających w Polsce pobiera zasiłek dla bezrobotnych.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1570.8,
+   "timings": {
+    "retrieval_ms": 68.7,
+    "fragments_ms": 9.7,
+    "nli_ms": 1451.0,
+    "total_ms": 1570.1
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "28-hardneg",
+   "seed": 28,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Ceny alkoholu w Polsce są najniższe w całej Unii Europejskiej.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1267.9,
+   "timings": {
+    "retrieval_ms": 82.9,
+    "fragments_ms": 8.1,
+    "nli_ms": 1128.1,
+    "total_ms": 1267.2
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "29-hardneg",
+   "seed": 29,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Unia Europejska przyjęła w zeszłym roku dziesiątki milionów migrantów wiary muzułmańskiej.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 2553.0,
+   "timings": {
+    "retrieval_ms": 64.2,
+    "fragments_ms": 10.3,
+    "nli_ms": 2428.4,
+    "total_ms": 2552.3
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "30-hardneg",
+   "seed": 30,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "Kraków sprzedał w tym roku prawie 2 tysiące mieszkań komunalnych prywatnym deweloperom.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 2714.9,
+   "timings": {
+    "retrieval_ms": 59.5,
+    "fragments_ms": 12.0,
+    "nli_ms": 2586.5,
+    "total_ms": 2714.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "31-hardneg",
+   "seed": 31,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "W Krakowie zbudowano w tym roku drugą linię metra, żeby zmniejszyć korki.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 3511.4,
+   "timings": {
+    "retrieval_ms": 77.4,
+    "fragments_ms": 18.5,
+    "nli_ms": 3368.0,
+    "total_ms": 3510.7
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  },
+  {
+   "id": "32-hardneg",
+   "seed": 32,
+   "type": "hardneg",
+   "group": "hardneg",
+   "text": "W Danii 50 proc. samochodów to auta elektryczne, a ich cena spadła o 30 do 40 proc.",
+   "expected": "brak_dowodow",
+   "gold_doc": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+   "pred": "brak_dowodow",
+   "outcome": "correct",
+   "ms": 1412.6,
+   "timings": {
+    "retrieval_ms": 69.4,
+    "fragments_ms": 8.4,
+    "nli_ms": 1301.4,
+    "total_ms": 1412.0
+   },
+   "verdicts_all": [
+    "brak_dowodow"
+   ],
+   "rules": [
+    "R6:BRAK_DOWODOW"
+   ],
+   "reason_codes": [
+    "TYLKO_MATERIALY_POKREWNE"
+   ],
+   "quote_gate_skips": 0,
+   "decisive_sources": []
+  }
+ ],
+ "regress": {
+  "cases.jsonl": {
+   "n": 35,
+   "ok": 33,
+   "false_verdicts": 0,
+   "rows": [
+    {
+     "id": "A1",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A2",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A3",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A4",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A5",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A6",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F1",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F2",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F3",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F4",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F5",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F6",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F7",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F8",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M1",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M2",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M3",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "T1",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "T2",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B1",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O1",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O2",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O3",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D1",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D3",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D4",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D5",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E1",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E3",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E4",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "J3",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    },
+    {
+     "id": "I2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    }
+   ]
+  },
+  "cases_heldout.jsonl": {
+   "n": 56,
+   "ok": 45,
+   "false_verdicts": 4,
+   "rows": [
+    {
+     "id": "H01",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H02",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H03",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H04",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H05",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H06",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H07",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H08",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H09",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H10",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H11",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H12",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H13",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H14",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H15",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H16",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H17",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H18",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H19",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H20",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H21",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H22",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H23",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H24",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H25",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H26",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H27",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H28",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H29",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H30",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H31",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H32",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H33",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H34",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H35",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H36",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H37",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H38",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H39",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H40",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H41",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H42",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H43",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H44",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H45",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H46",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H47",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H48",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H49",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H50",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H51",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H52",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H53",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H54",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H56",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    },
+    {
+     "id": "H57",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    }
+   ]
+  },
+  "cases_blind2.jsonl": {
+   "n": 49,
+   "ok": 41,
+   "false_verdicts": 0,
+   "rows": [
+    {
+     "id": "B2-01",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-02",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-03",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-04",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-05",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-06",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-07",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-08",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-09",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-10",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-11",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-12",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-13",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-14",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-15",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-16",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-17",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-18",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-19",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-20",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-21",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-22",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-23",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-24",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-25",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-26",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-27",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-28",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-29",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-30",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-31",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-32",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-33",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-34",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-35",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-36",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-37",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-38",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-39",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-40",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-41",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-42",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-43",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-44",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-45",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-46",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-47",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-48",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-50",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    }
+   ]
+  }
+ }
+}

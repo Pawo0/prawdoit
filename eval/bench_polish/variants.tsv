@@ -1,0 +1,173 @@
+# seed_no|type|text   — hand-written BEFORE any system output was seen; never edited afterwards (see README).
+# types: inflect question nodiac colloq para short typo  (positives: expected = verdict implied by Demagog's rating)
+#        neg (opposite of a false/true claim: expected verdict flips)   hardneg (same topic, NOT checked: expected abstain)
+01|inflect|Gwałt na policjantce nie został zakwalifikowany jako przestępstwo, a policjanta, który się go dopuścił, zwolnią z aresztu i wróci on do pracy.
+01|question|Czy to prawda, że gwałtu na policjantce nie zakwalifikowano jako przestępstwo, a sprawca zostanie zwolniony z aresztu i wróci do pracy?
+01|nodiac|gwaltu na policjantce nie zakwalifikowano jako przestepstwo, policjant ktory dopuscil sie gwaltu zostanie zwolniony z aresztu i wroci do pracy
+01|colloq|Policjant zgwałcił koleżankę z pracy i nic mu nie zrobią – nie uznali tego za przestępstwo, wypuszczą go z aresztu i normalnie wróci do roboty.
+02|para|Spoty przeciwko Nawrockiemu najpierw ukazały się w internecie, a dopiero potem sięgnęli po nie politycy tacy jak Szłapka i Nitras.
+02|short|Reklamy najpierw pojawiły się w necie, dopiero później wykorzystali je Szłapka i Nitras.
+02|typo|Najpierw sie pojawiły te rekalmy w necie, a pózniej różni ludzie, np. Adam Szłapka i Sławomir Nitras, je wykorzytywali.
+02|inflect|Te reklamy pojawiły się w necie najpierw, a różni ludzie, tacy jak Adam Szłapka czy Sławomir Nitras, wykorzystali je później.
+03|question|Czy to prawda, że COVID-19 to zaplanowane ludobójstwo?
+03|nodiac|covid-19 to zaplanowane ludobojstwo
+03|colloq|Cała ta pandemia covida to było ludobójstwo zaplanowane z góry, nikt mi nie wmówi, że nie.
+03|para|Pandemię koronawirusa wywołano celowo, żeby masowo wymordować ludzi.
+04|short|Małżeństwa ze zwierzętami są legalne w niektórych krajach.
+04|typo|Są kraje, w któych można zawżeć małżeństwo ze zwięrzeciem.
+04|inflect|W pewnych krajach zawiera się małżeństwa ze zwierzętami.
+04|question|Czy są kraje, w których można zawrzeć małżeństwo ze zwierzęciem?
+05|nodiac|polska odda ukrainie czesc terytorium w zamian za zakonczenie wojny
+05|colloq|Podobno mamy oddać Ukraińcom kawałek Polski, żeby wojna się wreszcie skończyła.
+05|para|Warszawa zrzeknie się fragmentu swoich ziem na rzecz Kijowa, aby doprowadzić do pokoju.
+05|short|Polska odda Ukrainie część terytorium.
+06|typo|Jesteśmy w zasadzie jedynym pańswtem na świecie, w którym są zaplanowane wybroy, ale ze względu na stan epidemi nie są przesuniete.
+06|inflect|Polska była w zasadzie jedynym państwem na świecie, które mimo stanu epidemii nie przesunęło zaplanowanych wyborów.
+06|question|Czy Polska jest jedynym państwem na świecie, w którym zaplanowane wybory nie zostały przesunięte ze względu na stan epidemii?
+06|nodiac|jestesmy w zasadzie jedynym panstwem na swiecie w ktorym sa zaplanowane wybory ale te wybory ze wzgledu na stan epidemii nie sa przesuniete
+07|colloq|Te Ukrainki w autobusie w Bielsku same się prosiły – opluły faceta i go prowokowały.
+07|para|Młode obywatelki Ukrainy jadące miejskim autobusem w Bielsku-Białej opluły mężczyznę i celowo go zaczepiały.
+07|short|Ukrainki w Bielsku-Białej pluły na pasażera autobusu.
+07|typo|Ukrainki z autobsu w Bielsku-Białej pluly i prowkowały pasażera.
+08|inflect|Prezydentowi Francji Emmanuelowi Macronowi Karol Nawrocki powiedział na forum publicznym, że Polska nie potrzebuje nauczycieli, bo sama jest lekcją.
+08|question|Czy Karol Nawrocki powiedział do Emmanuela Macrona: „Polska nie potrzebuje nauczycieli. Polska sama jest lekcją”?
+08|nodiac|karol nawrocki powiedzial na forum publicznym do prezydenta francji emmanuela macrona: polska nie potrzebuje nauczycieli, polska sama jest lekcja
+08|colloq|Nawrocki ładnie zgasił Macrona – powiedział mu prosto w oczy, że Polska nie potrzebuje nauczycieli, bo sama jest lekcją.
+09|para|Preparaty na koronawirusa są groźne dla zdrowia: po ich podaniu zachorowań przybywa, a w składzie mają grafen oraz pasożyta Trypanosoma cruzi.
+09|short|Szczepionki na COVID zawierają grafen i świdrowca amerykańskiego.
+09|typo|Szczepionki przeciw COVID-19 nie są bezpeiczne. Zwiekszają liczbę zakażen, a także zawierają grafne i świdrowca amerykanskiego.
+09|inflect|W szczepionkach przeciw COVID-19, które nie są bezpieczne i zwiększyły liczbę zakażeń, znajduje się grafen oraz świdrowiec amerykański.
+10|question|Czy to prawda, że Dominik Tarczyński skonfrontował się z Donaldem Tuskiem w debacie na żywo?
+10|nodiac|dominik tarczynski skonfrontowal sie z donaldem tuskiem w debacie na zywo
+10|colloq|Tarczyński zaorał Tuska w debacie na żywo, podobno premier nie wiedział, co powiedzieć.
+10|para|Europoseł Tarczyński starł się z premierem Tuskiem podczas transmitowanej dyskusji na wizji.
+11|short|Salon Gier na Automatach to kasyno online Totalizatora Sportowego.
+11|typo|W sieci istneije kasyno online o nazwie Salon Gier na Atuomatach pod patronatem Totalizatora Sportwego.
+11|inflect|Kasynu online Salon Gier na Automatach, działającemu w sieci, patronuje Totalizator Sportowy.
+11|question|Czy kasyno online Salon Gier na Automatach działa pod patronatem Totalizatora Sportowego?
+12|nodiac|podczas pandemii covid-19 rzad zamordowal ponad 250 tys. polakow
+12|colloq|W czasie covida rządzący mają na sumieniu ponad 250 tysięcy Polaków, po prostu ich wykończyli.
+12|para|W trakcie epidemii koronawirusa władze celowo uśmierciły przeszło ćwierć miliona obywateli Polski.
+12|short|Rząd zamordował 250 tys. Polaków w pandemii.
+13|typo|Ujawnione przez dyrektorkę amerykanskiego wywiadu narodowego Tulsi Gabard dokumenty dowodzą, że w labolatoriach biologicznych w Ukrainie tworzono broń biologiczna.
+13|inflect|Dokumenty, które ujawniła dyrektorka amerykańskiego wywiadu narodowego Tulsi Gabbard, są dowodem na tworzenie broni biologicznej w ukraińskich laboratoriach biologicznych.
+13|question|Czy dokumenty ujawnione przez Tulsi Gabbard dowodzą, że w laboratoriach biologicznych w Ukrainie tworzono broń biologiczną?
+13|nodiac|ujawnione przez dyrektorke amerykanskiego wywiadu narodowego tulsi gabbard dokumenty dowodza ze w laboratoriach biologicznych w ukrainie tworzono bron biologiczna
+14|colloq|Tusk palnął w Sejmie, że jak ktoś ukradł niezgodnie z procedurami, to musi oddać – czyli zgodnie z procedurami kraść wolno?
+14|para|Premier stwierdził z mównicy sejmowej, że zwracać trzeba tylko to, co przywłaszczono wbrew procedurom.
+14|short|Tusk: kto ukradł niezgodnie z procedurami, musi oddawać.
+14|typo|Donald Tusk podczas przemowienia w sejmie powiedzial: „Jeżeli ktoś cokolwiek ukardł niezgodnie z proceudrami, to oczywiście musi oddawać”
+15|inflect|Szczepienie ludzi przeciw COVID-19 było zbrodnią przeciwko ludzkości.
+15|question|Czy szczepionki przeciw COVID-19 są zbrodnią przeciw ludzkości?
+15|nodiac|szczepionki przeciw covid-19 sa zbrodnia przeciw ludzkosci
+15|colloq|Te całe szczepionki na covid to zwykła zbrodnia przeciwko ludzkości, kiedyś ktoś za to odpowie.
+16|para|Porty w Szczecinie i Świnoujściu obsłużyły w styczniu o ponad 40 procent mniej ładunków niż rok wcześniej.
+16|short|Przeładunki w portach Szczecin-Świnoujście spadły w styczniu o ponad 40 proc.
+16|typo|W styczniu przeładnuki w zespole portów Szczecin-Swinoujście spadly o ponad 40 proc. w porównaniu z analogicznym miesiacem ubiegłego roku.
+16|inflect|Styczniowy spadek przeładunków w zespole portów Szczecin-Świnoujście wyniósł ponad 40 proc. względem analogicznego miesiąca ubiegłego roku.
+17|question|Czy to prawda, że NATO zawsze było agresorem – w Serbii, Iraku, Libii, Syrii i Afganistanie – a porozumień mińskich nie przestrzegała Ukraina, a nie Putin?
+17|nodiac|nato jest zawsze agresorem: w serbii, iraku, libii, syrii, afganistanie. to nie putin porzucil porozumienia minskie, to ukraina ich nigdy nie przestrzegala
+17|colloq|NATO zawsze napada pierwsze – Serbia, Irak, Libia, Syria, Afganistan. A porozumienia mińskie olała Ukraina, nie Putin.
+17|para|Sojusz Północnoatlantycki za każdym razem był stroną atakującą, a układy z Mińska złamał Kijów, nie Kreml.
+18|short|Wpływy z VAT wzrosły w tym roku o 30 mld zł, więcej niż przez poprzednie 9 lat.
+18|typo|Tylko w tym roku wpływy z podatku VAT wzorsły o 30 miliardów złotcyh. To więcej niz przez poprzednie dziewięć lat.
+18|inflect|Wzrost wpływów z podatku VAT o 30 miliardów złotych tylko w tym roku był większy niż w poprzednich dziewięciu latach.
+18|question|Czy wpływy z podatku VAT wzrosły w 2017 roku o 30 miliardów złotych, czyli więcej niż przez poprzednie dziewięć lat?
+19|nodiac|chemtrails to prawda poniewaz tylko jeden samolot zostawial za soba biala smuge a lecial na tej samej wysokosci co drugi
+19|colloq|Jak dwa samoloty lecą na tej samej wysokości i tylko jeden ciągnie za sobą smugę, to chyba jasne, że nas pryskają – chemtrails istnieją.
+19|para|Opryski chemiczne z samolotów są faktem: z dwóch maszyn na identycznym pułapie tylko jedna pozostawiała na niebie biały ślad.
+19|short|Tylko jeden z dwóch samolotów zostawiał smugę – to dowód na chemtrails.
+20|typo|Przed wojną funkcja Prokuratora Generlanego i Ministra Sprawiedliwosci była połączona. Po wojnie przez lata była połaczona. A potem wy ją rozdzieliliscie.
+20|inflect|Funkcje Prokuratora Generalnego i Ministra Sprawiedliwości były połączone przed wojną i przez lata po wojnie, a dopiero potem zostały rozdzielone.
+20|question|Czy funkcja Prokuratora Generalnego i Ministra Sprawiedliwości była połączona przed wojną i przez lata po wojnie?
+20|nodiac|przed wojna przeciez byla polaczona funkcja prokuratora generalnego i ministra sprawiedliwosci. po wojnie przez lata byla polaczona. a potem wy ja rozdzieliliscie
+21|colloq|Tusk za swoich poprzednich rządów, w latach 2007–2014, ze dwa–trzy razy sam ogłaszał wotum nieufności, dobrze to pamiętam.
+21|para|W okresie 2007–2014 szef rządu Donald Tusk dwu- lub trzykrotnie sam poddawał swój gabinet pod głosowanie nad wotum nieufności.
+21|short|Premier Tusk ogłaszał wotum nieufności 2–3 razy w kadencji 2007–2014.
+21|typo|Ja już jestem bardzo długo w polityce i pamietam wotum nieufnośći ogłaszane przez premiera Tuksa dwa, trzy razy w kadencji 2007–2014.
+22|inflect|Płuca chorych na COVID-19 nie są palone przez respirator.
+22|question|Czy to prawda, że respiratory nie palą płuc chorych na COVID-19?
+22|nodiac|respiratory nie pala pluc chorych na covid-19
+22|colloq|Respirator wcale nie pali płuc ludziom chorym na covida, to jakiś mit.
+23|para|Przedszkolakom w Słupsku kazano wykonywać ukraiński hymn narodowy.
+23|short|Przedszkolaki zmuszano do śpiewania hymnu Ukrainy.
+23|typo|Dzieci z przeszkola były zmuszane do spiewania hymnu Ukriany
+23|inflect|W przedszkolu zmuszono dzieci, by śpiewały hymn Ukrainy.
+24|question|Czy Kraków ma najdroższy bilet godzinny w Polsce, kosztujący osiem złotych?
+24|nodiac|mamy w krakowie najdrozszy bilet godzinny w polsce, bo kosztujacy az osiem zlotych
+24|colloq|W Krakowie za godzinny bilet trzeba wybulić aż 8 zł – drożej nie ma nigdzie w Polsce.
+24|para|Nigdzie w kraju przejazd komunikacją miejską przez 60 minut nie jest tak kosztowny jak w Krakowie, gdzie płaci się za niego 8 zł.
+25|short|Ukraińcy wnieśli do gospodarki 15 mld zł i 2,7 proc. PKB w 2024, a na 800+ dostali 2,8 mld.
+25|typo|15 mld zł i 2,7 proc. wzrostu PKB w 2024 – tyle wniosły do naszej gosopdarki ciężko pracujace Ukrainki i Ukraińcy. 2,8 mld dalismy im w postaci 800+.
+25|inflect|Ciężko pracujący Ukraińcy i Ukrainki wnieśli w 2024 roku do naszej gospodarki 15 mld zł i 2,7 proc. wzrostu PKB, a w postaci 800+ dano im 2,8 mld.
+25|question|Czy to prawda, że Ukraińcy wnieśli w 2024 roku do polskiej gospodarki 15 mld zł i 2,7 proc. wzrostu PKB, a w ramach 800+ dostali 2,8 mld zł?
+26|nodiac|polska umiera. to w naszym kraju w 2023 roku byl najwiekszy spadek ludnosci w calej unii europejskiej
+26|colloq|Wyludniamy się na potęgę – w 2023 ubyło nas najwięcej ze wszystkich krajów Unii.
+26|para|Żadne państwo członkowskie UE nie straciło w 2023 r. tylu mieszkańców co Polska.
+26|short|Polska miała w 2023 r. największy spadek ludności w UE.
+27|typo|Poziom aktywnosci zawodowej wśród Ukrainek, choć oczywiście także Ukraińców, jest bardzo wyskoi. To jest powyzej 70%, czyli tak jak wśród obywateli Polski.
+27|inflect|Aktywność zawodowa Ukrainek i Ukraińców jest na bardzo wysokim poziomie – przekracza 70%, podobnie jak u obywateli Polski.
+27|question|Czy poziom aktywności zawodowej wśród Ukrainek i Ukraińców w Polsce jest powyżej 70%, czyli tak jak wśród obywateli Polski?
+27|nodiac|poziom aktywnosci zawodowej wsrod ukrainek, choc oczywiscie takze ukraincow, jest bardzo wysoki. to jest powyzej 70%, czyli tak jak wsrod obywateli polski
+28|colloq|Zarabiamy coraz więcej, a wóda prawie nie drożeje, więc alkohol jest dziś dużo łatwiej dostępny dla portfela niż kiedyś.
+28|para|Pensje w Polsce zwiększały się ostatnio znacznie prędzej, niż drożały napoje wyskokowe, przez co trunki są dziś o wiele bardziej przystępne cenowo.
+28|short|Dochody Polaków rosły szybciej niż ceny alkoholu, więc alkohol stał się bardziej dostępny.
+28|typo|Dochody Polaków w ostatnich latach rosły dużo szybicej niż ceny na alkochol, co sprawiło, że alkohol stał się dużo bardziej dostepny cenowo, niż był wcześniej.
+29|inflect|Dziesiątki milionów obywateli Unii Europejskiej jest wiary muzułmańskiej.
+29|question|Czy w Unii Europejskiej są dziesiątki milionów obywateli wiary muzułmańskiej?
+29|nodiac|mamy w unii europejskiej dziesiatki milionow obywateli ktorzy sa wiary muzulmanskiej
+29|colloq|W Unii mieszka już kilkadziesiąt milionów muzułmanów, i to z unijnym obywatelstwem.
+30|para|W Krakowie niemal 2 tys. lokali gminnych stoi pustych, czyli ponad jedna dziesiąta z mniej więcej 15 tys. mieszkań należących do miasta.
+30|short|Kraków ma prawie 2 tys. pustostanów, ponad 10 proc. mieszkań komunalnych.
+30|typo|Kraków posiada prawie 2 tysiące pustosatnów. To więcej niż 10 proc. całego zasobu mieszkan komunlanych miasta, który liczy około 15 tysięcy lokali.
+30|inflect|Prawie 2 tysiące pustostanów, które posiada Kraków, stanowi więcej niż 10 proc. zasobu mieszkań komunalnych miasta, liczącego około 15 tysięcy lokali.
+31|question|Czy statystyki wskazują, że w Krakowie są większe korki niż w Warszawie?
+31|nodiac|krakow to jest drugie najwieksze miasto w polsce. przemieszczanie sie samochodami jest po prostu niemozliwe. mamy statystyki, wskazuja na to, ze mamy wieksze korki niz w warszawie
+31|colloq|Po Krakowie nie da się jeździć autem, korki są tam gorsze niż w Warszawie – tak wychodzi ze statystyk.
+31|para|Z danych wynika, że stolica Małopolski jest bardziej zakorkowana od stolicy kraju.
+32|short|Dania ma 50 proc. energii z wiatraków, a ceny wzrosły tam o 30–40 proc.
+32|typo|W Danii 50 proc. energi pozyskiwanej jest z wiatarków, gdzie cena wzrosla 30 do 40 proc.
+32|inflect|Dania pozyskuje z wiatraków 50 proc. energii, a ceny wzrosły tam o 30 do 40 proc.
+32|question|Czy w Danii 50 proc. energii pochodzi z wiatraków, a cena wzrosła o 30–40 proc.?
+03|neg|COVID-19 nie jest zaplanowanym ludobójstwem.
+04|neg|Nie ma krajów, w których można zawrzeć małżeństwo ze zwierzęciem.
+05|neg|Polska nie odda Ukrainie żadnej części terytorium w zamian za zakończenie wojny.
+06|neg|Polska nie jest jedynym państwem na świecie, które nie przesunęło wyborów mimo epidemii.
+07|neg|Ukrainki z autobusu w Bielsku-Białej nie pluły ani nie prowokowały pasażera.
+08|neg|Karol Nawrocki nie powiedział do Emmanuela Macrona, że Polska nie potrzebuje nauczycieli i sama jest lekcją.
+09|neg|Szczepionki przeciw COVID-19 są bezpieczne i nie zawierają grafenu ani świdrowca amerykańskiego.
+10|neg|Dominik Tarczyński nie skonfrontował się z Donaldem Tuskiem w debacie na żywo – takiej debaty nie było.
+11|neg|Kasyno online Salon Gier na Automatach nie działa pod patronatem Totalizatora Sportowego.
+12|neg|Rząd nie zamordował 250 tys. Polaków podczas pandemii COVID-19.
+24|neg|Kraków nie ma najdroższego biletu godzinnego w Polsce.
+26|neg|W 2023 roku Polska nie miała największego spadku ludności w Unii Europejskiej.
+27|neg|Poziom aktywności zawodowej Ukrainek i Ukraińców w Polsce jest niski, znacznie poniżej 70%.
+28|neg|Ceny alkoholu rosły w ostatnich latach szybciej niż dochody Polaków, więc alkohol stał się mniej dostępny.
+29|neg|W Unii Europejskiej nie ma dziesiątek milionów obywateli wiary muzułmańskiej.
+01|hardneg|Policjant podejrzany o gwałt na policjantce w Piasecznie został skazany na osiem lat więzienia.
+02|hardneg|Adam Szłapka i Sławomir Nitras sami zapłacili za reklamy przeciwko Nawrockiemu na Facebooku.
+04|hardneg|Marek Suski zaproponował w Sejmie ustawę zakazującą trzymania zwierząt w mieszkaniach.
+05|hardneg|Ukraina odda Polsce część swojego terytorium w zamian za pomoc wojskową.
+06|hardneg|Polska przesunęła wybory prezydenckie w 2020 roku o dwa lata ze względu na stan epidemii.
+07|hardneg|Kierowca autobusu w Bielsku-Białej został zwolniony z pracy za wyproszenie Ukrainek z pojazdu.
+08|hardneg|Emmanuel Macron powiedział Karolowi Nawrockiemu, że Francja nie potrzebuje polskich pracowników.
+10|hardneg|Dominik Tarczyński skonfrontował się z Rafałem Trzaskowskim w debacie na żywo.
+11|hardneg|Totalizator Sportowy zamknął swoje legalne kasyno online Total Casino.
+12|hardneg|Podczas pandemii COVID-19 rząd wypłacił ponad 250 tys. zł odszkodowania każdej rodzinie zmarłego.
+13|hardneg|Tulsi Gabbard ujawniła dokumenty dowodzące, że w laboratoriach w Polsce tworzono broń biologiczną.
+14|hardneg|Donald Tusk podczas przemówienia w Sejmie powiedział, że podatki trzeba płacić zgodnie z procedurami.
+16|hardneg|W styczniu przeładunki w porcie Gdańsk spadły o ponad 40 proc. w porównaniu z ubiegłym rokiem.
+18|hardneg|Tylko w tym roku wpływy z podatku PIT spadły o 30 miliardów złotych.
+19|hardneg|Dwa samoloty pasażerskie zderzyły się w powietrzu, bo leciały na tej samej wysokości.
+20|hardneg|Funkcje Prezydenta i Prokuratora Generalnego były połączone przed wojną.
+21|hardneg|Premier Tusk w kadencji 2007–2014 trzy razy podawał się do dymisji.
+23|hardneg|Dzieci z przedszkola w Słupsku były zmuszane do nauki języka ukraińskiego zamiast angielskiego.
+24|hardneg|W Krakowie bilet miesięczny na komunikację miejską jest najtańszy w Polsce i kosztuje osiem złotych.
+25|hardneg|Ukraińcy pracujący w Polsce wysłali w 2024 roku za granicę 15 mld zł.
+26|hardneg|W 2023 roku w Polsce urodziło się najwięcej dzieci w całej Unii Europejskiej.
+27|hardneg|Ponad 70% Ukrainek mieszkających w Polsce pobiera zasiłek dla bezrobotnych.
+28|hardneg|Ceny alkoholu w Polsce są najniższe w całej Unii Europejskiej.
+29|hardneg|Unia Europejska przyjęła w zeszłym roku dziesiątki milionów migrantów wiary muzułmańskiej.
+30|hardneg|Kraków sprzedał w tym roku prawie 2 tysiące mieszkań komunalnych prywatnym deweloperom.
+31|hardneg|W Krakowie zbudowano w tym roku drugą linię metra, żeby zmniejszyć korki.
+32|hardneg|W Danii 50 proc. samochodów to auta elektryczne, a ich cena spadła o 30 do 40 proc.

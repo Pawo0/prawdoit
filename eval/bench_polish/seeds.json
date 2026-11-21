@@ -1,0 +1,290 @@
+[
+ {
+  "no": 1,
+  "id": "demagog:fake_news/podejrzany-o-gwalt-w-piasecznie-zwolniony-z-aresztu-policja-dementuje",
+  "claim": "Gwałtu na policjantce nie zakwalifikowano jako przestępstwo. Policjant, który dopuścił się gwałtu, zostanie zwolniony z aresztu i wróci do pracy.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-02-13",
+  "title": "Podejrzany o gwałt w Piasecznie zwolniony z aresztu? Policja dementuje"
+ },
+ {
+  "no": 2,
+  "id": "demagog:wypowiedzi/polityczni-koledzy-trzaskowskiego-atakowali-nawrockiego-skad-mieli-film",
+  "claim": "Najpierw się pojawiły te reklamy w necie, a później różni ludzie [np. Adam Szłapka i Sławomir Nitras – przyp. Demagog] je wykorzystywali.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-05-27",
+  "title": "Polityczni koledzy Trzaskowskiego atakowali Nawrockiego. Skąd mieli film?"
+ },
+ {
+  "no": 3,
+  "id": "demagog:fake_news/zdjecie-fiolki-nie-dowodzi-ze-covid-19-to-zaplanowane-ludobojstwo",
+  "claim": "COVID-19 to zaplanowane ludobójstwo.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2021-04-29",
+  "title": "Zdjęcie fiolki nie dowodzi, że COVID-19 to zaplanowane ludobójstwo"
+ },
+ {
+  "no": 4,
+  "id": "demagog:wypowiedzi/malzenstwa-ze-zwierzetami-suski-wykorzystuje-stary-falszywy-przekaz",
+  "claim": "[...] Są kraje, w których można zawrzeć małżeństwo ze zwierzęciem.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-08-26",
+  "title": "Małżeństwa ze zwierzętami? Suski wykorzystuje stary, fałszywy przekaz"
+ },
+ {
+  "no": 5,
+  "id": "demagog:fake_news/polska-odda-ukrainie-czesc-terytorium-w-zamian-za-zakonczenie-wojny-sprawdzamy",
+  "claim": "Polska odda Ukrainie część terytorium w zamian za zakończenie wojny",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-08-26",
+  "title": "Polska odda Ukrainie część terytorium w zamian za zakończenie wojny? Sprawdzamy"
+ },
+ {
+  "no": 6,
+  "id": "demagog:wypowiedzi/czy-inne-panstwa-przesuwaja-wybory-z-powodu-pandemii-koronawirusa",
+  "claim": "Jesteśmy w zasadzie jedynym państwem na świecie, w którym są zaplanowane wybory, ale te wybory, ze względu na stan epidemii, nie są przesunięte.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2020-04-02",
+  "title": "Czy inne państwa przesuwają wybory z powodu pandemii koronawirusa?"
+ },
+ {
+  "no": 7,
+  "id": "demagog:fake_news/skandal-w-autobusie-mzk-w-bielsku-bialej-nie-bylo-prowokacji",
+  "claim": "Ukrainki z autobusu w Bielsku-Białej pluły i prowokowały pasażera.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-07-14",
+  "title": "Skandal w autobusie. MZK w Bielsku-Białej: nie było prowokacji"
+ },
+ {
+  "no": 8,
+  "id": "demagog:fake_news/polska-nie-potrzebuje-od-francji-lekcji-historii-to-slowa-nawrockiego-do-macrona",
+  "claim": "Karol Nawrocki na formu publicznym miał powiedzieć do prezydenta Francji, Emmanuela Macrona: „Polska nie potrzebuje nauczycieli. Polska sama jest lekcją”.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-10-28",
+  "title": "„Polska nie potrzebuje od Francji lekcji historii”. To słowa Nawrockiego do Macrona?"
+ },
+ {
+  "no": 9,
+  "id": "demagog:fake_news/nieprawdziwie-informacje-na-temat-szczepien-w-materiale-pl1-tv",
+  "claim": "Szczepionki przeciw COVID-19 nie są bezpieczne. Zwiększają liczbę zakażeń, a także zawierają grafen i świdrowca amerykańskiego.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2021-10-07",
+  "title": "Nieprawdziwie informacje na temat szczepień w materiale PL1.TV"
+ },
+ {
+  "no": 10,
+  "id": "demagog:fake_news/nie-bylo-konfrontacji-tuska-z-tarczynskim-na-wizji-to-zmyslona-historia",
+  "claim": "Dominik Tarczyński skonfrontował się z Donaldem Tuskiem w debacie na żywo.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-06-02",
+  "title": "Nie było konfrontacji Tuska z Tarczyńskim na wizji. To zmyślona historia"
+ },
+ {
+  "no": 11,
+  "id": "demagog:fake_news/scam-z-hazardem-w-tle-to-nie-jest-legalne-kasyno",
+  "claim": "W sieci istnieje kasyno online o nazwie Salon Gier na Automatach pod patronatem Totalizatora Sportowego.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-11-14",
+  "title": "Scam z hazardem w tle. To nie jest legalne kasyno"
+ },
+ {
+  "no": 12,
+  "id": "demagog:fake_news/czy-tysiac-dni-temu-putin-zabil-covid-19-to-falszywa-informacja",
+  "claim": "Podczas pandemii COVID-19 rząd zamordował ponad 250 tys. Polaków.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2024-12-04",
+  "title": "Czy tysiąc dni temu Putin „zabił” COVID-19? To fałszywa informacja"
+ },
+ {
+  "no": 13,
+  "id": "demagog:fake_news/laboratoria-broni-biologicznej-w-ukrainie-nadal-ich-nie-udowodniono",
+  "claim": "Ujawnione przez dyrektorkę amerykańskiego wywiadu narodowego Tulsi Gabbard dokumenty dowodzą, że w laboratoriach biologicznych w Ukrainie tworzono broń biologiczną",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2026-06-16",
+  "title": "Laboratoria broni biologicznej w Ukrainie? Nadal tego nie udowodniono"
+ },
+ {
+  "no": 14,
+  "id": "demagog:fake_news/mozna-krasc-zgodnie-z-procedurami-slowa-donalda-tuska-wyrwane-z-kontekstu",
+  "claim": "Donald Tusk podczas przemówienia w sejmie powiedział: „Jeżeli ktoś cokolwiek ukradł niezgodnie z procedurami, to oczywiście musi oddawać”",
+  "rating": "misleading",
+  "rating_raw": "Brak kontekstu",
+  "published_at": "2025-10-20",
+  "title": "Można kraść zgodnie z procedurami? Słowa Donalda Tuska wyrwane z kontekstu"
+ },
+ {
+  "no": 15,
+  "id": "demagog:fake_news/szczepionki-przeciw-covid-19-zbrodnia-przeciw-ludzkosci-manipulacja",
+  "claim": "Szczepionki przeciw COVID-19 są zbrodnią przeciw ludzkości.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2021-07-13",
+  "title": "Szczepionki przeciw COVID-19 zbrodnią przeciw ludzkości? Manipulacja!"
+ },
+ {
+  "no": 16,
+  "id": "demagog:wypowiedzi/spadek-przeladunkow-w-porcie-szczecin-politycy-nie-czytaja-ze-zrozumieniem",
+  "claim": "W styczniu przeładunki w zespole portów Szczecin-Świnoujście spadły o ponad 40 proc. w porównaniu z analogicznym miesiącem ubiegłego roku.",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2026-03-18",
+  "title": "Spadek przeładunków w porcie Szczecin? Politycy nie czytają ze zrozumieniem"
+ },
+ {
+  "no": 17,
+  "id": "demagog:fake_news/francuski-general-obwinia-ukraine-i-nato-za-wywolanie-wojny-wyjasniamy",
+  "claim": "NATO jest zawsze agresorem: w Serbii, Iraku, Libii, Syrii, Afganistanie. To nie Putin porzucił porozumienia Mińskie, To Ukraina ich nigdy nie przestrzegała.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2025-11-25",
+  "title": "Francuski generał obwinia Ukrainę i NATO za wywołanie wojny? Wyjaśniamy"
+ },
+ {
+  "no": 18,
+  "id": "demagog:wypowiedzi/o-ile-wzrosly-wplywy-z-podatku-vat",
+  "claim": "Tylko w tym roku wpływy z podatku VAT wzrosły o 30 miliardów złotych. To więcej niż przez poprzednie dziewięć lat.",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2017-12-15",
+  "title": "O ile wzrosły wpływy z podatku VAT?"
+ },
+ {
+  "no": 19,
+  "id": "demagog:fake_news/jeden-samolot-zostawia-smuge-drugi-nie-obserwacja-cejrowskiego-to-nie-dowod-na-chemtrails",
+  "claim": "Chemtrails to prawda, ponieważ tylko jeden samolot zostawiał za sobą białą smugę, a leciał na tej samej wysokości, co drugi.",
+  "rating": "misleading",
+  "rating_raw": "Brak kontekstu",
+  "published_at": "2026-06-24",
+  "title": "Jeden samolot zostawia smugę, drugi nie. Obserwacja Cejrowskiego to nie dowód na chemtrails"
+ },
+ {
+  "no": 20,
+  "id": "demagog:wypowiedzi/minister-sprawiedliwosci-i-prokurator-generalny-czy-faktycznie-byli-polaczeni-przez-lata",
+  "claim": "Przed wojną przecież była połączona funkcja [Prokuratora Generalnego i Ministra Sprawiedliwości - przyp. Demagog]. Po wojnie przez lata była połączona. A potem wy ją rozdzieliliście.",
+  "rating": "mixed",
+  "rating_raw": "Częściowa prawda",
+  "published_at": "2026-06-25",
+  "title": "Minister Sprawiedliwości i Prokurator Generalny. Czy faktycznie byli połączeni ,,przez lata’’?"
+ },
+ {
+  "no": 21,
+  "id": "demagog:wypowiedzi/wotum-zaufania-w-sejmie-premier-ryzykowal-dymisja-wyjasniamy",
+  "claim": "Ja już jestem bardzo długo w polityce i pamiętam wotum nieufności ogłaszane przez premiera Tuska dwa, trzy razy w kadencji 2007–2014.",
+  "rating": "mixed",
+  "rating_raw": "Częściowa prawda",
+  "published_at": "2025-06-12",
+  "title": "Wotum zaufania w Sejmie. Premier ryzykował dymisją? Wyjaśniamy"
+ },
+ {
+  "no": 22,
+  "id": "demagog:fake_news/nie-respiratory-nie-pala-pluc-chorych-na-covid-19",
+  "claim": "Respiratory nie palą płuc chorych na COVID-19.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2021-05-24",
+  "title": "Nie, respiratory nie palą płuc chorych na COVID-19"
+ },
+ {
+  "no": 23,
+  "id": "demagog:fake_news/dzieci-zmuszane-do-spiewania-hymnu-ukrainy-wladze-slupska-dementuja",
+  "claim": "Dzieci z przedszkola były zmuszane do śpiewania hymnu Ukrainy",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2026-01-09",
+  "title": "Dzieci zmuszane do śpiewania hymnu Ukrainy? Władze Słupska dementują"
+ },
+ {
+  "no": 24,
+  "id": "demagog:wypowiedzi/godzina-za-8-zl-ktore-miasto-ma-najdrozsze-bilety-komunikacji-miejskiej",
+  "claim": "Mamy [w Krakowie – przyp. Demagog] najdroższy bilet godzinny w Polsce, bo kosztujący aż osiem złotych.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-09-10",
+  "title": "Godzina za 8 zł. Które miasto ma najdroższe bilety komunikacji miejskiej?"
+ },
+ {
+  "no": 25,
+  "id": "demagog:wypowiedzi/migranci-z-ukrainy-obciazeniem-dla-budzetu-biejat-odpowiada-nawrockiemu",
+  "claim": "15 mld zł i 2,7 proc. wzrostu PKB w 2024 – mówi to panu coś, panie Nawrocki? Tyle wniosły do naszej gospodarki ciężko pracujące Ukrainki i Ukraińcy. 2,8 mld daliśmy im w postaci 800+.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-08-29",
+  "title": "Migranci z Ukrainy obciążeniem dla budżetu? Biejat odpowiada Nawrockiemu"
+ },
+ {
+  "no": 26,
+  "id": "demagog:wypowiedzi/polska-z-najwiekszym-spadkiem-ludnosci-w-ue",
+  "claim": "Polska umiera. To w naszym kraju w 2023 roku był największy spadek ludności w całej Unii Europejskiej.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2024-07-23",
+  "title": "Polska z największym spadkiem ludności w UE?"
+ },
+ {
+  "no": 27,
+  "id": "demagog:wypowiedzi/ukraincy-i-ukrainki-pracuja-w-polsce-czy-sa-tak-aktywni-jak-polacy",
+  "claim": "Poziom aktywności zawodowej wśród Ukrainek, głównie Ukrainek, choć oczywiście także Ukraińców, jest bardzo wysoki. To jest powyżej 70%, czyli tak jak wśród obywateli Polski.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-08-07",
+  "title": "Ukraińcy i Ukrainki pracują w Polsce. Czy są tak aktywni jak Polacy?"
+ },
+ {
+  "no": 28,
+  "id": "demagog:wypowiedzi/pensje-rosna-szybciej-niz-ceny-alkoholu-dane-pokazuja-trend",
+  "claim": "Dochody Polaków w ostatnich latach rosły dużo szybciej niż ceny na alkohol, co sprawiło, że alkohol stał się dużo bardziej dostępny, niż był wcześniej, jeśli chodzi o cenę.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-09-04",
+  "title": "Pensje rosną szybciej niż ceny alkoholu? Dane pokazują trend"
+ },
+ {
+  "no": 29,
+  "id": "demagog:wypowiedzi/ile-obywateli-ue-jest-wiary-muzulmanskiej",
+  "claim": "Mamy w Unii Europejskiej dziesiątki milionów obywateli którzy są wiary muzułmańskiej.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2016-03-25",
+  "title": "Ile obywateli UE jest wiary muzułmańskiej?"
+ },
+ {
+  "no": 30,
+  "id": "demagog:wypowiedzi/ile-jest-pustostanow-w-krakowie-w-sieci-kraza-rozne-dane",
+  "claim": "Kraków posiada prawie 2 tysięcy pustostanów. To więcej niż 10 proc. całego zasobu mieszkań komunalnych miasta. […] Cały zasób mieszkań komunalnych Krakowa to około 15 tysięcy lokali […].",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-09-01",
+  "title": "Ile jest pustostanów w Krakowie? W sieci krążą różne dane"
+ },
+ {
+  "no": 31,
+  "id": "demagog:wypowiedzi/krakow-i-warszawa-gdzie-sa-wieksze-korki",
+  "claim": "Kraków to jest drugie największe miasto w Polsce. Przemieszczanie się samochodami (...) jest po prostu niemożliwe. My mamy statystyki, wskazują na to, że mamy większe korki niż w Warszawie.",
+  "rating": "unverifiable",
+  "rating_raw": "Nieweryfikowalne",
+  "published_at": "2026-07-17",
+  "title": "Kraków i Warszawa. Gdzie są większe korki?"
+ },
+ {
+  "no": 32,
+  "id": "demagog:wypowiedzi/dania-stawia-wiatraki-a-prad-i-tak-drozeje-jak-jest-naprawde",
+  "claim": "W Danii 50 proc. energii pozyskiwanej jest z wiatraków, gdzie cena wzrosła 30 do 40 proc.",
+  "rating": "unverifiable",
+  "rating_raw": "Nieweryfikowalne",
+  "published_at": "2023-02-09",
+  "title": "Dania stawia wiatraki, a prąd i tak drożeje? Jak jest naprawdę?"
+ }
+]

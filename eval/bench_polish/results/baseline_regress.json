@@ -1,0 +1,1334 @@
+{
+ "summary": {
+  "latency_ms": {},
+  "setup": {
+   "analyzer": "prefix6",
+   "rule": "",
+   "no_alt": false,
+   "embed_model": "default",
+   "analyzer_load_s": 0.0,
+   "analyzer_rss_mb": 0,
+   "index_build_s": 4.3,
+   "models_load_s": 9.4,
+   "peak_rss_mb": 3288,
+   "documents": 4382,
+   "chunks": 21494,
+   "claims": 3085
+  }
+ },
+ "rows": [],
+ "regress": {
+  "cases.jsonl": {
+   "n": 35,
+   "ok": 34,
+   "false_verdicts": 0,
+   "rows": [
+    {
+     "id": "A1",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A2",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A3",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A4",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A5",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "A6",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F1",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F2",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F3",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F4",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F5",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F6",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F7",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "F8",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M1",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M2",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "M3",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "T1",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "T2",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B1",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O1",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O2",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "O3",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D1",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D3",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D4",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "D5",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E1",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E3",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "E4",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "J3",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    },
+    {
+     "id": "I2",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    }
+   ]
+  },
+  "cases_heldout.jsonl": {
+   "n": 56,
+   "ok": 49,
+   "false_verdicts": 2,
+   "rows": [
+    {
+     "id": "H01",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H02",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H03",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H04",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H05",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H06",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H07",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H08",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H09",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H10",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H11",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H12",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H13",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H14",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H15",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H16",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H17",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H18",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H19",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H20",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H21",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H22",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H23",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H24",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H25",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H26",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H27",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H28",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H29",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H30",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H31",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H32",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H33",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H34",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H35",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H36",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H37",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H38",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H39",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H40",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H41",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H42",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H43",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H44",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H45",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H46",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H47",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H48",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H49",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H50",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H51",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H52",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H53",
+     "ok": false,
+     "verdict": "falszywe",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": true
+    },
+    {
+     "id": "H54",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow",
+      "potwierdzone",
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "H56",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    },
+    {
+     "id": "H57",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    }
+   ]
+  },
+  "cases_blind2.jsonl": {
+   "n": 49,
+   "ok": 41,
+   "false_verdicts": 0,
+   "rows": [
+    {
+     "id": "B2-01",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-02",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-03",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-04",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-05",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-06",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-07",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-08",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-09",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-10",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-11",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-12",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-13",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-14",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-15",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-16",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-17",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-18",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-19",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-20",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-21",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-22",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-23",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-24",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-25",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-26",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-27",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-28",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-29",
+     "ok": false,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-30",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-31",
+     "ok": true,
+     "verdict": "potwierdzone",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-32",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-33",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-34",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-35",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-36",
+     "ok": true,
+     "verdict": "nie_podlega_weryfikacji",
+     "expected": [
+      "nie_podlega_weryfikacji"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-37",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-38",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-39",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-40",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-41",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-42",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-43",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-44",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "potwierdzone",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-45",
+     "ok": true,
+     "verdict": "falszywe",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-46",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "falszywe",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-47",
+     "ok": true,
+     "verdict": "wprowadzajace_w_blad",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-48",
+     "ok": true,
+     "verdict": "brak_dowodow",
+     "expected": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+     ],
+     "false_verdict": false
+    },
+    {
+     "id": "B2-50",
+     "ok": true,
+     "verdict": "doprecyzuj",
+     "expected": "doprecyzuj",
+     "false_verdict": false
+    }
+   ]
+  }
+ }
+}

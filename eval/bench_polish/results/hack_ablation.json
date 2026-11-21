@@ -1,0 +1,70 @@
+{
+ "question": {
+  "n": 19,
+  "median_cos_raw": 0.968,
+  "median_cos_rewritten": 0.975,
+  "cos>=0.88_raw": 19,
+  "cos>=0.88_rewritten": 19,
+  "cos>=0.82_raw": 19,
+  "cos>=0.82_rewritten": 19,
+  "rank1_raw": 19,
+  "rank1_rewritten": 19,
+  "rewriting_helped": 13,
+  "rewriting_hurt": 0
+ },
+ "all_positives": {
+  "n": 128,
+  "median_cos_raw": 0.944,
+  "median_cos_rewritten": 0.944,
+  "cos>=0.88_raw": 107,
+  "cos>=0.88_rewritten": 107,
+  "cos>=0.82_raw": 122,
+  "cos>=0.82_rewritten": 122,
+  "rank1_raw": 124,
+  "rank1_rewritten": 124,
+  "rewriting_helped": 15,
+  "rewriting_hurt": 1
+ },
+ "cos_nodiac": {
+  "n": 18,
+  "median": 0.957,
+  "min": 0.793,
+  ">=0.88": 16
+ },
+ "cos_typo": {
+  "n": 18,
+  "median": 0.948,
+  "min": 0.843,
+  ">=0.88": 15
+ },
+ "cos_inflect": {
+  "n": 19,
+  "median": 0.975,
+  "min": 0.909,
+  ">=0.88": 19
+ },
+ "cos_question": {
+  "n": 19,
+  "median": 0.975,
+  "min": 0.881,
+  ">=0.88": 19
+ },
+ "cos_short": {
+  "n": 18,
+  "median": 0.961,
+  "min": 0.896,
+  ">=0.88": 18
+ },
+ "cos_colloq": {
+  "n": 18,
+  "median": 0.904,
+  "min": 0.842,
+  ">=0.88": 14
+ },
+ "cos_para": {
+  "n": 18,
+  "median": 0.861,
+  "min": 0.728,
+  ">=0.88": 6
+ }
+}

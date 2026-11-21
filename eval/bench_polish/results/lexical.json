@@ -1,0 +1,3922 @@
+{
+ "prefix6": {
+  "analyzer_load_s": 0.0,
+  "rss_added_mb": 22,
+  "corpus_tokens": 999555,
+  "tokenize_corpus_s_cold": 3.8,
+  "bm25_build_s": 1.0,
+  "vocab": 35982,
+  "query_tokenize_ms_p50": 0.055,
+  "claims": {
+   "R@1": 0.883,
+   "R@5": 0.898,
+   "MRR": 0.894
+  },
+  "chunks": {
+   "R@1": 0.922,
+   "R@5": 0.945,
+   "MRR": 0.931
+  },
+  "lex_gate_pass(>=0.4)": 104,
+  "mean_lex": 0.65,
+  "by_type": {
+   "inflect": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.771
+   },
+   "question": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.816
+   },
+   "nodiac": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.969
+   },
+   "colloq": {
+    "n": 18,
+    "claims_R@1": 0.889,
+    "claims_MRR": 0.917,
+    "chunks_R@5": 1.0,
+    "lex_pass": 11,
+    "mean_lex": 0.426
+   },
+   "para": {
+    "n": 18,
+    "claims_R@1": 0.278,
+    "claims_MRR": 0.328,
+    "chunks_R@5": 0.611,
+    "lex_pass": 1,
+    "mean_lex": 0.166
+   },
+   "short": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.581
+   },
+   "typo": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.802
+   }
+  },
+  "rows": [
+   {
+    "id": "01-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "01-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "01-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "01-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "02-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "02-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.533
+   },
+   {
+    "id": "02-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "02-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "03-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "03-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 35,
+    "lex": 0.0
+   },
+   {
+    "id": "04-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "05-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "05-colloq",
+    "type": "colloq",
+    "claim_rank": null,
+    "chunk_rank": 3,
+    "lex": 0.125
+   },
+   {
+    "id": "05-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "05-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.625
+   },
+   {
+    "id": "06-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "06-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "07-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-para",
+    "type": "para",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "07-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "08-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "08-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "08-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "08-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-para",
+    "type": "para",
+    "claim_rank": 31,
+    "chunk_rank": 15,
+    "lex": 0.083
+   },
+   {
+    "id": "09-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "09-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.917
+   },
+   {
+    "id": "10-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.429
+   },
+   {
+    "id": "10-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.286
+   },
+   {
+    "id": "11-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "11-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "12-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "12-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 3,
+    "lex": 0.25
+   },
+   {
+    "id": "12-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "12-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "13-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "13-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "13-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "14-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-para",
+    "type": "para",
+    "claim_rank": 11,
+    "chunk_rank": 11,
+    "lex": 0.1
+   },
+   {
+    "id": "14-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "15-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "16-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.308
+   },
+   {
+    "id": "16-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "16-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "16-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "17-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "17-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "17-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.462
+   },
+   {
+    "id": "17-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "18-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.556
+   },
+   {
+    "id": "18-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "19-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "19-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "19-para",
+    "type": "para",
+    "claim_rank": 39,
+    "chunk_rank": 5,
+    "lex": 0.1
+   },
+   {
+    "id": "19-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "20-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "20-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "20-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "20-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "21-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "21-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.308
+   },
+   {
+    "id": "21-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "21-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "22-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "22-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.333
+   },
+   {
+    "id": "23-para",
+    "type": "para",
+    "claim_rank": 11,
+    "chunk_rank": 1,
+    "lex": 0.333
+   },
+   {
+    "id": "23-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "23-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "24-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "24-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "24-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.364
+   },
+   {
+    "id": "24-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.091
+   },
+   {
+    "id": "25-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "25-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.773
+   },
+   {
+    "id": "25-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.682
+   },
+   {
+    "id": "25-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "26-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "26-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.273
+   },
+   {
+    "id": "26-para",
+    "type": "para",
+    "claim_rank": 7,
+    "chunk_rank": 8,
+    "lex": 0.182
+   },
+   {
+    "id": "26-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "27-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "27-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "27-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "27-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "28-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.143
+   },
+   {
+    "id": "28-para",
+    "type": "para",
+    "claim_rank": 34,
+    "chunk_rank": 1,
+    "lex": 0.071
+   },
+   {
+    "id": "28-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "28-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "29-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "29-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "30-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.357
+   },
+   {
+    "id": "30-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.429
+   },
+   {
+    "id": "30-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "30-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "31-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "31-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "31-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.267
+   },
+   {
+    "id": "31-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.0
+   },
+   {
+    "id": "32-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.7
+   },
+   {
+    "id": "32-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "32-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "32-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   }
+  ]
+ },
+ "pystempel": {
+  "analyzer_load_s": 9.06,
+  "rss_added_mb": 256,
+  "corpus_tokens": 999555,
+  "tokenize_corpus_s_cold": 6.5,
+  "bm25_build_s": 2.0,
+  "vocab": 39306,
+  "query_tokenize_ms_p50": 0.1,
+  "claims": {
+   "R@1": 0.875,
+   "R@5": 0.914,
+   "MRR": 0.895
+  },
+  "chunks": {
+   "R@1": 0.914,
+   "R@5": 0.953,
+   "MRR": 0.934
+  },
+  "lex_gate_pass(>=0.4)": 103,
+  "mean_lex": 0.603,
+  "by_type": {
+   "inflect": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.797
+   },
+   "question": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.805
+   },
+   "nodiac": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.729
+   },
+   "colloq": {
+    "n": 18,
+    "claims_R@1": 0.833,
+    "claims_MRR": 0.903,
+    "chunks_R@5": 1.0,
+    "lex_pass": 11,
+    "mean_lex": 0.433
+   },
+   "para": {
+    "n": 18,
+    "claims_R@1": 0.278,
+    "claims_MRR": 0.349,
+    "chunks_R@5": 0.667,
+    "lex_pass": 1,
+    "mean_lex": 0.159
+   },
+   "short": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.581
+   },
+   "typo": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.697
+   }
+  },
+  "rows": [
+   {
+    "id": "01-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.909
+   },
+   {
+    "id": "01-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "01-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "01-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "02-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "02-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.467
+   },
+   {
+    "id": "02-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "02-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.733
+   },
+   {
+    "id": "03-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "03-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 19,
+    "lex": 0.0
+   },
+   {
+    "id": "04-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "05-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "05-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.375
+   },
+   {
+    "id": "05-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "05-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.625
+   },
+   {
+    "id": "06-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "06-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "07-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-para",
+    "type": "para",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.429
+   },
+   {
+    "id": "07-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "07-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "08-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "08-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "08-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "08-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-para",
+    "type": "para",
+    "claim_rank": 33,
+    "chunk_rank": 2,
+    "lex": 0.083
+   },
+   {
+    "id": "09-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "09-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "10-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "10-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.429
+   },
+   {
+    "id": "10-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.286
+   },
+   {
+    "id": "11-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "11-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "12-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "12-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.375
+   },
+   {
+    "id": "12-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "12-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "13-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "13-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "14-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-para",
+    "type": "para",
+    "claim_rank": 9,
+    "chunk_rank": 10,
+    "lex": 0.1
+   },
+   {
+    "id": "14-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.6
+   },
+   {
+    "id": "15-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "15-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "15-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 2,
+    "lex": 0.5
+   },
+   {
+    "id": "16-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.385
+   },
+   {
+    "id": "16-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "16-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "16-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "17-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "17-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.462
+   },
+   {
+    "id": "17-para",
+    "type": "para",
+    "claim_rank": 10,
+    "chunk_rank": 27,
+    "lex": 0.077
+   },
+   {
+    "id": "18-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.556
+   },
+   {
+    "id": "18-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "19-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "19-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.6
+   },
+   {
+    "id": "19-para",
+    "type": "para",
+    "claim_rank": 4,
+    "chunk_rank": 2,
+    "lex": 0.2
+   },
+   {
+    "id": "19-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "20-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "20-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "20-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "20-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "21-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "21-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.308
+   },
+   {
+    "id": "21-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "21-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "22-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "22-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-para",
+    "type": "para",
+    "claim_rank": 6,
+    "chunk_rank": 1,
+    "lex": 0.167
+   },
+   {
+    "id": "23-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "24-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "24-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "24-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.364
+   },
+   {
+    "id": "24-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.091
+   },
+   {
+    "id": "25-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.478
+   },
+   {
+    "id": "25-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.696
+   },
+   {
+    "id": "25-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.739
+   },
+   {
+    "id": "25-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.522
+   },
+   {
+    "id": "26-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "26-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 2,
+    "lex": 0.273
+   },
+   {
+    "id": "26-para",
+    "type": "para",
+    "claim_rank": 8,
+    "chunk_rank": 15,
+    "lex": 0.182
+   },
+   {
+    "id": "26-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "27-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "27-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "27-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "27-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "28-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.154
+   },
+   {
+    "id": "28-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 3,
+    "lex": 0.0
+   },
+   {
+    "id": "28-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "28-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "29-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "29-colloq",
+    "type": "colloq",
+    "claim_rank": 4,
+    "chunk_rank": 1,
+    "lex": 0.25
+   },
+   {
+    "id": "30-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.357
+   },
+   {
+    "id": "30-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "30-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "30-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "31-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.333
+   },
+   {
+    "id": "31-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.733
+   },
+   {
+    "id": "31-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "31-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.0
+   },
+   {
+    "id": "32-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "32-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.7
+   },
+   {
+    "id": "32-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "32-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   }
+  ],
+  "paired_vs_prefix6": {
+   "claim_rank_better": 5,
+   "claim_rank_worse": 5
+  }
+ },
+ "simplemma": {
+  "analyzer_load_s": 6.1,
+  "rss_added_mb": 343,
+  "corpus_tokens": 999555,
+  "tokenize_corpus_s_cold": 4.5,
+  "bm25_build_s": 0.8,
+  "vocab": 40953,
+  "query_tokenize_ms_p50": 0.057,
+  "claims": {
+   "R@1": 0.875,
+   "R@5": 0.922,
+   "MRR": 0.894
+  },
+  "chunks": {
+   "R@1": 0.914,
+   "R@5": 0.953,
+   "MRR": 0.932
+  },
+  "lex_gate_pass(>=0.4)": 105,
+  "mean_lex": 0.615,
+  "by_type": {
+   "inflect": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.797
+   },
+   "question": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.813
+   },
+   "nodiac": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.747
+   },
+   "colloq": {
+    "n": 18,
+    "claims_R@1": 0.833,
+    "claims_MRR": 0.9,
+    "chunks_R@5": 1.0,
+    "lex_pass": 11,
+    "mean_lex": 0.459
+   },
+   "para": {
+    "n": 18,
+    "claims_R@1": 0.278,
+    "claims_MRR": 0.349,
+    "chunks_R@5": 0.667,
+    "lex_pass": 2,
+    "mean_lex": 0.165
+   },
+   "short": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.608
+   },
+   "typo": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.699
+   }
+  },
+  "rows": [
+   {
+    "id": "01-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.909
+   },
+   {
+    "id": "01-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "01-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "01-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "02-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "02-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.467
+   },
+   {
+    "id": "02-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "02-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.733
+   },
+   {
+    "id": "03-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "03-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 20,
+    "lex": 0.0
+   },
+   {
+    "id": "04-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "04-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "05-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "05-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.25
+   },
+   {
+    "id": "05-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "05-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.625
+   },
+   {
+    "id": "06-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "06-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "06-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "07-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-para",
+    "type": "para",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.429
+   },
+   {
+    "id": "07-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "07-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "08-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "08-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "08-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "08-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-para",
+    "type": "para",
+    "claim_rank": 34,
+    "chunk_rank": 2,
+    "lex": 0.083
+   },
+   {
+    "id": "09-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "09-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "10-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "10-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "10-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.286
+   },
+   {
+    "id": "11-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "11-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "12-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "12-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.375
+   },
+   {
+    "id": "12-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "12-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "13-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "13-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "13-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "14-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-para",
+    "type": "para",
+    "claim_rank": 9,
+    "chunk_rank": 11,
+    "lex": 0.1
+   },
+   {
+    "id": "14-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.6
+   },
+   {
+    "id": "15-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "15-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "15-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "16-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.385
+   },
+   {
+    "id": "16-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "16-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "16-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "17-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "18-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "18-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "19-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.6
+   },
+   {
+    "id": "19-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "19-para",
+    "type": "para",
+    "claim_rank": 3,
+    "chunk_rank": 2,
+    "lex": 0.2
+   },
+   {
+    "id": "19-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "20-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "20-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "20-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "20-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.583
+   },
+   {
+    "id": "21-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "21-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.385
+   },
+   {
+    "id": "21-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "21-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "22-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "22-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "22-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-para",
+    "type": "para",
+    "claim_rank": 5,
+    "chunk_rank": 4,
+    "lex": 0.167
+   },
+   {
+    "id": "23-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "23-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "24-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "24-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.545
+   },
+   {
+    "id": "24-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.364
+   },
+   {
+    "id": "24-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.091
+   },
+   {
+    "id": "25-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.478
+   },
+   {
+    "id": "25-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.696
+   },
+   {
+    "id": "25-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.739
+   },
+   {
+    "id": "25-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.522
+   },
+   {
+    "id": "26-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "26-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 2,
+    "lex": 0.273
+   },
+   {
+    "id": "26-para",
+    "type": "para",
+    "claim_rank": 10,
+    "chunk_rank": 19,
+    "lex": 0.182
+   },
+   {
+    "id": "26-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "27-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "27-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "27-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "27-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "28-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.154
+   },
+   {
+    "id": "28-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 3,
+    "lex": 0.0
+   },
+   {
+    "id": "28-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "28-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "29-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "29-colloq",
+    "type": "colloq",
+    "claim_rank": 5,
+    "chunk_rank": 1,
+    "lex": 0.25
+   },
+   {
+    "id": "30-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.462
+   },
+   {
+    "id": "30-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "30-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "30-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "31-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "31-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "31-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "31-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.0
+   },
+   {
+    "id": "32-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "32-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.7
+   },
+   {
+    "id": "32-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "32-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   }
+  ],
+  "paired_vs_prefix6": {
+   "claim_rank_better": 4,
+   "claim_rank_worse": 4
+  }
+ },
+ "simplemma_p6": {
+  "analyzer_load_s": 0.0,
+  "rss_added_mb": 0,
+  "corpus_tokens": 999555,
+  "tokenize_corpus_s_cold": 5.4,
+  "bm25_build_s": 1.2,
+  "vocab": 29533,
+  "query_tokenize_ms_p50": 0.081,
+  "claims": {
+   "R@1": 0.898,
+   "R@5": 0.93,
+   "MRR": 0.913
+  },
+  "chunks": {
+   "R@1": 0.93,
+   "R@5": 0.953,
+   "MRR": 0.942
+  },
+  "lex_gate_pass(>=0.4)": 107,
+  "mean_lex": 0.66,
+  "by_type": {
+   "inflect": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.827
+   },
+   "question": {
+    "n": 19,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 19,
+    "mean_lex": 0.817
+   },
+   "nodiac": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.851
+   },
+   "colloq": {
+    "n": 18,
+    "claims_R@1": 0.944,
+    "claims_MRR": 0.972,
+    "chunks_R@5": 1.0,
+    "lex_pass": 12,
+    "mean_lex": 0.5
+   },
+   "para": {
+    "n": 18,
+    "claims_R@1": 0.333,
+    "claims_MRR": 0.413,
+    "chunks_R@5": 0.667,
+    "lex_pass": 3,
+    "mean_lex": 0.201
+   },
+   "short": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.622
+   },
+   "typo": {
+    "n": 18,
+    "claims_R@1": 1.0,
+    "claims_MRR": 1.0,
+    "chunks_R@5": 1.0,
+    "lex_pass": 18,
+    "mean_lex": 0.788
+   }
+  },
+  "rows": [
+   {
+    "id": "01-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "01-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "01-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "01-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "02-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.2
+   },
+   {
+    "id": "02-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.533
+   },
+   {
+    "id": "02-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.733
+   },
+   {
+    "id": "02-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "03-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "03-colloq",
+    "type": "colloq",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "03-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 20,
+    "lex": 0.0
+   },
+   {
+    "id": "04-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "04-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "05-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "05-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.375
+   },
+   {
+    "id": "05-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "05-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.625
+   },
+   {
+    "id": "06-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "06-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "06-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "07-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-para",
+    "type": "para",
+    "claim_rank": 2,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "07-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "07-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "08-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "08-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.643
+   },
+   {
+    "id": "08-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.786
+   },
+   {
+    "id": "08-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-para",
+    "type": "para",
+    "claim_rank": 35,
+    "chunk_rank": 3,
+    "lex": 0.083
+   },
+   {
+    "id": "09-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "09-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "09-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.917
+   },
+   {
+    "id": "10-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "10-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.571
+   },
+   {
+    "id": "10-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.286
+   },
+   {
+    "id": "11-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.636
+   },
+   {
+    "id": "11-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "11-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "11-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "12-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "12-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 2,
+    "lex": 0.375
+   },
+   {
+    "id": "12-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "12-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.75
+   },
+   {
+    "id": "13-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.857
+   },
+   {
+    "id": "13-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.714
+   },
+   {
+    "id": "13-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.929
+   },
+   {
+    "id": "14-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-para",
+    "type": "para",
+    "claim_rank": 11,
+    "chunk_rank": 11,
+    "lex": 0.1
+   },
+   {
+    "id": "14-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "14-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "15-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "15-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "16-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.385
+   },
+   {
+    "id": "16-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "16-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "16-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "17-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "17-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.769
+   },
+   {
+    "id": "17-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": null,
+    "lex": 0.0
+   },
+   {
+    "id": "18-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "18-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.778
+   },
+   {
+    "id": "18-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "19-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.7
+   },
+   {
+    "id": "19-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "19-para",
+    "type": "para",
+    "claim_rank": 3,
+    "chunk_rank": 2,
+    "lex": 0.2
+   },
+   {
+    "id": "19-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "20-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.583
+   },
+   {
+    "id": "20-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "20-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "20-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "21-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "21-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.385
+   },
+   {
+    "id": "21-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "21-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "22-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "22-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 1.0
+   },
+   {
+    "id": "22-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "22-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "23-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "23-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.667
+   },
+   {
+    "id": "23-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.833
+   },
+   {
+    "id": "24-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "24-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.545
+   },
+   {
+    "id": "24-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.364
+   },
+   {
+    "id": "24-para",
+    "type": "para",
+    "claim_rank": 3,
+    "chunk_rank": 1,
+    "lex": 0.182
+   },
+   {
+    "id": "25-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "25-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "25-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.727
+   },
+   {
+    "id": "25-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.545
+   },
+   {
+    "id": "26-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.818
+   },
+   {
+    "id": "26-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.364
+   },
+   {
+    "id": "26-para",
+    "type": "para",
+    "claim_rank": 9,
+    "chunk_rank": 18,
+    "lex": 0.182
+   },
+   {
+    "id": "26-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.455
+   },
+   {
+    "id": "27-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "27-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "27-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.692
+   },
+   {
+    "id": "27-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "28-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.154
+   },
+   {
+    "id": "28-para",
+    "type": "para",
+    "claim_rank": 35,
+    "chunk_rank": 1,
+    "lex": 0.077
+   },
+   {
+    "id": "28-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.615
+   },
+   {
+    "id": "28-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.846
+   },
+   {
+    "id": "29-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.875
+   },
+   {
+    "id": "29-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.5
+   },
+   {
+    "id": "30-para",
+    "type": "para",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.462
+   },
+   {
+    "id": "30-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.538
+   },
+   {
+    "id": "30-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "30-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.923
+   },
+   {
+    "id": "31-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.4
+   },
+   {
+    "id": "31-nodiac",
+    "type": "nodiac",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.867
+   },
+   {
+    "id": "31-colloq",
+    "type": "colloq",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.267
+   },
+   {
+    "id": "31-para",
+    "type": "para",
+    "claim_rank": null,
+    "chunk_rank": 1,
+    "lex": 0.0
+   },
+   {
+    "id": "32-short",
+    "type": "short",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "32-typo",
+    "type": "typo",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.8
+   },
+   {
+    "id": "32-inflect",
+    "type": "inflect",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   },
+   {
+    "id": "32-question",
+    "type": "question",
+    "claim_rank": 1,
+    "chunk_rank": 1,
+    "lex": 0.9
+   }
+  ],
+  "paired_vs_prefix6": {
+   "claim_rank_better": 4,
+   "claim_rank_worse": 3
+  }
+ }
+}
