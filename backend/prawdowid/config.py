@@ -48,8 +48,15 @@ class Settings:
     max_input_chars: int = 6000
     max_fetch_bytes: int = 3_000_000
     fetch_timeout_s: float = 8.0
-    rate_limit_per_min: int = int(_env("RATE_LIMIT", "30"))
+    # Per client address and minute. The address is the socket peer unless uvicorn runs behind a proxy it trusts
+    # (FORWARDED_ALLOW_IPS / --forwarded-allow-ips): then it is taken from X-Forwarded-For (docs/DEPLOYMENT.md).
+    rate_limit_per_min: int = int(_env("RATE_LIMIT", "120"))            # POST /api/check* (a jury set has 30+ cases)
+    rate_limit_quick_per_min: int = int(_env("RATE_LIMIT_QUICK", "60"))  # POST /api/quick: batches of <= 40 items
+    rate_limit_auto_per_min: int = int(_env("RATE_LIMIT_AUTO", "20"))    # checks with mode="auto" (extension router)
+    quick_concurrency: int = max(1, int(_env("QUICK_CONCURRENCY", "1")))  # /api/quick batches inferring at once
+    quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))               # then 503 + Retry-After, never a queue
     retention_days: int = int(_env("RETENTION_DAYS", "30"))
+    auto_retention_days: int = int(_env("AUTO_RETENTION_DAYS", "7"))     # audit rows of mode="auto" (no text stored)
 
     # --- channels (secrets only from env, never committed) ---
     wa_verify_token: str = _env("WA_VERIFY_TOKEN", "")

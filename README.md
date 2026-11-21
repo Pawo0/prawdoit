@@ -11,7 +11,7 @@ pokazuje, co mówią źródła.
 |---|---|
 | `backend/prawdowid/` | API (FastAPI), silnik weryfikacji (wyszukiwanie hybrydowe, NLI, reguły R1–R6), bezpieczeństwo, audyt, sprawy moderatora, adaptery kanałów (WhatsApp, Messenger, demo) |
 | `web/` | Strona WWW (bez frameworka): sprawdzanie, wynik z dowodami, czat demo, katalog źródeł, metodologia, panel analityka, PWA (udostępnianie z aplikacji na Androidzie) |
-| `extension/` | Wtyczka MV3 (Chrome/Edge/Vivaldi + Firefox Android): oznaczanie w czasie rzeczywistym treści zbieżnych z obalonymi twierdzeniami (zasłona / ostrzeżenie), przycisk „Wybierz fragment” |
+| `extension/` | Wtyczka MV3 (Chrome/Edge/Vivaldi + Firefox Android): lupka „Sprawdź” (wybór fragmentu → pełne sprawdzenie) oraz oznaczanie treści zbieżnych z twierdzeniami ocenionymi przez fact-checkerów — zawsze ze źródłem, oceną, datą i linkiem (zasłona tylko jako opcja) |
 | `bots/discord_bot.py` | Bot Discord (`/sprawdz`, wzmianka, DM, menu kontekstowe wiadomości) |
 | `bots/mcp_server.py` | Serwer MCP (tylko odczyt): `sprawdz`, `katalog_zrodel`, `kurs_nbp` (na żywo), `akt_prawny` / `szukaj_aktow` (Sejm ELI na żywo) |
 | `data/sources/` | **Rejestr źródeł** — jeden plik JSON na źródło (licencja, kwalifikacja, harmonogram); edycja w panelu `/admin` |
@@ -80,7 +80,7 @@ historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), mod
 | `PRAWDOWID_LLM_BASE_URL` / `_MODEL` / `_API_KEY` | — | opcjonalny LLM (OpenAI-compatible) tylko do upraszczania języka |
 | `PRAWDOWID_EMBED_MODEL`, `PRAWDOWID_NLI_MODEL` | mmlw-e5-small, mDeBERTa | wymiana modeli bez zmian w kodzie |
 | `PRAWDOWID_WA_*`, `PRAWDOWID_FB_*`, `PRAWDOWID_DISCORD_TOKEN` | — | kanały WhatsApp / Messenger / Discord |
-| `PRAWDOWID_RATE_LIMIT`, `PRAWDOWID_RETENTION_DAYS` | 30 / 30 | zapytania na minutę na IP; retencja audytu (dni) |
+| `PRAWDOWID_RATE_LIMIT`, `PRAWDOWID_RETENTION_DAYS` | 120 / 30 | pełne sprawdzenia na minutę na adres klienta (osobno: `PRAWDOWID_RATE_LIMIT_QUICK` = 60 paczek wtyczki, `PRAWDOWID_RATE_LIMIT_AUTO` = 20 sprawdzeń w tle; za proxy patrz [DEPLOYMENT](docs/DEPLOYMENT.md)); retencja audytu (dni) |
 | `PRAWDOWID_COST_PLN_PER_CPU_S`, `PRAWDOWID_COST_PLN_PER_1K_LLM_TOKENS` | 0,0000116 / 0 | stawki do szacunku kosztu odpowiedzi |
 
 Sekrety tylko w zmiennych środowiskowych — nigdy w repozytorium.

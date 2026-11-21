@@ -5,22 +5,21 @@ import csv
 import io
 import json
 import logging
-import time
-from collections import Counter, defaultdict, deque
+from collections import Counter
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import __version__, store
+from . import __version__, ratelimit, store
 from .admin_api import public_registry, router as admin_router
 from .channels.meta import router as meta_router
-from .jobs import router as jobs_router
+from .jobs import guard_auto, router as jobs_router
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .schemas import CheckRequest, CheckResult, QuickRequest, QuickResult
-from .service import engine_info, quick_score, run_check
+from .service import QuickBusy, engine_info, quick_score, run_check
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("prawdowid.api")
@@ -33,19 +32,18 @@ app.include_router(meta_router)
 app.include_router(admin_router)  # source registry admin: /admin, /api/admin/*, background scheduler
 app.include_router(jobs_router)  # async checks for the waiting window: /api/check/async, /api/jobs/{id}
 
-_hits: dict[str, deque] = defaultdict(deque)
-
-
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if request.url.path.startswith("/api/check") and request.method == "POST":
-        ip = request.client.host if request.client else "?"
-        q, now = _hits[ip], time.time()
-        while q and now - q[0] > 60:
-            q.popleft()
-        q.append(now)
-        if len(q) > settings.rate_limit_per_min:
-            return JSONResponse({"detail": "Za dużo zapytań — spróbuj za minutę."}, status_code=429)
+    """Per client address and minute (ratelimit.py): full checks and tier-1 batches have separate buckets, so
+    background page scanning cannot use up the budget for checks, and the other way round."""
+    if request.method == "POST":
+        path = request.url.path
+        limit = (("check", settings.rate_limit_per_min) if path.startswith("/api/check")
+                 else ("quick", settings.rate_limit_quick_per_min) if path == "/api/quick" else None)
+        if limit:
+            wait = ratelimit.hit(limit[0], ratelimit.client_ip(request), limit[1])
+            if wait is not None:
+                return JSONResponse({"detail": ratelimit.MESSAGE}, status_code=429, headers={"Retry-After": str(wait)})
     return await call_next(request)
 
 
@@ -68,9 +66,10 @@ def health():
 
 
 @app.post("/api/check", response_model=CheckResult)
-def api_check(req: CheckRequest):
+def api_check(req: CheckRequest, request: Request):
     if not (req.text or req.url):
         raise HTTPException(422, "Podaj tekst lub adres URL.")
+    guard_auto(req, request)
     return run_check(req)
 
 
@@ -100,7 +99,13 @@ def api_chat_reply(body: dict):
 
 @app.post("/api/quick", response_model=list[QuickResult])
 def api_quick(req: QuickRequest):
-    return quick_score(req)
+    """Tier 1 (router). Per item `state`: none | candidate | match — see schemas.QuickResult. Errors are never a
+    statement about content: 429 (client limit) and 503 (inference slot busy) both carry Retry-After."""
+    try:
+        return quick_score(req)
+    except QuickBusy as e:
+        return JSONResponse({"detail": "Serwer jest zajęty — spróbuj za chwilę. To nie jest ocena treści.",
+                             "status": "blad_techniczny"}, status_code=503, headers={"Retry-After": str(e.retry_after)})
 
 
 @app.delete("/api/session/{session}")

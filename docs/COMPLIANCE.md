@@ -63,7 +63,7 @@
 | Każda teza → dowód; abstynencja; awaria/niejasne/poza zakresem osobno | ✅ | bramka V2, R1–R6, `status` |
 | Korpus ≥ 100 dok., ≥ 10 domen, ≥ 2 typy, źródła pierwotne + wtórne, lista do audytu | ✅ | 4,4 tys. dok., 24 domeny (`/api/health` → `corpus`), `docs/SOURCES.md` |
 | Znacznik publikacji i pobrania; preferencja aktualnych; ostrzeżenie o archiwalnych | ✅ | `published_at`, `retrieved_at`; `stale_days=365` → ostrzeżenie „Materiał archiwalny” / `NIEAKTUALNE_DOWODY` |
-| Bezpieczeństwo: walidacja, separacja instrukcji, ograniczenia narzędzi, sekrety, limit, logi | ✅ | limit 6000 zn., SSRF guard (`security.check_public_url`), robots.txt, 30 zapytań/min/IP (`api.rate_limit`), tabele `security_events`, `errors` |
+| Bezpieczeństwo: walidacja, separacja instrukcji, ograniczenia narzędzi, sekrety, limit, logi | ✅ | limit 6000 zn., SSRF guard (`security.check_public_url`), robots.txt, limity na adres klienta: 120 sprawdzeń, 60 paczek wtyczki i 20 sprawdzeń w tle na minutę (`ratelimit.py`), tabele `security_events`, `errors` |
 | Prywatność: minimalizacja, maskowanie PII, retencja, usunięcie sesji | ✅ | `textutil.mask_pii`, `RETENTION_DAYS=30` (`store.purge_expired`), `DELETE /api/session/{id}` |
 | Obserwowalność: czas, modele, błędy wyszukiwania, abstynencje, **szacunkowy koszt** | ✅ | `timings_ms`, `engine`, tabela `errors`, `/api/stats` (abstentions, `cost_estimate_pln`), `engine.cost_estimate` (dodane 21.11) |
 | Dostępność: responsywność, kontrast, prosty język | ✅ | `web/static/style.css`, zrzut `eval/results/screens/07_mobile_wynik.png` |

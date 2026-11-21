@@ -41,7 +41,7 @@ Każde sprawdzenie zapisuje szacunek kosztu (`engine.cost_estimate`: czas × sta
 
 ## Pod obciążeniem
 - API jest bezstanowe (poza SQLite audytu) → skalowanie poziome (kilka workerów uvicorn/gunicorn za load balancerem); SQLite → PostgreSQL przy wielu instancjach.
-- Limity: 30 zapytań/min/IP (WWW) i per użytkownik kanału; Meta wymaga szybkiej odpowiedzi 200 na webhook — przetwarzanie odbywa się w tle.
+- Limity na adres klienta i minutę: 120 pełnych sprawdzeń, 60 paczek wtyczki (`/api/quick`), 20 sprawdzeń w tle; osobny limit per użytkownik kanału; Meta wymaga szybkiej odpowiedzi 200 na webhook — przetwarzanie odbywa się w tle.
 - Wtyczka: paczki ≤ 16 fragmentów, cache po stronie klienta i serwera (popularne posty powtarzają się → wysoki współczynnik trafień), skanowanie tylko widocznych elementów.
 - Wąskie gardło: NLI na CPU. Przy większym ruchu: GPU lub model NLI w ONNX/int8 (≈ 3× szybciej), osobny worker dla `/api/quick`.
 

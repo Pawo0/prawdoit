@@ -1,12 +1,16 @@
 """Async job API for the waiting window: the UI starts a check and polls its stage.
 
-  POST /api/check/async   (same body as /api/check)  -> {"job_id": "..."}
+  POST /api/check/async   (same body as /api/check)  -> {"job_id": "...", "mode": "manual|auto"}
   GET  /api/jobs/{job_id}                             -> {"state": "running|done|error", "stage", "stage_label",
                                                           "elapsed_s", "result"?}
 
 Stages are reported from inside service.run_check through its `progress` callback (labels: websearch.STAGES), so the
 window only shows what is really happening. Small thread pool, jobs expire 10 minutes after they finish.
 /api/check stays synchronous and unchanged for the other channels.
+
+Background checks of the extension router (CheckRequest.mode="auto") run in their own single-thread pool, so they can
+never occupy the workers a person is waiting for; their queue is short and their own rate limit applies. Their result
+is removed from memory as soon as it has been delivered once (it contains the checked text).
 """
 from __future__ import annotations
 
@@ -18,9 +22,10 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
-from . import store
+from . import ratelimit, store
+from .config import settings
 from .schemas import CheckRequest
 from .websearch import STAGES
 
@@ -29,7 +34,9 @@ router = APIRouter()
 
 JOB_TTL_S = 600
 MAX_JOBS = 500
+MAX_AUTO_WAITING = 8  # background checks queued or running; beyond that the client is told to retry later
 _POOL = ThreadPoolExecutor(max_workers=int(os.environ.get("PRAWDOWID_JOB_WORKERS", "2")), thread_name_prefix="job")
+_AUTO_POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="job-auto")
 _JOBS: dict[str, "Job"] = {}
 _LOCK = threading.Lock()
 
@@ -37,6 +44,7 @@ _LOCK = threading.Lock()
 @dataclass
 class Job:
     id: str
+    auto: bool = False
     created: float = field(default_factory=time.monotonic)
     started: float | None = None
     finished: float | None = None
@@ -86,18 +94,30 @@ def _run(job: Job, req: CheckRequest) -> None:
         job.finished = time.monotonic()
 
 
+def guard_auto(req: CheckRequest, request: Request) -> None:
+    """Extra conditions for mode="auto" (also used by the synchronous /api/check): text only, own rate limit."""
+    if req.mode != "auto":
+        return
+    if not (req.text or "").strip():
+        raise HTTPException(422, "Tryb automatyczny przyjmuje tylko tekst.")
+    ratelimit.enforce("auto", request, settings.rate_limit_auto_per_min)
+
+
 @router.post("/api/check/async")
-def api_check_async(req: CheckRequest):
+def api_check_async(req: CheckRequest, request: Request):
     if not (req.text or req.url):
         raise HTTPException(422, "Podaj tekst lub adres URL.")
+    guard_auto(req, request)
+    auto = req.mode == "auto"
     _purge()
     with _LOCK:
-        if sum(1 for j in _JOBS.values() if j.state == "running") >= MAX_JOBS:
-            raise HTTPException(429, "Za dużo trwających sprawdzeń — spróbuj za chwilę.")
-        job = Job(id=uuid.uuid4().hex[:16])
+        running = [j for j in _JOBS.values() if j.state == "running"]
+        if len(running) >= MAX_JOBS or (auto and sum(1 for j in running if j.auto) >= MAX_AUTO_WAITING):
+            raise HTTPException(429, "Za dużo trwających sprawdzeń — spróbuj za chwilę.", headers={"Retry-After": "5"})
+        job = Job(id=uuid.uuid4().hex[:16], auto=auto)
         _JOBS[job.id] = job
-    _POOL.submit(_run, job, req)
-    return {"job_id": job.id}
+    (_AUTO_POOL if auto else _POOL).submit(_run, job, req)
+    return {"job_id": job.id, "mode": req.mode}
 
 
 @router.get("/api/jobs/{job_id}")
@@ -106,4 +126,8 @@ def api_job(job_id: str):
     job = _JOBS.get(job_id)
     if job is None:
         raise HTTPException(404, "Nie znaleziono zadania (mogło wygasnąć po 10 minutach).")
-    return job.view()
+    view = job.view()
+    if job.auto and view["state"] != "running":
+        with _LOCK:
+            _JOBS.pop(job_id, None)  # delivered once: a background result does not stay in memory
+    return view
