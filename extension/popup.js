@@ -28,12 +28,23 @@ const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new 
   document.getElementById("st").textContent = `Na tej karcie sprawdzono ${st.scanned} fragmentów, oznaczono ${st.flagged}.`;
   document.getElementById("auto").onchange = e => send({type: "setSettings", data: {autoScan: e.target.checked}});
   document.getElementById("mode").onchange = e => send({type: "setSettings", data: {mode: e.target.checked ? "zaslon" : "oznacz"}});
-  document.getElementById("save").onclick = () => send({type: "setSettings", data: {apiBase: document.getElementById("api").value.trim() || "http://localhost:8000", demoWebBase: document.getElementById("demo-web").value.trim() || "http://localhost:5500"}});
-  document.getElementById("web").onclick = () => send({type: "openWebsite", demo: !!s.mockMode});
-  document.getElementById("pick").onclick = async () => {
-    // works on ANY site: inject the content script on demand (activeTab), then start the picker
-    try { await api.scripting.executeScript({target: {tabId: tab.id}, files: ["content.js"]}); } catch (e) { /* already injected or restricted page */ }
-    api.tabs.sendMessage(tab.id, {type: "startPicker"});
-    window.close();
+  document.getElementById("save").onclick = async () => {
+    const status = document.getElementById("save-status");
+    const data = {apiBase: document.getElementById("api").value.trim() || "http://localhost:8000", demoWebBase: document.getElementById("demo-web").value.trim() || "http://localhost:5500"};
+    try {
+      for (const value of Object.values(data)) if (!/^https?:$/.test(new URL(value).protocol)) throw new Error();
+      if (!(await send({type: "setSettings", data}))?.ok) throw new Error();
+      status.textContent = "Zapisano adresy.";
+    } catch { status.textContent = "Nie udało się zapisać. Podaj poprawne adresy http:// lub https://."; }
   };
+  document.getElementById("web").onclick = () => send({type: "openWebsite", demo: !!s.mockMode});
+  async function activate(type) {
+    try {
+      await api.scripting.executeScript({target: {tabId: tab.id}, files: ["content.js"]});
+      await api.tabs.sendMessage(tab.id, {type});
+      window.close();
+    } catch { document.getElementById("action-status").textContent = "Na tej stronie przeglądarka nie pozwala wyświetlić lupki. Otwórz zwykłą stronę internetową i spróbuj ponownie."; }
+  }
+  document.getElementById("show").onclick = () => activate("openMenu");
+  document.getElementById("pick").onclick = () => activate("startPicker");
 })();

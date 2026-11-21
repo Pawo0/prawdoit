@@ -59,7 +59,7 @@ Wtyczka wysyła **tylko tekst** widocznych postów/nagłówków (bez URL strony,
 użytkownika), paczkami co ~0,5 s. Serwer: embedding zdań → najbliższe twierdzenie ocenione jako fałsz /
 manipulacja → NLI (czy to samo twierdzenie, a nie zaprzeczenie) → prawdopodobieństwo powtórzenia obalonej
 informacji = σ(30·(cos − 0,80)) × zgodność NLI × waga oceny. Wynik cache'owany po haszu tekstu.
-≥ 0,60 → zasłona „kliknij, aby odsłonić”; 0,35–0,60 → odznaka z procentem; poniżej — nic (unikamy ogólnych
+≥ 0,60 → zasłona „kliknij, aby odsłonić”; 0,35–0,60 → przycisk ostrzeżenia; poniżej — nic (unikamy ogólnych
 ostrzeżeń, które obniżają zaufanie do prawdziwych informacji).
 
 ## Modele i dostawcy (wszystko lokalnie, CPU)
@@ -78,3 +78,17 @@ Kanały, korpus i reguły są niezależne od modelu.
 - Dopasowanie do fact-checków działa na poziomie twierdzeń; satyra, ironia i bardzo krótkie posty mogą być mylone.
 - Facebook/X zmieniają strukturę DOM — adaptery wtyczki wymagają utrzymania (fallback: przycisk „Wybierz fragment”).
 - OCR zrzutów ekranu i odwrotne wyszukiwanie obrazów nie są włączone (komunikowane jako ograniczenie techniczne).
+
+## Interfejs rozszerzenia
+- Główne wejście: stale widoczna lupka „Sprawdź” w prawym dolnym rogu zwykłych stron HTTP/HTTPS.
+  Wymaga przyznanego dostępu do witryn; strony wewnętrzne przeglądarki i inne chronione strony nie pozwalają na wstrzyknięcie skryptu.
+  Interfejs przywraca swój element po usunięciu przez stronę. Wstrzymanie ostrzeżeń nie usuwa lupki.
+- Menu lupki: wybór fragmentu, sprawdzanie zaznaczonego tekstu, strona Prawdowid i wstrzymanie ostrzeżeń na danej stronie.
+- Panel na pasku przeglądarki: konfiguracja ostrzeżeń, zasłon, trybu demonstracyjnego i adresów serwera/strony.
+- Automatyczny skan pozostaje ograniczony do dotychczas obsługiwanych portali, mediów społecznościowych i lokalnego demo.
+  Na pozostałych witrynach treść jest wysyłana dopiero po ręcznym wyborze. Na obsługiwanych stronach automatyczny skan
+  zaczyna się po zaakceptowaniu informacji o działaniu lub wcześniejszym zapisaniu tej zgody.
+- Wszystkie powierzchnie używają kremowego tła, kobaltu, ostrych ramek i nagłówków inspirowanych Macintoshem.
+  Geist Pixel Square 1.9.2 jest dołączony lokalnie (SIL OFL, `extension/fonts/LICENSE.txt`); font nie jest pobierany z CDN.
+  Dłuższe teksty pozostają w systemowym kroju sans-serif. Zasłony informują o dopasowaniu do znanego fact-checku,
+  nie przedstawiają go jako pełnej weryfikacji i zawsze umożliwiają odsłonięcie materiału.

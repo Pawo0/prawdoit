@@ -19,16 +19,17 @@ const result = {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.route('http://localhost:8000/**', route => route.fulfill({contentType: 'text/html', body: readFileSync(resolve(root, 'web/demo/feed.html'), 'utf8')}));
+  await page.route('**/fonts/GeistPixel-Square.woff2', route => route.fulfill({contentType: 'font/woff2', body: readFileSync(resolve(root, 'extension/fonts/GeistPixel-Square.woff2'))}));
   await page.goto('http://localhost:8000/demo/feed.html');
   await page.evaluate(() => {
-    window.calls = []; window.replies = []; window.fail = false;
+    window.calls = []; window.replies = []; window.quickReplies = []; window.fail = false;
     window.chrome = {runtime: {
-      getURL: () => 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><path d="M5 5h20v20H5z" fill="white"/></svg>'),
+      getURL: path => path.startsWith('fonts/') ? 'http://localhost:8000/' + path : 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><path d="M5 5h20v20H5z" fill="white"/></svg>'),
       onMessage: {addListener: fn => window.extensionMessage = fn},
       sendMessage: (msg, cb) => {
         window.calls.push(msg);
         if (msg.type === 'settings') return cb({ok: true, data: {autoScan: false, noticeSeen: true}});
-        if (msg.type === 'quick') return; // Deliberately stalled: full result must not wait for this.
+        if (msg.type === 'quick') return window.quickReplies.push(cb); // Deliberately stalled: full result must not wait for this.
         if (msg.type === 'check') return window.replies.push(cb);
         cb({ok: true});
       }
@@ -56,6 +57,27 @@ const result = {
   await sheet.locator('[data-s="full"]').click();
   assert.equal(await page.evaluate(() => window.calls.at(-1).id), 'test-result');
   await page.keyboard.press('Escape');
+  // Primary floating entry point remains visible and uses a short task-focused menu.
+  assert.equal(await page.locator('prawdowid-ui .fab').isVisible(), true);
+  await page.locator('prawdowid-ui .fab').click();
+  assert.equal(await page.locator('prawdowid-ui .menu [data-m="pick"]').isVisible(), true);
+  await screenshot('floating-menu');
+  await page.keyboard.press('Escape');
+  // A matched post uses the same flat window style, and can always be revealed.
+  await pick();
+  await page.evaluate(() => window.quickReplies.pop()({ok: true, data: [{id: 'pick', level: 'wysokie', risk: .9, match: {claim: 'Przykładowe twierdzenie', publisher: 'Źródło testowe', verdict: 'false', verdict_raw: 'fałsz', url: 'https://example.org', published_at: '2026-11-20'}}]}));
+  await reply(result);
+  await page.keyboard.press('Escape');
+  const overlay = page.locator('prawdowid-ui .ov');
+  await overlay.waitFor();
+  await screenshot('blocked-post');
+  assert.equal(await overlay.locator('[data-a="pokaz"]').isVisible(), true);
+  await overlay.locator('[data-a="pokaz"]').click();
+  assert.equal(await overlay.count(), 0);
+  assert.equal(await page.locator('prawdowid-ui .badge').isVisible(), true);
+  // Restore the floating UI if a page replaces/removes its root node.
+  await page.evaluate(() => [...document.querySelectorAll('prawdowid-ui')].find(h => h.shadowRoot.querySelector('.fab')).remove());
+  await page.locator('prawdowid-ui .fab').waitFor();
   assert.equal(await sheet.count(), 0);
   // Dismissing a pending check must not resurrect it when the server replies.
   await pick(); await page.keyboard.press('Escape'); await reply(result);
@@ -109,6 +131,7 @@ const result = {
   await page.keyboard.press('Escape');
   // Popup switch saves the preference and displays its saved value after reopening.
   await page.route('http://localhost:8000/popup.html', route => route.fulfill({contentType: 'text/html', body: readFileSync(resolve(root, 'extension/popup.html'), 'utf8').replace('<script src="popup.js"></script>', '')}));
+  await page.setViewportSize({width: 380, height: 820});
   await page.goto('http://localhost:8000/popup.html');
   await page.evaluate(() => {
     window.savedSettings = {mockMode: false, autoScan: true, mode: 'zaslon', apiBase: 'http://localhost:8000'};
@@ -123,6 +146,8 @@ const result = {
   });
   const popupScript = readFileSync(resolve(root, 'extension/popup.js'), 'utf8');
   await page.addScriptTag({content: popupScript});
+  await screenshot('toolbar-settings');
+  await page.locator('#testing summary').click();
   await page.locator('#mock').check();
   assert.equal(await page.evaluate(() => window.savedSettings.mockMode), true);
   assert.match(await page.locator('#mock-status').innerText(), /Włączony/);
@@ -130,6 +155,22 @@ const result = {
   // Re-run popup setup with the saved settings, as on reopening the extension popup.
   await page.addScriptTag({content: `(() => { ${popupScript} })()`});
   assert.equal(await page.locator('#mock').isChecked(), true);
+  // Generic sites get the main entry point, but their content is not automatically scanned.
+  await page.route('https://example.org/**', route => route.fulfill({contentType: 'text/html', body: '<h1>Zwykła strona</h1><p>To jest przykładowa dłuższa treść zwykłej strony do testowania ręcznego sprawdzania informacji.</p>'}));
+  await page.goto('https://example.org/');
+  await page.evaluate(() => {
+    window.calls = [];
+    window.chrome = {runtime: {
+      getURL: path => 'http://localhost:8000/' + path,
+      onMessage: {addListener() {}},
+      sendMessage: (msg, cb) => { window.calls.push(msg); cb({ok: true, data: {autoScan: true, noticeSeen: true, disabledSites: []}}); }
+    }, storage: {onChanged: {addListener() {}}}};
+  });
+  await page.addScriptTag({content: script});
+  await page.locator('prawdowid-ui .fab').waitFor();
+  await page.locator('prawdowid-ui .fab').click();
+  assert.match(await page.locator('prawdowid-ui .menu').innerText(), /wybór fragmentu/);
+  assert.equal(await page.evaluate(() => window.calls.filter(m => m.type === 'quick').length), 0);
   assert.deepEqual(errors, []);
   await browser.close();
   console.log('PASS: immediate checking, loading, result, evidence, errors/retry, stale replies, keyboard, mobile layout.');

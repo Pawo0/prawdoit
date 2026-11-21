@@ -1,24 +1,24 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><style>
-body{font:14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;width:330px;color:#101828}
-header{background:#1d3557;color:#fff;padding:12px 14px;display:flex;gap:8px;align-items:center;font-weight:800;font-size:16px}
-main{padding:12px 14px}
-button{font:inherit;font-weight:650;width:100%;border-radius:10px;padding:10px;cursor:pointer;border:0;background:#1d3557;color:#fff;margin:4px 0}
-button.s{background:#fff;color:#1d3557;border:1.5px solid #1d3557}
-label{display:flex;gap:8px;align-items:center;margin:8px 0}
-input[type=text]{width:100%;font:inherit;padding:6px 8px;border:1px solid #d0d5dd;border-radius:8px}
-.m{color:#475467;font-size:12px}
-.st{background:#f2f4f7;border-radius:10px;padding:8px 10px;margin:8px 0}
-.demo{background:#f4f3eb;border:2px solid #191919;padding:10px;margin-bottom:12px}
-.demo label{margin:0;font-weight:700;color:#3027cf}.demo p{margin:6px 0 0;font-size:12px;line-height:1.5}
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+@font-face{font-family:"Geist Pixel";src:url("fonts/GeistPixel-Square.woff2") format("woff2");font-display:swap}
+*{box-sizing:border-box}body{font:15px/1.5 system-ui,sans-serif;margin:0;width:360px;background:#f4f3eb;color:#191919;border:2px solid #191919;color-scheme:light}
+header{display:flex;align-items:center;gap:10px;border-bottom:2px solid #191919;padding:10px 14px;font:16px "Geist Pixel",monospace}header:before{content:"";width:14px;height:14px;border:2px solid #191919;background:#443cf2}header:after{content:"";height:13px;flex:1;background:repeating-linear-gradient(#191919 0 1px,transparent 1px 3px)}
+main{padding:20px}h1{font-size:26px;line-height:1.2;letter-spacing:-.03em;margin:0 0 12px;color:#3027cf}p{margin:8px 0 14px}.intro{font-size:15px}.hint,.m{color:#55554f;font-size:13px}
+button{font:650 15px/1.4 system-ui,sans-serif;width:100%;min-height:46px;border:1.5px solid #191919;border-radius:0;padding:10px 12px;cursor:pointer;background:#443cf2;color:white;margin:4px 0}button:hover{background:#3027cf}button.s{background:transparent;color:#191919}button.s:hover{background:#e3e7d5}button:disabled{opacity:.6;cursor:wait}
+:focus-visible{outline:3px solid #443cf2;outline-offset:3px}label{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-weight:600}input[type=checkbox]{width:20px;height:20px;margin:2px 0;flex-shrink:0;accent-color:#443cf2}input[type=text]{width:100%;font:14px system-ui;padding:10px;border:1px solid #191919;background:#fffef8;border-radius:0}
+details{border-top:1px solid #c4c3ba;margin-top:16px;padding-top:4px}summary{cursor:pointer;font-weight:650;padding:12px 0;min-height:46px}.st{font-size:13px;color:#55554f;border-top:1px solid #c4c3ba;padding-top:14px;margin-top:18px}.demo{background:#e3e7d5;padding:10px}.demo p{font-size:13px;margin-bottom:0}#action-status:not(:empty){padding:10px;background:#e3e7d5;font-size:14px}
 </style></head><body>
-<header><img src="icons/icon48.png" width="24" height="24" alt="">Prawdowid</header>
-<main>
-  <div class="demo"><label><input type="checkbox" id="mock" aria-describedby="mock-help"> Tryb demonstracyjny</label><p id="mock-help">Przykładowe wyniki bez backendu. Tekst nie jest wysyłany na serwer ani faktycznie weryfikowany.</p><p id="mock-status" role="status"></p></div>
-  <div class="st" id="st">Na tej karcie: …</div>
-  <button id="pick">🎯 Wybierz fragment do sprawdzenia</button>
-  <button class="s" id="web">Otwórz stronę Prawdowid</button>
-  <label><input type="checkbox" id="auto"> Automatycznie oznaczaj widoczne treści</label>
-  <label><input type="checkbox" id="mode"> Zasłaniaj treści o wysokim ryzyku (kliknij, by odsłonić)</label>
-  <details><summary class="m">Ustawienia serwera i strony</summary><label for="api">Adres serwera</label><input type="text" id="api" placeholder="http://localhost:8000"><label for="demo-web">Adres strony w trybie demo</label><input type="text" id="demo-web" placeholder="http://localhost:5500"><button class="s" id="save">Zapisz</button></details>
-  <p class="m">Oznaczamy wyłącznie treści zbieżne z informacjami już ocenionymi przez organizacje fact-checkingowe — nigdy całe portale czy autorów. Wysyłamy tylko tekst fragmentów, bez danych o Tobie.</p>
+<header>Prawdowid</header><main>
+<h1>Spokojnie. Sprawdź.</h1>
+<p class="intro">Na co dzień korzystaj z <b>lupki w prawym dolnym rogu strony</b>. Wybierz fragment, a pokażemy, co mówią źródła.</p>
+<button id="show">Pokaż lupkę na stronie</button>
+<p id="action-status" role="status"></p>
+<details><summary>Ustawienia sprawdzania</summary>
+<label><input type="checkbox" id="auto"><span>Ostrzegaj o podejrzanych treściach</span></label>
+<p class="hint">Automatyczne ostrzeżenia działają na obsługiwanych portalach i serwisach społecznościowych. Brak ostrzeżenia nie potwierdza prawdziwości.</p>
+<label><input type="checkbox" id="mode"><span>Zasłaniaj treści z silnym dopasowaniem do obalonej informacji</span></label>
+<p class="hint">Po wyłączeniu pokażemy tylko ostrzeżenie. Każdą zasłonę można odsłonić.</p>
+</details>
+<details id="testing"><summary>Tryb testowy bez serwera</summary><div class="demo"><label><input type="checkbox" id="mock" aria-describedby="mock-help">Tryb demonstracyjny</label><p id="mock-help">Fikcyjne wyniki do testowania wyglądu. Tekst pozostaje w przeglądarce.</p><p id="mock-status" role="status"></p></div></details>
+<details><summary>Połączenie i narzędzia</summary><label for="api">Adres serwera</label><input type="text" id="api" placeholder="http://localhost:8000"><label for="demo-web">Adres strony w trybie demo</label><input type="text" id="demo-web" placeholder="http://localhost:5500"><button class="s" id="save">Zapisz adresy</button><p id="save-status" role="status" class="hint"></p><button class="s" id="web">Otwórz stronę Prawdowid ↗</button><button class="s" id="pick">Wybierz fragment na stronie</button></details>
+<div class="st" id="st">Wczytywanie stanu…</div>
 </main><script src="popup.js"></script></body></html>

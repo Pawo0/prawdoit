@@ -8,6 +8,9 @@
   if (window.__prawdowid) return;
   window.__prawdowid = true;
   const api = globalThis.browser ?? globalThis.chrome;
+  // Font faces declared only inside a shadow stylesheet are ignored by some browsers.
+  new FontFace("Geist Pixel", `url("${api.runtime.getURL("fonts/GeistPixel-Square.woff2")}")`).load()
+    .then(font => document.fonts.add(font)).catch(() => {});
   const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new Promise(res => chrome.runtime.sendMessage(msg, res));
   const host = location.hostname.replace(/^www\./, "");
   const isMobile = matchMedia("(pointer: coarse)").matches;
@@ -50,54 +53,41 @@
   const adapter = isDemo ? {name: "demo", items: root => ADAPTERS.slice(0, 2).flatMap(a => a.items(root))} : ADAPTERS.find(a => a.test(host));
 
   // ------------------------------------------------------------------ UI (shadow DOM, isolated from page CSS)
+  const AUTO_SCAN_HOSTS = ["bankier.pl", "businessinsider.com.pl", "dorzeczy.pl", "dziennik.pl", "facebook.com", "fakt.pl", "gazeta.pl", "instagram.com", "interia.pl", "money.pl", "natemat.pl", "nczas.info", "niezalezna.pl", "o2.pl", "oko.press", "onet.pl", "pap.pl", "pch24.pl", "polsatnews.pl", "pudelek.pl", "radiozet.pl", "rmf24.pl", "rp.pl", "se.pl", "tvn24.pl", "tvp.info", "tvrepublika.pl", "twitter.com", "wp.pl", "wpolityce.pl", "wprost.pl", "wyborcza.pl", "wykop.pl", "x.com"];
+  const supportsAutoScan = isDemo || AUTO_SCAN_HOSTS.some(d => host === d || host.endsWith("." + d));
+
   const CSS = `
+  @font-face{font-family:"Geist Pixel";src:url("${api.runtime.getURL("fonts/GeistPixel-Square.woff2")}") format("woff2");font-display:swap;}
   :host{all:initial}
   *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  .ov{position:absolute;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:8px;overflow:hidden;
-      backdrop-filter:blur(9px) saturate(.6);-webkit-backdrop-filter:blur(9px);background:rgba(255,255,255,.55);border-radius:8px}
-  .card{background:#fff;border:2px solid #b42318;border-radius:14px;padding:14px 16px;max-width:520px;width:100%;color:#101828;
-        box-shadow:0 8px 24px rgba(16,24,40,.18);font-size:14px;line-height:1.45}
-  .card.m{border-color:#b54708}
-  .card.c{padding:8px 12px;font-size:13px}.card.c .q,.card.c .bar,.card.c .meta.x{display:none}.card.c .row{margin-top:6px}
-  .hd{display:flex;align-items:center;gap:8px;font-weight:800;color:#b42318;font-size:15px}
-  .card.m .hd{color:#b54708}
-  .q{margin:8px 0;padding:6px 10px;border-left:3px solid #d0d5dd;background:#f9fafb;font-style:italic;font-size:13px}
-  .meta{color:#475467;font-size:12px}
-  .bar{height:8px;background:#eaecf0;border-radius:99px;overflow:hidden;margin:6px 0 2px}
-  .bar>span{display:block;height:100%;background:#b42318}
-  .card.m .bar>span{background:#b54708}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  button{font:inherit;font-weight:650;font-size:13px;border-radius:10px;padding:8px 12px;cursor:pointer;border:1.5px solid #1d3557;background:#fff;color:#1d3557}
-  button.p{background:#1d3557;color:#fff}
-  .badge{position:absolute;top:6px;right:6px;z-index:2147483000;cursor:pointer;font-weight:800;font-size:12px;padding:4px 9px;
-         border-radius:99px;background:#fffaeb;color:#b54708;border:1.5px solid #b54708;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  .badge.h{background:#fef3f2;color:#b42318;border-color:#b42318}
-  .pop{position:absolute;top:34px;right:6px;z-index:2147483001;width:min(420px,92vw)}
-  .fab{position:fixed;right:18px;bottom:18px;z-index:2147483600;width:54px;height:54px;border-radius:50%;border:0;padding:0;
-       background:#1d3557;box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .fab img{width:30px;height:30px}
-  .fab .n{position:absolute;top:-4px;right:-4px;background:#b42318;color:#fff;font-size:11px;font-weight:800;border-radius:99px;padding:2px 6px}
-  .menu{position:fixed;right:18px;bottom:82px;z-index:2147483600;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);
-        padding:8px;width:280px;font-size:14px;color:#101828}
-  .menu button{display:block;width:100%;text-align:left;border:0;border-radius:8px;padding:10px 12px;font-weight:600}
-  .menu button:hover{background:#f2f4f7}
-  .menu .t{font-size:12px;color:#475467;padding:4px 12px 8px}
-  .hl{position:fixed;z-index:2147483500;pointer-events:none;border:3px solid #f79009;background:rgba(247,144,9,.12);border-radius:6px;transition:all .06s}
-  .hl.sel{border-color:#1d3557;background:rgba(29,53,87,.12)}
-  .pbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:2147483601;background:#101828;color:#fff;border-radius:14px;
-        padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:94vw;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-  .pbar button{border-color:#fff;background:transparent;color:#fff}
-  .pbar button.p{background:#fff;color:#101828}
-  .notice{position:fixed;left:18px;bottom:18px;z-index:2147483600;max-width:380px}
-  /* On-demand verification: Macintosh window chrome + cobalt editorial typography.
-     Scoped to the extension's shadow root; no page styles or remote assets. */
-  .fab{border-radius:0;background:#443cf2;border:2px solid #191919;box-shadow:4px 4px 0 #191919}
-  .menu{border:2px solid #191919;border-radius:0;background:#f4f3eb;box-shadow:5px 5px 0 #191919}
-  .menu button{border-radius:0;background:transparent;color:#191919}
-  .menu button:hover{background:#e3e7d5}
-  .hl{border:2px solid #443cf2;background:rgba(68,60,242,.1);border-radius:0;transition:none}
-  .pbar{background:#f4f3eb;color:#191919;border:2px solid #191919;border-radius:0;box-shadow:4px 4px 0 #191919;padding:10px 14px}
-  .pbar button{background:#f4f3eb;color:#191919;border:1px solid #191919;border-radius:0}
+  button{font:650 15px/1.4 system-ui,sans-serif;min-height:44px;border:1.5px solid #191919;border-radius:0;padding:9px 12px;cursor:pointer;background:#f4f3eb;color:#191919}
+  button:hover{background:#e3e7d5}button.p{background:#443cf2;color:#fff;border-color:#443cf2}button.p:hover{background:#3027cf}
+  :focus-visible{outline:3px solid #443cf2;outline-offset:3px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .ov{position:absolute;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:8px;overflow:auto;background:#eae9e2;border:1px solid #191919;
+    background-image:radial-gradient(#c4c3ba .6px,transparent .8px);background-size:4px 4px}
+  .card{background:#f4f3eb;border:2px solid #191919;border-radius:0;padding:16px;max-width:520px;width:100%;color:#191919;box-shadow:4px 4px 0 #191919;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+  .card .hd{font-size:20px;font-weight:750;color:#815000;line-height:1.25;display:flex;align-items:center;gap:10px}
+  .card .hd img{display:none}
+  .card .mini-title{font:14px "Geist Pixel",ui-monospace,monospace;border-bottom:1px solid #191919;padding-bottom:8px;margin-bottom:12px;color:#3027cf}
+  .card.c{padding:10px 12px;font-size:13px;box-shadow:2px 2px 0 #191919}.card.c .hd{font-size:17px}.card.c .mini-title{margin-bottom:6px;padding-bottom:4px}
+  .card.c .row{margin-top:8px}.card.c button{font-size:13px;min-height:40px;padding:7px 9px}
+  .q{margin:10px 0;padding:8px 10px;border-left:3px solid #443cf2;background:#eae9e2;font-size:14px}
+  .meta{color:#55554f;font-size:13px}.bar{height:8px;background:#d2d1c7;margin:8px 0}.bar>span{display:block;height:100%;background:#815000}
+  .badge{position:absolute;top:6px;right:6px;z-index:2147483000;cursor:pointer;font-size:13px;min-height:36px;padding:6px 10px;border-radius:0;background:#f4f3eb;color:#815000;border:2px solid #191919;box-shadow:2px 2px 0 #191919}
+  .pop{position:absolute;top:48px;right:6px;z-index:2147483001;width:min(420px,90vw)}
+  .fab{position:fixed;right:18px;bottom:18px;z-index:2147483603;min-height:56px;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 14px;background:#443cf2;color:white;border:2px solid #191919;box-shadow:4px 4px 0 #191919}
+  .fab svg{width:28px;height:28px;shape-rendering:crispEdges}.fab-label{font-size:16px}.fab .n{position:absolute;top:-10px;right:-5px;background:#f4f3eb;color:#191919;border:1px solid #191919;font:700 12px system-ui;padding:2px 6px}
+  .fab:hover{background:#3027cf;color:white}
+  .menu{position:fixed;right:18px;bottom:88px;z-index:2147483600;background:#f4f3eb;border:2px solid #191919;box-shadow:5px 5px 0 #191919;width:min(350px,calc(100vw - 36px));max-height:calc(100dvh - 110px);overflow:auto;font-size:15px;color:#191919}
+  .menu-header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:2px solid #191919;font:16px "Geist Pixel",monospace}
+  .menu-header:after{content:"";flex:1;height:13px;background:repeating-linear-gradient(#191919 0 1px,transparent 1px 3px)}
+  .menu-body{padding:18px}.menu-body p{margin:0 0 16px;line-height:1.5}.menu button{display:block;width:100%;text-align:left;margin-top:8px}
+  .menu .t{font-size:13px;color:#55554f;line-height:1.5}.menu-status{margin:14px 0;border-top:1px solid #c4c3ba;padding-top:12px}.menu details{border-top:1px solid #c4c3ba;margin-top:16px;padding-top:6px}.menu summary{cursor:pointer;min-height:44px;padding:10px 0;font-weight:650}
+  .hl{position:fixed;z-index:2147483500;pointer-events:none;border:2px solid #443cf2;background:rgba(68,60,242,.1)}
+  .pbar{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:2147483601;background:#f4f3eb;color:#191919;border:2px solid #191919;box-shadow:4px 4px 0 #191919;
+    padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:max-content;max-width:calc(100vw - 36px);font-size:15px}
+  .notice{position:fixed;left:18px;bottom:88px;z-index:2147483600;max-width:min(380px,calc(100vw - 36px))}
   .sheet{--ink:#191919;--paper:#f4f3eb;--blue:#443cf2;--sage:#e3e7d5;position:fixed;z-index:2147483602;
     right:24px;bottom:90px;width:min(620px,calc(100vw - 48px));max-height:calc(100dvh - 120px);
     display:flex;flex-direction:column;overflow:visible;border:2px solid var(--ink);color:var(--ink);background:var(--paper);
@@ -110,7 +100,7 @@
   .sheet button.p:hover{background:#3027cf}
   .sheet :focus-visible,.pbar :focus-visible,.menu :focus-visible{outline:3px solid #443cf2;outline-offset:3px}
   .sheet .window-bar{display:flex;align-items:center;gap:10px;padding:7px 9px;border-bottom:2px solid var(--ink);flex-shrink:0}
-  .sheet .window-name{font:700 13px/1.2 ui-monospace,"Courier New",monospace;letter-spacing:.02em;white-space:nowrap}
+  .sheet .window-name{font:400 15px/1.2 "Geist Pixel",ui-monospace,monospace;letter-spacing:.02em;white-space:nowrap}
   .sheet .window-stripes{flex:1;height:14px;background:repeating-linear-gradient(to bottom,var(--ink) 0 1px,transparent 1px 3px)}
   .sheet .window-close{padding:0;min-height:28px;width:28px;display:grid;place-items:center;font:22px/1 monospace}
   .sheet .window-mark{width:14px;height:14px;border:2px solid var(--ink);box-shadow:inset 3px 3px 0 var(--paper);background:var(--blue)}
@@ -170,7 +160,6 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
   const fmtDate = s => { if (!s) return "b.d."; const [y, m, d] = s.slice(0, 10).split("-"); return d ? `${d}.${m}.${y}` : s; };
   const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : "#"; } catch { return "#"; } };
-  const ICON = api.runtime.getURL("icons/icon48.png");
 
   function shadowHost(parent, fixed = false) {
     const h = document.createElement("prawdowid-ui");
@@ -191,22 +180,12 @@
   function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length; }
 
   function matchCard(r, text, cls, compact = false) {
-    const m = r.match; const pct = Math.round(r.risk * 100);
-    const what = m.verdict === "false" ? (r.level === "wysokie" ? "prawdopodobny fałsz" : "możliwy fałsz") : "może wprowadzać w błąd";
-    if (compact) return `<div class="card ${cls} c">
-      <div class="hd"><img src="${ICON}" width="18" height="18" alt="">Prawdowid: ${pct}% — ${what}</div>
-      <div>Zbieżne z: „${esc(m.claim.slice(0, 90))}${m.claim.length > 90 ? "…" : ""}” — <b>${esc(m.publisher)}: ${esc(m.verdict_raw || m.verdict)}</b></div>
-      <div class="row"><button class="p" data-a="analiza">Dlaczego? →</button>${cls === "h" ? '<button data-a="pokaz">Pokaż</button>' : '<button data-a="zamknij">Zamknij</button>'}</div></div>`;
-    return `<div class="card ${cls}">
-      <div class="hd"><img src="${ICON}" width="20" height="20" alt="">Prawdowid: ${what}</div>
-      <div style="margin-top:6px">Ta treść jest zbieżna z informacją, którą <b>${esc(m.publisher)}</b> ocenił(a) jako <b>„${esc(m.verdict_raw || m.verdict)}”</b> (${fmtDate(m.published_at)}).</div>
-      <div class="q">Sprawdzone twierdzenie: „${esc(m.claim.slice(0, 220))}”</div>
-      <div class="meta">Prawdopodobieństwo, że to powtórzenie obalonej informacji: <b>${pct}%</b></div>
-      <div class="bar"><span style="width:${pct}%"></span></div>
-      <div class="meta x">Ocena dotyczy treści, nie autora ani portalu. Model może się mylić — sprawdź źródło.</div>
-      <div class="row"><button class="p" data-a="analiza">Dlaczego? Zobacz analizę →</button>
-        <a href="${safeUrl(m.url)}" target="_blank" rel="noopener nofollow"><button data-a="zrodlo">Źródło (${esc(m.publisher)})</button></a>
-        ${cls === "h" ? '<button data-a="pokaz">Pokaż mimo to</button>' : '<button data-a="zamknij">Zamknij</button>'}</div></div>`;
+    const m = r.match;
+    return `<div class="card ${cls}${compact ? " c" : ""}">
+      <div class="mini-title">Prawdowid · ostrzeżenie</div><div class="hd">! Treść wymaga uwagi</div>
+      <p style="margin:8px 0">Podobną informację ${esc(m.publisher)} ocenił(a) jako <b>${esc(m.verdict_raw || (m.verdict === "false" ? "fałszywą" : "wprowadzającą w błąd"))}</b>.</p>
+      ${compact ? "" : `<div class="meta">To dopasowanie treści, a nie pełna weryfikacja. Sprawdź kontekst.</div><div class="meta">Źródło: ${esc(m.publisher)} · ${esc(fmtDate(m.published_at))}</div>`}
+      <div class="row"><button class="p" data-a="analiza">Sprawdź szczegóły</button><button data-a="${cls === "h" ? "pokaz" : "zamknij"}">${cls === "h" ? "Odsłoń treść" : "Zamknij"}</button></div></div>`;
   }
 
   function render(target, r, text) {
@@ -217,15 +196,15 @@
     const wire = (scope) => scope.querySelectorAll("[data-a]").forEach(b => b.addEventListener("click", ev => {
       ev.preventDefault(); ev.stopPropagation();
       const a = b.dataset.a;
-      if (a === "analiza") send({type: "openAnalysis", text});
+      if (a === "analiza") checkText(text, target);
       if (a === "zrodlo") window.open(safeUrl(r.match.url), "_blank", "noopener");
       if (a === "pokaz" || a === "zamknij") { root.querySelector(".ov, .pop")?.remove(); if (a === "pokaz") showBadge(); }
     }));
     function showBadge() {
-      const b = document.createElement("div");
+      const b = document.createElement("button");
       b.className = "badge" + (r.level === "wysokie" ? " h" : "");
       b.style.pointerEvents = "auto";
-      b.textContent = `⚠ ${Math.round(r.risk * 100)}% · ${r.match.verdict === "false" ? "możliwy fałsz" : "może wprowadzać w błąd"}`;
+      b.textContent = "! Sprawdź tę treść";
       b.title = "Prawdowid: kliknij, aby zobaczyć szczegóły";
       b.onclick = ev => { ev.preventDefault(); ev.stopPropagation();
         const ex = root.querySelector(".pop"); if (ex) { ex.remove(); return; }
@@ -236,7 +215,7 @@
       // the card must fit INSIDE the post, never spill over neighbouring content
       const hgt = target.getBoundingClientRect().height;
       const compact = hgt < 270;
-      if (hgt < 128) target.style.minHeight = "128px";
+      if (hgt < 210) target.style.minHeight = "210px";
       const ov = document.createElement("div"); ov.className = "ov"; ov.style.pointerEvents = "auto";
       ov.innerHTML = matchCard(r, text, "h", compact); root.append(ov); wire(ov);
       ov.addEventListener("click", e => e.stopPropagation());
@@ -277,7 +256,7 @@
   }
 
   function scan() {
-    if (!S.autoScan || S.disabledSites.includes(host) || !adapter) return;
+    if (!S.noticeSeen || !supportsAutoScan || !S.autoScan || S.disabledSites.includes(host) || !adapter) return;
     for (const {target, text} of adapter.items(document)) {
       if (!target || isOurs(target) || !text || text.length < 40) continue;
       const h = hash(text);
@@ -293,38 +272,51 @@
   const ui = shadowHost(document.documentElement, true);
   const fab = document.createElement("button");
   fab.className = "fab"; fab.title = "Prawdowid — sprawdź fragment"; fab.setAttribute("aria-label", "Prawdowid — sprawdź fragment");
-  fab.innerHTML = `<img src="${ICON}" alt=""><span class="n" hidden></span>`;
+  fab.innerHTML = `<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M8 3h12v3h4v4h3v10h-3v4h-4v3H8v-3H4v-4H1V10h3V6h4V3Z" stroke="currentColor" stroke-width="2"/><path d="m23 24 7 7M8 10h3V7h7" stroke="currentColor" stroke-width="3"/></svg><span class="fab-label">Sprawdź</span><span class="n" hidden></span>`;
+  fab.setAttribute("aria-expanded", "false");
+  // Keep the main entry point available even when a SPA replaces its DOM.
+  new MutationObserver(() => { if (!ui.host.isConnected) document.documentElement.append(ui.host); }).observe(document.documentElement, {childList: true});
   ui.root.append(fab);
   function updateFab() { const n = fab.querySelector(".n"); n.hidden = !flaggedCount; n.textContent = flaggedCount; }
 
   let menu = null;
   fab.addEventListener("click", e => { e.stopPropagation(); menu ? closeMenu() : openMenu(); });
-  function closeMenu() { menu?.remove(); menu = null; }
+  function closeMenu() { menu?.remove(); menu = null; fab.setAttribute("aria-expanded", "false"); }
   function openMenu() {
-    menu = document.createElement("div"); menu.className = "menu";
+    stopPicker(); closeSheet(false);
+    closeMenu();
+    menu = document.createElement("section"); menu.className = "menu"; menu.setAttribute("aria-label", "Sprawdzanie informacji");
+    fab.setAttribute("aria-expanded", "true");
     const sel = String(getSelection() || "").trim();
     const disabled = S.disabledSites.includes(host);
-    menu.innerHTML = `<div class="t"><b>Prawdowid</b> · oznaczono na tej stronie: ${flaggedCount}</div>
-      <button data-m="pick">🎯 Wybierz fragment do sprawdzenia</button>
-      ${sel.length > 20 ? '<button data-m="sel">✂️ Sprawdź zaznaczony tekst</button>' : ""}
-      <button data-m="toggle">${disabled || !S.autoScan ? "▶️ Włącz automatyczne oznaczanie tutaj" : "⏸ Wyłącz automatyczne oznaczanie tutaj"}</button>
-      <button data-m="mode">${S.mode === "zaslon" ? "👁 Tryb: zasłaniaj (zmień na: tylko oznaczaj)" : "🏷 Tryb: tylko oznaczaj (zmień na: zasłaniaj)"}</button>
-      <div class="t">Wysyłamy tylko tekst sprawdzanych fragmentów — bez danych o Tobie. Oceniamy treść, nie portal.</div>`;
+    const paused = disabled || !S.autoScan;
+    menu.innerHTML = `<div class="menu-header">Prawdowid</div><div class="menu-body">
+      <p>Nie wiesz, czy wierzyć tej informacji?</p>
+      <button class="p" data-m="pick">Wybierz fragment do sprawdzenia</button>
+      <p class="t" style="margin-top:8px">Potem kliknij tekst na stronie. Resztą zajmiemy się my.</p>
+      ${sel.length > 20 ? '<button data-m="sel">Sprawdź zaznaczony tekst</button>' : ""}
+      <button data-m="web">Otwórz stronę Prawdowid ↗</button>
+      <div class="menu-status t">${S.mockMode ? "Tryb demo · wyniki są przykładowe." : !supportsAutoScan ? "Na tej stronie sprawdzaj treści przez wybór fragmentu." : paused ? "Automatyczne ostrzeżenia są wstrzymane." : "Automatyczne ostrzeżenia są włączone."}</div>
+      ${supportsAutoScan ? `<details><summary>Ostrzeżenia na tej stronie</summary><button data-m="toggle">${paused ? "Włącz ostrzeżenia tutaj" : "Wstrzymaj ostrzeżenia tutaj"}</button><p class="t" style="margin-top:10px">Lupka i ręczne sprawdzanie pozostają dostępne.</p></details>` : ""}
+      <details><summary>Jak to działa?</summary><p class="t">${S.mockMode ? "W trybie demonstracyjnym tekst zostaje w przeglądarce. Wynik jest fikcyjny." : "Do sprawdzenia wysyłamy tekst fragmentu, bez adresu strony. Wynik opieramy na źródłach. Brak ostrzeżenia nie oznacza, że informacja jest prawdziwa."}</p><p class="t">Ustawienia znajdziesz pod ikoną Prawdowida na pasku przeglądarki.</p></details></div>`;
     menu.addEventListener("click", async e => {
       const m = e.target.closest("button")?.dataset.m; if (!m) return;
       closeMenu();
       if (m === "pick") startPicker();
       if (m === "sel") checkText(sel, null);
+      if (m === "web") send({type: "openWebsite", demo: !!S.mockMode});
       if (m === "toggle") {
-        const on = disabled || !S.autoScan;
+        const on = paused;
         S.disabledSites = on ? S.disabledSites.filter(h => h !== host) : [...S.disabledSites, host];
         if (on) S.autoScan = true;
         await send({type: "setSettings", data: {disabledSites: S.disabledSites, autoScan: S.autoScan}});
         if (on) scan();
+        openMenu();
       }
-      if (m === "mode") { S.mode = S.mode === "zaslon" ? "oznacz" : "zaslon"; await send({type: "setSettings", data: {mode: S.mode}}); }
     });
+    menu.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); fab.focus(); } });
     ui.root.append(menu);
+    menu.querySelector("button")?.focus({preventScroll: true});
   }
   document.addEventListener("click", e => { if (menu && !isOurs(e.target)) closeMenu(); }, true);
 
@@ -477,13 +469,13 @@
   // ------------------------------------------------------------------ first-run privacy notice + start
   function notice() {
     const n = document.createElement("div"); n.className = "notice";
-    n.innerHTML = `<div class="card" style="border-color:#1d3557"><div class="hd" style="color:#1d3557"><img src="${ICON}" width="20" height="20" alt="">Prawdowid działa na tej stronie</div>
-      <p style="margin:8px 0">Sprawdzamy widoczne posty i nagłówki, wysyłając <b>sam tekst</b> (bez Twoich danych, bez adresu strony) do serwera Prawdowida. Oznaczamy tylko treści zbieżne z informacjami obalonymi przez fact-checkerów — nigdy całe portale.</p>
-      <div class="row"><button class="p" data-n="ok">Rozumiem</button><button data-n="off">Wyłącz automatyczne oznaczanie</button></div></div>`;
+    n.innerHTML = `<div class="card"><div class="mini-title">Prawdowid · pierwsze uruchomienie</div><div class="hd">Sprawdź, zanim uwierzysz.</div>
+      <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy ostrzegać o widocznych treściach podobnych do obalonych informacji. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony. Brak ostrzeżenia nie oznacza, że treść jest prawdziwa."}</p>
+      <div class="row"><button class="p" data-n="ok">Włącz ostrzeżenia</button><button data-n="off">Sprawdzam tylko ręcznie</button></div></div>`;
     n.addEventListener("click", async e => {
       const a = e.target.closest("button")?.dataset.n; if (!a) return;
       S.noticeSeen = true;
-      if (a === "off") S.autoScan = false;
+      S.autoScan = a === "ok";
       await send({type: "setSettings", data: {noticeSeen: true, autoScan: S.autoScan}});
       n.remove();
       if (S.autoScan) scan();
@@ -494,13 +486,14 @@
   (async () => {
     const r = await send({type: "settings"});
     if (r?.ok) S = Object.assign(S, r.data);
-    if (!S.noticeSeen) notice();
+    if (!S.noticeSeen && supportsAutoScan) notice();
     scan();
     mo.observe(document.body, {childList: true, subtree: true});
   })();
   api.storage?.onChanged?.addListener(ch => {
     for (const k in ch) S[k] = ch[k].newValue;
+    if (menu) openMenu();
     if (ch.mockMode) closeSheet(); // Do not show a reply from the previous mode.
   });
-  api.runtime.onMessage.addListener(msg => { if (msg?.type === "startPicker") startPicker(); });
+  api.runtime.onMessage.addListener(msg => { if (msg?.type === "startPicker") startPicker(); if (msg?.type === "openMenu") openMenu(); });
 })();
