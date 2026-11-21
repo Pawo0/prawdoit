@@ -1,4 +1,4 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — wynik sprawdzenia</title></head><body>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3eb"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — wynik sprawdzenia</title></head><body class="analysis-page">
 <main class="wrap">
   <h1>Wynik sprawdzenia</h1>
   <div id="out"><div class="card" id="progress"><div class="row"><span class="spinner" aria-hidden="true"></span><b>Sprawdzamy…</b></div>
@@ -8,8 +8,9 @@
 <script>
 const out = document.getElementById("out");
 let stepTimer;
-function animate() { const li = [...document.querySelectorAll("#steps li")]; let i = 0;
-  stepTimer = setInterval(() => { li.forEach((x, j) => x.className = j < i ? "done" : j === i ? "now" : ""); i = Math.min(i + 1, li.length - 1); }, 450); }
+function animate() {
+  out.innerHTML = '<section class="window"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Sprawdzanie informacji</span><span class="window-lines" aria-hidden="true"></span></div><div class="loading-window"><h2>Sprawdzam, co mówią źródła.</h2><p role="status">Analizujemy treść i szukamy dowodów.</p><div class="loading-track" role="progressbar" aria-label="Trwa sprawdzanie"><span></span></div></div></section>';
+}
 async function main() {
   const m = location.pathname.match(/^\/analiza\/([a-f0-9]+)/);
   try {
@@ -26,6 +27,6 @@ async function main() {
     renderResult(res, out);
   } catch (e) { clearInterval(stepTimer); out.innerHTML = '<div class="err"><b>Błąd techniczny — to nie jest ocena treści.</b><p>' + esc(e.message) + '</p></div>'; }
 }
-document.getElementById("share").onclick = () => navigator.clipboard.writeText(location.href);
+document.getElementById("share").onclick = async () => { try { await navigator.clipboard.writeText(location.href); document.getElementById("share").textContent = "Link skopiowany"; } catch { document.getElementById("share").textContent = "Skopiuj adres z paska przeglądarki"; } };
 main();
 </script></body></html>

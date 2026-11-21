@@ -50,3 +50,16 @@ przygotowany niezależnie). Własny zbiór jury: ten sam format JSONL (`id, scen
 - Twierdzenia wymagające wnioskowania z wielu źródeł naraz (np. porównania między krajami z różnych tabel).
 - Ironia/satyra, bardzo krótkie posty, mocno skrócone parafrazy bez kluczowych nazw (np. bez nazwiska z oryginału).
 - Wiadomości z wieloma twierdzeniami: sprawdzamy do 3 najbardziej „sprawdzalnych” zdań.
+
+## Podgląd nowej strony bez modeli
+W katalogu `web/` uruchom `python3 -m http.server 5500`, następnie otwórz `http://localhost:5500`.
+Przycisk „Pokaż przykładowy wynik” pokazuje wyraźnie oznaczoną fikcyjną analizę bez żądania do API.
+Rzeczywiste sprawdzanie, zapisane analizy i kanały wymagają uruchomionego backendu. Gdy backend jest dostępny,
+formularz pokazuje wynik na tej samej stronie, z linkiem do zapisanej analizy. Bez backendu błędu połączenia
+nie przedstawia się jako oceny informacji.
+
+Strona główna i zapisane analizy korzystają z tego samego renderera: najpierw werdykt z symbolem, potem wyjaśnienie,
+sprawdzana treść i jawne dowody. Przesłanki, metryki, zgłoszenia błędów i audyt są rozwijane na życzenie.
+Tło jest statycznym wzorem CSS; ilustracja `web/static/hero-dither.png` została wygenerowana narzędziem ImageGen
+na podstawie referencji wizualnej użytkownika. Font Geist Pixel Square jest lokalny, z licencją w `web/static/fonts/LICENSE.txt`.
+Test strony bez backendu: `node eval/test_web_ui.cjs` (Playwright/Chromium; opcjonalnie `CHROME_PATH` i `SCREENSHOT_DIR`).

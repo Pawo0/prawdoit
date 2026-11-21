@@ -1,5 +1,5 @@
 // Prawdowid — shared front-end helpers (no framework, no build step).
-const VERDICT_ICON = {falszywe: "✕", wprowadzajace_w_blad: "!", potwierdzone: "✓", brak_dowodow: "?", nie_podlega_weryfikacji: "💬"};
+const VERDICT_ICON = {falszywe: "✕", wprowadzajace_w_blad: "!", potwierdzone: "✓", brak_dowodow: "?", nie_podlega_weryfikacji: "—"};
 const STANCE = {przeczy: "Przeczy twierdzeniu", popiera: "Potwierdza twierdzenie", kontekst: "Kontekst / temat pokrewny", neutralne: "Neutralne"};
 const TIER = {1: "Źródło pierwotne / urzędowe", 2: "Fact-checking / zweryfikowana baza", 3: "Media"};
 const STATUS = {blad_techniczny: "Błąd techniczny — to nie jest ocena treści", doprecyzuj: "Potrzebujemy doprecyzowania", poza_zakresem: "Poza zakresem"};
@@ -12,8 +12,12 @@ function safeUrl(u) { try { const x = new URL(u); return ["http:", "https:"].inc
 function chrome_() {
   const h = document.createElement("header");
   h.className = "top";
-  h.innerHTML = `<div class="wrap"><a class="logo" href="/"><img src="/static/logo.svg" alt="" width="28" height="28"> Prawdowid</a>
-    <a href="/">Sprawdź</a><a href="/czat">Czat (demo)</a><a href="/zrodla">Źródła</a><a href="/metodologia">Metodologia</a><a href="/moderator">Panel analityka</a></div>`;
+  h.innerHTML = `<div class="wrap"><a class="logo" href="/" aria-label="Prawdowid — strona główna"><span class="brand-mark" aria-hidden="true"></span>Prawdowid</a>
+    <nav class="site-nav" aria-label="Menu główne"><a href="/" ${location.pathname === "/" ? 'aria-current="page"' : ""}>Sprawdź</a><a href="/zrodla">Źródła</a><a class="nav-method" href="/metodologia">Jak to działa</a>
+    <details class="nav-more"><summary>Więcej</summary><div><a href="/metodologia">Jak to działa</a><a href="/czat">Czat demonstracyjny</a><a href="/o-projekcie">O projekcie</a><a href="/moderator">Panel analityka</a></div></details></nav><span class="nav-tail" aria-hidden="true"></span><span class="header-tag">Oparte na źródłach.</span></div>`;
+  const skip = document.createElement("a"); skip.className = "skip-link"; skip.href = "#main"; skip.textContent = "Przejdź do treści";
+  document.body.prepend(skip);
+  if (!document.querySelector("main").id) document.querySelector("main").id = "main";
   document.body.prepend(h);
   const f = document.createElement("footer");
   f.innerHTML = `Prawdowid — prototyp hackathonowy. Pomagamy ocenić informacje na podstawie jawnych źródeł; nie jesteśmy „sędzią prawdy”.
@@ -32,7 +36,7 @@ function sessionId() {
 async function runCheck(input, channel = "web") {
   const isUrl = /^https?:\/\/\S+$/.test(input.trim());
   const body = isUrl ? {url: input.trim(), channel, session: sessionId()} : {text: input, channel, session: sessionId()};
-  const r = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const r = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body), signal: AbortSignal.timeout(45000)});
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
   return r.json();
 }
@@ -41,11 +45,11 @@ function renderEvidence(e) {
   const fc = e.factcheck_verdict_raw ? `<div class="small">Sprawdzane twierdzenie: „${esc(e.factcheck_claim || e.title)}” — ocena źródła: <b>${esc(e.factcheck_verdict_raw)}</b>${e.same_claim === false ? " (Twoje twierdzenie jest jego zaprzeczeniem)" : ""}</div>` : "";
   return `<div class="ev">
     <div><span class="chip ${esc(e.stance)}">${STANCE[e.stance] || esc(e.stance)}</span><span class="chip tier${e.tier}">${TIER[e.tier] || ""}</span></div>
-    <div style="margin-top:6px"><a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(e.title)}</b></a></div>
+    <div class="evidence-title" style="margin-top:6px"><a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(e.title)}</b></a></div>
     <div class="small muted">${esc(e.publisher)} · ${esc(e.domain)} · opublikowano ${fmtDate(e.published_at)}${e.age_days != null ? ` (${e.age_days} dni temu)` : ""}</div>
     ${fc}
     <blockquote><span class="small muted">Fragment źródła (cytat):</span><br>„${esc(e.fragment)}”</blockquote>
-    <div class="small muted">Podobieństwo do twierdzenia: ${(e.similarity * 100).toFixed(0)}% · ${e.stance !== "kontekst" ? `pewność oceny fragmentu: ${(e.stance_score * 100).toFixed(0)}% · ` : ""}pobrano ${fmtDate(e.retrieved_at)} · <span title="${esc(e.license)}">${esc(shortLic(e.license))}</span> (<a href="/zrodla">warunki</a>)</div>
+    <details><summary>Dane źródła i analizy</summary><div class="small muted">Podobieństwo do twierdzenia: ${(e.similarity * 100).toFixed(0)}% · ${e.stance !== "kontekst" ? `pewność oceny fragmentu: ${(e.stance_score * 100).toFixed(0)}% · ` : ""}pobrano ${fmtDate(e.retrieved_at)} · <span title="${esc(e.license)}">${esc(shortLic(e.license))}</span> (<a href="/zrodla">warunki</a>)</div></details>
   </div>`;
 }
 
@@ -62,22 +66,20 @@ function renderClaim(c, i, n) {
     ? `<div style="margin-top:10px">Siła podstaw odpowiedzi: <b>${esc(c.strength_label)}</b></div>` : (c.verdict === "brak_dowodow" ? `<div style="margin-top:10px">Podstawa: <b>niewystarczająca</b>${c.reason_codes?.length ? " — " + c.reason_codes.map(r => REASON[r] || r).join("; ") : ""}</div>` : "");
   const shown = c.verdict === "brak_dowodow" && !c.conflicting ? c.evidence.slice(0, 3) : c.evidence;
   const evid = shown.length ? shown.map(renderEvidence).join("") + (shown.length < c.evidence.length ? `<p class="small muted">+${c.evidence.length - shown.length} dalszych materiałów pokrewnych pominięto.</p>` : "") : `<p class="muted">Brak materiałów źródłowych do pokazania.</p>`;
-  return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}">
-    <div class="small muted">${n > 1 ? `Twierdzenie ${i + 1} z ${n} · ` : ""}${KIND[c.kind] || c.kind}${c.high_risk ? ' · <span class="chip przeczy">temat wysokiego ryzyka</span>' : ""}</div>
-    <div class="claim-q">„${esc(c.claim)}”</div>
-    <span class="badge v-${c.verdict}"><span aria-hidden="true">${VERDICT_ICON[c.verdict]}</span> ${esc(c.verdict_label)}</span>
-    ${strength}
-    <div class="interp"><div class="small muted">Nasza interpretacja (na podstawie źródeł poniżej):</div><p style="margin:4px 0 0">${esc(c.explanation)}</p></div>
+  return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Wynik sprawdzenia${n > 1 ? ` · ${i + 1} z ${n}` : ""}</span><span class="window-lines" aria-hidden="true"></span></div><div class="claim-body">
+    <div class="verdict-hero"><span class="verdict-icon" aria-hidden="true">${VERDICT_ICON[c.verdict] || "?"}</span><div><div class="eyebrow">${n > 1 ? `Informacja ${i + 1} z ${n}` : "Co mówią źródła"}</div><h2>${esc(c.verdict === "falszywe" ? "Fałsz" : c.verdict_label)}</h2></div></div>
+    <p class="verdict-explanation">${esc(c.explanation)}</p>
+    <div class="claim-q"><small>Sprawdzana informacja</small>„${esc(c.claim)}”</div>
     ${c.missing_context ? `<div class="warn"><b>Brakujący kontekst:</b> ${esc(c.missing_context)}</div>` : ""}
     ${c.context_type && !c.missing_context ? `<div class="warn"><b>Rodzaj problemu:</b> ${esc(CTX[c.context_type] || c.context_type)}</div>` : ""}
     ${c.what_unknown ? `<div class="info"><b>Czego nie udało się ustalić:</b> ${esc(c.what_unknown)}${c.would_settle ? `<br><b>Co mogłoby to rozstrzygnąć:</b> ${esc(c.would_settle)}.` : ""}</div>` : ""}
-    ${c.premises.length ? `<details ${["falszywe", "potwierdzone", "wprowadzajace_w_blad"].includes(c.verdict) ? "open" : ""}><summary>Dlaczego taki wynik? (jawne przesłanki)</summary><ul class="premises">${c.premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}:</b> ${esc(p.value)}</li>`).join("")}</ul>
+    ${c.premises.length || strength ? `<details><summary>Dlaczego taki wynik?</summary>${strength}<ul class="premises">${c.premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}:</b> ${esc(p.value)}</li>`).join("")}</ul>
       <div class="small muted">Reguły: ${c.rules_fired.map(esc).join(", ") || "—"} · <a href="/metodologia#reguly">opis reguł</a></div></details>` : ""}
-    <h3 style="margin-top:20px">Co mówią źródła</h3>
+    <h3 class="evidence-heading">Źródła i dowody</h3>
     <p class="small muted">Dosłowne fragmenty źródeł — oddzielone od naszej interpretacji powyżej.</p>
     ${evid}
-    <details><summary>Ograniczenia tej odpowiedzi</summary><ul>${c.limitations.map(l => `<li>${esc(l)}</li>`).join("")}</ul></details>
-  </section>`;
+    ${c.limitations.length ? `<details><summary>Ograniczenia tej odpowiedzi</summary><ul>${c.limitations.map(l => `<li>${esc(l)}</li>`).join("")}</ul></details>` : ""}
+  </div></section>`;
 }
 
 function renderSignals(sig) {
@@ -100,27 +102,23 @@ const SPRAWDZ_STATIC = `<section class="card"><h2 style="margin-top:0">Sprawdź 
 
 function renderResult(res, el) {
   if (res.status !== "ok") {
-    el.innerHTML = `<div class="err"><b>${STATUS[res.status] || res.status}</b><p>${esc(res.status_message)}</p></div>`;
+    el.innerHTML = `<section class="window result-error" role="status"><h2>${esc(STATUS[res.status] || res.status)}</h2><p>${esc(res.status_message)}</p></section>`;
     return;
   }
   const t = res.timings_ms?.total_ms;
   el.innerHTML = `
-    <div class="card"><div class="small muted">Sprawdzana treść${res.url_meta ? ` (${esc(res.url_meta.domain)})` : ""}:</div>
-      <div>${esc(res.input_excerpt)}</div>
-      ${res.url_meta?.title ? `<div class="small muted">Tytuł strony: ${esc(res.url_meta.title)} · data: ${esc(res.url_meta.date || "brak")}</div>` : ""}
-      <div class="row small muted" style="margin-top:8px"><span>Wynik: <b>${esc(res.summary)}</b></span>${t ? `<span>· analiza trwała ${(t / 1000).toFixed(1)} s</span>` : ""}<span>· ID sprawdzenia: <span class="kbd">${esc(res.id)}</span></span></div>
-    </div>
+    ${res.demo ? '<div class="demo-banner"><b>Przykładowy wynik.</b> Dane są fikcyjne — to podgląd wyglądu, bez sprawdzania przez serwer.</div>' : ""}
     ${res.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join("")}
-    ${res.claims_overview ? `<p class="muted">${esc(res.claims_overview)}</p>` : ""}
     ${res.claims.map((c, i) => renderClaim(c, i, res.claims.length)).join("")}
     ${res.case_status ? `<div class="info"><b>Pętla informacji:</b> ${esc(res.case_status)}</div>` : ""}
-    ${renderSignals(res.signals)}
-    <section class="card"><h2 style="margin-top:0">Coś się nie zgadza?</h2>
+    ${res.signals?.length ? `<details class="card result-secondary"><summary>Jak samodzielnie rozpoznawać manipulację?</summary>${renderSignals(res.signals)}</details>` : ""}
+    <details class="card result-secondary"><summary>Zgłoś błąd w wyniku</summary>
       <p class="small">Jeśli uważasz, że wynik jest błędny lub źródło zostało źle zrozumiane — daj nam znać. Zgłoszenie trafi do analityka, a poprawki publikujemy w rejestrze korekt.</p>
       <form id="fb" class="row"><input id="fbm" maxlength="1000" required placeholder="Co jest nie tak?" style="flex:1;font:inherit;padding:10px;border-radius:10px;border:1px solid #d0d5dd"><button>Zgłoś błąd</button></form>
-      <p id="fbok" class="small" hidden>Dziękujemy — zgłoszenie zapisano.</p></section>
+      <p id="fbok" class="small" role="status" hidden>Dziękujemy — zgłoszenie zapisano.</p></details>
     <p class="small muted">Odpowiedź przygotował automatyczny system wykorzystujący modele sztucznej inteligencji do wyszukiwania i porównywania źródeł. Ocena wynika z jawnych reguł, nie z „opinii” modelu.</p>
-    <details class="card"><summary>Zapis przebiegu sprawdzenia (audyt)</summary>
+    <details class="card result-secondary"><summary>Przebieg sprawdzenia i dane techniczne</summary>
+      <p class="result-meta">Sprawdzana treść: ${esc(res.input_excerpt)}<br>ID: ${esc(res.id)}${t ? ` · Czas: ${(t / 1000).toFixed(1)} s` : ""}</p>
       <table><tr><th>Czas utworzenia</th><td>${esc(res.created_at)}</td></tr>
       <tr><th>Kanał</th><td>${esc(res.channel)}</td></tr>
       <tr><th>Czasy etapów [ms]</th><td>${Object.entries(res.timings_ms || {}).map(([k, v]) => `${esc(k)}: ${Math.round(v)}`).join(" · ")}</td></tr>
@@ -131,9 +129,12 @@ function renderResult(res, el) {
       <p class="small"><button type="button" class="secondary" id="delsess">Usuń historię moich sprawdzeń</button></p>
     </details>`;
   el.querySelector("#fb")?.addEventListener("submit", async e => { e.preventDefault();
-    await fetch("/api/feedback", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({check_id: res.id, message: el.querySelector("#fbm").value})});
+    if (res.demo) { el.querySelector("#fbok").hidden = false; el.querySelector("#fbok").textContent = "To podgląd demonstracyjny. Zgłoszenie nie zostało wysłane."; return; }
+    const response = await fetch("/api/feedback", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({check_id: res.id, message: el.querySelector("#fbm").value})});
+    if (!response.ok) { el.querySelector("#fbok").hidden = false; el.querySelector("#fbok").textContent = "Nie udało się zapisać zgłoszenia. Spróbuj ponownie."; return; }
     el.querySelector("#fb").hidden = true; el.querySelector("#fbok").hidden = false; });
   el.querySelector("#delsess")?.addEventListener("click", async () => {
+    if (res.demo) { alert("Podgląd nie zapisuje historii na serwerze."); return; }
     const r = await fetch("/api/session/" + sessionId(), {method: "DELETE"}); const d = await r.json();
     alert(`Usunięto ${d.deleted_checks} zapisanych sprawdzeń z tej przeglądarki.`); });
 }
