@@ -35,8 +35,12 @@
         if (h1) { const lead = root.querySelector('[class*="lead"], [class*="Lead"], article p'); out.push({target: h1.parentElement || h1, text: txt(h1) + (lead ? ". " + txt(lead) : "")}); }
         body.querySelectorAll("p, blockquote").forEach(p => { const t = txt(p); if (t.length >= 60 && t.length < 1500) out.push({target: p, text: t}); });
         // teaser headlines on portal home pages
-        root.querySelectorAll("a h2, a h3, h2 a, h3 a, a[class*='title'], [class*='title'] > a").forEach(e => {
-          const t = txt(e); if (t.length >= 25 && t.length <= 240) out.push({target: e.closest("article, li") || e.closest("a") || e, text: t});
+        const seenT = new Set();
+        root.querySelectorAll("h2, h3, h4, a[class*='title' i], [class*='title' i] > a, [class*='headline' i]").forEach(e => {
+          if (e.closest("nav, footer, [role='navigation'], [aria-hidden='true']")) return;
+          const t = txt(e); if (t.length < 25 || t.length > 240 || seenT.has(t)) return;
+          seenT.add(t);
+          out.push({target: e.closest("article, li") || e.closest("a") || e, text: t});
         });
         return out;
       } },

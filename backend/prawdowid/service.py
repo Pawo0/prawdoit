@@ -14,7 +14,7 @@ from datetime import date, datetime, timezone
 from . import llm, store
 from .claims import extract_claims
 from .config import settings
-from .engine import verify_claim
+from .engine import same_claim, verify_claim
 from .fetch import FetchError, fetch_url
 from .index import INDEX
 from .nli import NLI_MODEL
@@ -236,7 +236,7 @@ def quick_score(req: QuickRequest) -> list[QuickResult]:
                 _cache(h, r)
         fwd = NLI_MODEL.score([(seg, INDEX.docs[di].claim or INDEX.docs[di].title) for _, _, di, _, seg in pending_nli])
         # reverse direction only where the forward pass hints at a contradiction (negation check) — saves CPU
-        need = [i for i, f in enumerate(fwd) if f.contra >= 0.5]
+        need = [i for i, f in enumerate(fwd) if f.contra >= 0.3]
         rev_scores = NLI_MODEL.score([(INDEX.docs[pending_nli[i][2]].claim or INDEX.docs[pending_nli[i][2]].title,
                                        pending_nli[i][4]) for i in need])
         rev = list(fwd)
@@ -246,12 +246,11 @@ def quick_score(req: QuickRequest) -> list[QuickResult]:
             d = INDEX.docs[di]
             # P(content repeats the debunked claim): similarity (calibrated logistic) x does the post ASSERT it (NLI)
             p_match = 1 / (1 + math.exp(-(sim - 0.78) * 25))
-            if min(s.contra, s_rev.contra) >= 0.8:
-                agree = 0.0  # the post states the opposite (e.g. it debunks the claim) — never flag it
-            elif s.entail >= s.contra:
-                agree = 0.30 + 0.70 * s.entail
+            decision = same_claim(sim, s, s_rev, d.claim or d.title, seg, d.source_type)
+            if decision is not True:
+                agree = 0.0  # opposite (e.g. the post debunks it) or merely related — never flag
             else:
-                agree = 0.15 * (1 - s.contra)
+                agree = 0.30 + 0.70 * s.entail
             risk = round(p_match * agree * RISK_W[d.verdict], 3)
             level = "wysokie" if risk >= 0.6 else "srednie" if risk >= 0.35 else "brak"
             r = QuickResult(

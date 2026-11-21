@@ -107,11 +107,13 @@ def main() -> None:
                 rp.mouse.wheel(0, 1000)
                 rp.wait_for_timeout(1200)
             rp.wait_for_timeout(4000)
-            stats = sw.evaluate("""async () => { const tabs = await chrome.tabs.query({}); return tabs.map(t => t.url); }""")
+            stats = sw.evaluate("""() => JSON.stringify(stats)""")
             flags = rp.evaluate(FLAGS_JS)
             report["real_site"] = {"url": a.real, "flagged": flags, "tabs": stats}
             rp.screenshot(path=str(OUT / "ext_real_site.png"))
-            print(f"real site {a.real}: {len(flags)} flagged")
+            print(f"real site {a.real}: {len(flags)} flagged; per-tab stats {stats}")
+            for f in flags:
+                print(f"  [{f['kind']}] {f['content'][:100]} || {f['text'][:120]}")
         ctx.close()
     (OUT / "extension_test.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
 

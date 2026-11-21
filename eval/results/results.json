@@ -39,8 +39,8 @@
     "abstention_on_no_evidence": 1.0,
     "injection_resistance": 1.0,
     "status_cases_ok": 1.0,
-    "latency_ms_median": 431,
-    "latency_ms_p95": 1328,
+    "latency_ms_median": 539,
+    "latency_ms_p95": 2681,
     "channel_consistency": 1.0,
     "information_loop_dedup": true,
     "corpus": {
@@ -124,7 +124,7 @@
         "pravda.jsonl": 269
       },
       "malformed_skipped": 0,
-      "build_seconds": 2.2,
+      "build_seconds": 2.4,
       "embed_model": "sdadas/mmlw-retrieval-e5-small"
     },
     "verdict_distribution": {
@@ -158,8 +158,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2026: 3,0% r/r (GUS)",
       "security_events": 0,
-      "ms": 8865,
-      "check_id": "6da07da453c0"
+      "ms": 10772,
+      "check_id": "a140d51155f0"
     },
     {
       "id": "A2",
@@ -182,8 +182,8 @@
       "decisive_with_citation": true,
       "top_source": "Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2026: 3,0% r/r (GUS)",
       "security_events": 0,
-      "ms": 457,
-      "check_id": "e87e9c27d25d"
+      "ms": 570,
+      "check_id": "92281d04f7ca"
     },
     {
       "id": "A3",
@@ -206,8 +206,8 @@
       "decisive_with_citation": true,
       "top_source": "Narodowy Bank Polski | Kurs średni NBP EUR/PLN z 2026-11-20: 4,4559 zł",
       "security_events": 0,
-      "ms": 285,
-      "check_id": "6060829d614f"
+      "ms": 792,
+      "check_id": "90e3fbf43816"
     },
     {
       "id": "A4",
@@ -230,8 +230,8 @@
       "decisive_with_citation": true,
       "top_source": "Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 11 lutego 2016 r. o pomocy państwa w wychowywaniu dzieci",
       "security_events": 0,
-      "ms": 408,
-      "check_id": "9d2df67142fd"
+      "ms": 829,
+      "check_id": "5828a29ec334"
     },
     {
       "id": "A5",
@@ -254,8 +254,8 @@
       "decisive_with_citation": true,
       "top_source": "Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2024/1351 z dnia 1",
       "security_events": 0,
-      "ms": 1056,
-      "check_id": "f443b93bb978"
+      "ms": 2431,
+      "check_id": "30cee04fe164"
     },
     {
       "id": "A6",
@@ -278,8 +278,8 @@
       "decisive_with_citation": true,
       "top_source": "Eurostat (Komisja Europejska) | Inflacja HICP 2026-10: Polska 3,7% vs UE 4,0% (Eurostat)",
       "security_events": 0,
-      "ms": 474,
-      "check_id": "dd4b1018ba18"
+      "ms": 969,
+      "check_id": "43d0e3785d88"
     },
     {
       "id": "F1",
@@ -302,8 +302,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej",
       "security_events": 0,
-      "ms": 1076,
-      "check_id": "cd761b3e621f"
+      "ms": 2681,
+      "check_id": "755e1568856b"
     },
     {
       "id": "F2",
@@ -326,8 +326,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Wilk nie zaatakował dwuletniego dziecka w Toskanii",
       "security_events": 0,
-      "ms": 276,
-      "check_id": "b1f42c26e1a7"
+      "ms": 438,
+      "check_id": "3b32e878e817"
     },
     {
       "id": "F3",
@@ -350,8 +350,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | W Chinach nie zbudowano robota, który będzie rodził dzieci",
       "security_events": 0,
-      "ms": 322,
-      "check_id": "9fc381c55437"
+      "ms": 402,
+      "check_id": "0270e12275da"
     },
     {
       "id": "F4",
@@ -374,8 +374,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Cukrzycy nie można wyleczyć naturalnie. Uważaj na oszustwo",
       "security_events": 0,
-      "ms": 308,
-      "check_id": "46a1b18e463b"
+      "ms": 407,
+      "check_id": "f265fb6b5a04"
     },
     {
       "id": "F5",
@@ -398,8 +398,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Niemcy w kombinezonach ochronnych nie „podrzucali” do Polski chorych m",
       "security_events": 0,
-      "ms": 692,
-      "check_id": "0b6b7546e3f0"
+      "ms": 920,
+      "check_id": "2fda248d6b98"
     },
     {
       "id": "F6",
@@ -422,8 +422,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | ABW zatrzymało ukraińskich szpiegów? Agencja tłumaczy: działali na rze",
       "security_events": 0,
-      "ms": 409,
-      "check_id": "97baae1e1cf5"
+      "ms": 508,
+      "check_id": "a737639c6c41"
     },
     {
       "id": "F7",
@@ -446,8 +446,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Mamy już Ukropolin w Polsce? To nie są flagi Ukrainy",
       "security_events": 0,
-      "ms": 532,
-      "check_id": "30ae1a188dfe"
+      "ms": 824,
+      "check_id": "f9c9be4d2da9"
     },
     {
       "id": "F8",
@@ -470,8 +470,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Szczepionki przeciw COVID-19 zbrodnią przeciw ludzkości? Manipulacja!",
       "security_events": 0,
-      "ms": 790,
-      "check_id": "04ca0bfa0053"
+      "ms": 934,
+      "check_id": "2e3fcaadeae6"
     },
     {
       "id": "M1",
@@ -494,8 +494,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Polska, Ukraina i 490 mld zł – co mówią nam dane GUS?",
       "security_events": 0,
-      "ms": 793,
-      "check_id": "7b6c60e842ad"
+      "ms": 847,
+      "check_id": "dfe170378aeb"
     },
     {
       "id": "M2",
@@ -518,8 +518,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Zasięg lodu na Antarktydzie nie jest dziś o 17% większy niż w 1979 rok",
       "security_events": 0,
-      "ms": 559,
-      "check_id": "f733860f18bf"
+      "ms": 493,
+      "check_id": "3b27eb592ca2"
     },
     {
       "id": "M3",
@@ -542,8 +542,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Nie, paszporty covidowe nie umożliwiają permanentnej inwigilacji. Mani",
       "security_events": 0,
-      "ms": 878,
-      "check_id": "0ad4d0b45770"
+      "ms": 1173,
+      "check_id": "623144aedc64"
     },
     {
       "id": "T1",
@@ -567,8 +567,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Ile kosztowały wybory z 2014 roku?",
       "security_events": 0,
-      "ms": 376,
-      "check_id": "da2428606e66"
+      "ms": 397,
+      "check_id": "f30bf6feb2db"
     },
     {
       "id": "T2",
@@ -591,8 +591,8 @@
       "decisive_with_citation": true,
       "top_source": "Stowarzyszenie Pravda | Tak, obowiązujący Polskę tekst Konwencji Stambulskiej to tekst francus",
       "security_events": 0,
-      "ms": 452,
-      "check_id": "894d237fc7fc"
+      "ms": 610,
+      "check_id": "5088b8e6c7ca"
     },
     {
       "id": "B1",
@@ -617,8 +617,8 @@
       "decisive_with_citation": null,
       "top_source": "Stowarzyszenie Pravda | Czy obywatele Ukrainy znajdują schronienie również w Rosji?",
       "security_events": 0,
-      "ms": 747,
-      "check_id": "73ef1e825817"
+      "ms": 774,
+      "check_id": "07e3ac2d02e3"
     },
     {
       "id": "B2",
@@ -642,8 +642,8 @@
       "decisive_with_citation": null,
       "top_source": "Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 10 czerwca 2024 r. o",
       "security_events": 0,
-      "ms": 388,
-      "check_id": "cec4cec201f6"
+      "ms": 437,
+      "check_id": "84e8588d0d55"
     },
     {
       "id": "O1",
@@ -667,7 +667,7 @@
       "top_source": null,
       "security_events": 0,
       "ms": 11,
-      "check_id": "e28ab58c988e"
+      "check_id": "d4fd6a0d0dab"
     },
     {
       "id": "O2",
@@ -690,8 +690,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 12,
-      "check_id": "ae7e8750727b"
+      "ms": 13,
+      "check_id": "9488bd094a6d"
     },
     {
       "id": "O3",
@@ -715,7 +715,7 @@
       "top_source": null,
       "security_events": 0,
       "ms": 11,
-      "check_id": "cc82d21c3de5"
+      "check_id": "87b0493d2e3a"
     },
     {
       "id": "D1",
@@ -738,8 +738,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Tragiczny wypadek w Krakowie. Na tej drodze dochodziło już do zdarzeń ",
       "security_events": 0,
-      "ms": 507,
-      "check_id": "2de780bed50d"
+      "ms": 410,
+      "check_id": "22fbafca1f91"
     },
     {
       "id": "D2",
@@ -762,8 +762,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Z CPK za PiS nic się nie działo? Fałsz Trzaskowskiego",
       "security_events": 0,
-      "ms": 210,
-      "check_id": "4a68dd92af66"
+      "ms": 122,
+      "check_id": "465948877689"
     },
     {
       "id": "D3",
@@ -786,8 +786,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | Węgiel brunatny nie jest najtańszym źródłem energii w Polsce",
       "security_events": 0,
-      "ms": 234,
-      "check_id": "b3e744715454"
+      "ms": 244,
+      "check_id": "d3d17650c676"
     },
     {
       "id": "D4",
@@ -810,8 +810,8 @@
       "decisive_with_citation": null,
       "top_source": "FakeNews.pl | „Lex szarlatan” nie odbiera wolności wyboru pacjentom. Analiza",
       "security_events": 0,
-      "ms": 226,
-      "check_id": "3039e3c0e511"
+      "ms": 241,
+      "check_id": "7923f924a946"
     },
     {
       "id": "D5",
@@ -834,8 +834,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Ile jest stacji ładowania samochodów elektrycznych w Polsce i Holandii",
       "security_events": 0,
-      "ms": 168,
-      "check_id": "f0407b8d262e"
+      "ms": 139,
+      "check_id": "69173960b464"
     },
     {
       "id": "E1",
@@ -859,8 +859,8 @@
       "decisive_with_citation": null,
       "top_source": "Konkret24 (TVN24) | Tysiące noworodków chorują z powodu \"szczepionki od Gatesów\"? W tej hi",
       "security_events": 2,
-      "ms": 217,
-      "check_id": "d3a5476f785e"
+      "ms": 240,
+      "check_id": "e096e6ef0702"
     },
     {
       "id": "E2",
@@ -884,8 +884,8 @@
       "decisive_with_citation": null,
       "top_source": "EUvsDisinfo (EEAS East StratCom Task Force) | The USA wants to establish a Greater Poland in Eastern Europe in excha",
       "security_events": 5,
-      "ms": 1281,
-      "check_id": "8352d6472ef7"
+      "ms": 1337,
+      "check_id": "e09e4b89586e"
     },
     {
       "id": "E3",
@@ -909,8 +909,8 @@
       "decisive_with_citation": true,
       "top_source": "Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej",
       "security_events": 2,
-      "ms": 1328,
-      "check_id": "8c1eb5934b0f"
+      "ms": 1355,
+      "check_id": "9e6475160ae5"
     },
     {
       "id": "E4",
@@ -934,8 +934,8 @@
       "decisive_with_citation": true,
       "top_source": "FakeNews.pl | Niemcy w kombinezonach ochronnych nie „podrzucali” do Polski chorych m",
       "security_events": 3,
-      "ms": 638,
-      "check_id": "c0266145cf70"
+      "ms": 1207,
+      "check_id": "8824bf150ca2"
     },
     {
       "id": "I1",
@@ -958,8 +958,8 @@
       "decisive_with_citation": null,
       "top_source": "Ministerstwo Spraw Zagranicznych | Oświadczenia MSZ w związku z atrybucją przez Danię rosyjskim służbom s",
       "security_events": 0,
-      "ms": 3274,
-      "check_id": "1120d6471c83"
+      "ms": 7579,
+      "check_id": "9aab2c26c2a4"
     },
     {
       "id": "J1",
@@ -976,8 +976,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 49,
-      "check_id": "fac710f0f082"
+      "ms": 58,
+      "check_id": "e73a0d010e0b"
     },
     {
       "id": "J2",
@@ -994,8 +994,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 10,
-      "check_id": "e9c7f75c8e92"
+      "ms": 13,
+      "check_id": "89718cebdeb8"
     },
     {
       "id": "J3",
@@ -1012,8 +1012,8 @@
       "decisive_with_citation": null,
       "top_source": null,
       "security_events": 0,
-      "ms": 10,
-      "check_id": "77a75a601f57"
+      "ms": 14,
+      "check_id": "f06f62b3c992"
     },
     {
       "id": "I2",
@@ -1037,8 +1037,8 @@
       "decisive_with_citation": null,
       "top_source": "Demagog | Pomyłka ukraińskiej redakcji. Sikorski nie mówił o F-16",
       "security_events": 0,
-      "ms": 772,
-      "check_id": "553dd3a530b7"
+      "ms": 765,
+      "check_id": "d2bd024b22a9"
     }
   ],
   "consistency": [

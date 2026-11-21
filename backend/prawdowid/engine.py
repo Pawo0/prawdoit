@@ -287,6 +287,22 @@ def numeric_stance(claim: str, source: str) -> str | None:
     return None
 
 
+def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
+    """Single decision used by BOTH the full analysis and the browser extension, so the extension never flags
+    content that the full analysis would not match. True = the user asserts the checked claim; False = the user
+    asserts its opposite; None = only related (context, never a verdict or a flag)."""
+    incident = source_type == "incident"  # long, multi-part (often English) narratives -> stricter
+    lex = _relevance(set(tokens(checked_claim)), user_text)
+    if cos >= 0.85 and min(fwd.contra, rev.contra) >= 0.80:
+        return False
+    if max(fwd.contra, rev.contra) < 0.5 and (
+            (cos >= 0.88 and not incident)
+            or (cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
+            or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):
+        return True
+    return None
+
+
 # ======================================================================================================== main
 def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     high_risk = bool(HIGH_RISK.search(claim.text))
@@ -369,16 +385,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         if d.source_type in ("factcheck", "incident"):
             nc, same = c.nli_claim, None
             if c.is_claim_match and nc is not None:
-                rev = c.nli_claim_rev or nc
-                lex = _relevance(set(tokens(d.claim or "")), claim.query)  # share of the checked claim's words used
-                incident = d.source_type == "incident"
-                if c.claim_cos >= 0.85 and min(nc.contra, rev.contra) >= 0.80:
-                    same = False  # the user states the opposite of the checked claim (contradiction both ways)
-                elif max(nc.contra, rev.contra) < 0.5 and (
-                        (c.claim_cos >= 0.88 and not incident)  # near-paraphrase, no contradiction
-                        or (c.claim_cos >= 0.86 and nc.entail >= (0.8 if incident else 0.5))  # user asserts it
-                        or (not incident and c.claim_cos >= 0.80 and nc.entail >= 0.8 and lex >= 0.4)):
-                    same = True
+                same = same_claim(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
