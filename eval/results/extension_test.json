@@ -1,7 +1,7 @@
 {
   "demo_feed": {
     "flagged": 5,
-    "seconds_to_flags": 13.9,
+    "seconds_to_flags": 14.0,
     "items": [
       {
         "kind": "zaslona",
@@ -15,7 +15,7 @@
       },
       {
         "kind": "zaslona",
-        "text": "Prawdowid: 84% — prawdopodobny fałsz\nZbieżne z: „Polska straciła 490 mld zł bo pomaga Ukrainie” — Demagog: Brakujący kontekst\nDlaczego? →\nPokaż",
+        "text": "Prawdowid: 84% — może wprowadzać w błąd\nZbieżne z: „Polska straciła 490 mld zł bo pomaga Ukrainie” — Demagog: Brakujący kontekst\nDlaczego? →\nPokaż",
         "content": "Anna S. 3 dni Przez pomoc dla Ukrainy Polska straciła już 490 miliardów złotych. Kto za to zapłaci? My wszyscy. Lubię to"
       },
       {
@@ -31,18 +31,8 @@
     ]
   },
   "picker": {
-    "seconds": 2.1,
+    "seconds": 0.7,
     "sheet": "Prawdowid · Brak wystarczających dowodów\nBrak wystarczających dowodów\n„Szczepionki przeciw COVID zawierają mikrochipy, dzięki którym można śledzić zaszczepionych.”\nNie znaleźliśmy w naszym katalogu źródeł wystarczających materiałów, by potwierdzić albo obalić tę informację. To nie znaczy, że jest prawdziwa, ani że jest fałszywa. Znaleźliśmy tylko materiały na pokrewny temat: „Szczepionki powodem zachorowań na RSV w Australii? Fałsz!” (Demagog); „Nie, szczepienia przeciw grypie nie zwiększają ryzyka zachorowania na koronawirusa.” (Stowarzyszenie Pravda).\nDemagog, 03.08.2022 — Szczepionki powode"
   },
-  "analysis_page_url": "http://127.0.0.1:8000/analiza/8bdc6e04561d",
-  "real_site": {
-    "url": "https://www.onet.pl",
-    "flagged": [],
-    "tabs": [
-      null,
-      "http://127.0.0.1:8000/demo/feed.html",
-      "http://127.0.0.1:8000/analiza/8bdc6e04561d",
-      null
-    ]
-  }
+  "analysis_page_url": "http://127.0.0.1:8000/analiza/1f941eb2a595"
 }
