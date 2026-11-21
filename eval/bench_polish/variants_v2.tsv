@@ -1,0 +1,289 @@
+# seed_no|type|text   — HELD-OUT split (v2). Hand-written BEFORE any system output was seen; frozen. Never edit a line: record problems in errata_v2.tsv.
+# types: inflect question nodiac colloq para short typo  (positives: expected = verdict implied by Demagog's rating; fixed rotation, 4 types per claim)
+#        neg (opposite of a false/true claim: expected verdict flips)
+#        hardneg:<subtype> (same topic, NOT checked by anyone in the corpus: expected abstain). Subtypes:
+#          person    a different person or group in the same role
+#          place     a different place, institution or object in the same role
+#          number    a different number, date or year
+#          predicate a different predicate about the same subject
+#          neighbour a true neighbouring fact on the same topic that no corpus document states
+#          othercov  a statement close to ANOTHER corpus document (not the seed's), which that document does not rate
+101|inflect|Porodówka w Lesku nie została zamknięta.
+101|question|Czy to prawda, że porodówka w Lesku nie jest zamknięta?
+101|nodiac|nie, porodowka w lesku nie jest zamknieta
+101|colloq|Porodówki w Lesku wcale nie zamknęli, dalej normalnie działa.
+102|para|Premier Tusk oświadczył, że złoto zgromadzone w skarbcach NBP nie jest wyłącznie nasze – skoro jesteśmy w Unii, to stanowi własność całej wspólnoty.
+102|short|Tusk: polskie rezerwy złota należą do całej UE.
+102|typo|Donald Tusk powiedzał: Polskie rezrewy złota nie należą tylko do Polski. Polska jest w UE wiec naleza do całej UE
+102|inflect|Donald Tusk mówił, że polskie rezerwy złota nie należą wyłącznie do Polski, bo skoro Polska jest w UE, to należą one do całej Unii.
+103|question|Czy w 2017 roku w całej Łodzi wybudowano niewiele ponad 2800 mieszkań, a we Wrocławiu 9000?
+103|nodiac|w 2017 r. wybudowano w calej lodzi niewiele ponad 2800 mieszkan lacznie, podczas kiedy w takim wroclawiu mieszkan powstalo 9000
+103|colloq|W Łodzi przez cały 2017 rok postawili raptem trochę ponad 2800 mieszkań, a taki Wrocław machnął 9000.
+103|para|Łódź oddała w 2017 r. do użytku ledwie nieco powyżej 2,8 tys. lokali mieszkalnych, natomiast we Wrocławiu przybyło ich aż 9 tys.
+104|short|Ziemia jest płaska, bo tak mówi Biblia.
+104|typo|Ziemia jest płaksa poniewaz tak napisano w Bibli.
+104|inflect|O tym, że Ziemia jest płaska, świadczą zapisy w Biblii.
+104|question|Czy Ziemia jest płaska, skoro tak napisano w Biblii?
+105|nodiac|bill gates uzywa chemtrailsow do sciemniania slonca
+105|colloq|Gates pryska nam niebo chemią z samolotów, żeby przyciemnić słońce.
+105|para|Założyciel Microsoftu płaci za rozpylanie chemikaliów z samolotów, by zasłonić światło słoneczne.
+105|short|Gates ściemnia słońce chemtrailsami.
+106|typo|Pańswto polskie przekazało helikopetr Ukrainie, co osłabia polska ochronę zdrowia.
+106|inflect|Przekazanie Ukrainie helikoptera przez państwo polskie osłabiło polską ochronę zdrowia.
+106|question|Czy to prawda, że państwo polskie oddało Ukrainie helikopter medyczny i osłabiło przez to własną ochronę zdrowia?
+106|nodiac|panstwo polskie przekazalo helikopter ukrainie, co oslabia polska ochrone zdrowia
+107|colloq|Kowal z KO wypalił, że trzeba zrobić ustawę, która zmusi Polaków, żeby jechali na front na Ukrainę.
+107|para|Paweł Kowal opowiedział się za uchwaleniem przepisów, na mocy których obywatele Polski będą przymusowo wysyłani do walki w Ukrainie.
+107|short|Kowal: ustawa ma zmusić Polaków do wyjazdu na front na Ukrainę.
+107|typo|Paweł Kowal powiedzial: „Powinna powstać ustwa, która zmusi Polaków do tego, zeby pojechali na front na Ukrainę”.
+108|inflect|Ci, którzy wejdą do autobusów ewakuacyjnych, zostaną wywiezieni do lasu i zabici, a polskie ziemie zostaną zajęte przez Żydów.
+108|question|Czy to prawda, że wejście do autobusu ewakuacyjnego skończy się wywózką do lasu i śmiercią, a polskie ziemie zajmą Żydzi?
+108|nodiac|wejscie do autobusu ewakuacyjnego skonczy sie wywozka do lasu i smiercia, a polskie ziemie zajma zydzi
+108|colloq|Nie wsiadajcie do tych autobusów ewakuacyjnych – wywiozą was do lasu i zabiją, a Polskę przejmą Żydzi.
+109|para|Unia zmienia przepisy o f-gazach, przez co już w 2026 r. używanie pomp ciepła będzie zakazane.
+109|short|Od 2026 roku pompy ciepła będą nielegalne.
+109|typo|Mamy mieć nowelizcję rozporządzenia dotyczacego gazów fluorowanych i nielegalne staną się za kilka lat, chyba juz od roku 2026, pompy ciepla.
+109|inflect|Po nowelizacji rozporządzenia dotyczącego gazów fluorowanych pompy ciepła staną się za kilka lat, chyba już od 2026 roku, nielegalne.
+110|question|Czy lasy na Lubelszczyźnie podpalono celowo, żeby NATO mogło zbudować tam bazy?
+110|nodiac|celowo podpalono lasy na lubelszczyznie, by nato zbudowalo tam sobie bazy
+110|colloq|Te lasy na Lubelszczyźnie ktoś puścił z dymem specjalnie, żeby NATO miało gdzie postawić sobie bazy.
+110|para|Pożar w powiecie biłgorajskim wzniecono z premedytacją, aby oczyścić teren pod infrastrukturę wojskową Sojuszu Północnoatlantyckiego.
+111|short|Ukraińcy pobili polskich żołnierzy na granicy.
+111|typo|Polscy żolnierze stacjonujący na granicy zostali pobici przez obywateli Ukriany.
+111|inflect|Obywatele Ukrainy pobili polskich żołnierzy, którzy stacjonowali na granicy.
+111|question|Czy to prawda, że obywatele Ukrainy pobili polskich żołnierzy stacjonujących na granicy?
+112|nodiac|media expert ze wzgledu na podatki za nielegalne skladowanie wyprzedaje laptopy dell w cenie dziewieciu zlotych
+112|colloq|Media Expert opycha laptopy Della po 9 zł, bo musi szybko opróżnić magazyn, żeby nie bulić podatku za nielegalne składowanie.
+112|para|Sieć Media Expert pozbywa się komputerów przenośnych marki Dell za 9 zł od sztuki, aby uniknąć opłat podatkowych za bezprawne magazynowanie towaru.
+112|short|Media Expert sprzedaje laptopy Dell za 9 zł.
+113|typo|Bakterie wywołujace boreliozę oraz wirusy RSV, a także SARS-CoV-2 odpowiedzialny za pandemie COVID-19 powstały w labolatorium w wyniku badań typu gain-of-function
+113|inflect|Bakterię wywołującą boreliozę, wirusa RSV oraz odpowiedzialnego za pandemię COVID-19 wirusa SARS-CoV-2 stworzono w laboratoriach podczas badań typu gain-of-function.
+113|question|Czy bakterie wywołujące boreliozę, wirus RSV i SARS-CoV-2 powstały w laboratorium w wyniku badań typu gain-of-function?
+113|nodiac|bakterie wywolujace borelioze oraz wirusy rsv, a takze sars-cov-2 odpowiedzialny za pandemie covid-19 powstaly w laboratorium w wyniku badan typu gain-of-function
+114|colloq|Sam papież Leon XIV zachwala jakiś nowy sposób na cukrzycę, widziałam reklamę na fejsie.
+114|para|Ojciec Święty Leon XIV rekomenduje wiernym nowatorską terapię dla diabetyków.
+114|short|Papież Leon XIV poleca lek na cukrzycę.
+114|typo|Papiez Leon XIV poelca nową metode leczenia cukrzycy.
+115|inflect|Ceny energii w Europie wzrastają co tydzień o 50 proc.
+115|question|Czy cena energii w Europie rośnie o 50 proc. na tydzień?
+115|nodiac|cena energii w europie wzrasta o 50 proc. na tydzien
+115|colloq|Energia w Europie drożeje o 50 procent tydzień w tydzień, to jakiś obłęd.
+116|para|W Holandii stado kulików cienkodziobych rozbiło się o wiatrak i teraz temu gatunkowi grozi wyginięcie.
+116|short|Kuliki cienkodziobe zagrożone po zderzeniu z wiatrakiem w Holandii.
+116|typo|Populacja kulików cienkodziobych zagrozona, po zderzeniu ptaków tego gatnuku z turbiną wiatorwą w Holandii.
+116|inflect|Zderzenie kulików cienkodziobych z turbiną wiatrową w Holandii zagroziło populacji tego gatunku.
+117|question|Czy jedzenie muchomorów jest zdrowe i może być formą naturalnej terapii?
+117|nodiac|jedzenie muchomorow jest zdrowe i jest forma naturalnej terapii
+117|colloq|Muchomory można spokojnie jeść, to samo zdrowie i taka naturalna terapia, a nie żadna trucizna.
+117|para|Spożywanie muchomora czerwonego służy organizmowi i działa jak lekarstwo prosto z natury.
+118|short|We Francji większość hospitalizowanych na COVID to zaszczepieni – propaganda szczepionkowa się wali.
+118|typo|We Francji większośc hospitalizacji z powodu zachorowania na COVID-19 stanowią zaszczepieni, co świadczy o tym, że propaganda szczepionkowa sie wlai.
+118|inflect|Zaszczepieni stanowią we Francji większość hospitalizowanych z powodu zachorowania na COVID-19, a to świadczy, że „propaganda szczepionkowa” się zawaliła.
+118|question|Czy to prawda, że we Francji większość hospitalizacji z powodu COVID-19 stanowią zaszczepieni i że świadczy to o upadku „propagandy szczepionkowej”?
+119|nodiac|pijani policjanci regularnie rozbijaja radiowozy w roznych regionach polski
+119|colloq|Co chwilę jakiś nawalony gliniarz rozwala radiowóz, i to w całej Polsce, nie w jednym miejscu.
+119|para|W wielu częściach kraju nietrzeźwi funkcjonariusze policji notorycznie powodują kolizje służbowymi samochodami.
+119|short|Pijani policjanci regularnie rozbijają radiowozy.
+120|typo|Na witrynie GGPoker mozna zagrać w pokrea i wygrać pieniadze.
+120|inflect|Na witrynie GGPoker gra się w pokera i wygrywa pieniądze.
+120|question|Czy na stronie GGPoker można zagrać w pokera i wygrać pieniądze?
+120|nodiac|na witrynie ggpoker mozna zagrac w pokera i wygrac pieniadze
+121|colloq|Od tamtej wielkiej fali emigracji z lat 2005–07 ludzie wyjeżdżają z Polski za granicę osiem razy rzadziej.
+121|para|W porównaniu ze szczytem exodusu Polaków w latach 2005–2007 liczba osób opuszczających kraj zmniejszyła się ośmiokrotnie.
+121|short|Emigracja spadła 8-krotnie od fali z lat 2005–07.
+121|typo|Ilość wyjazdów za granice od wielkiej fali emigarcji 2005-07 spadła 8-krotnie.
+122|inflect|Za rządu PiS nielegalnie wydano setki tysięcy wiz, a za rządu Koalicji 15 października w 2025 roku było ponad 25 tys. odmów wjazdu do Polski na granicy zewnętrznej UE.
+122|question|Czy to prawda, że rząd PiS nielegalnie wydał setki tysięcy wiz, a rząd Koalicji 15 października odmówił w 2025 roku wjazdu do Polski ponad 25 tys. osób na granicy zewnętrznej UE?
+122|nodiac|rzad pis: setki tysiecy nielegalnie wydanych wiz. rzad koalicji 15 pazdziernika: ponad 25 tys. odmow wjazdu do polski na granicy zewnetrznej ue w 2025 roku. widzicie roznice?
+122|colloq|PiS rozdawał wizy na lewo setkami tysięcy, a obecna koalicja w samym 2025 zawróciła z granicy ponad 25 tys. ludzi – widać różnicę, nie?
+123|para|W lutym 2023 r., czyli w ostatnim roku władzy PiS, ceny rosły w tempie 18,4 proc. rocznie, a pod rządami obecnej koalicji wskaźnik ten zmalał do 4,1 proc.
+123|short|Inflacja za PiS w lutym 2023: 18,4 proc., dziś 4,1 proc.
+123|typo|W 2023, mówię cały czas o ostatnim roku rzadu PiS, w lutym inflacja wynosiła 18,4 proc. My dzisjaj mamy 4,1 i bedzie lepiej.
+123|inflect|W lutym 2023 roku, ostatniego roku rządów PiS, inflacja wyniosła 18,4 proc., a dzisiaj mamy inflację 4,1 proc. i będzie lepiej.
+124|question|Czy siedem organizacji związanych z protestami we Francji jest finansowanych przez George’a Sorosa?
+124|nodiac|siedem organizacji zwiazanych z protestami we francji sa finansowane przez srodki pochodzace od georga sorosa
+124|colloq|Za tymi zadymami we Francji stoi kasa Sorosa – finansuje on aż siedem organizacji, które maczały w nich palce.
+124|para|Pieniądze George’a Sorosa trafiają do siedmiu stowarzyszeń zaangażowanych we francuskie demonstracje.
+125|short|Polska ma trzy razy większy dług publiczny niż Ukraina, a rozdaje miliardy Kijowowi.
+125|typo|Polska ma trzykrotnie większy dług publiczny niz Ukraina w stanie wojny, a mimo to rząd lekką reką rozdaje miliardy w „pomoc” dla Kijowa, zadłużajac własnych obywateli po uszy.
+125|inflect|Dług publiczny Polski jest trzykrotnie większy od długu Ukrainy będącej w stanie wojny, a mimo to rząd lekką ręką rozdaje Kijowowi miliardy „pomocy” i zadłuża własnych obywateli po uszy.
+125|question|Czy Polska ma trzykrotnie większy dług publiczny niż Ukraina, a mimo to rząd rozdaje miliardy na pomoc dla Kijowa?
+126|nodiac|w warszawskich sciekach wykryto wirus polio, a media naglasniaja ten temat, by rodzice szczepili swoje dzieci
+126|colloq|Niby znaleźli polio w ściekach w Warszawie, a media trąbią o tym tylko po to, żeby nastraszyć rodziców i zagonić dzieciaki na szczepienia.
+126|para|Doniesienia o obecności wirusa polio w stołecznej kanalizacji są rozdmuchiwane przez dziennikarzy po to, by skłonić opiekunów do zaszczepienia pociech.
+126|short|Media straszą polio w ściekach Warszawy, żeby rodzice szczepili dzieci.
+127|typo|Obok stacji kolejowej w Mice doszlo do prowokacji, a nie wybuhcu i aktu dywersji.
+127|inflect|To, do czego doszło obok stacji kolejowej w Mice, było prowokacją, a nie wybuchem i aktem dywersji.
+127|question|Czy obok stacji kolejowej w Mice doszło do prowokacji, a nie do wybuchu i aktu dywersji?
+127|nodiac|obok stacji kolejowej w mice doszlo do prowokacji, a nie wybuchu i aktu dywersji
+128|colloq|Czarzasty sam przyznał, jak to wygląda u nich na lewicy: „u nas można pić, ćpać, palić”.
+128|para|Lider Lewicy Włodzimierz Czarzasty scharakteryzował obyczaje panujące w swoim środowisku politycznym, mówiąc, że wolno tam pić alkohol, brać narkotyki i palić.
+128|short|Czarzasty o lewicy: „U nas można pić, ćpać, palić”.
+128|typo|Włodzimierz Czarzasty opisał, co dzieje sie w lewicowych partiach słowami „U nas mozna pić, ćpac, palić”.
+129|inflect|Ukraińcom w Polsce zapewnia się darmowe szkoły policealne i licea zaoczne, a Polakom nie.
+129|question|Czy to prawda, że w Polsce Ukraińcy mają szkoły policealne i licea zaoczne za darmo, a Polacy nie?
+129|nodiac|w polsce ukraincy maja szkoly policealne i licea zaoczne za darmo, a polacy nie
+129|colloq|Ukrainiec w Polsce ma policealną i zaoczne liceum za friko, a Polak musi bulić z własnej kieszeni.
+130|para|Emeryci z Ukrainy otrzymują bezpłatnie preparat, za który polscy pacjenci muszą wykładać własne pieniądze.
+130|short|Ukraińscy seniorzy mają lek za darmo, a Polacy płacą.
+130|typo|Ukraińscy seniorzy dostaja za darmo lek, za który Polacy musza płaćić.
+130|inflect|Ukraińskim seniorom wydaje się za darmo lek, za który Polak musi płacić.
+131|question|Czy Rosjanie odkryli nowy lek na cukrzycę i zespół metaboliczny?
+131|nodiac|rosjanie odkryli nowy lek na cukrzyce i zespol metaboliczny
+131|colloq|Ruscy podobno wymyślili nowy lek na cukrzycę i ten cały zespół metaboliczny.
+131|para|Uczeni z Rosji opracowali nieznany dotąd preparat, który ma leczyć cukrzycę i zespół metaboliczny.
+132|short|W siedzibie 3. Korpusu SZU wisi flaga „Wielkiej Ukrainy” z ziemiami Polski.
+132|typo|W siedizbie 3. Korpusu Armijnego SZU wisi flaga „Wielkiej Ukrainy”, która obejmuje tereny Polski, Rumuni i Mołdawi.
+132|inflect|Flaga „Wielkiej Ukrainy”, obejmująca tereny Polski, Rumunii i Mołdawii, wisiała w siedzibie 3. Korpusu Armijnego SZU.
+132|question|Czy w siedzibie 3. Korpusu Armijnego Sił Zbrojnych Ukrainy wisi flaga „Wielkiej Ukrainy” obejmująca tereny Polski, Rumunii i Mołdawii?
+133|nodiac|francja przygotowuje placowki medyczne na ewentualne przyjecie rannych zolnierzy i jest to zapowiedz powaznego starcia w europie w 2026 roku
+133|colloq|Francuzi już szykują szpitale na rannych żołnierzy, czyli w 2026 czeka nas w Europie poważna wojna.
+133|para|Paryż polecił szpitalom, by były gotowe na napływ poszkodowanych wojskowych, co zwiastuje duży konflikt zbrojny na kontynencie w 2026 r.
+133|short|Francja szykuje szpitale na rannych żołnierzy – w 2026 będzie wojna w Europie.
+134|typo|Dziennikarz BBC udawal, że jest na ukraińksim froncie.
+134|inflect|Dziennikarz BBC udawał obecność na froncie w Ukrainie.
+134|question|Czy dziennikarz BBC udawał, że jest na ukraińskim froncie?
+134|nodiac|dziennikarz bbc udawal, ze jest na ukrainskim froncie
+135|colloq|No i proszę, te unijne przyczepiane nakrętki już działają – klimat zaczął się ochładzać.
+135|para|Dzięki narzuconemu przez Brukselę przytwierdzaniu zakrętek do butelek globalne ocieplenie ustąpiło i temperatury zaczęły spadać.
+135|short|Dzięki nakrętkom przy butelkach klimat zaczął się ochładzać.
+135|typo|Unijny obowiazek mocowania nakrętek do butelek przynosi pierwsze efetky: klimat zaczął się ochładzac.
+136|inflect|Z australijskich danych wynika, że szczepionki HPV nie chronią przed rakiem szyjki macicy, a preparaty te są narzędziem depopulacji, bo negatywnie wpływają na płodność młodych kobiet.
+136|question|Czy dane z Australii pokazują, że szczepionka HPV nie chroni przed rakiem szyjki macicy i negatywnie wpływa na płodność młodych kobiet?
+136|nodiac|dane z australii pokazuja, ze szczepionka hpv nie chroni przed rakiem szyjki macicy, a preparat ten to narzedzie depopulacji, bo negatywnie wplywa na plodnosc u mlodych kobiet
+136|colloq|W Australii już wyszło w danych, że ta szczepionka na HPV wcale nie chroni przed rakiem szyjki macicy, za to rozwala dziewczynom płodność – zwykła depopulacja.
+137|para|Panowie częściej niż panie targają się na własne życie i częściej umierają śmiercią samobójczą.
+137|short|Mężczyźni częściej popełniają samobójstwa niż kobiety.
+137|typo|Mamy więcej prób samobójczych czy samobjóstw wśrod mężczyzn niz wśród kobiet.
+137|inflect|Prób samobójczych i samobójstw jest więcej u mężczyzn niż u kobiet.
+138|question|Czy w 2024 roku realne wynagrodzenia w polskiej gospodarce rosły najszybciej w XXI wieku?
+138|nodiac|w zeszlym roku wynagrodzenia w polskiej gospodarce, te prawdziwe, realne, czyli po skorygowaniu o inflacje, rosly najszybciej w xxi wieku
+138|colloq|W 2024 pensje poszły w górę tak, że nawet po odliczeniu inflacji był to największy skok w tym stuleciu.
+138|para|Rok 2024 przyniósł Polakom rekordowy w tym stuleciu przyrost siły nabywczej płac.
+139|short|Lech Kaczyński popierał kompromis aborcyjny.
+139|typo|Jak wszyscy pamietamy, prof. Lech Kaczyński był zwolennkiem kompromisu aborcyjengo.
+139|inflect|Profesor Lech Kaczyński należał do zwolenników kompromisu aborcyjnego.
+139|question|Czy Lech Kaczyński był zwolennikiem kompromisu aborcyjnego?
+140|nodiac|w tej chwili zadluzenie krakowa jest prawie 90 proc. rocznych dochodow, dla porownania warszawy 30 proc.
+140|colloq|Kraków siedzi w długach po uszy – ma ich prawie tyle, ile wynosi 90 proc. jego rocznych dochodów, a Warszawa tylko 30 proc.
+140|para|Zobowiązania stolicy Małopolski sięgają blisko dziewięciu dziesiątych jej rocznych wpływów budżetowych, podczas gdy w przypadku stolicy kraju jest to około 30 proc.
+140|short|Dług Krakowa to prawie 90 proc. dochodów, Warszawy – 30 proc.
+141|typo|W Polsce jest około 10 tys. żołnirzey amerykanskich, to jest trzeci wynik w Europie – 37 tys. jest w Niemczech, okolo 13 tys. jest we Włoszech.
+141|inflect|Około 10 tys. amerykańskich żołnierzy w Polsce daje nam trzecie miejsce w Europie, po Niemczech z 37 tys. i Włoszech z około 13 tys.
+141|question|Czy w Polsce stacjonuje około 10 tys. żołnierzy amerykańskich i czy to trzeci wynik w Europie, po Niemczech (37 tys.) i Włoszech (ok. 13 tys.)?
+141|nodiac|w polsce jest okolo 10 tys. zolnierzy amerykanskich, to jest trzeci wynik w europie - 37 tys. jest w niemczech, okolo 13 tys. jest we wloszech
+142|colloq|My, Polacy, wybieramy aż 53 europosłów – mało który kraj w Europie ma ich tylu.
+142|para|Polsce przypadają 53 mandaty w Parlamencie Europejskim, co stawia ją w czołówce państw o najliczniejszej reprezentacji.
+142|short|Polska wybiera aż 53 europosłów, jedną z największych grup w UE.
+142|typo|Polacy wybierają jedną z największych ilosci w ogóle europsołów w Europie, aż 53.
+143|inflect|Koszty nadmiernego spożycia alkoholu dla budżetu państwa sięgają 100 miliardów złotych – chodzi o sprawy bezpieczeństwa, policyjne, sprzątanie i przede wszystkim zdrowie.
+143|question|Czy nadmierne spożycie alkoholu kosztuje budżet państwa do 100 miliardów złotych?
+143|nodiac|nadmierne spozycie alkoholu kosztuje budzet panstwa do 100 miliardow zlotych. to sa sprawy bezpieczenstwa, policyjne, sprzatanie, no i przede wszystkim zdrowie
+143|colloq|Przez to, że ludzie za dużo chleją, państwo jest w plecy nawet 100 miliardów złotych rocznie – policja, sprzątanie, a głównie leczenie.
+144|para|W projekcie nowej siedmioletniej perspektywy finansowej Unii największa pula – 123 mld euro – została przewidziana dla Polski.
+144|short|Polska ma dostać najwięcej z nowego budżetu UE – 123 mld euro.
+144|typo|Komsija Europejska dziś pokazała liczby w propozycji budzetu na następne 7 lat. Najwiecej 123 mld euro ma dostać Polska
+144|inflect|W pokazanej przez Komisję Europejską propozycji budżetu na następne 7 lat najwięcej, bo 123 mld euro, ma dostać Polska.
+145|question|Czy Radio Maryja jest jedną z pięciu, sześciu najbardziej słuchanych stacji w Polsce?
+145|nodiac|radio maryja jest jedna z pieciu, szesciu najbardziej sluchanych stacji w polsce
+145|colloq|Radia Maryja słucha masa ludzi – to jedna z pięciu, sześciu najpopularniejszych stacji w kraju.
+145|para|Rozgłośnia ojca Rydzyka mieści się w pierwszej szóstce stacji radiowych o największej słuchalności w kraju.
+146|short|Dług publiczny Polski jest niższy od średniej UE.
+146|typo|Dług publiczyn wciaż mamy niższy od średniej w Uni Europejskiej.
+146|inflect|Polski dług publiczny wciąż pozostaje niższy od średniego długu w Unii Europejskiej.
+146|question|Czy dług publiczny Polski wciąż jest niższy od średniej w Unii Europejskiej?
+147|nodiac|okolo 10 tys. osob uzyskalo odmowe wjazdu do niemiec w 2024 roku. w tym roku to jest 4,5 tys. z tego polowa to sa obywatele ukrainy
+147|colloq|Niemcy w 2024 nie wpuścili do siebie jakichś 10 tys. ludzi, w tym roku już 4,5 tys., z czego połowa to Ukraińcy.
+147|para|W 2024 r. niemiecka straż graniczna zawróciła do Polski mniej więcej 10 tys. cudzoziemców, a w bieżącym roku 4,5 tys.; co drugi z nich miał ukraiński paszport.
+147|short|Niemcy odmówiły wjazdu 10 tys. osób w 2024 r., połowa to Ukraińcy.
+148|typo|Polska ma jeden z najniższych wskaźników utylizacji szczepoinek w całej Europie. Jedna, mniej wiecej, jedna na 1000 szczepionek jest utylizowana.
+148|inflect|Wskaźnik utylizacji szczepionek w Polsce należy do najniższych w całej Europie – utylizuje się mniej więcej jedną na 1000 szczepionek.
+148|question|Czy Polska ma jeden z najniższych wskaźników utylizacji szczepionek w Europie?
+148|nodiac|polska ma jeden z najnizszych wskaznikow utylizacji szczepionek w calej europie. jedna, mniej wiecej, jedna na 1000 szczepionek jest utylizowana
+101|neg|Porodówka w Lesku jest zamknięta.
+102|neg|Donald Tusk nie powiedział, że polskie rezerwy złota należą do całej UE.
+104|neg|Ziemia nie jest płaska, a to, co napisano w Biblii, niczego takiego nie dowodzi.
+105|neg|Bill Gates nie używa chemtrailsów do ściemniania słońca.
+106|neg|Państwo polskie nie przekazało Ukrainie helikoptera i nie osłabiło w ten sposób polskiej ochrony zdrowia.
+107|neg|Paweł Kowal nie powiedział, że powinna powstać ustawa, która zmusi Polaków do wyjazdu na front na Ukrainę.
+108|neg|Wejście do autobusu ewakuacyjnego nie skończy się wywózką do lasu i śmiercią.
+109|neg|Pompy ciepła nie staną się nielegalne od 2026 roku.
+110|neg|Lasów na Lubelszczyźnie nie podpalono celowo po to, by NATO zbudowało tam bazy.
+111|neg|Polscy żołnierze stacjonujący na granicy nie zostali pobici przez obywateli Ukrainy.
+112|neg|Media Expert nie wyprzedaje laptopów Dell w cenie dziewięciu złotych.
+114|neg|Papież Leon XIV nie poleca żadnej nowej metody leczenia cukrzycy.
+115|neg|Cena energii w Europie nie wzrasta o 50 proc. na tydzień.
+116|neg|Nie było żadnego zderzenia kulików cienkodziobych z turbiną wiatrową w Holandii.
+117|neg|Jedzenie muchomorów nie jest zdrowe i nie jest żadną naturalną terapią.
+137|neg|Wśród kobiet jest więcej samobójstw i prób samobójczych niż wśród mężczyzn.
+138|neg|W zeszłym roku realne wynagrodzenia w polskiej gospodarce spadły.
+139|neg|Prof. Lech Kaczyński nie był zwolennikiem kompromisu aborcyjnego.
+140|neg|Zadłużenie Warszawy w relacji do rocznych dochodów jest wyższe niż zadłużenie Krakowa.
+144|neg|Polska nie jest największym beneficjentem w propozycji budżetu UE na następne 7 lat.
+145|neg|Radio Maryja nie należy do sześciu najbardziej słuchanych stacji w Polsce.
+146|neg|Dług publiczny Polski jest wyższy od średniej w Unii Europejskiej.
+101|hardneg:place|Porodówka w Sanoku nie jest zamknięta.
+102|hardneg:person|Mateusz Morawiecki powiedział, że polskie rezerwy złota należą do całej Unii Europejskiej.
+103|hardneg:number|W 2010 r. wybudowano w całej Łodzi niewiele ponad 2800 mieszkań.
+104|hardneg:othercov|Wojciech Cejrowski powiedział w wywiadzie u Żurnalisty, że nie wierzy w lądowanie ludzi na Księżycu.
+105|hardneg:neighbour|Erupcja wulkanu Pinatubo w 1991 roku obniżyła na pewien czas średnią temperaturę na Ziemi.
+106|hardneg:othercov|Polska przekaże Ukrainie śmigłowce Black Hawk.
+107|hardneg:person|Władysław Kosiniak-Kamysz powiedział: „Powinna powstać ustawa, która zmusi Polaków do tego, żeby pojechali na front na Ukrainę”.
+108|hardneg:predicate|Rozporządzenie Rady Ministrów z 30 maja 2025 roku nakazuje gminom zakup autobusów ewakuacyjnych.
+109|hardneg:predicate|Pompy ciepła mają być od 2026 roku obowiązkowe w każdym nowym domu.
+110|hardneg:place|Celowo podpalono lasy w Bieszczadach, by NATO zbudowało tam sobie bazy.
+111|hardneg:neighbour|W 2024 roku polski żołnierz zmarł po ugodzeniu nożem na granicy z Białorusią.
+112|hardneg:place|RTV Euro AGD wyprzedaje telewizory Samsung w cenie dziewięciu złotych.
+113|hardneg:predicate|Bakterie wywołujące boreliozę przenoszą się między ludźmi drogą kropelkową.
+114|hardneg:othercov|Robert Kubica poleca nową metodę leczenia cukrzycy.
+115|hardneg:number|Cena energii w Europie wzrasta o 5 proc. rocznie.
+116|hardneg:place|Stado bocianów zginęło po zderzeniu z turbiną wiatrową w Niemczech.
+117|hardneg:neighbour|Muchomor sromotnikowy jest najbardziej trującym grzybem rosnącym w polskich lasach.
+118|hardneg:othercov|W Izraelu większość hospitalizowanych z powodu COVID-19 stanowili latem 2021 roku zaszczepieni.
+119|hardneg:person|Pijani strażacy regularnie rozbijają wozy bojowe w różnych regionach Polski.
+120|hardneg:place|Na witrynie PokerStars można zagrać w pokera i wygrać pieniądze.
+121|hardneg:predicate|Liczba powrotów Polaków z emigracji wzrosła 8-krotnie od lat 2005–07.
+122|hardneg:predicate|W 2025 roku Polska deportowała ponad 25 tys. cudzoziemców.
+123|hardneg:neighbour|W lutym 2023 roku inflacja na Węgrzech przekraczała 25 proc.
+124|hardneg:person|Siedem organizacji związanych z protestami we Francji jest finansowanych przez Billa Gatesa.
+125|hardneg:place|Polska ma trzykrotnie większy dług publiczny niż Czechy.
+126|hardneg:number|W 2019 roku w warszawskich ściekach wykryto wirus polio.
+127|hardneg:predicate|Obok stacji kolejowej w Mice wykoleił się pociąg towarowy.
+128|hardneg:person|Jarosław Kaczyński opisał, co dzieje się w PiS, słowami „U nas można pić, ćpać, palić”.
+129|hardneg:person|W Polsce Białorusini mają szkoły policealne i licea zaoczne za darmo, a Polacy nie.
+130|hardneg:predicate|Ukraińscy seniorzy dostają w Polsce za darmo pobyt w sanatorium, za który Polacy muszą płacić.
+131|hardneg:othercov|Rosjanie odkryli nowy lek na chorobę Alzheimera.
+132|hardneg:predicate|W siedzibie 3. Korpusu Armijnego SZU wisi portret Stepana Bandery.
+133|hardneg:predicate|Francja wprowadzi w 2026 roku obowiązkową służbę wojskową.
+134|hardneg:othercov|Dziennikarz CNN udawał, że jest na ukraińskim froncie.
+135|hardneg:neighbour|Obowiązek mocowania nakrętek do butelek obowiązuje w Unii Europejskiej od lipca 2024 roku.
+136|hardneg:neighbour|Australia jako pierwszy kraj na świecie uruchomiła powszechny program szczepień przeciw HPV.
+137|hardneg:predicate|Mężczyźni częściej niż kobiety chorują na depresję.
+138|hardneg:predicate|W zeszłym roku emerytury w Polsce rosły najszybciej w XXI wieku.
+139|hardneg:person|Lech Wałęsa był zwolennikiem kompromisu aborcyjnego.
+140|hardneg:number|W 2015 roku zadłużenie Krakowa wynosiło prawie 90 proc. rocznych dochodów miasta.
+141|hardneg:number|W 2015 roku w Polsce stacjonowało około 10 tys. żołnierzy amerykańskich.
+142|hardneg:neighbour|W wyborach do Parlamentu Europejskiego w 2004 roku Polacy wybierali 54 europosłów.
+143|hardneg:place|Palenie tytoniu kosztuje budżet państwa do 100 miliardów złotych.
+144|hardneg:predicate|Polska wpłaci do budżetu UE na następne 7 lat 123 mld euro.
+145|hardneg:place|TV Trwam jest jedną z pięciu, sześciu najchętniej oglądanych stacji telewizyjnych w Polsce.
+146|hardneg:predicate|Koszty obsługi długu publicznego mamy wciąż niższe od średniej w Unii Europejskiej.
+147|hardneg:number|Około 10 tys. osób uzyskało odmowę wjazdu do Niemiec w 2019 roku.
+148|hardneg:place|Niemcy mają jeden z najniższych wskaźników utylizacji szczepionek w całej Europie.
+#
+# Hard-negative candidates DROPPED before the freeze, after a plain text search of the whole corpus (data/corpus/*.jsonl).
+# A "no verdict expected" item is only valid if no document rates or states it:
+#   106 "Polska przekazała Ukrainie myśliwce MiG-29" (true neighbour)   - stated as a fact inside two other Demagog articles
+#   106 Polish ambulances donated to Ukraine                          - presupposed by two fakenews_pl fact-checks (OLX stories)
+#   109 an EU ban on gas boilers                                      - rated by another Demagog fact-check (misleading)
+#   110 forests in Greece set on fire deliberately                    - rated by a fakenews_pl fact-check (false)
+#   116 wind turbines kill birds                                      - rated by a fakenews_pl fact-check (misleading)
+#   122 more than 25 thousand refusals of entry in 2019               - the seed's own fact-check gives figures up to 2019
+#   125 "Polska ma dwukrotnie większy dług publiczny niż Ukraina"     - rated by another Demagog fact-check (misleading)
+#   142 "Malta wybiera sześciu europosłów" (true neighbour)           - stated in the seed's own fact-check
+#   143 sale of alcohol to minors is banned (true neighbour)          - covered by a Pravda fact-check on age checks
+#   146 unemployment below the EU average (true neighbour)            - the official Eurostat card in the corpus states it
+#   146 health spending below the EU average (true neighbour)         - stated in a Konkret24 article
+#   104/105/109/120/136 swaps that the seed's own fact-check refutes anyway (flat Earth "because of the Koran", another
+#       person spraying chemtrails, heat pumps illegal from another year, GGPoker holding a licence, HPV data from another
+#       country): a "false" verdict would be defensible, so they are not hard negatives

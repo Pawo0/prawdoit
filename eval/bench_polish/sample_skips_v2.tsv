@@ -1,0 +1,12 @@
+# document_id|reason   — manual exclusions from the v2 sample, decided from the claim text alone, before any system run.
+# The sampler (build_dataset.py, sample_v2) replaces a skipped claim with the next one of the same rating x period stratum.
+demagog:fake_news/ania-zaginela-i-nie-mozna-jej-znalezc-to-kolejne-internetowe-oszustwo|not self-contained: "Ania" is an unnamed person from a scam post
+demagog:fake_news/od-czego-zalezy-czas-zanikania-smug-kondensacyjnych|same story as v1 seed 19 (contrail behaviour as proof of chemtrails); the lexical check did not catch it
+demagog:wypowiedzi/tusk-znalazl-paliwo-po-518-zl-srednia-cena-ciagle-jest-wyzsza|not a statement: a photo caption ("Paliwo po 5.18. Mogę być winny grosika?")
+demagog:fake_news/szczepienia-przeciw-hpv-to-nie-zabieg-sa-bezpieczne-i-skuteczne|not self-contained: the point depends on the legal sense of "zabieg" in the surrounding statement
+demagog:fake_news/wojciech-cejrowski-o-zakazie-uprawy-warzyw-i-owocow-wyjasniamy|conditional call to action, not a statement; the rating of the bare assertion would be debatable
+demagog:wypowiedzi/dezinformacja-o-krakowskim-centrum-integracji-wpisuje-sie-w-szersza-narracje|refers to a pictured example ("Kolejny przykład ...")
+demagog:wypowiedzi/co-grozi-za-przejscie-na-chrzescijanstwo-w-arabii-saudyjskiej|not self-contained: neither the country nor the transaction is named
+demagog:wypowiedzi/ilu-uchodzcow-przyjela-slowacja|not self-contained: no object ("przyjęli kilkanaście, czy kilkadziesiąt osób")
+demagog:wypowiedzi/czy-wzrost-wynagrodzen-sprawia-ze-inflacja-jest-mniej-odczuwalna|hypothetical arithmetic example; Demagog rates the real wage and inflation figures, so the label of the sentence as worded is debatable
+demagog:wypowiedzi/pakt-migracyjny-ruszyl-w-rumunii-po-wyborach-to-manipulacja|debatable label: another fact-checker in the corpus (fakenews_pl:22885) rates the same story "false" where Demagog says "manipulation"

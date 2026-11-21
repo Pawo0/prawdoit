@@ -7,6 +7,7 @@ import logging
 import math
 import os
 import re
+import threading
 import time
 from collections import OrderedDict
 from urllib.parse import urlparse
@@ -19,7 +20,7 @@ from .engine import same_claim, verify_claim
 from .fetch import FetchError, fetch_url
 from .index import INDEX
 from .nli import NLI_MODEL
-from .schemas import CheckRequest, CheckResult, QuickMatch, QuickRequest, QuickResult
+from .schemas import CheckRequest, CheckResult, QuickConflict, QuickMatch, QuickRequest, QuickResult
 from .security import ResolveError, UnsafeURL, neutralize, scan
 from .signals import sprawdz_signals
 from .schemas import RULES_VERSION
@@ -72,18 +73,26 @@ def cost_estimate(res: CheckResult) -> dict:
 
 
 def run_check(req: CheckRequest, progress=None) -> CheckResult:
-    """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py)."""
+    """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py).
+
+    mode="auto" (a background check the extension router starts for a `candidate` the user did not ask about) runs
+    the same claim extraction, retrieval and rules on the LOCAL corpus only and leaves no trace of the text:
+    no URL/link fetch, no live search (it would send the claim to third-party sites), no LLM call, no moderator case,
+    and the audit row holds a SHA-256 of the text instead of the text (store.save_auto_check). The returned result
+    still carries the claims and their evidence, so the caller can show the source."""
     t_start = time.perf_counter()
     websearch.emit(progress, "analiza")
     timings: dict[str, float] = {}
     cid = store.new_id()
-    res = CheckResult(id=cid, created_at=store.now(), channel=req.channel, status="ok",
+    auto = req.mode == "auto"
+    channel = f"{req.channel[:20]}-auto" if auto and not req.channel.endswith("-auto") else req.channel
+    res = CheckResult(id=cid, created_at=store.now(), channel=channel, status="ok",
                       input_kind="url" if (req.url and not req.text) else "text", input_excerpt="",
-                      engine=engine_info())
+                      engine=engine_info(), mode=req.mode)
     text = normalize_ws(req.text or "")[: settings.max_input_chars]
-    url = (req.url or "").strip()
+    url = "" if auto else (req.url or "").strip()  # auto: text only, nothing is fetched on the user's behalf
     # a bare URL pasted as text
-    if not url and re.fullmatch(r"https?://\S+", text):
+    if not url and not auto and re.fullmatch(r"https?://\S+", text):
         url, text = text, ""
         res.input_kind = "url"
 
@@ -117,7 +126,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     # is fetched with the same SSRF guard, scanned for injected instructions (scenario E) and used for claims only
     # when the message itself has none. A failed fetch is a notice, never a verdict and never a failed check.
     page_text = ""
-    links = [] if url else re.findall(r"https?://[^\s<>\"'„”]+", text)
+    links = [] if (url or auto) else re.findall(r"https?://[^\s<>\"'„”]+", text)
     if links:
         link = links[0].rstrip(".,;:!?)]}")
         t0 = time.perf_counter()
@@ -159,6 +168,8 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
         else:
             live = websearch.LiveStage(cid, progress)  # Google Fact Check + trusted-domain fallback; never raises
+            if auto or req.live_search is False:
+                live.enabled = False  # start_google() and finish() are then no-ops: local corpus only
             try:
                 websearch.emit(progress, "baza")
                 live.start_google(claims)
@@ -176,7 +187,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                 res.warnings += live.warnings
 
     # optional LLM rephrasing of already-decided explanations
-    if res.claims and llm.enabled():
+    if res.claims and llm.enabled() and not auto:  # auto: the text is not sent to the LLM endpoint
         t0 = time.perf_counter()
         for c in res.claims:
             if c.verdict in ("falszywe", "potwierdzone", "wprowadzajace_w_blad"):
@@ -208,7 +219,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     # information loop: unresolved, check-worthy -> moderator case (grouped with similar ones)
     unresolved = [c for c in res.claims if (c.verdict == "brak_dowodow" and c.kind == "fakt")
                   or any(r.startswith("HR:") for r in c.rules_fired)]
-    if unresolved and res.status == "ok":
+    if unresolved and res.status == "ok" and not auto:  # auto: passive browsing must not fill the analyst queue
         c = unresolved[0]
         try:
             emb = INDEX.encode_query([c.claim])[0]
@@ -234,7 +245,10 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     res.timings_ms = {k: round(v, 1) for k, v in timings.items()}
     res.engine["cost_estimate"] = cost_estimate(res)
     try:
-        store.save_check(res.model_dump(), res.input_excerpt, req.session)
+        if auto:
+            store.save_auto_check(res.model_dump(), hashlib.sha256(text.encode()).hexdigest())
+        else:
+            store.save_check(res.model_dump(), res.input_excerpt, req.session)
     except Exception as e:  # noqa: BLE001
         log.warning("audit save failed: %s", e)
     return res
@@ -261,9 +275,29 @@ def source_status_notices(domains: set[str]) -> list[str]:
     return out
 
 
-# ------------------------------------------------------------------ extension fast path
+# ------------------------------------------------------------------ extension fast path = tier-1 ROUTER
+# Tier 1 does not judge content. It answers one question per item — "does this text repeat a claim that a named
+# fact-checker already rated false / misleading?" — and routes:
+#   match      shown by the extension, always with publisher, rating, date and link (QuickMatch);
+#   candidate  never shown; the extension may send the best few to tier 2 in the background (run_check mode="auto");
+#   none       nothing.
+# research/09_architecture_two_tier_and_containers.md §3.4–3.5.
 _QCACHE: OrderedDict[str, QuickResult] = OrderedDict()
 RISK_W = {"false": 1.0, "misleading": 0.85, "mixed": 0.7}
+# engine.same_claim cannot return True below cosine 0.80 (nor False below 0.85), so NLI below this gate cannot change
+# the result. backend/tests/test_router_quick.py fails if the engine rule moves under the gate.
+QUICK_NLI_GATE = 0.80
+# A claim rated TRUE that is this close (cosine) to the debunked one suppresses the tag: fact-checkers rated two
+# nearly identical statements differently, so a similarity match cannot say which one the text repeats.
+CONFLICT_MARGIN = 0.03
+_NO_MATCH = "brak zbieżności ze zweryfikowanymi fałszami"
+_QUICK_SEM = threading.BoundedSemaphore(settings.quick_concurrency)
+
+
+class QuickBusy(RuntimeError):
+    """All quick-path inference slots are taken. The API answers 503 + Retry-After; the client renders nothing."""
+
+    retry_after = 2
 
 
 def _segments(text: str) -> list[str]:
@@ -273,68 +307,146 @@ def _segments(text: str) -> list[str]:
     return list(dict.fromkeys(segs))
 
 
-def quick_score(req: QuickRequest) -> list[QuickResult]:
+def _checkable(text: str) -> float | None:
+    """Score (0..1) of the best factual sentence tier 2 could check, or None. Uses tier 2's own claim extraction, so
+    "candidate" means "run_check would look this up" rather than a separate notion of suspicious content."""
+    facts = [c for c in extract_claims(normalize_ws(text)[:2000], max_claims=3)
+             if c.kind == "fakt" and len(c.query.split()) >= 3]
+    return max(c.score for c in facts) if facts else None
+
+
+def _route(r: QuickResult, text: str, sim: float | None, near: bool) -> QuickResult:
+    """Fill state / priority / reasons of a result that is not a visible match."""
+    score = _checkable(text)
+    reasons = list(r.reasons)
+    if near and "CONFLICTING_RATINGS" not in reasons:
+        reasons.append("NEAR_MISS")
+    high_risk = bool(HIGH_RISK.search(text))
+    if high_risk and (near or score is not None):
+        reasons.append("HIGH_RISK_TOPIC")
+    if score is not None:
+        reasons.append("FACTUAL_SENTENCE")
+    # order for the automatic checks: near miss to a rated claim > high-risk topic > check-worthiness
+    if near:
+        priority = 0.6 + 0.4 * max(0.0, min(1.0, ((sim or 0.0) - settings.claim_match_soft) / 0.16))
+    elif score is None:
+        priority = 0.0
+    elif high_risk:
+        priority = 0.4 + 0.2 * score
+    else:
+        priority = 0.4 * score
+    r.state = "candidate" if (near or score is not None) else "none"
+    r.priority, r.reasons = round(priority, 3), reasons
+    return r
+
+
+def quick_score(req: QuickRequest, *, nli_gate: float = QUICK_NLI_GATE, suppress_conflicts: bool = True,
+                use_cache: bool = True) -> list[QuickResult]:
+    """The keyword switches exist for eval/measure_router.py (before/after comparison); the API uses the defaults."""
     out: dict[str, QuickResult] = {}
-    todo: list[tuple[str, str, list[str]]] = []
+    todo: list[tuple[str, str, str, list[str]]] = []
+    stamp = INDEX.loaded_at or ""  # a cached result is valid for one index load
     for it in req.items:
-        h = hashlib.sha1(normalize_ws(it.text).encode()).hexdigest()
-        if h in _QCACHE:
+        h = hashlib.sha1(f"{stamp}\n{normalize_ws(it.text)}".encode()).hexdigest()
+        if use_cache and h in _QCACHE:
             out[it.id] = _QCACHE[h].model_copy(update={"id": it.id})
             continue
         segs = _segments(it.text)
         if not segs:
             out[it.id] = QuickResult(id=it.id, risk=0.0, level="brak", reason="za krótki tekst")
             continue
-        todo.append((it.id, h, segs))
+        todo.append((it.id, h, it.text, segs))
     if todo:
-        flat = [s for _, _, segs in todo for s in segs]
-        embs = INDEX.encode_query(flat)
-        doc_idx, sims = INDEX.match_claims_batch(embs)
-        pos = 0
-        pending_nli: list[tuple[str, str, int, float, str]] = []
-        for item_id, h, segs in todo:
-            best = None
-            for j in range(len(segs)):
-                di, sim = int(doc_idx[pos + j]), float(sims[pos + j])
-                d = INDEX.docs[di]
-                if d.verdict in RISK_W and (best is None or sim > best[1]):
-                    best = (di, sim, segs[j])
-            pos += len(segs)
-            if best and best[1] >= settings.claim_match_soft:
-                pending_nli.append((item_id, h, best[0], best[1], best[2]))
-            else:
-                r = QuickResult(id=item_id, risk=0.0, level="brak", reason="brak zbieżności ze zweryfikowanymi fałszami")
+        # One batch infers at a time (settings.quick_concurrency): background page scanning must not starve a
+        # manual check running in another thread. The wait is bounded, so worker threads are never parked for long.
+        if not _QUICK_SEM.acquire(timeout=settings.quick_wait_s):
+            raise QuickBusy("quick path busy")
+        try:
+            for item_id, h, r in _quick_infer(todo, nli_gate, suppress_conflicts):
                 out[item_id] = r
-                _cache(h, r)
-        fwd = NLI_MODEL.score([(seg, INDEX.docs[di].claim or INDEX.docs[di].title) for _, _, di, _, seg in pending_nli])
-        # reverse direction only where the forward pass hints at a contradiction (negation check) — saves CPU
-        need = [i for i, f in enumerate(fwd) if f.contra >= 0.3]
-        rev_scores = NLI_MODEL.score([(INDEX.docs[pending_nli[i][2]].claim or INDEX.docs[pending_nli[i][2]].title,
-                                       pending_nli[i][4]) for i in need])
-        rev = list(fwd)
-        for i, r_ in zip(need, rev_scores):
-            rev[i] = r_
-        for (item_id, h, di, sim, seg), s, s_rev in zip(pending_nli, fwd, rev):
-            d = INDEX.docs[di]
-            # P(content repeats the debunked claim): similarity (calibrated logistic) x does the post ASSERT it (NLI)
-            p_match = 1 / (1 + math.exp(-(sim - 0.78) * 25))
-            decision = same_claim(sim, s, s_rev, d.claim or d.title, seg, d.source_type)
-            if decision is not True:
-                agree = 0.0  # opposite (e.g. the post debunks it) or merely related — never flag
-            else:
-                agree = 0.30 + 0.70 * s.entail
-            risk = round(p_match * agree * RISK_W[d.verdict], 3)
-            level = "wysokie" if risk >= 0.6 else "srednie" if risk >= 0.35 else "brak"
-            r = QuickResult(
-                id=item_id, risk=risk, level=level,
-                match=QuickMatch(claim=d.claim or d.title, verdict=d.verdict, verdict_raw=d.verdict_raw,
-                                 publisher=d.publisher, url=d.url, title=d.title, published_at=d.published_at,
-                                 similarity=round(sim, 3), sentence=seg),
-                reason=f"Treść jest zbieżna z twierdzeniem ocenionym przez {d.publisher} jako „{d.verdict_raw}”.",
-            )
-            out[item_id] = r
-            _cache(h, r)
+                if use_cache:
+                    _cache(h, r)
+        finally:
+            _QUICK_SEM.release()
     return [out[it.id] for it in req.items]
+
+
+def _quick_infer(todo: list[tuple[str, str, str, list[str]]], nli_gate: float, suppress_conflicts: bool
+                 ) -> list[tuple[str, str, QuickResult]]:
+    done: list[tuple[str, str, QuickResult]] = []
+    flat = [s for _, _, _, segs in todo for s in segs]
+    embs = INDEX.encode_query(flat)
+    doc_idx, sims = INDEX.match_claims_batch(embs)
+    true_idx, true_sims = INDEX.match_claims_batch(embs, verdicts=("true",))
+    pos = 0
+    pending_nli: list[tuple[str, str, str, int, float, str, int]] = []
+
+    def _match(d, sim: float, seg: str) -> QuickMatch:
+        return QuickMatch(claim=d.claim or d.title, verdict=d.verdict, verdict_raw=d.verdict_raw, publisher=d.publisher,
+                          url=d.url, title=d.title, published_at=d.published_at, similarity=round(sim, 3), sentence=seg)
+
+    for item_id, h, text, segs in todo:
+        best = None
+        for j in range(len(segs)):
+            di, sim = int(doc_idx[pos + j]), float(sims[pos + j])
+            d = INDEX.docs[di]
+            if d.verdict in RISK_W and (best is None or sim > best[1]):
+                best = (di, sim, segs[j], pos + j)
+        pos += len(segs)
+        if best and best[1] >= max(nli_gate, settings.claim_match_soft):
+            pending_nli.append((item_id, h, text, *best))
+        elif best and best[1] >= settings.claim_match_soft:
+            # near-miss band (soft threshold .. NLI gate): same_claim cannot accept it, so no NLI call is spent
+            d = INDEX.docs[best[0]]
+            r = QuickResult(id=item_id, risk=0.0, level="brak", match=_match(d, best[1], best[2]),
+                            reason=f"Treść jest zbieżna z twierdzeniem ocenionym przez {d.publisher} jako „{d.verdict_raw}”.")
+            done.append((item_id, h, _route(r, text, best[1], near=True)))
+        else:
+            r = QuickResult(id=item_id, risk=0.0, level="brak", reason=_NO_MATCH)
+            done.append((item_id, h, _route(r, text, None, near=False)))
+    fwd = NLI_MODEL.score([(seg, INDEX.docs[di].claim or INDEX.docs[di].title) for _, _, _, di, _, seg, _ in pending_nli])
+    # reverse direction only where the forward pass hints at a contradiction (negation check) — saves CPU
+    need = [i for i, f in enumerate(fwd) if f.contra >= 0.3]
+    rev_scores = NLI_MODEL.score([(INDEX.docs[pending_nli[i][3]].claim or INDEX.docs[pending_nli[i][3]].title,
+                                   pending_nli[i][5]) for i in need])
+    rev = list(fwd)
+    for i, r_ in zip(need, rev_scores):
+        rev[i] = r_
+    for (item_id, h, text, di, sim, seg, row), s, s_rev in zip(pending_nli, fwd, rev):
+        d = INDEX.docs[di]
+        # similarity (calibrated logistic) x does the post ASSERT the rated claim (NLI); an internal score, never shown
+        p_match = 1 / (1 + math.exp(-(sim - 0.78) * 25))
+        decision = same_claim(sim, s, s_rev, d.claim or d.title, seg, d.source_type)
+        if decision is not True:
+            agree = 0.0  # opposite (e.g. the post debunks it) or merely related — never a match
+        else:
+            agree = 0.30 + 0.70 * s.entail
+        risk = round(p_match * agree * RISK_W[d.verdict], 3)
+        level = "wysokie" if risk >= 0.6 else "srednie" if risk >= 0.35 else "brak"
+        r = QuickResult(
+            id=item_id, risk=risk, level=level, match=_match(d, sim, seg),
+            reason=f"Treść jest zbieżna z twierdzeniem ocenionym przez {d.publisher} jako „{d.verdict_raw}”.",
+        )
+        if level != "brak" and suppress_conflicts:
+            t = INDEX.docs[int(true_idx[row])]
+            t_sim = float(true_sims[row])
+            if t.verdict == "true" and t_sim >= sim - CONFLICT_MARGIN:
+                r.conflict = QuickConflict(claim=t.claim or t.title, verdict_raw=t.verdict_raw, publisher=t.publisher,
+                                           url=t.url, published_at=t.published_at, similarity=round(t_sim, 3))
+                r.risk, r.level = 0.0, "brak"
+                r.reasons = ["CONFLICTING_RATINGS"]
+                r.reason = (f"Zbliżone twierdzenia oceniono różnie ({d.publisher}: „{d.verdict_raw}”, {t.publisher}: "
+                            f"„{t.verdict_raw}”) — bez oznaczenia.")
+        complete = bool(d.publisher and d.url and d.published_at and (d.verdict_raw or d.verdict))
+        if r.level != "brak" and not complete:
+            r.risk, r.level = 0.0, "brak"  # a visible match must name publisher, rating, date and link
+        if r.level != "brak":
+            r.state, r.reasons = "match", ["RATED_CLAIM_MATCH"]
+        else:
+            # decision False = the text denies the rated claim: not a near miss, at most a checkable sentence
+            r = _route(r, text, sim, near=decision is not False)
+        done.append((item_id, h, r))
+    return done
 
 
 def _cache(h: str, r: QuickResult) -> None:

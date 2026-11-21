@@ -1,0 +1,434 @@
+[
+ {
+  "no": 101,
+  "id": "demagog:wypowiedzi/porodowka-w-lesku-falsz-tuska-o-podkarpackim-szpitalu",
+  "claim": "Nie, nie jest zamknięta [porodówka w Lesku – przyp. Demagog].",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-03-23",
+  "title": "Porodówka w Lesku. Fałsz Tuska o podkarpackim szpitalu"
+ },
+ {
+  "no": 102,
+  "id": "demagog:fake_news/polskie-rezerwy-zlota-naleza-do-ue-donald-tusk-tego-nie-powiedzial",
+  "claim": "Donald Tusk powiedział: Polskie rezerwy złota nie należą tylko do Polski. Polska jest w UE więc należą do całej UE",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-10-24",
+  "title": "Polskie rezerwy złota należą do UE? Donald Tusk tego nie powiedział"
+ },
+ {
+  "no": 103,
+  "id": "demagog:wypowiedzi/ile-mieszkan-powstalo-w-lodzi-w-2017roku",
+  "claim": "W 2017 r. wybudowano w całej Łodzi niewiele ponad 2800 mieszkań łącznie, podczas kiedy w takim Wrocławiu mieszkań powstało 9000.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2018-09-24",
+  "title": "Ile mieszkań powstało w Łodzi w 2017roku?"
+ },
+ {
+  "no": 104,
+  "id": "demagog:fake_news/ziemia-jest-plaska-bo-tak-mowi-biblia-cejrowski-w-wywiadzie-sie-myli",
+  "claim": "Ziemia jest płaska ponieważ tak napisano w Biblii.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-02-13",
+  "title": "Ziemia jest płaska, bo tak mówi Biblia? Cejrowski w wywiadzie się myli"
+ },
+ {
+  "no": 105,
+  "id": "demagog:fake_news/bill-gates-finansuje-program-sciemniania-slonca-sprawdzamy-fakty-na-temat-geoinzynierii-i-chemtrailsow",
+  "claim": "Bill Gates używa chemtrailsów do ściemniania słońca",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-09-24",
+  "title": "Bill Gates finansuje program ściemniania słońca? Sprawdzamy fakty na temat geoinżynierii i chemtrails"
+ },
+ {
+  "no": 106,
+  "id": "demagog:fake_news/przekazanie-helikoptera-ukrainie-oslabia-ochrone-zdrowia-falsz",
+  "claim": "Państwo polskie przekazało helikopter Ukrainie, co osłabia polską ochronę zdrowia.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2024-01-29",
+  "title": "Przekazanie helikoptera Ukrainie osłabia ochronę zdrowia? Fałsz"
+ },
+ {
+  "no": 107,
+  "id": "demagog:fake_news/pawel-kowal-mowil-o-ustawie-ktora-zmusi-polakow-do-wyjazdu-na-ukrainski-front-to-nie-jego-slowa",
+  "claim": "Paweł Kowal powiedział: „Powinna powstać ustawa, która zmusi Polaków do tego, żeby pojechali na front na Ukrainę”.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-06-09",
+  "title": "Paweł Kowal mówił o ustawie, która zmusi Polaków do wyjazdu na ukraiński front? To nie jego słowa"
+ },
+ {
+  "no": 108,
+  "id": "demagog:fake_news/ewakuacja-ma-na-celu-zaglade-polakow-to-kolejna-teoria-spiskowa",
+  "claim": "Wejście do autobusu ewakuacyjnego skończy się wywózką do lasu i śmiercią, a polskie ziemie zajmą Żydzi.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-10-08",
+  "title": "Ewakuacja ma na celu zagładę Polaków? To kolejna teoria spiskowa"
+ },
+ {
+  "no": 109,
+  "id": "demagog:wypowiedzi/zakaz-pomp-ciepla-od-2026-posiadacze-pomp-sa-bezpieczni",
+  "claim": "Mamy mieć nowelizację rozporządzenia dotyczącego gazów fluorowanych i nielegalne staną się za kilka lat, chyba już od roku 2026, pompy ciepła.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2023-04-21",
+  "title": "Zakaz pomp ciepła od 2026? Posiadacze pomp są bezpieczni"
+ },
+ {
+  "no": 110,
+  "id": "demagog:fake_news/teorie-spiskowe-wokol-pozaru-na-lubelszczyznie-jakie-sa-fakty",
+  "claim": "Celowo podpalono lasy na Lubelszczyźnie, by NATO zbudowało tam sobie bazy.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-05-08",
+  "title": "Teorie spiskowe wokół pożaru na Lubelszczyźnie. Jakie są fakty?"
+ },
+ {
+  "no": 111,
+  "id": "demagog:fake_news/czy-na-granicy-z-ukraina-pobito-polskich-zolnierzy-to-nieprawda",
+  "claim": "Polscy żołnierze stacjonujący na granicy zostali pobici przez obywateli Ukrainy.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-09-18",
+  "title": "Czy na granicy z Ukrainą pobito polskich żołnierzy? To nieprawda"
+ },
+ {
+  "no": 112,
+  "id": "demagog:fake_news/media-expert-oferuje-laptopy-za-dziewiec-zlotych-proba-oszustwa",
+  "claim": "Media Expert ze względu na podatki za nielegalne składowanie wyprzedaje laptopy Dell w cenie dziewięciu złotych.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2023-07-04",
+  "title": "Media Expert oferuje laptopy za dziewięć złotych? Próba oszustwa"
+ },
+ {
+  "no": 113,
+  "id": "demagog:fake_news/borelioza-rsv-i-covid-19-robert-f-kennedy-jr-znowu-powtarza-fake-newsy",
+  "claim": "Bakterie wywołujące boreliozę oraz wirusy RSV, a także SARS-CoV-2 odpowiedzialny za pandemię COVID-19 powstały w laboratorium w wyniku badań typu gain-of-function",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-08-18",
+  "title": "Borelioza, RSV i COVID-19. Robert F. Kennedy Jr. znowu powtarza fake newsy"
+ },
+ {
+  "no": 114,
+  "id": "demagog:fake_news/papiez-leon-xiv-promuje-lek-na-cukrzyce-uwaga-na-scam",
+  "claim": "Papież Leon XIV poleca nową metodę leczenia cukrzycy.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-07-24",
+  "title": "Papież Leon XIV promuje lek na cukrzycę? Uwaga na scam"
+ },
+ {
+  "no": 115,
+  "id": "demagog:fake_news/wysokie-ceny-to-wina-zielonej-energii-falsz",
+  "claim": "Cena energii w Europie wzrasta o 50 proc. na tydzień.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2022-10-24",
+  "title": "Wysokie ceny to wina zielonej energii? Fałsz!"
+ },
+ {
+  "no": 116,
+  "id": "demagog:fake_news/czy-setki-ptakow-zginelo-przez-zderzenie-z-wiatrakiem-wyjasniamy-co-przedstawia-fotografia",
+  "claim": "Populacja kulików cienkodziobych zagrożona, po zderzeniu ptaków tego gatunku z turbiną wiatrową w Holandii.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2026-01-02",
+  "title": "Czy miliony ptaków zginęły przez zderzenie z wiatrakiem? Wyjaśniamy, co przedstawia fotografia"
+ },
+ {
+  "no": 117,
+  "id": "demagog:fake_news/jedzenie-muchomorow-czerwonych-jesienna-moda-niewarta-ryzyka",
+  "claim": "Jedzenie muchomorów jest zdrowe i jest formą naturalnej terapii",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2025-10-06",
+  "title": "Jedzenie muchomorów czerwonych. Jesienna „moda” niewarta ryzyka"
+ },
+ {
+  "no": 118,
+  "id": "demagog:fake_news/we-francji-choruje-wiecej-zaszczepionych-falszywy-kontekst",
+  "claim": "We Francji większość hospitalizacji z powodu zachorowania na COVID-19 stanowią zaszczepieni, co świadczy o tym, że „propaganda szczepionkowa” się wali.",
+  "rating": "false",
+  "rating_raw": "Fałsz",
+  "published_at": "2021-12-21",
+  "title": "We Francji choruje więcej zaszczepionych? Fałszywy kontekst!"
+ },
+ {
+  "no": 119,
+  "id": "demagog:fake_news/plaga-alkoholizmu-w-policji-to-kampania-dezinformacyjna",
+  "claim": "Pijani policjanci regularnie rozbijają radiowozy w różnych regionach Polski",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2026-04-03",
+  "title": "Plaga alkoholizmu w policji? To kampania dezinformacyjna"
+ },
+ {
+  "no": 120,
+  "id": "demagog:fake_news/pokerowa-promocja-na-swieto-niepodleglosci-uwaga-na-nielegalne-kasyno",
+  "claim": "Na witrynie GGPoker można zagrać w pokera i wygrać pieniądze.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2025-11-10",
+  "title": "Pokerowa promocja na Święto Niepodległości? Uwaga na nielegalne kasyno"
+ },
+ {
+  "no": 121,
+  "id": "demagog:wypowiedzi/emigracja-polakow-jak-zmienil-sie-jej-poziom-na-przestrzeni-lat",
+  "claim": "@Komorowski „Ilość wyjazdów za granicę od wielkiej fali emigracji 2005-07 spadła 8-krotnie”. @dmggPL #factcheck ? — Mateusz Bałuka (@Mattansky) March 7, 2015",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2015-03-09",
+  "title": "Emigracja Polaków - jak zmienił się jej poziom na przestrzeni lat?"
+ },
+ {
+  "no": 122,
+  "id": "demagog:wypowiedzi/odmowy-wjazdu-do-kraju-dla-cudzoziemcow-manipulacja-szlapki",
+  "claim": "Rząd PiS: Setki tysięcy nielegalnie wydanych wiz. Rząd Koalicji 15 października: Ponad 25 tys. odmów wjazdu do Polski na granicy zewnętrznej UE w 2025 roku. Widzicie różnicę? #SilnaPolska",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2026-06-16",
+  "title": "Odmowy wjazdu do kraju dla cudzoziemców. Manipulacja Szłapki"
+ },
+ {
+  "no": 123,
+  "id": "demagog:wypowiedzi/expose-premiera-tuska-manipulacja-na-temat-inflacji-za-rzadow-pis",
+  "claim": "W 2023, mówię cały czas o ostatnim roku rządu PiS, w lutym inflacja wynosiła 18,4 proc. My dzisiaj mamy 4,1 i będzie lepiej.",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2025-06-11",
+  "title": "Exposé premiera Tuska. Manipulacja na temat inflacji za rządów PiS"
+ },
+ {
+  "no": 124,
+  "id": "demagog:fake_news/george-soros-i-protesty-we-francji-hiszpanska-gazeta-manipuluje-kontekstem",
+  "claim": "Siedem organizacji związanych z protestami we Francji są finansowane przez środki pochodzące od Georga Sorosa.",
+  "rating": "misleading",
+  "rating_raw": "Brak kontekstu",
+  "published_at": "2026-10-26",
+  "title": "George Soros i protesty we Francji. Hiszpańska gazeta manipuluje kontekstem"
+ },
+ {
+  "no": 125,
+  "id": "demagog:wypowiedzi/dlug-publiczny-polski-wiekszy-niz-ukrainy-uwaga-na-manipulacje",
+  "claim": "Polska ma trzykrotnie większy dług publiczny niż Ukraina w stanie wojny, a mimo to rząd lekką ręką rozdaje miliardy w „pomoc” dla Kijowa, zadłużając własnych obywateli po uszy.",
+  "rating": "misleading",
+  "rating_raw": "Manipulacja",
+  "published_at": "2025-08-06",
+  "title": "Dług publiczny Polski większy niż Ukrainy? Uwaga na manipulację"
+ },
+ {
+  "no": 126,
+  "id": "demagog:fake_news/media-nie-strasza-wirusem-polio-by-wyszczepiono-populacje-to-nagranie-sprzed-dwoch-lat",
+  "claim": "W warszawskich ściekach wykryto wirus polio, a media nagłaśniają ten temat, by rodzice szczepili swoje dzieci.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2026-06-22",
+  "title": "Media nie straszą wirusem polio, by wyszczepiono populację. To nagranie sprzed dwóch lat"
+ },
+ {
+  "no": 127,
+  "id": "demagog:fake_news/dywersanci-zniszczyli-tory-kolejowe-dezinformacja-podwaza-ustalenia-sluzb",
+  "claim": "Obok stacji kolejowej w Mice doszło do prowokacji, a nie wybuchu i aktu dywersji.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2025-11-19",
+  "title": "Dywersanci zniszczyli tory kolejowe. Dezinformacja podważa ustalenia służb"
+ },
+ {
+  "no": 128,
+  "id": "demagog:fake_news/u-nas-mozna-pic-cpac-palic-slowa-czarzastego-wyrwano-z-kontekstu",
+  "claim": "Włodzimierz Czarzasty opisał, co dzieje się w lewicowych partiach słowami „U nas można pić, ćpać, palić”.",
+  "rating": "misleading",
+  "rating_raw": "Brak kontekstu",
+  "published_at": "2026-03-27",
+  "title": "„U nas można pić, ćpać, palić”. Słowa Czarzastego wyrwano z kontekstu"
+ },
+ {
+  "no": 129,
+  "id": "demagog:fake_news/darmowe-szkoly-policealne-tylko-dla-ukraincow-wyjasniamy",
+  "claim": "W Polsce Ukraińcy mają szkoły policealne i licea zaoczne za darmo, a Polacy nie.",
+  "rating": "misleading",
+  "rating_raw": "Brakujący kontekst",
+  "published_at": "2025-06-01",
+  "title": "Darmowe szkoły policealne tylko dla Ukraińców? Wyjaśniamy"
+ },
+ {
+  "no": 130,
+  "id": "demagog:fake_news/ukrainiec-ma-leki-za-darmo-a-polak-musi-placic-nfz-zaprzecza",
+  "claim": "Ukraińscy seniorzy dostają za darmo lek, za który Polacy muszą płacić.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2026-05-25",
+  "title": "Ukrainiec ma leki za darmo, a Polak musi płacić? NFZ zaprzecza"
+ },
+ {
+  "no": 131,
+  "id": "demagog:fake_news/rosjanie-stworzyli-lek-na-cukrzyce-sprawdzamy-ile-w-tym-prawdy",
+  "claim": "Rosjanie odkryli nowy lek na cukrzycę i zespół metaboliczny.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2025-11-19",
+  "title": "Rosjanie stworzyli lek na cukrzycę? Sprawdzamy, ile w tym prawdy"
+ },
+ {
+  "no": 132,
+  "id": "demagog:fake_news/3-korpus-i-mapa-wielkiej-ukrainy-nie-ma-na-niej-polski",
+  "claim": "W siedzibie 3. Korpusu Armijnego SZU wisi flaga „Wielkiej Ukrainy”, która obejmuje tereny Polski, Rumunii i Mołdawii.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy Fałsz",
+  "published_at": "2026-08-21",
+  "title": "3. Korpus i mapa „Wielkiej Ukrainy”? Nie ma na niej Polski"
+ },
+ {
+  "no": 133,
+  "id": "demagog:fake_news/czy-francja-szykuje-sie-do-wojny-z-rosja-uwaga-na-dezinformacje",
+  "claim": "Francja przygotowuje placówki medyczne na ewentualne przyjęcie rannych żołnierzy i jest to rzekomo zapowiedź „poważnego starcia” w Europie w 2026 roku.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2025-09-19",
+  "title": "Czy Francja szykuje się do wojny z Rosją? Uwaga na dezinformację"
+ },
+ {
+  "no": 134,
+  "id": "demagog:fake_news/dziennikarz-bbc-udawal-ze-jest-na-ukrainskim-froncie-to-stary-fake-news",
+  "claim": "Dziennikarz BBC udawał, że jest na ukraińskim froncie.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2026-01-22",
+  "title": "Dziennikarz BBC udawał, że jest na ukraińskim froncie? To stary fake news"
+ },
+ {
+  "no": 135,
+  "id": "demagog:fake_news/czy-klimat-zaczal-sie-ochladzac-dane-temu-przecza",
+  "claim": "Unijny obowiązek mocowania nakrętek do butelek przynosi pierwsze efekty: klimat zaczął się ochładzać.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2025-06-02",
+  "title": "Czy klimat zaczął się ochładzać ? Dane temu przeczą"
+ },
+ {
+  "no": 136,
+  "id": "demagog:fake_news/szczepienie-na-hpv-chroni-przed-rakiem-szyjki-macicy-dane-to-potwierdzaja",
+  "claim": "Dane z Australii pokazują, że szczepionka HPV nie chroni przed rakiem szyjki macicy, a preparat ten to narzędzie depopulacji, bo negatywnie wpływa na płodność u młodych kobiet.",
+  "rating": "mixed",
+  "rating_raw": "Częściowy fałsz",
+  "published_at": "2026-07-10",
+  "title": "Szczepienie na HPV chroni przed rakiem szyjki macicy. Dane to potwierdzają"
+ },
+ {
+  "no": 137,
+  "id": "demagog:wypowiedzi/samobojstwa-mezczyzn-co-wiemy-na-ich-temat",
+  "claim": "Mamy więcej prób samobójczych czy samobójstw wśród mężczyzn niż wśród kobiet.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-07-13",
+  "title": "Samobójstwa mężczyzn. Co wiemy na ich temat?"
+ },
+ {
+  "no": 138,
+  "id": "demagog:wypowiedzi/place-rosna-szybciej-od-inflacji-rekordowo",
+  "claim": "W zeszłym roku wynagrodzenia w polskiej gospodarce, te prawdziwe, realne, czyli po skorygowaniu o inflację, rosły najszybciej w XXI wieku.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-07-31",
+  "title": "Płace rosną szybciej od inflacji. Rekordowo?"
+ },
+ {
+  "no": 139,
+  "id": "demagog:wypowiedzi/jaka-byla-opinia-lecha-kaczynskiego-na-temat-kompromisu-aborcyjnego",
+  "claim": "Jak wszyscy pamiętamy, prof. Lech Kaczyński był zwolennikiem kompromisu aborcyjnego.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2020-11-05",
+  "title": "Jaka była opinia Lecha Kaczyńskiego na temat kompromisu aborcyjnego?"
+ },
+ {
+  "no": 140,
+  "id": "demagog:wypowiedzi/krakow-ma-wieksze-dlugi-niz-warszawa-roznica-jest-widoczna",
+  "claim": "W tej chwili zadłużenie Krakowa jest prawie 90 proc. [rocznych dochodów – przyp. Demagog], dla porównania Warszawy 30 proc.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-04-01",
+  "title": "Kraków ma większe długi niż Warszawa? Różnica jest widoczna"
+ },
+ {
+  "no": 141,
+  "id": "demagog:wypowiedzi/wojska-amerykanskie-w-europie-ilu-zolnierzy-jest-w-polsce",
+  "claim": "W Polsce jest około 10 tys. żołnierzy amerykańskich, to jest trzeci wynik w Europie – 37 tys. jest w Niemczech, około 13 tys. jest we Włoszech.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-09-18",
+  "title": "Wojska amerykańskie w Europie. Ilu żołnierzy jest w Polsce?"
+ },
+ {
+  "no": 142,
+  "id": "demagog:wypowiedzi/eurowybory-ile-mandatow-przypadnie-polsce",
+  "claim": "Polacy wybierają jedną z największych ilości w ogóle europosłów w Europie, aż 53.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2024-05-31",
+  "title": "Eurowybory – ile mandatów przypadnie Polsce?"
+ },
+ {
+  "no": 143,
+  "id": "demagog:wypowiedzi/do-100-mld-zl-rocznie-czy-tyle-kosztuje-polske-nadmierne-spozycie-alkoholu",
+  "claim": "Nadmierne spożycie alkoholu kosztuje budżet państwa do 100 miliardów złotych. To są sprawy bezpieczeństwa, policyjne, sprzątanie, no i przede wszystkim zdrowie",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-06-11",
+  "title": "Do 100 mld zł rocznie. Czy tyle kosztuje Polskę nadmierne spożycie alkoholu?"
+ },
+ {
+  "no": 144,
+  "id": "demagog:wypowiedzi/projekt-budzetu-ue-polska-najwiekszym-beneficjentem",
+  "claim": "Komisja Europejska dziś pokazała liczby w propozycji budżetu na następne 7 lat. Najwięcej 123 mld euro ma dostać…. Polska",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-07-18",
+  "title": "Projekt budżetu UE. Polska największym beneficjentem"
+ },
+ {
+  "no": 145,
+  "id": "demagog:wypowiedzi/sluchacze-radia-maryja-czy-czytelnicy-gazety-wyborczej-3",
+  "claim": "Radio Maryja jest jedną z pięciu, sześciu najbardziej słuchanych stacji w Polsce.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2016-02-01",
+  "title": "Słuchacze Radia Maryja, czy czytelnicy Gazety Wyborczej?"
+ },
+ {
+  "no": 146,
+  "id": "demagog:wypowiedzi/dlug-publiczny-polski-nizszy-niz-srednia-ue-to-prawda",
+  "claim": "Dług publiczny wciąż mamy niższy od średniej w Unii Europejskiej.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2026-07-17",
+  "title": "Dług publiczny Polski niższy niż średnia UE? To prawda"
+ },
+ {
+  "no": 147,
+  "id": "demagog:wypowiedzi/niemcy-zawracaja-migrantow-na-granicy-kogo-najczesciej",
+  "claim": "Około 10 tys. osób uzyskało odmowę wjazdu do Niemiec [w 2024 roku – przyp, Demagog]. W tym roku to jest 4,5 tys. Z tego połowa to są obywatele Ukrainy.",
+  "rating": "true",
+  "rating_raw": "Prawda",
+  "published_at": "2025-07-09",
+  "title": "Niemcy zawracają migrantów na granicy. Kogo najczęściej?"
+ },
+ {
+  "no": 148,
+  "id": "demagog:wypowiedzi/jak-wiele-szczepionek-przeciw-covid-19-jest-utylizowanych-w-polsce",
+  "claim": "Polska ma jeden z najniższych wskaźników utylizacji szczepionek w całej Europie. Jedna, mniej więcej, jedna na 1000 szczepionek jest utylizowana.",
+  "rating": "unverifiable",
+  "rating_raw": "Nieweryfikowalne",
+  "published_at": "2021-06-01",
+  "title": "Jak wiele szczepionek przeciw COVID-19 jest utylizowanych w Polsce?"
+ }
+]

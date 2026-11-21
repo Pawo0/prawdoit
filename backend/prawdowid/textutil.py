@@ -190,15 +190,31 @@ def content_words(s: str) -> list[str]:
 _LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat)\b[^.!?]{0,40}[!.]+\s*", re.I)
 
 
+_PAST = re.compile(r"\b\w{3,}(?:ł|ła|ło|li|ły)\b")
+_COMPOUND_FUTURE = re.compile(r"\bbęd\w*\s+\w+")
+_BEDZIE = re.compile(r"będzie")
+_PL_DIACRITIC = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
+_KIND_RX = (_LEADIN, _OPINION, _PREDICTION, _FACTUAL_CUE, _PAST, _COMPOUND_FUTURE, _BEDZIE)
+# the same patterns with their own diacritics stripped ("będzie" -> "bedzie", "…ł" -> "…l"), for text typed without them
+_KIND_RX_PLAIN = tuple(re.compile(rx.pattern.translate(_STRIP), rx.flags) for rx in _KIND_RX)
+
+
 def claim_kind(s: str) -> str:
-    s = _LEADIN.sub("", s) or s  # "Skandal we Wrocławiu! <fact>" — the exclamation is not the claim
-    if _OPINION.search(s) and not _NUMBER.search(s):
+    """fakt | opinia | pytanie | prognoza, from wording cues.
+
+    A text that contains no Polish diacritic at all is taken as typed without them ("zostanie zwolniony i wroci",
+    "dopuscil sie") and is matched with diacritic-stripped patterns. A text that does contain diacritics keeps the exact
+    patterns: stripping there would only add ambiguity ("czuję" I feel / "czuje" he feels, "mają" / "3 maja")."""
+    leadin, opinion, prediction, factual, past_rx, compound_future, bedzie = (
+        _KIND_RX if _PL_DIACRITIC.search(s) else _KIND_RX_PLAIN)
+    s = leadin.sub("", s) or s  # "Skandal we Wrocławiu! <fact>" — the exclamation is not the claim
+    if opinion.search(s) and not _NUMBER.search(s):
         return "opinia"
     if is_question(s):
         return "pytanie"
     # past-tense verbs signal a factual report, except in compound future tense ("będą rosły", "będzie rodził")
-    past = re.search(r"\b\w{3,}(?:ł|ła|ło|li|ły)\b", re.sub(r"\bbęd\w*\s+\w+", " ", s))
-    if _PREDICTION.search(s) and not _FACTUAL_CUE.search(s.replace("będzie", "")) and not past:
+    past = past_rx.search(compound_future.sub(" ", s))
+    if prediction.search(s) and not factual.search(bedzie.sub("", s)) and not past:
         return "prognoza"
     return "fakt"
 

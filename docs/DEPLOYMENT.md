@@ -63,6 +63,34 @@ i kierować ruch do `127.0.0.1:8000`, ustawiając zaufane adresy proxy odpowiedn
 Panel moderatora używa tokenu z `.env`, a nie tokenu demonstracyjnego z instrukcji uruchamiania bez Dockera.
 HTTPS jest potrzebny przed przesyłaniem rzeczywistych zgłoszeń i danych dostępowych przez internet.
 
+## Limity zapytań i adres klienta za proxy
+
+Limity są liczone na adres klienta, w oknie jednej minuty, w pamięci procesu (`backend/prawdowid/ratelimit.py`):
+
+| Zmienna | Domyślnie | Czego dotyczy |
+|---|---|---|
+| `PRAWDOWID_RATE_LIMIT` | 120 | `POST /api/check` i `/api/check/async` (zestaw jury ma co najmniej 30 przypadków) |
+| `PRAWDOWID_RATE_LIMIT_QUICK` | 60 | `POST /api/quick` — paczki wtyczki (do 40 fragmentów w paczce) |
+| `PRAWDOWID_RATE_LIMIT_AUTO` | 20 | sprawdzenia w tle (`mode: "auto"`); liczą się też do pierwszego limitu |
+| `PRAWDOWID_QUICK_CONCURRENCY` | 1 | ile paczek `/api/quick` liczy się naraz; pozostałe czekają do 3 s, potem 503 |
+
+Przekroczenie limitu to odpowiedź 429 z nagłówkiem `Retry-After` (sekundy) — nigdy wynik merytoryczny.
+
+**Za reverse proxy adresem połączenia jest proxy.** Bez dodatkowej konfiguracji wszyscy użytkownicy dzielą wtedy jeden
+limit. uvicorn (uruchamiany z domyślnym `--proxy-headers`) podstawia adres z nagłówka `X-Forwarded-For` tylko wtedy,
+gdy połączenie przychodzi z adresu wymienionego w `FORWARDED_ALLOW_IPS` (domyślnie `127.0.0.1,::1`). W Compose tę
+zmienną ustawia `PRAWDOWID_TRUSTED_PROXY_IPS`:
+
+- profil `tls` (Caddy w sieci Compose): `PRAWDOWID_TRUSTED_PROXY_IPS=*` — jak wyżej; port backendu musi wtedy
+  pozostać na `127.0.0.1`, bo inaczej każdy mógłby podać dowolny adres w nagłówku;
+- własne proxy na tym samym hoście przed kontenerem: połączenie przychodzi z bramy sieci Dockera, nie z `127.0.0.1` —
+  podaj jej adres lub podsieć, np. `PRAWDOWID_TRUSTED_PROXY_IPS=172.16.0.0/12`;
+- uruchomienie bez Dockera za tunelem lub proxy na tym samym hoście (np. `cloudflared`): domyślne `127.0.0.1` wystarcza,
+  o ile tunel dodaje `X-Forwarded-For`; w innym układzie ustaw `FORWARDED_ALLOW_IPS` lub `--forwarded-allow-ips`.
+
+Sprawdzenie: `backend/.venv/bin/python backend/tests/test_rate_limit.py` (klasa `ProxyAddress` używa tego samego
+middleware, które instaluje uvicorn). Limity są lokalne dla procesu — druga replika wymaga wspólnego magazynu.
+
 ## Hosting przyjmujący własny obraz Docker
 
 Zbuduj i wypchnij obraz do własnego rejestru:

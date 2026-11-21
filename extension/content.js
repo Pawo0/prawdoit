@@ -1,7 +1,12 @@
 // Prawdowid — content script.
-// 1) Real-time: scans what is VISIBLE on screen (IntersectionObserver) on social media & news portals, sends only the
-//    text of each post/headline/paragraph to the Prawdowid server, and marks content that matches a claim already
-//    rated false/misleading by fact-checkers: a click-to-reveal overlay (high) or a badge with probability (medium).
+// 1) Real-time: scans what is VISIBLE on screen (IntersectionObserver) on social media & news portals and sends only
+//    the text of each post/headline/paragraph to the Prawdowid server. The server is a ROUTER with three answers:
+//      none      → nothing is shown;
+//      candidate → nothing is shown. With the opt-in setting "autoVerify", at most 3 per page view are checked in
+//                  the background (full pipeline in "auto" mode: local sources only, no live search, text not
+//                  stored) and get a badge only if that check ends with a decisive verdict that cites a source;
+//      match     → a badge naming the fact-checker, its rating, the date and a link; a click runs the full check.
+//    A badge is therefore never shown without a named source. Covering the post is an opt-in setting.
 // 2) On demand: floating button (bottom-right) → "Wybierz fragment" element picker (like uBlock) → full analysis.
 // Never judges by domain/author/popularity — only by content matched to verified fact-checks (challenge rule).
 (() => {
@@ -14,7 +19,7 @@
   const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new Promise(res => chrome.runtime.sendMessage(msg, res));
   const host = location.hostname.replace(/^www\./, "");
   const isMobile = matchMedia("(pointer: coarse)").matches;
-  let S = {autoScan: true, mockMode: false, mode: "zaslon", disabledSites: [], noticeSeen: false, apiBase: ""};
+  let S = {autoScan: true, autoVerify: false, mockMode: false, mode: "oznacz", disabledSites: [], noticeSeen: false, apiBase: ""};
 
   // ------------------------------------------------------------------ site adapters
   const txt = el => (el?.innerText || "").replace(/\s+/g, " ").trim();
@@ -74,8 +79,10 @@
   .card.c .row{margin-top:8px}.card.c button{font-size:13px;min-height:40px;padding:7px 9px}
   .q{margin:10px 0;padding:8px 10px;border-left:3px solid #443cf2;background:#eae9e2;font-size:14px}
   .meta{color:#55554f;font-size:13px}.bar{height:8px;background:#d2d1c7;margin:8px 0}.bar>span{display:block;height:100%;background:#815000}
-  .badge{position:absolute;top:6px;right:6px;z-index:2147483000;cursor:pointer;font-size:13px;min-height:36px;padding:6px 10px;border-radius:0;background:#f4f3eb;color:#815000;border:2px solid #191919;box-shadow:2px 2px 0 #191919}
-  .pop{position:absolute;top:48px;right:6px;z-index:2147483001;width:min(420px,90vw)}
+  .badge{position:absolute;top:6px;right:6px;z-index:2147483000;font-size:13px;line-height:1.35;min-height:36px;padding:6px 10px;border-radius:0;background:#f4f3eb;color:#191919;border:2px solid #191919;box-shadow:2px 2px 0 #191919;
+    display:flex;align-items:center;gap:10px;width:max-content;max-width:min(490px,calc(100% - 12px));overflow-wrap:anywhere}
+  .badge a{color:#3027cf;text-decoration:underline;text-underline-offset:3px;min-width:0}
+  .badge button{font-size:13px;min-height:32px;padding:4px 10px;flex-shrink:0}.card .meta a{color:#3027cf}
   .fab{position:fixed;right:18px;bottom:18px;z-index:2147483603;min-height:56px;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 14px;background:#443cf2;color:white;border:2px solid #191919;box-shadow:4px 4px 0 #191919}
   .fab svg{width:28px;height:28px;shape-rendering:crispEdges}.fab-label{font-size:16px}.fab .n{position:absolute;top:-10px;right:-5px;background:#f4f3eb;color:#191919;border:1px solid #191919;font:700 12px system-ui;padding:2px 6px}
   .fab:hover{background:#3027cf;color:white}
@@ -167,54 +174,151 @@
   const isOurs = el => !!el?.closest?.("prawdowid-ui");
 
   // ------------------------------------------------------------------ result rendering on page elements
-  const results = new Map(); // text hash -> QuickResult
+  const results = new Map(); // text hash -> QuickResult (+ .verified once a background check ended decisively)
   const pending = new Map(); // id -> {target, text, hash}
   const seen = new WeakMap(); // element -> hash
   let flaggedCount = 0;
 
   function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length; }
 
-  function matchCard(r, text, cls, compact = false) {
+  // Router state of a tier-1 answer. Servers without the router only send `level`.
+  const stateOf = r => r.state || (r.level !== "brak" && r.match ? "match" : "none");
+  const ratingOf = m => m.verdict_raw || (m.verdict === "false" ? "fałsz" : "wprowadza w błąd");
+  const sourceLink = (url, label = "Źródło") => `<a href="${safeUrl(url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(label)} ↗</a>`;
+
+  // The only two things a tag can say, both about a named publication (publisher, date, link):
+  // - match: a fact-checker rated a similar statement — text matching, not a verification of this post;
+  // - verified: the background check of this text ended with a decisive verdict that cites this source.
+  // The badge text is the link to that publication; the full sentence is its tooltip / accessible description.
+  function tagOf(r) {
+    const v = r.verified;
+    if (v) {
+      const [lead, brief] = v.verdict === "falszywe" ? ["Źródła przeczą tej informacji", "Źródła przeczą"] : ["Według źródeł ta informacja wprowadza w błąd", "Wprowadza w błąd wg źródeł"];
+      const who = `: <b>${esc(v.publisher)}</b>, ${esc(fmtDate(v.date))}`;
+      return {kind: "auto", url: v.url, html: lead + who, brief: brief + who,
+        title: `${lead}: ${v.publisher}, ${fmtDate(v.date)}. Wynik automatycznego sprawdzenia w lokalnej bazie źródeł. „Sprawdź” uruchamia pełne sprawdzenie.`};
+    }
     const m = r.match;
-    return `<div class="card ${cls}${compact ? " c" : ""}">
-      <div class="mini-title">Prawdowid · ostrzeżenie</div><div class="hd">! Treść wymaga uwagi</div>
-      <p style="margin:8px 0">Podobną informację ${esc(m.publisher)} ocenił(a) jako <b>${esc(m.verdict_raw || (m.verdict === "false" ? "fałszywą" : "wprowadzającą w błąd"))}</b>.</p>
-      ${compact ? "" : `<div class="meta">To dopasowanie treści, a nie pełna weryfikacja. Sprawdź kontekst.</div><div class="meta">Źródło: ${esc(m.publisher)} · ${esc(fmtDate(m.published_at))}</div>`}
-      <div class="row"><button class="p" data-a="analiza">Sprawdź szczegóły</button><button data-a="${cls === "h" ? "pokaz" : "zamknij"}">${cls === "h" ? "Odsłoń treść" : "Zamknij"}</button></div></div>`;
+    if (stateOf(r) !== "match" || !m?.publisher || safeUrl(m.url) === "#") return null;
+    const what = `: <b>${esc(m.publisher)}</b> — „${esc(ratingOf(m))}” (${esc(fmtDate(m.published_at))})`;
+    return {kind: "match", url: m.url, html: "Podobna informacja" + what, brief: "Podobne" + what,
+      title: `Podobną informację ${m.publisher} ocenił(a) jako „${ratingOf(m)}” (${fmtDate(m.published_at)}). To dopasowanie treści, a nie pełna weryfikacja. „Sprawdź” uruchamia pełne sprawdzenie.`};
+  }
+
+  function matchCard(r, compact = false) {
+    const m = r.match;
+    return `<div class="card h${compact ? " c" : ""}">
+      <div class="mini-title">Prawdowid · ocena fact-checkera</div><div class="hd">Podobna informacja była sprawdzana</div>
+      <p style="margin:8px 0">Podobną informację ${esc(m.publisher)} ocenił(a) jako <b>${esc(ratingOf(m))}</b>.</p>
+      ${compact ? "" : `<div class="meta">To dopasowanie treści, a nie pełna weryfikacja. Sprawdź kontekst.</div>`}<div class="meta">${sourceLink(m.url, `Źródło: ${m.publisher} · ${fmtDate(m.published_at)}`)}</div>
+      <div class="row"><button class="p" data-a="analiza">Sprawdź szczegóły</button><button data-a="pokaz">Odsłoń treść</button></div></div>`;
   }
 
   function render(target, r, text) {
-    if (!target.isConnected || r.level === "brak" || target.querySelector(":scope > prawdowid-ui")) return;
+    const tag = tagOf(r);
+    if (!tag || !target.isConnected || target.querySelector(":scope > prawdowid-ui")) return;
     if (getComputedStyle(target).position === "static") target.style.position = "relative";
     const {host: h, root} = shadowHost(target);
+    h.dataset.kind = tag.kind;
     flaggedCount++; updateFab();
     const wire = (scope) => scope.querySelectorAll("[data-a]").forEach(b => b.addEventListener("click", ev => {
       ev.preventDefault(); ev.stopPropagation();
       const a = b.dataset.a;
       if (a === "analiza") checkText(text, target);
-      if (a === "zrodlo") window.open(safeUrl(r.match.url), "_blank", "noopener");
-      if (a === "pokaz" || a === "zamknij") { root.querySelector(".ov, .pop")?.remove(); if (a === "pokaz") showBadge(); }
+      if (a === "pokaz") { root.querySelector(".ov")?.remove(); showBadge(); }
     }));
     function showBadge() {
-      const b = document.createElement("button");
-      b.className = "badge" + (r.level === "wysokie" ? " h" : "");
+      const b = document.createElement("div");
+      b.className = "badge"; b.setAttribute("role", "note"); b.title = tag.title; b.setAttribute("aria-label", tag.title);
       b.style.pointerEvents = "auto";
-      b.textContent = "! Sprawdź tę treść";
-      b.title = "Prawdowid: kliknij, aby zobaczyć szczegóły";
-      b.onclick = ev => { ev.preventDefault(); ev.stopPropagation();
-        const ex = root.querySelector(".pop"); if (ex) { ex.remove(); return; }
-        const p = document.createElement("div"); p.className = "pop"; p.style.pointerEvents = "auto"; p.innerHTML = matchCard(r, text, "m"); root.append(p); wire(p); };
-      root.append(b);
+      const narrow = target.getBoundingClientRect().width < 520; // shorter lead where the badge would cover the post
+      b.innerHTML = `<a href="${safeUrl(tag.url)}" target="_blank" rel="noopener noreferrer nofollow">${narrow ? tag.brief : tag.html} ↗</a><button data-a="analiza">Sprawdź</button>`;
+      b.addEventListener("click", ev => ev.stopPropagation()); // the source link must not trigger the post's own click
+      root.append(b); wire(b);
+      if (target.getBoundingClientRect().height < 120) {
+        // a short post (headline, one-line entry): make room above it instead of covering its text
+        const before = target.style.paddingTop;
+        target.style.paddingTop = (parseFloat(getComputedStyle(target).paddingTop) || 0) + b.getBoundingClientRect().height + 8 + "px";
+        h.restore = () => { target.style.paddingTop = before; };
+      }
     }
-    if (r.level === "wysokie" && S.mode === "zaslon") {
-      // the card must fit INSIDE the post, never spill over neighbouring content
+    if (tag.kind === "match" && r.level === "wysokie" && S.mode === "zaslon") {
+      // opt-in setting. The card must fit INSIDE the post, never spill over neighbouring content
       const hgt = target.getBoundingClientRect().height;
       const compact = hgt < 270;
       if (hgt < 210) target.style.minHeight = "210px";
       const ov = document.createElement("div"); ov.className = "ov"; ov.style.pointerEvents = "auto";
-      ov.innerHTML = matchCard(r, text, "h", compact); root.append(ov); wire(ov);
+      ov.innerHTML = matchCard(r, compact); root.append(ov); wire(ov);
       ov.addEventListener("click", e => e.stopPropagation());
     } else showBadge();
+  }
+  function unrender(target, kind) {
+    const h = target?.querySelector?.(`:scope > prawdowid-ui[data-kind="${kind}"]`);
+    if (h) { h.restore?.(); h.remove(); flaggedCount = Math.max(0, flaggedCount - 1); updateFab(); }
+  }
+
+  // ------------------------------------------------------------------ full check (tier 2): start a job, poll its stage
+  // Returns {data: CheckResult} or {error?: message}. `alive` lets the caller abandon a check it no longer shows.
+  async function fullCheck(text, mode = "manual", onStage = null, alive = () => true) {
+    let r;
+    try { r = await send({type: "check", text: text.slice(0, 6000), mode}); } catch { return {}; }
+    if (!r?.ok) return {limited: [429, 503].includes(r?.status)};
+    if (r.data) return {data: r.data}; // demo mode, or a server without the job API (synchronous answer)
+    const deadline = Date.now() + (mode === "auto" ? 20000 : 120000);
+    let misses = 0;
+    while (alive() && Date.now() < deadline) {
+      await new Promise(done => setTimeout(done, 700));
+      let j;
+      try { j = await send({type: "job", id: r.job}); } catch { j = null; }
+      if (!j?.ok) { if (j?.status === 404 || ++misses > 3) return {}; continue; }
+      misses = 0;
+      const s = j.data || {};
+      if (s.state === "done") return s.result ? {data: s.result} : {};
+      if (s.state === "error") return {error: s.error};
+      onStage?.(s);
+    }
+    return {};
+  }
+
+  // A background result earns a badge only if it is decisive AND names its source; everything else stays silent.
+  function decisive(res) {
+    if (res?.status !== "ok" || res.demo) return null;
+    for (const verdict of ["falszywe", "wprowadzajace_w_blad"]) for (const c of res.claims || []) {
+      if (c.verdict !== verdict || c.conflicting) continue;
+      const ev = c.evidence || [];
+      const e = ev[c.main_evidence ?? -1] || ev.find(x => x.stance === "przeczy");
+      if (e?.publisher && safeUrl(e.url) !== "#") return {verdict, publisher: e.publisher, date: e.published_at, url: e.url};
+    }
+    return null;
+  }
+
+  // ------------------------------------------------------------------ automatic hand-over: candidate → background check
+  const AUTO_MAX = 3; // background checks per page view; everything else waits for a click
+  const candidates = [], autoSeen = new Set();
+  const pageOf = () => location.origin + location.pathname; // query/hash changes (tracking, infinite scroll) are the same page
+  let autoLeft = AUTO_MAX, autoBusy = false, autoTimer = null, page = pageOf();
+
+  function offer(p, q) {
+    if (!S.autoVerify || S.mockMode || autoLeft <= 0 || autoSeen.has(p.h)) return;
+    candidates.push({h: p.h, text: p.text, target: p.target, priority: q.priority || 0});
+    if (!autoTimer) autoTimer = setTimeout(runAuto, 900); // let the first screen arrive before spending the budget
+  }
+  async function runAuto() {
+    autoTimer = null;
+    if (autoBusy) return;
+    autoBusy = true;
+    while (autoLeft > 0 && candidates.length && S.autoVerify && !S.mockMode) {
+      candidates.sort((a, b) => b.priority - a.priority);
+      const c = candidates.shift();
+      if (autoSeen.has(c.h)) continue;
+      autoSeen.add(c.h); autoLeft--; // one at a time; a failed attempt also uses up the budget
+      const out = await fullCheck(c.text, "auto");
+      if (out.limited) { autoLeft = 0; break; } // the server asked for less: no more background checks on this page
+      const v = out.data?.mode === "auto" && decisive(out.data);
+      if (v) { const q = results.get(c.h); if (q) { q.verified = v; render(c.target, q, c.text); } }
+    }
+    candidates.length = 0;
+    autoBusy = false;
   }
 
   // ------------------------------------------------------------------ real-time scanning of visible content
@@ -222,8 +326,14 @@
     for (const e of entries) if (e.isIntersecting) { queue(e.target); io.unobserve(e.target); }
   }, {threshold: 0.2});
   const targetText = new WeakMap();
-  let batch = [], timer = null, seq = 0;
+  let batch = [], timer = null, seq = 0, sending = false, pauseUntil = 0;
 
+  function route(p, q) {
+    results.set(p.h, q);
+    const st = stateOf(q);
+    if (st === "match") render(p.target, q, p.text);
+    else if (st === "candidate") offer(p, q); // never shown by itself
+  }
   function queue(target) {
     const text = targetText.get(target);
     if (!text) return;
@@ -232,26 +342,36 @@
     const id = "i" + (seq++);
     pending.set(id, {target, text, h});
     batch.push({id, text: text.slice(0, 1500)});
-    if (!timer) timer = setTimeout(flush, 500);
+    if (!timer && !sending) timer = setTimeout(flush, 500);
   }
 
+  // One batch at a time: the next one leaves only after the previous answer, so a slow server is never piled on.
   async function flush() {
     timer = null;
+    if (sending) return;
+    if (pauseUntil > Date.now()) { timer = setTimeout(flush, pauseUntil - Date.now()); return; }
     const items = batch.splice(0, 16);
-    if (batch.length) timer = setTimeout(flush, 300);
     if (!items.length) return;
-    const r = await send({type: "quick", items});
-    if (!r?.ok) { console.debug("[Prawdowid] quick failed", r?.error); items.forEach(i => pending.delete(i.id)); return; }
-    for (const q of r.data) {
-      const p = pending.get(q.id); pending.delete(q.id);
-      if (!p) continue;
-      results.set(p.h, q);
-      if (q.level !== "brak") render(p.target, q, p.text);
-    }
+    sending = true;
+    let r;
+    try { r = await send({type: "quick", items}); } catch { r = null; }
+    sending = false;
+    if (r?.ok) {
+      for (const q of r.data) {
+        const p = pending.get(q.id); pending.delete(q.id);
+        if (p) route(p, q);
+      }
+    } else if ([429, 503].includes(r?.status)) {
+      // rate limit / busy server: keep the items and wait as long as the server asked. An error never renders a tag.
+      pauseUntil = Date.now() + Math.min(60, Math.max(2, r.retryAfter || 5)) * 1000;
+      batch.unshift(...items);
+    } else { console.debug("[Prawdowid] quick failed", r?.error); items.forEach(i => pending.delete(i.id)); }
+    if (batch.length) timer = setTimeout(flush, Math.max(300, pauseUntil - Date.now()));
   }
 
   function scan() {
     if (!S.noticeSeen || !supportsAutoScan || !S.autoScan || S.disabledSites.includes(host) || !adapter) return;
+    if (pageOf() !== page) { page = pageOf(); autoLeft = AUTO_MAX; } // in-app navigation = new page view
     for (const {target, text} of adapter.items(document)) {
       if (!target || isOurs(target) || !text || text.length < 40) continue;
       const h = hash(text);
@@ -368,17 +488,19 @@
     openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>Sprawdzanie informacji</h2></div></div>
       <div class="selected-text"><span class="selected-label">Wybrany fragment</span>${esc(text.slice(0, 280))}${text.length > 280 ? "…" : ""}</div>
       <div class="loader-track" role="progressbar" aria-label="Trwa sprawdzanie informacji"><div class="loader-blocks"></div></div>
-      <p role="status">${S.mockMode ? "Ładowanie przykładowego wyniku…" : "Trwa analiza treści i wyszukiwanie dowodów."}</p><p class="muted">${S.mockMode ? "Tryb demonstracyjny · tekst pozostaje w przeglądarce." : "Wysyłamy tylko tekst fragmentu, bez adresu strony."}</p>`, {title: S.mockMode ? "Demo · sprawdzanie…" : "Sprawdzanie…", loading: true});
+      <p role="status" data-stage>${S.mockMode ? "Ładowanie przykładowego wyniku…" : "Trwa analiza treści i wyszukiwanie dowodów."}</p><p class="muted">${S.mockMode ? "Tryb demonstracyjny · tekst pozostaje w przeglądarce." : "Wysyłamy tylko tekst fragmentu, bez adresu strony."}</p>`, {title: S.mockMode ? "Demo · sprawdzanie…" : "Sprawdzanie…", loading: true});
     // The optional quick annotation must never delay the full answer or turn its failure into an error.
     if (el) send({type: "quick", items: [{id: "pick", text: text.slice(0, 1500)}]}).then(quick => {
-      if (version === checkVersion && quick?.ok && quick.data?.[0]?.level !== "brak" && quick.data?.[0]?.match) render(el, quick.data[0], text);
+      if (version === checkVersion && quick?.ok && quick.data?.[0] && stateOf(quick.data[0]) === "match") render(el, quick.data[0], text);
     }).catch(() => {});
-    let full;
-    try { full = await send({type: "check", text: text.slice(0, 6000)}); }
-    catch { full = {ok: false}; }
+    // The server reports what it is really doing (queue, local sources, trusted sites…); show that stage.
+    const full = await fullCheck(text, "manual", s => {
+      const stage = version === checkVersion && s.stage_label && sheet?.querySelector("[data-stage]");
+      if (stage) stage.textContent = s.stage_label;
+    }, () => version === checkVersion);
     if (version !== checkVersion) return;
-    if (!full?.ok) {
-      messageSheet("Nie udało się sprawdzić", "Nie udało się połączyć z serwerem Prawdowida. Spróbuj ponownie za chwilę. To błąd techniczny, a nie ocena treści.", () => checkText(text, el));
+    if (!full.data) {
+      messageSheet("Nie udało się sprawdzić", full.error || (full.limited ? "Serwer Prawdowida przyjął już zbyt wiele zapytań. Spróbuj ponownie za chwilę. To błąd techniczny, a nie ocena treści." : "Nie udało się połączyć z serwerem Prawdowida. Spróbuj ponownie za chwilę. To błąd techniczny, a nie ocena treści."), () => checkText(text, el));
       return;
     }
     const res = full.data;
@@ -386,6 +508,8 @@
       messageSheet(res.status === "blad_techniczny" ? "Błąd techniczny" : res.status === "doprecyzuj" ? "Doprecyzuj pytanie" : "Poza zakresem", res.status_message || "Nie można wykonać tego sprawdzenia.", res.status === "blad_techniczny" ? () => checkText(text, el) : null);
       return;
     }
+    // The check the user asked for (with live search) supersedes a badge left by the background check.
+    if (el && !res.demo && !decisive(res)) unrender(el, "auto");
     const verdictView = {
       falszywe: {label: "Fałsz", icon: "×", tone: "false", hint: "Źródła przeczą tej informacji."},
       potwierdzone: {label: "Potwierdzone", icon: "✓", tone: "true", hint: "Źródła potwierdzają tę informację."},
@@ -426,7 +550,7 @@
   function notice() {
     const n = document.createElement("div"); n.className = "notice";
     n.innerHTML = `<div class="card"><div class="mini-title">Prawdowid · pierwsze uruchomienie</div><div class="hd">Prawdowid na tej stronie</div>
-      <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy ostrzegać o widocznych treściach podobnych do obalonych informacji. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony. Brak ostrzeżenia nie oznacza, że treść jest prawdziwa."}</p>
+      <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy pokazywać przy widocznych treściach oceny fact-checkerów dotyczące podobnych informacji — zawsze ze źródłem. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony." + (S.autoVerify ? " Najwyżej 3 fragmenty na stronę sprawdzamy dokładniej w tle: tylko w lokalnej bazie źródeł i bez zapisywania tekstu." : "") + " Brak oznaczenia nie oznacza, że treść jest prawdziwa."}</p>
       <div class="row"><button class="p" data-n="ok">Włącz ostrzeżenia</button><button data-n="off">Sprawdzam tylko ręcznie</button></div></div>`;
     n.addEventListener("click", async e => {
       const a = e.target.closest("button")?.dataset.n; if (!a) return;

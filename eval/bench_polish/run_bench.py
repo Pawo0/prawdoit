@@ -12,6 +12,9 @@ into the work dir on first use so that all variants see the same documents (dele
 Analyzer variants (--analyzer): prefix6 (current), pystempel, simplemma, simplemma_p6 (lemma, then 6-char prefix).
 Other switches: --no-alt (disable the consonant-alternation hack), --regress <cases.jsonl> (run an existing eval set
 through the same patched pipeline and print accuracy).
+
+Splits (--set): v1 = bench.jsonl, the tuning split (default); v2 = bench_v2.jsonl, the held-out split. A v2 run is saved
+as results/<name>_v2.json so that it never overwrites a v1 result. Scoring is identical for both.
 """
 from __future__ import annotations
 
@@ -164,10 +167,10 @@ def patch_rules(kind: str) -> None:
         sub("cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)", "cos >= 0.74 and fwd.entail >= 0.8)")
     elif kind == "bidir_nli":
         sub("if c.claim_cos >= 0.85:  # reverse direction", "if c.claim_cos >= 0.74:  # reverse direction")
-        sub("""            (cos >= 0.88 and not incident)
-            or (cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
-            or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):""",
-            """            cos >= 0.74 and max(fwd.entail, 0.0 if incident else rev.entail) >= 0.8):""")
+        sub("""        if ((cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
+                or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):""",
+            """        if cos >= 0.74 and max(fwd.entail, 0.0 if incident else rev.entail) >= 0.8:""")
+        sub("if cos >= 0.88 and not incident:  # similarity alone", "if False:  # similarity alone: switched off by --rule bidir_nli")
     else:
         raise SystemExit(f"unknown rule variant {kind}")
     exec(compile(src, engine.__file__, "exec"), engine.__dict__)
@@ -225,8 +228,10 @@ def trace(text: str, gold_idx: int) -> dict:
     t["nli_rev"] = [round(rev.entail, 3), round(rev.neutral, 3), round(rev.contra, 3)]
     t["lex"] = round(engine._relevance(set(engine.tokens(d.claim)), q), 3)
     cos = t["gold_cos"]
-    same = engine.same_claim(cos, fwd, rev if cos >= 0.85 else fwd, d.claim, q, d.source_type) if cos >= 0.78 else None
+    same, guard = engine.claim_match(cos, fwd, rev if cos >= 0.85 else fwd, d.claim, q, d.source_type) if cos >= 0.78 else (None, None)
     t["same_claim"] = same
+    if guard:
+        t["guard"] = guard  # rule G1: similarity alone was not accepted because a name or number differs
     # first stage at which the gold document stops being able to produce a verdict
     if c.kind in ("opinia", "prognoza"):
         t["stage"] = "1_kind_gate(R1 regex)"
@@ -237,7 +242,9 @@ def trace(text: str, gold_idx: int) -> dict:
     elif cos < 0.78:
         t["stage"] = "4_match_threshold(cos<0.78: NLI never asked)"
     elif same is None:
-        if max(fwd.contra, rev.contra if cos >= 0.85 else fwd.contra) >= 0.5:
+        if guard:
+            t["stage"] = "5_agreement_guard(G1: name or number differs)"
+        elif max(fwd.contra, rev.contra if cos >= 0.85 else fwd.contra) >= 0.5:
             t["stage"] = "5_nli_contradiction_veto"
         elif cos < 0.80:
             t["stage"] = "5_cos_0.78-0.80_dead_zone"
@@ -304,6 +311,11 @@ def summarise(rows: list[dict]) -> dict:
         tr = [r for r in rows if r["type"] == t]
         c = Counter(r["outcome"] for r in tr)
         s["by_type"][t] = {"n": len(tr), "correct": c["correct"], "abstain_miss": c["abstain"], "false_verdict": c["false_verdict"]}
+    if any(r.get("subtype") for r in rows):  # v2 only: hard negatives by sub-type (a breakdown, not a different score)
+        s["hardneg_by_subtype"] = {}
+        for t in dict.fromkeys(r["subtype"] for r in rows if r.get("subtype")):
+            c = Counter(r["outcome"] for r in rows if r.get("subtype") == t)
+            s["hardneg_by_subtype"][t] = {"n": sum(c.values()), "correct": c["correct"], "false_verdict": c["false_verdict"]}
     ret = [r for r in rows if r["group"] in ("pos", "unverifiable") and "trace" in r and "gold_cos" in r["trace"]]
     s["retrieval_n"] = len(ret)
     s["retrieval"] = {}
@@ -333,11 +345,15 @@ def main() -> None:
     ap.add_argument("--analyzer", default="prefix6")
     ap.add_argument("--no-alt", action="store_true")
     ap.add_argument("--rule", default="", help="what-if same-claim rule: no_lex | bidir_nli (see patch_rules)")
-    ap.add_argument("--bench", default=str(HERE / "bench.jsonl"))
+    ap.add_argument("--set", dest="split", choices=["v1", "v2"], default="v1",
+                    help="v1 = tuning split (bench.jsonl), v2 = held-out split (bench_v2.jsonl, results saved as <name>_v2.json)")
+    ap.add_argument("--bench", default="", help="explicit dataset path (overrides --set)")
     ap.add_argument("--regress", nargs="*", default=[], help="existing eval sets (eval/cases*.jsonl) to run as regression check")
     ap.add_argument("--no-trace", action="store_true")
     ap.add_argument("--skip-bench", action="store_true", help="only run the --regress sets")
     args = ap.parse_args()
+    sfx = "" if args.split == "v1" else f"_{args.split}"
+    args.bench = args.bench or str(HERE / f"bench{sfx}.jsonl")
     setup_env()
     rss0 = rss_mb()
     t0 = time.perf_counter()
@@ -379,6 +395,8 @@ def main() -> None:
              "quote_gate_skips": sum("bramka V2" in l for c in res.claims for l in c.limitations),
              "decisive_sources": [e.doc_id for c in res.claims if c.verdict in DECISIVE for e in c.evidence
                                   if e.stance in ("przeczy", "popiera") or e.same_claim is not None][:3]}
+        if it.get("subtype"):
+            r["subtype"] = it["subtype"]
         if not args.no_trace and it["gold_doc"] in gold_idx:
             r["trace"] = trace(it["text"], gold_idx[it["gold_doc"]])
         rows.append(r)
@@ -387,7 +405,7 @@ def main() -> None:
 
     summary = summarise(rows) if rows else {}
     summary.setdefault("latency_ms", {})
-    summary["setup"] = {"analyzer": args.analyzer, "rule": args.rule, "no_alt": args.no_alt, "embed_model": os.environ.get("PRAWDOWID_EMBED_MODEL", "default"),
+    summary["setup"] = {"set": args.split, "bench": Path(args.bench).name, "analyzer": args.analyzer, "rule": args.rule, "no_alt": args.no_alt, "embed_model": os.environ.get("PRAWDOWID_EMBED_MODEL", "default"),
                         "analyzer_load_s": round(t_an, 2), "analyzer_rss_mb": rss_an - rss0, "index_build_s": round(t_index, 1),
                         "models_load_s": round(t_models, 1), "peak_rss_mb": rss_mb(), "documents": INDEX.stats.get("documents"),
                         "chunks": INDEX.stats.get("chunks"), "claims": INDEX.stats.get("factchecked_claims")}
@@ -404,7 +422,7 @@ def main() -> None:
             rr.append({"id": c["id"], "ok": ok, "verdict": v or res.status, "expected": c["expected"] or c["expected_status"], "false_verdict": fv})
         regress[Path(path).name] = {"n": len(rr), "ok": sum(r["ok"] for r in rr), "false_verdicts": sum(r["false_verdict"] for r in rr), "rows": rr}
         print(f"regress {Path(path).name}: {regress[Path(path).name]['ok']}/{len(rr)} ok, false verdicts {regress[Path(path).name]['false_verdicts']}")
-    out = HERE / "results" / f"{args.name}.json"
+    out = HERE / "results" / f"{args.name}{sfx}.json"
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps({"summary": summary, "rows": rows, "regress": regress}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps({k: v for k, v in summary.items() if k not in ("retrieval_by_type",)}, ensure_ascii=False, indent=1))

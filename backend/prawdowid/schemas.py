@@ -117,6 +117,10 @@ class CheckRequest(BaseModel):
     url: Optional[str] = Field(default=None, max_length=2048)
     channel: str = "web"
     session: Optional[str] = None  # opaque, client-generated; lets the user delete their demo session
+    # "auto" = background check started by the extension router for a `candidate` item (service.run_check): local
+    # corpus only (no live search, no page fetch, no LLM), no moderator case, and the text is not written to the audit log.
+    mode: Literal["manual", "auto"] = "manual"
+    live_search: Optional[bool] = None  # False skips the live stage for this request; always off in auto mode
 
 
 class LiveSearchInfo(BaseModel):
@@ -151,6 +155,7 @@ class CheckResult(BaseModel):
     case_id: Optional[str] = None
     case_status: Optional[str] = None  # "rekomendowane" vs "przekazane" — never claim forwarding that did not happen
     live_search: Optional[LiveSearchInfo] = None  # None = live stage did not run (no key / not needed / disabled)
+    mode: Literal["manual", "auto"] = "manual"  # echo of CheckRequest.mode (auto: see service.run_check)
 
 
 class QuickItem(BaseModel):
@@ -175,10 +180,35 @@ class QuickMatch(BaseModel):
     sentence: str
 
 
+class QuickConflict(BaseModel):
+    """A claim rated TRUE by a fact-checker that is about as close to the text as the debunked one."""
+    claim: str
+    verdict_raw: Optional[str]
+    publisher: str
+    url: str
+    published_at: Optional[str]
+    similarity: float
+
+
+RouterState = Literal["none", "candidate", "match"]
+
+
 class QuickResult(BaseModel):
+    """Tier 1 = router. `state` is the contract; `risk`/`level` are kept for older extension builds.
+
+    none      – nothing to show, nothing to check.
+    candidate – NOT shown to the user; only tells the client which items tier 2 may check in the background
+                (ordered by `priority`). `match`, when present, is merely the nearest rated claim.
+    match     – the text repeats a claim rated by a named fact-checker: `match` carries publisher, rating, date and
+                link. level != "brak" exactly when state == "match"."""
     id: str
-    risk: float  # 0..1 — probability that the content repeats a claim already rated false/misleading
+    risk: float  # 0..1 — internal score of "repeats a claim already rated false/misleading"; never shown to users
     level: Literal["wysokie", "srednie", "brak"]
     match: Optional[QuickMatch] = None
     reason: str = ""
     analysis_url: Optional[str] = None
+    state: RouterState = "none"
+    priority: float = 0.0  # candidates only, 0..1: order for automatic tier-2 checks
+    reasons: list[str] = Field(default_factory=list)  # RATED_CLAIM_MATCH | NEAR_MISS | CONFLICTING_RATINGS |
+    #                                                   HIGH_RISK_TOPIC | FACTUAL_SENTENCE
+    conflict: Optional[QuickConflict] = None  # set when a true-rated claim is equally close (the tag is suppressed)
