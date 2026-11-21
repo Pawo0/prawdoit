@@ -9,7 +9,8 @@ host, no protection bypass, stored URLs skipped, merge capped at `max_docs`, exc
 `params` are overridden in memory for this run. Run ONE process per group — the delay is kept per host per process.
 
 Usage (backend venv, repo root):  backend/.venv/bin/python ingest/backfill_organiser_sources.py <group> [<group>…]
-Groups: govpl | policja | kwp | cert | umgdy | kgsok          (run of 2026-11-21: research/10_organiser_sources.md)
+Groups: govpl | policja | kwp | cert | umgdy | kgsok          (runs of 2026-11-21: research/10_organiser_sources.md;
+kwp and kgsok were run a second time with 4 more listing/feed pages, to cover at least the last three months)
 
 Police sites (policja.pl, mazowiecka.policja.gov.pl): the article pages carry no publication date, so after the fetch
 the listing pages are read once more and `published_at` of every record found there is set from the listing's
@@ -52,17 +53,17 @@ GROUPS: dict[str, list[tuple[str, list[dict]]]] = {
         html_list(POLICJA, r"^https://policja\.pl/pol/aktualnosci/\d+,[^/]+\.html$", a, b) for a, b in ((1, 20), (21, 40))])],
     "kwp": [("kwp_radom_aktualnosci", [
         html_list(KWP, r"^https://mazowiecka\.policja\.gov\.pl/ra/aktualnosci/aktualnosci/\d+,[^/]+\.html$", a, b)
-        for a, b in ((1, 10), (11, 16))])],
+        for a, b in ((1, 10), (11, 20))])],
     "cert": [("cert_komunikaty", [dict(params={"list_urls": pages("https://moje.cert.pl/komunikaty/?page={}", 1, 12),
                                                "max_items": 120})])],
     "umgdy": [("umgdy_aktualnosci", [dict(params={
         "list_urls": ["https://www.umgdy.gov.pl/aktualnosci/"] + pages("https://www.umgdy.gov.pl/aktualnosci/strona/{}/", 2, 6),
         "max_items": 60})])],
     "kgsok": [("kgsok_aktualnosci", [dict(params={"feed_url": f"https://kgsok.pl/feed/?paged={n}", "max_items": 20})
-                                     for n in range(2, 16)])],
+                                     for n in range(2, 20)])],
 }
 SINCE = (date.today() - timedelta(days=200)).isoformat()  # newly fetched records older than this are not kept
-LISTING_DATES = {"policja_aktualnosci": (POLICJA, 40), "kwp_radom_aktualnosci": (KWP, 16)}
+LISTING_DATES = {"policja_aktualnosci": (POLICJA, 40), "kwp_radom_aktualnosci": (KWP, 20)}
 KEEP = ("max_docs", "max_chars", "delay_s", "date_regex")  # registry params that also apply to an overridden method
 
 
