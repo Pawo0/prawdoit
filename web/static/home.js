@@ -4,6 +4,10 @@
   const results = document.getElementById('results'), out = document.getElementById('out');
   const submit = document.getElementById('go'), error = document.getElementById('form-error');
   const copy = document.getElementById('copy-link'), copied = document.getElementById('copied');
+  const img = document.getElementById('img'), attach = document.getElementById('attach');
+  const MAX_IMAGE = 6e6;  // backend/prawdowid/ocr.py MAX_IMAGE_BYTES
+  const readImage = f => new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => fail(r.error); r.readAsDataURL(f); });
+  if (img) img.onchange = () => { q.required = !img.files.length; error.hidden = true; };
   let mode = 'text', busy = false;
   function hideLinks() { document.getElementById('result-link').hidden = true; copy.hidden = true; copied.textContent = ''; }
   function setMode(next) {
@@ -15,6 +19,7 @@
     document.getElementById('q-label').textContent = next === 'url' ? 'Wklej adres strony z informacją' : 'Wklej tekst, który chcesz sprawdzić';
     q.placeholder = next === 'url' ? 'https://…' : 'Wklej wiadomość lub fragment posta…';
     q.inputMode = next === 'url' ? 'url' : 'text'; error.hidden = true; q.focus();
+    if (attach) { attach.hidden = next === 'url'; if (next === 'url' && img) { img.value = ''; q.required = true; } }
   }
   document.getElementById('tab-text').onclick = () => setMode('text');
   document.getElementById('tab-url').onclick = () => setMode('url');
@@ -24,7 +29,9 @@
   }
   form.addEventListener('submit', async e => {
     e.preventDefault(); if (busy) return;
-    const text = q.value.trim(); if (!text) { q.focus(); return; }
+    const file = mode === 'text' && img && img.files[0] || null;
+    const text = q.value.trim(); if (!text && !file) { q.focus(); return; }
+    if (file && file.size > MAX_IMAGE) { error.textContent = 'Obraz jest za duży (limit 6 MB).'; error.hidden = false; return; }
     if (mode === 'url' && !/^https?:\/\/\S+$/.test(text)) { error.textContent = 'Wklej pełny adres zaczynający się od https:// lub http://.'; error.hidden = false; q.focus(); return; }
     busy = true; submit.disabled = true; error.hidden = true;
     document.getElementById('again').disabled = true;
@@ -34,7 +41,8 @@
     const wait = openWait({inline: out});
     showResults();
     try {
-      const res = await checkWithProgress(text, new URLSearchParams(location.search).get('ch') || 'web', wait); renderResult(res, out);
+      const image = file ? await readImage(file) : null;
+      const res = await checkWithProgress(text, new URLSearchParams(location.search).get('ch') || 'web', wait, image); renderResult(res, out);
       if (res.status === 'ok' && res.id) { const link = document.getElementById('result-link'); link.href = '/analiza/' + encodeURIComponent(res.id); link.hidden = false; copy.hidden = false; }
     }
     catch (err) { renderTechError(out, err); }  // technical error or "Anuluj" — never shown as an assessment of the content

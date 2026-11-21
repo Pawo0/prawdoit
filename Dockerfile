@@ -13,9 +13,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/backend
 
 WORKDIR /app
-# libgomp is required by the CPU numerical libraries. No compiler or browser in the image.
+# libgomp is required by the CPU numerical libraries; tesseract-ocr(-pol) reads screenshots (ocr.py, ~20 MB).
+# No compiler or browser in the image.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libgomp1 \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 tesseract-ocr tesseract-ocr-pol \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 prawdowid \
     && useradd --uid 10001 --gid prawdowid --create-home prawdowid \

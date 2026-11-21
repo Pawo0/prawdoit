@@ -68,8 +68,8 @@ def health():
 
 @app.post("/api/check", response_model=CheckResult)
 def api_check(req: CheckRequest, request: Request):
-    if not (req.text or req.url):
-        raise HTTPException(422, "Podaj tekst lub adres URL.")
+    if not (req.text or req.url or req.image_b64):
+        raise HTTPException(422, "Podaj tekst, adres URL lub obraz.")
     guard_auto(req, request)
     return run_check(req)
 

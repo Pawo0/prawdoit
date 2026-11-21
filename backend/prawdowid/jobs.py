@@ -105,8 +105,8 @@ def guard_auto(req: CheckRequest, request: Request) -> None:
 
 @router.post("/api/check/async")
 def api_check_async(req: CheckRequest, request: Request):
-    if not (req.text or req.url):
-        raise HTTPException(422, "Podaj tekst lub adres URL.")
+    if not (req.text or req.url or req.image_b64):
+        raise HTTPException(422, "Podaj tekst, adres URL lub obraz.")
     guard_auto(req, request)
     auto = req.mode == "auto"
     _purge()

@@ -107,3 +107,4 @@ ul.res-list li{margin:8px 0;overflow-wrap:anywhere}
 .wait-ov .window{width:100%;max-width:420px}
 .wait-ov .loading-window{padding:20px}
 .wait-ov .loading-window h2{font-size:22px}
+.attach{margin-top:10px}.check-window .attach label{font-size:14px;font-weight:500;margin-bottom:4px}.attach input{font-size:14px;max-width:100%}

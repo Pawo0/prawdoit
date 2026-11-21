@@ -127,6 +127,9 @@ class CheckRequest(BaseModel):
     # corpus only (no live search, no page fetch, no LLM), no moderator case, and the text is not written to the audit log.
     mode: Literal["manual", "auto"] = "manual"
     live_search: Optional[bool] = None  # False skips the live stage for this request; always off in auto mode
+    # screenshot (scenario F): base64 or a data URL; read locally with OCR (ocr.py) and never stored. `text` is the
+    # question that goes with it ("Czy Demagog to sprawdzał?"). Ignored in auto mode.
+    image_b64: Optional[str] = Field(default=None, max_length=8_200_000)
 
 
 class LiveSearchInfo(BaseModel):

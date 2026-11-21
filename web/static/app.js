@@ -76,10 +76,11 @@ async function checkAsync(body, ui, signal) {
 }
 
 // ui: the object returned by openWait() (or null) — receives stage labels and gets its "Anuluj" wired to the request.
-async function checkWithProgress(input, channel = "web", ui = null) {
+// image: optional data URL of a screenshot (read with OCR on the server, never stored); input is then the question.
+async function checkWithProgress(input, channel = "web", ui = null, image = null) {
   const ctrl = new AbortController();
   if (ui) ui.onCancel = () => ctrl.abort();
-  const body = checkBody(input, channel);
+  const body = image ? {text: input, image_b64: image, channel, session: sessionId()} : checkBody(input, channel);
   const res = await checkAsync(body, ui, ctrl.signal);
   if (res) return res;
   ui?.update({stage_label: GENERIC_STAGE});

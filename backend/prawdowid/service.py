@@ -13,7 +13,7 @@ from collections import OrderedDict
 from urllib.parse import urlparse
 from datetime import date, datetime, timezone
 
-from . import llm, provenance, store, websearch
+from . import llm, ocr, provenance, store, websearch
 from .claims import extract_claims
 from .config import settings
 from .engine import same_claim, verify_claim
@@ -72,6 +72,38 @@ def cost_estimate(res: CheckResult) -> dict:
             "external_calls": len(ls.steps) if ls else 0}
 
 
+OCR_NOTICE = ("Tekst odczytałem automatycznie z obrazu (OCR) — mogą w nim być błędy odczytu. "
+              "Data widoczna na obrazie nie potwierdza sama w sobie rzeczywistej daty publikacji.")
+
+
+def _read_image(req: CheckRequest, res: CheckResult, cid: str, timings: dict) -> str:
+    """Screenshot -> text (ocr.py), "" on failure. Neither the image nor the raw text is stored (the audit row keeps
+    the masked excerpt as for any text); a failure is a technical notice, never a verdict."""
+    t0 = time.perf_counter()
+    res.input_kind = "image"
+    try:
+        text = ocr.read_text(ocr.decode_b64(req.image_b64 or ""))
+    except ocr.OcrUnavailable as e:
+        log.warning("OCR unavailable: %s", e)
+        res.status = "blad_techniczny"
+        res.status_message = ("Odczyt tekstu z obrazu nie jest dostępny na tym serwerze. To błąd techniczny, a nie "
+                              "ocena treści. Wklej tekst ze zrzutu ekranu.")
+        store.log_error(cid, "ocr", str(e))
+        return ""
+    except ocr.OcrError as e:
+        res.status = "blad_techniczny"
+        res.status_message = f"Nie udało się odczytać obrazu: {e}. To nie jest ocena treści. Wklej tekst ze zrzutu."
+        return ""
+    finally:
+        timings["ocr_ms"] = (time.perf_counter() - t0) * 1000
+    if len(text) < 10:
+        res.status = "doprecyzuj"
+        res.status_message = "Nie odczytałem tekstu z obrazu. Wklej tekst ze zrzutu ekranu albo przyślij wyraźniejszy obraz."
+        return ""
+    res.warnings.insert(0, OCR_NOTICE)
+    return text
+
+
 def run_check(req: CheckRequest, progress=None) -> CheckResult:
     """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py).
 
@@ -90,6 +122,9 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                       input_kind="url" if (req.url and not req.text) else "text", input_excerpt="",
                       engine=engine_info(), mode=req.mode)
     text = normalize_ws(req.text or "")[: settings.max_input_chars]
+    ocr_text = _read_image(req, res, cid, timings) if (req.image_b64 and not auto) else ""
+    if ocr_text:  # the question that came with the screenshot first, then what the image says
+        text = normalize_ws(f"{text}\n{ocr_text}")[: settings.max_input_chars]
     url = "" if auto else (req.url or "").strip()  # auto: text only, nothing is fetched on the user's behalf
     # a bare URL pasted as text
     if not url and not auto and re.fullmatch(r"https?://\S+", text):
@@ -151,6 +186,8 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     res.warnings += source_status_notices({d.removeprefix("www.") for d in domains if d})
     if res.status == "ok":
         res.security_events += scan(req.text or "", "wiadomość użytkownika")
+        if ocr_text:
+            res.security_events += scan(ocr_text, "tekst odczytany z obrazu")
         if res.security_events:
             res.warnings.append("W treści wykryto fragmenty przypominające polecenia dla systemu (np. „zignoruj "
                                 "instrukcje”). Potraktowaliśmy je jako zwykły tekst — nie wpływają na ocenę. "

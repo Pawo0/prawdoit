@@ -13,6 +13,7 @@
           <div class="input-tabs" role="group" aria-label="Co chcesz sprawdzić?"><button type="button" class="input-tab active" id="tab-text" aria-pressed="true">Wiadomość</button><button type="button" class="input-tab" id="tab-url" aria-pressed="false">Link do strony</button></div>
           <label for="q" id="q-label">Wklej tekst, który chcesz sprawdzić</label>
           <textarea id="q" name="q" required maxlength="6000" placeholder="Wklej wiadomość lub fragment posta…" aria-describedby="privacy-hint"></textarea>
+          <div class="attach" id="attach"><label for="img" class="small">Zrzut ekranu (opcjonalnie) — odczytamy z niego tekst; obrazu nie zapisujemy</label><input type="file" id="img" accept="image/png,image/jpeg,image/webp"></div>
           <div class="form-actions"><p class="small muted" id="privacy-hint">Nie wpisuj danych osobowych.</p><button id="go" type="submit">Sprawdź informację <span aria-hidden="true">↗</span></button></div>
           <p class="form-error" id="form-error" role="status" hidden></p>
         </div>
