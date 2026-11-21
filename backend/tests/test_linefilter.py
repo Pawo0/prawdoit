@@ -71,6 +71,15 @@ class Extraction(unittest.TestCase):
         self.assertEqual(cs[0].query, "Ministerstwo wycofało z aptek wszystkie syropy na kaszel.")
         self.assertNotIn("2026", cs[0].text)
 
+    def test_filter_runs_before_neutralize_joins_lines(self):
+        # service.py: neutralize() joins lines into one string, so the filter has to see the text first
+        from prawdowid.security import neutralize
+        s = "Czy ktoś to sprawdzał?\nRedaktor serwisu 4 kwietnia 2025.\nWojewoda zamknął wszystkie baseny w regionie.\n3 tys. reakcji."
+        joined = extract_claims(neutralize(s))  # joined first: the author line is what gets checked
+        self.assertTrue(any("2025" in c.query for c in joined))
+        cs = extract_claims(neutralize(drop_metadata_lines(s)))
+        self.assertEqual([c.query for c in cs], ["Wojewoda zamknął wszystkie baseny w regionie."])
+
     def test_dated_statement_is_still_a_claim(self):
         cs = extract_claims("Jan Nowak 5 godz. temu\nSejm uchwalił ustawę o podatku cyfrowym 15 września 2024.")
         self.assertEqual(len(cs), 1)
