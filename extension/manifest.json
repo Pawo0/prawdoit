@@ -1,0 +1,100 @@
+{
+  "manifest_version": 3,
+  "name": "Prawdowid — sprawdź, zanim udostępnisz",
+  "short_name": "Prawdowid",
+  "version": "0.1.0",
+  "description": "Oznacza treści zbieżne z informacjami już obalonymi przez fact-checkerów i źródła urzędowe. Pokazuje źródła — nie jest sędzią prawdy.",
+  "default_locale": "pl",
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Prawdowid"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*",
+    "https://*.trycloudflare.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.facebook.com/*",
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://*.instagram.com/*",
+        "https://*.onet.pl/*",
+        "https://*.o2.pl/*",
+        "https://*.wp.pl/*",
+        "https://*.interia.pl/*",
+        "https://*.tvrepublika.pl/*",
+        "https://tvrepublika.pl/*",
+        "https://wpolityce.pl/*",
+        "https://dorzeczy.pl/*",
+        "https://*.gazeta.pl/*",
+        "https://*.tvn24.pl/*",
+        "https://tvn24.pl/*",
+        "https://*.polsatnews.pl/*",
+        "https://*.rmf24.pl/*",
+        "https://*.tvp.info/*",
+        "https://*.money.pl/*",
+        "https://natemat.pl/*",
+        "https://oko.press/*",
+        "https://niezalezna.pl/*",
+        "https://*.pch24.pl/*",
+        "https://nczas.info/*",
+        "https://*.fakt.pl/*",
+        "https://*.se.pl/*",
+        "https://*.rp.pl/*",
+        "https://*.wyborcza.pl/*",
+        "https://*.businessinsider.com.pl/*",
+        "https://*.pap.pl/*",
+        "https://*.radiozet.pl/*",
+        "https://*.dziennik.pl/*",
+        "https://*.wprost.pl/*",
+        "https://*.bankier.pl/*",
+        "https://*.pudelek.pl/*",
+        "https://*.wykop.pl/*",
+        "http://localhost:8000/demo/*",
+        "http://127.0.0.1:8000/demo/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "prawdowid@hackathon.local",
+      "strict_min_version": "121.0"
+    },
+    "gecko_android": {
+      "strict_min_version": "121.0"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

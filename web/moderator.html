@@ -1,0 +1,36 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — panel analityka</title></head><body>
+<main class="wrap" style="max-width:1100px">
+  <h1>Panel analityka / moderatora</h1>
+  <p class="lead">Kolejka nierozstrzygniętych zgłoszeń (pogrupowanych według podobieństwa), alerty o powtarzających się pytaniach bez odpowiedzi, zdarzenia bezpieczeństwa i metryki działania.</p>
+  <form class="card row" id="lf"><label for="tok">Token moderatora</label><input id="tok" type="password" style="font:inherit;padding:8px;border-radius:8px;border:1px solid #d0d5dd" placeholder="demo-moderator"><button>Wejdź</button></form>
+  <div id="out"></div>
+</main>
+<script>
+async function load() {
+  const tok = sessionStorage.getItem("modtok"); if (!tok) return;
+  const r = await fetch("/api/cases", {headers: {"X-Moderator-Token": tok}});
+  if (!r.ok) { document.getElementById("out").innerHTML = '<div class="err">Błędny token.</div>'; return; }
+  const d = await r.json(); const s = d.stats;
+  document.getElementById("out").innerHTML = `
+   <div class="card"><h2 style="margin-top:0">Metryki</h2><table>
+     <tr><th>Sprawdzenia</th><td>${s.checks}</td><th>Mediana czasu odpowiedzi</th><td>${s.latency_ms_median ? (s.latency_ms_median/1000).toFixed(2)+" s" : "—"} (p95: ${s.latency_ms_p95 ? (s.latency_ms_p95/1000).toFixed(2)+" s" : "—"})</td></tr>
+     <tr><th>Kanały</th><td>${Object.entries(s.by_channel).map(([k,v]) => esc(k)+": "+v).join(", ")}</td><th>Werdykty</th><td>${Object.entries(s.verdicts).map(([k,v]) => esc(k)+": "+v).join(", ")}</td></tr>
+     <tr><th>Wstrzymania (brak dowodów)</th><td>${s.abstentions}</td><th>Statusy</th><td>${Object.entries(s.by_status).map(([k,v]) => esc(k)+": "+v).join(", ")}</td></tr>
+     <tr><th>Zdarzenia bezpieczeństwa</th><td>${Object.entries(s.security_events).map(([k,v]) => esc(k)+": "+v).join(", ") || "0"}</td><th>Błędy komponentów</th><td>${Object.entries(s.errors).map(([k,v]) => esc(k)+": "+v).join(", ") || "0"}</td></tr>
+   </table><p class="small"><a href="#" id="csv">Eksport CSV</a> · <a href="#" id="json">Eksport JSON</a></p></div>
+   <div class="card"><h2 style="margin-top:0">Sprawy (${d.cases.length})</h2>
+    ${d.cases.length ? '<table><tr><th>ID</th><th>Twierdzenie</th><th>Zgłoszeń</th><th>Priorytet</th><th>Kanały</th><th>Status</th><th>Akcja</th></tr>' + d.cases.map(c => `<tr>
+      <td class="kbd">${esc(c.id)}</td><td>${esc(c.title)}<div class="small muted">ostatnio: ${esc(c.updated_at)} · <a href="/analiza/${esc(c.sample_check_ids.at(-1))}">ostatnie sprawdzenie</a></div></td>
+      <td><b>${c.count}</b>${c.count >= 3 ? ' <span class="chip przeczy">powtarzające się</span>' : ''}</td><td>${esc(c.priority)}</td><td>${c.channels.map(esc).join(", ")}</td><td>${esc(c.status)}</td>
+      <td><select data-id="${esc(c.id)}"><option>nowa</option><option>w toku</option><option>zamknięta</option></select></td></tr>`).join("") + '</table>' : '<p class="muted">Brak spraw.</p>'}</div>
+   <div class="card"><h2 style="margin-top:0">Ostatnie zdarzenia bezpieczeństwa</h2>
+    ${d.security_events.length ? '<table><tr><th>Czas</th><th>Rodzaj</th><th>Gdzie</th><th>Fragment</th></tr>' + d.security_events.map(e => `<tr><td class="small">${esc(e.created_at)}</td><td>${esc(e.kind)}</td><td>${esc(e.location)}</td><td class="small">${esc(e.detail)}</td></tr>`).join("") + '</table>' : '<p class="muted">Brak.</p>'}</div>`;
+  document.querySelectorAll("select[data-id]").forEach(sel => { const c = d.cases.find(x => x.id === sel.dataset.id); sel.value = c.status;
+    sel.onchange = () => fetch("/api/cases/" + sel.dataset.id, {method: "POST", headers: {"Content-Type": "application/json", "X-Moderator-Token": tok}, body: JSON.stringify({status: sel.value})}); });
+  for (const f of ["csv", "json"]) document.getElementById(f).onclick = async ev => { ev.preventDefault();
+    const r = await fetch("/api/export/checks." + f, {headers: {"X-Moderator-Token": tok}}); const b = await r.blob();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "prawdowid-checks." + f; a.click(); };
+}
+document.getElementById("lf").onsubmit = e => { e.preventDefault(); sessionStorage.setItem("modtok", document.getElementById("tok").value || "demo-moderator"); load(); };
+load(); setInterval(load, 15000);
+</script></body></html>

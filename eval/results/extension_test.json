@@ -1,0 +1,48 @@
+{
+  "demo_feed": {
+    "flagged": 5,
+    "seconds_to_flags": 13.9,
+    "items": [
+      {
+        "kind": "zaslona",
+        "text": "Prawdowid: 99% — prawdopodobny fałsz\nZbieżne z: „Ukraina nie płaci Orlenowi za paliwo.” — Demagog: Fałsz\nDlaczego? →\nPokaż",
+        "content": "Grażyna K. 2 godz. Ludzie!!! Ukraina w ogóle nie płaci Orlenowi za paliwo, a my płacimy na stacjach coraz więcej. Udostę"
+      },
+      {
+        "kind": "zaslona",
+        "text": "Prawdowid: 78% — prawdopodobny fałsz\nZbieżne z: „Niemcy w kombinezonach ochronnych podrzucali do Polski chorych migrantów.” — FakeNews.pl: Fałsz\nDlaczego? →\nPokaż",
+        "content": "Prawdziwe Wiadomości PL 2 dni Niemieckie służby podrzucają do Polski chorych migrantów — przy granicy widziano ludzi w k"
+      },
+      {
+        "kind": "zaslona",
+        "text": "Prawdowid: 84% — prawdopodobny fałsz\nZbieżne z: „Polska straciła 490 mld zł bo pomaga Ukrainie” — Demagog: Brakujący kontekst\nDlaczego? →\nPokaż",
+        "content": "Anna S. 3 dni Przez pomoc dla Ukrainy Polska straciła już 490 miliardów złotych. Kto za to zapłaci? My wszyscy. Lubię to"
+      },
+      {
+        "kind": "zaslona",
+        "text": "Prawdowid: 98% — prawdopodobny fałsz\nZbieżne z: „W Chinach zbudowano robota, który będzie rodził dzieci” — FakeNews.pl: Fałsz\nDlaczego? →\nPokaż",
+        "content": "@obserwator_pl W Chinach zbudowali robota, który ma rodzić dzieci zamiast kobiet. Ciąża w maszynie już w przyszłym roku!"
+      },
+      {
+        "kind": "zaslona",
+        "text": "Prawdowid: 94% — prawdopodobny fałsz\nZbieżne z: „Wilk zaatakował dwuletnie dziecko w Toskanii” — FakeNews.pl: Fałsz\nDlaczego? →\nPokaż",
+        "content": "@turysta Wilk rzucił się na dwuletnie dziecko w Toskanii, Włosi są przerażeni."
+      }
+    ]
+  },
+  "picker": {
+    "seconds": 2.1,
+    "sheet": "Prawdowid · Brak wystarczających dowodów\nBrak wystarczających dowodów\n„Szczepionki przeciw COVID zawierają mikrochipy, dzięki którym można śledzić zaszczepionych.”\nNie znaleźliśmy w naszym katalogu źródeł wystarczających materiałów, by potwierdzić albo obalić tę informację. To nie znaczy, że jest prawdziwa, ani że jest fałszywa. Znaleźliśmy tylko materiały na pokrewny temat: „Szczepionki powodem zachorowań na RSV w Australii? Fałsz!” (Demagog); „Nie, szczepienia przeciw grypie nie zwiększają ryzyka zachorowania na koronawirusa.” (Stowarzyszenie Pravda).\nDemagog, 03.08.2022 — Szczepionki powode"
+  },
+  "analysis_page_url": "http://127.0.0.1:8000/analiza/8bdc6e04561d",
+  "real_site": {
+    "url": "https://www.onet.pl",
+    "flagged": [],
+    "tabs": [
+      null,
+      "http://127.0.0.1:8000/demo/feed.html",
+      "http://127.0.0.1:8000/analiza/8bdc6e04561d",
+      null
+    ]
+  }
+}

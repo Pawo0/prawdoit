@@ -1,0 +1,31 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — wynik sprawdzenia</title></head><body>
+<main class="wrap">
+  <h1>Wynik sprawdzenia</h1>
+  <div id="out"><div class="card" id="progress"><div class="row"><span class="spinner" aria-hidden="true"></span><b>Sprawdzamy…</b></div>
+    <ul class="steps" id="steps"><li>Rozpoznajemy twierdzenia do sprawdzenia</li><li>Przeszukujemy katalog źródeł</li><li>Porównujemy fragmenty źródeł z twierdzeniem</li><li>Ustalamy ocenę według jawnych zasad</li></ul></div></div>
+  <div class="row"><a class="btn secondary" href="/">Sprawdź coś innego</a><button class="secondary" id="share" type="button">Kopiuj link do wyniku</button></div>
+</main>
+<script>
+const out = document.getElementById("out");
+let stepTimer;
+function animate() { const li = [...document.querySelectorAll("#steps li")]; let i = 0;
+  stepTimer = setInterval(() => { li.forEach((x, j) => x.className = j < i ? "done" : j === i ? "now" : ""); i = Math.min(i + 1, li.length - 1); }, 450); }
+async function main() {
+  const m = location.pathname.match(/^\/analiza\/([a-f0-9]+)/);
+  try {
+    let res;
+    if (m) { const r = await fetch("/api/check/" + m[1]); if (!r.ok) throw new Error((await r.json()).detail); res = await r.json(); }
+    else {
+      const t = decodeURIComponent((location.hash.match(/t=(.*)$/) || [])[1] || "");
+      if (!t) { location.href = "/"; return; }
+      animate();
+      res = await runCheck(t, new URLSearchParams(location.search).get("ch") || "web");
+      history.replaceState(null, "", "/analiza/" + res.id);
+    }
+    clearInterval(stepTimer);
+    renderResult(res, out);
+  } catch (e) { clearInterval(stepTimer); out.innerHTML = '<div class="err"><b>Błąd techniczny — to nie jest ocena treści.</b><p>' + esc(e.message) + '</p></div>'; }
+}
+document.getElementById("share").onclick = () => navigator.clipboard.writeText(location.href);
+main();
+</script></body></html>

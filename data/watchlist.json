@@ -1,0 +1,9 @@
+{
+  "_doc": "Jawnie określone przypadki, w których obecność domeny w katalogu incydentów wyzwala NEUTRALNE ostrzeżenie o statusie źródła. Nigdy nie wpływa na werdykt (wymóg wyzwania, scenariusz I). Każdy wpis musi wskazywać publiczne źródło.",
+  "entries": [
+    {"pattern": "news-pravda.com", "label": "sieć portali „Pravda” (Portal Kombat)", "publisher": "CheckFirst",
+     "source_url": "https://checkfirst.network/pravda-network-worldwide-expansion-and-llm-wikipedia-pollution/", "date": "2025-03-13"},
+    {"pattern": "pravda-pl.com", "label": "sieć portali „Pravda” (Portal Kombat)", "publisher": "CheckFirst",
+     "source_url": "https://checkfirst.network/pravda-network-worldwide-expansion-and-llm-wikipedia-pollution/", "date": "2025-03-13"}
+  ]
+}

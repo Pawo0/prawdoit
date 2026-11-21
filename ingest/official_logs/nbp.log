@@ -1,0 +1,14 @@
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/EUR/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/USD/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/USD/?format=json -> retry in 10s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/USD/2025-11-10/2025-11-20/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/USD/2025-11-10/2025-11-20/?format=json -> retry in 10s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/CHF/2025-11-10/2025-11-20/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/UAH/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/UAH/?format=json -> retry in 10s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/UAH/2026-10-11/2026-10-21/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/NOK/2026-10-11/2026-10-21/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/SEK/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/JPY/2025-11-10/2025-11-20/?format=json -> retry in 5s
+  HTTP 500 https://api.nbp.pl/api/exchangerates/rates/A/CNY/?format=json -> retry in 5s
+[ok] data/corpus/official_nbp.jsonl: 13 records

@@ -1,0 +1,227 @@
+{
+  "files": {
+    "checkfirst.jsonl": {
+      "records": 31,
+      "access_method": "WordPress REST API /wp-json/wp/v2/posts",
+      "publishers": {
+        "CheckFirst": 31
+      },
+      "domains": {
+        "checkfirst.network": 31
+      },
+      "source_types": {
+        "incident": 31
+      },
+      "languages": {
+        "en": 31
+      },
+      "verdicts": {
+        "None": 31
+      },
+      "licenses": [
+        "© Check First Oy. Site policy (robots.txt/llms.txt): AI systems & RAG pipelines welcome to read, index and cite with attribution to CheckFirst + link. Quoted propaganda in reports is evidence, not CheckFirst's claim."
+      ],
+      "published_range": [
+        "2021-12-10",
+        "2026-11-06"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:19:49Z",
+        "2026-11-21T12:19:50Z"
+      ]
+    },
+    "demagog.jsonl": {
+      "records": 380,
+      "access_method": "Yoast sitemaps + article HTML (schema.org ClaimReview JSON-LD); WP REST API closed (401)",
+      "publishers": {
+        "Demagog": 380
+      },
+      "domains": {
+        "demagog.org.pl": 380
+      },
+      "source_types": {
+        "factcheck": 380
+      },
+      "languages": {
+        "pl": 380
+      },
+      "verdicts": {
+        "false": 224,
+        "mixed": 20,
+        "misleading": 73,
+        "None": 24,
+        "true": 36,
+        "unverifiable": 3
+      },
+      "licenses": [
+        "© Stowarzyszenie Demagog. 'Ogólne Warunki Licencji' (demagog.org.pl/zasady-udostepniania-tresci): non-commercial reuse allowed without modification (non-distorting shortening OK) with attribution 'Źródło informacji: www.demagog.org.pl' + link; commercial use needs consent. robots Content-Signal: search=yes, ai-train=no, use=reference -> RAG/citation only, never training."
+      ],
+      "published_range": [
+        "2014-04-29",
+        "2026-11-20"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:17:32Z",
+        "2026-11-21T12:17:57Z"
+      ]
+    },
+    "euvsdisinfo.jsonl": {
+      "records": 300,
+      "access_method": "euvsdisinfo.eu database listing (keyword x date slices, no pagination per robots) + HF mirror NLP-UniBW/eu_vs_disinfo for case text (site served Cloudflare challenge)",
+      "publishers": {
+        "EUvsDisinfo (EEAS East StratCom Task Force)": 300
+      },
+      "domains": {
+        "euvsdisinfo.eu": 300
+      },
+      "source_types": {
+        "incident": 300
+      },
+      "languages": {
+        "en": 300
+      },
+      "verdicts": {
+        "false": 300
+      },
+      "licenses": [
+        "EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded. Case text taken from HF mirror NLP-UniBW/eu_vs_disinfo (scrape of euvsdisinfo.eu, no licence of its own) because the site served a Cloudflare challenge."
+      ],
+      "published_range": [
+        "2016-01-04",
+        "2025-07-13"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:19:45Z",
+        "2026-11-21T12:19:46Z"
+      ]
+    },
+    "fakenews_pl.jsonl": {
+      "records": 500,
+      "access_method": "WordPress REST API /wp-json/wp/v2/posts (ACF fields teza/autor/ocena)",
+      "publishers": {
+        "FakeNews.pl": 500
+      },
+      "domains": {
+        "fakenews.pl": 500
+      },
+      "source_types": {
+        "factcheck": 500
+      },
+      "languages": {
+        "pl": 500
+      },
+      "verdicts": {
+        "None": 100,
+        "misleading": 31,
+        "false": 339,
+        "unverifiable": 15,
+        "true": 6,
+        "mixed": 9
+      },
+      "licenses": [
+        "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Stored claim, verdict, excerpt (≤2500 chars) + link for citation."
+      ],
+      "published_range": [
+        "2021-09-14",
+        "2026-11-13"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:18:26Z",
+        "2026-11-21T12:18:39Z"
+      ]
+    },
+    "konkret24.jsonl": {
+      "records": 120,
+      "access_method": "section landing pages + related-article links (NewsArticle JSON-LD); short excerpts only",
+      "publishers": {
+        "Konkret24 (TVN24)": 120
+      },
+      "domains": {
+        "konkret24.tvn24.pl": 120
+      },
+      "source_types": {
+        "factcheck": 120
+      },
+      "languages": {
+        "pl": 120
+      },
+      "verdicts": {
+        "None": 120
+      },
+      "licenses": [
+        "© TVN S.A. (Konkret24/TVN24), all rights reserved. Stored only title, lead and a short excerpt (≤700 chars) with link, for citation; full text must be read at source."
+      ],
+      "published_range": [
+        "2024-09-28",
+        "2026-11-20"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:19:04Z",
+        "2026-11-21T12:19:32Z"
+      ]
+    },
+    "pravda.jsonl": {
+      "records": 269,
+      "access_method": "Ghost sitemap-posts.xml + article HTML; claim/verdict joined from Google Fact Check Tools (Data Commons) ClaimReview feed",
+      "publishers": {
+        "Stowarzyszenie Pravda": 269
+      },
+      "domains": {
+        "pravda.org.pl": 269
+      },
+      "source_types": {
+        "factcheck": 269
+      },
+      "languages": {
+        "pl": 269
+      },
+      "verdicts": {
+        "unverifiable": 31,
+        "false": 113,
+        "true": 49,
+        "misleading": 16,
+        "None": 60
+      },
+      "licenses": [
+        "© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored claim, verdict, excerpt (≤2500 chars) + link for citation. Claim/verdict from Pravda's own ClaimReview markup (Google Fact Check Tools feed)."
+      ],
+      "published_range": [
+        "2020-08-02",
+        "2026-11-13"
+      ],
+      "retrieved_range": [
+        "2026-11-21T12:18:42Z",
+        "2026-11-21T12:18:52Z"
+      ]
+    }
+  },
+  "totals": {
+    "records": 1600,
+    "source_types": {
+      "incident": 331,
+      "factcheck": 1269
+    },
+    "domains": {
+      "checkfirst.network": 31,
+      "demagog.org.pl": 380,
+      "euvsdisinfo.eu": 300,
+      "fakenews.pl": 500,
+      "konkret24.tvn24.pl": 120,
+      "pravda.org.pl": 269
+    },
+    "n_domains": 6,
+    "languages": {
+      "en": 331,
+      "pl": 1269
+    },
+    "verdicts": {
+      "None": 335,
+      "false": 976,
+      "mixed": 29,
+      "misleading": 120,
+      "true": 91,
+      "unverifiable": 49
+    },
+    "invalid_records": 0
+  }
+}

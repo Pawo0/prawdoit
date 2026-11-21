@@ -1,0 +1,268 @@
+"""Corpus loading, chunking and hybrid (BM25 + dense) index, plus a claim index for matching previously
+fact-checked claims (PFCR — previously fact-checked claim retrieval)."""
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+import math
+import threading
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+import numpy as np
+
+from .config import settings
+from .schemas import SourceDoc
+from .textutil import normalize_ws, split_sentences, tokens
+
+log = logging.getLogger("prawdowid.index")
+
+TIER = {"official": 1, "factcheck": 2, "incident": 2, "media": 3}
+TIER_LABEL = {1: "źródło pierwotne / urzędowe", 2: "zweryfikowana baza fact-checkingowa", 3: "media"}
+
+
+@dataclass
+class Chunk:
+    idx: int
+    doc_idx: int
+    text: str
+
+
+def _age_days(published_at: str | None) -> int | None:
+    if not published_at:
+        return None
+    try:
+        d = date.fromisoformat(published_at[:10])
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc).date() - d).days
+
+
+class BM25:
+    def __init__(self, docs_tokens: list[list[str]], k1: float = 1.4, b: float = 0.75):
+        self.k1, self.b = k1, b
+        self.N = len(docs_tokens)
+        self.lens = np.array([len(t) for t in docs_tokens], dtype=np.float32)
+        self.avgdl = float(self.lens.mean()) if self.N else 1.0
+        self.postings: dict[str, list[tuple[int, int]]] = defaultdict(list)
+        for i, toks in enumerate(docs_tokens):
+            for t, c in Counter(toks).items():
+                self.postings[t].append((i, c))
+        self.idf = {t: math.log(1 + (self.N - len(p) + 0.5) / (len(p) + 0.5)) for t, p in self.postings.items()}
+
+    def search(self, q_tokens: list[str], k: int = 40) -> list[tuple[int, float]]:
+        scores: dict[int, float] = defaultdict(float)
+        for t in set(q_tokens):
+            if t not in self.postings:
+                continue
+            idf = self.idf[t]
+            for i, tf in self.postings[t]:
+                denom = tf + self.k1 * (1 - self.b + self.b * self.lens[i] / self.avgdl)
+                scores[i] += idf * tf * (self.k1 + 1) / denom
+        return sorted(scores.items(), key=lambda x: -x[1])[:k]
+
+
+class Embedder:
+    """Thin wrapper so the embedding model is swappable via PRAWDOWID_EMBED_MODEL."""
+
+    def __init__(self, name: str):
+        import torch
+        from sentence_transformers import SentenceTransformer
+
+        self.name = name
+        # fp32 matters: several Polish checkpoints ship fp16 weights, which are ~15x slower on CPU
+        self.model = SentenceTransformer(name, device="cpu", model_kwargs={"torch_dtype": torch.float32})
+        self.model.max_seq_length = 192
+
+    def encode(self, texts: list[str], prefix: str, batch_size: int = 32) -> np.ndarray:
+        if not texts:
+            return np.zeros((0, self.model.get_sentence_embedding_dimension()), dtype=np.float32)
+        emb = self.model.encode([prefix + t for t in texts], batch_size=batch_size, normalize_embeddings=True,
+                                show_progress_bar=False, convert_to_numpy=True)
+        return emb.astype(np.float32)
+
+
+class CorpusIndex:
+    def __init__(self) -> None:
+        self.docs: list[SourceDoc] = []
+        self.chunks: list[Chunk] = []
+        self.bm25: BM25 | None = None
+        self.chunk_emb: np.ndarray | None = None
+        self.claim_doc_idx: list[int] = []  # docs that carry a fact-checked claim
+        self.claim_texts: list[str] = []
+        self.claim_emb: np.ndarray | None = None
+        self.claim_bm25: BM25 | None = None
+        self.embedder: Embedder | None = None
+        self.stats: dict = {}
+        self.loaded_at: str | None = None
+        self._lock = threading.Lock()
+
+    # ------------------------------------------------------------------ loading
+    def load(self, corpus_dir: Path | None = None) -> None:
+        corpus_dir = corpus_dir or settings.corpus_dir
+        t0 = time.time()
+        docs: list[SourceDoc] = []
+        seen: set[str] = set()
+        per_file: dict[str, int] = {}
+        errors = 0
+        for f in sorted(corpus_dir.glob("*.jsonl")):
+            n = 0
+            for line in f.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    d = SourceDoc(**json.loads(line))
+                except Exception:  # noqa: BLE001 — malformed records are counted and skipped
+                    errors += 1
+                    continue
+                if d.id in seen or not (d.text or d.claim):
+                    continue
+                seen.add(d.id)
+                d.text = normalize_ws(d.text)[:6000]
+                docs.append(d)
+                n += 1
+            per_file[f.name] = n
+        self.docs = docs
+        self._build_chunks()
+        self._build_indexes()
+        self.loaded_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        self.stats = {
+            "documents": len(docs),
+            "chunks": len(self.chunks),
+            "factchecked_claims": len(self.claim_texts),
+            "domains": len({d.domain for d in docs}),
+            "publishers": len({d.publisher for d in docs}),
+            "by_type": dict(Counter(d.source_type for d in docs)),
+            "by_publisher": dict(Counter(d.publisher for d in docs).most_common()),
+            "files": per_file,
+            "malformed_skipped": errors,
+            "build_seconds": round(time.time() - t0, 1),
+            "embed_model": settings.embed_model,
+        }
+        log.info("index loaded: %s", self.stats)
+
+    def _build_chunks(self) -> None:
+        chunks: list[Chunk] = []
+        self.synthetic: set[int] = set()  # "Twierdzenie: … Ocena: …" chunks are not verbatim source text
+        for di, d in enumerate(self.docs):
+            head = d.title.strip()
+            body_parts: list[str] = []
+            if d.claim:
+                body_parts.append(f"Twierdzenie: {d.claim}")
+                if d.verdict_raw:
+                    body_parts.append(f"Ocena: {d.verdict_raw}.")
+            sents = split_sentences(d.text)
+            # sliding window of sentences, ~600 chars, 1-sentence overlap
+            window: list[str] = []
+            size = 0
+            groups: list[str] = []
+            for s in sents:
+                window.append(s)
+                size += len(s)
+                if size >= 450:
+                    groups.append(" ".join(window))
+                    window = window[-1:]
+                    size = len(window[0])
+            if window and (not groups or len(window) > 1 or size > 120):
+                groups.append(" ".join(window))
+            if body_parts:
+                self.synthetic.add(len(chunks))
+                chunks.append(Chunk(len(chunks), di, f"{head}. " + " ".join(body_parts)))
+            for g in groups[:5]:
+                chunks.append(Chunk(len(chunks), di, g))
+            if not body_parts and not groups:
+                chunks.append(Chunk(len(chunks), di, head))
+        self.chunks = chunks
+        self.doc_chunks: list[list[int]] = [[] for _ in self.docs]
+        for ch in chunks:
+            self.doc_chunks[ch.doc_idx].append(ch.idx)
+
+    def _embed_cached(self, texts: list[str], prefix: str, kind: str) -> np.ndarray:
+        """Incremental per-text cache: only texts not seen before are embedded (corpus updates are cheap)."""
+        slug = hashlib.sha1((settings.embed_model + prefix).encode()).hexdigest()[:10]
+        kpath, vpath = settings.index_dir / f"emb-{slug}.keys.json", settings.index_dir / f"emb-{slug}.npy"
+        keys: list[str] = json.loads(kpath.read_text()) if kpath.exists() else []
+        vecs = np.load(vpath) if vpath.exists() and keys else None
+        pos = {k: i for i, k in enumerate(keys)}
+        hashes = [hashlib.sha1(t.encode("utf-8", "ignore")).hexdigest() for t in texts]
+        missing = list(dict.fromkeys(h for h in hashes if h not in pos))
+        if missing:
+            by_hash = dict(zip(hashes, texts))
+            log.info("embedding %d new %s texts (cached: %d)", len(missing), kind, len(keys))
+            t0 = time.time()
+            new = self.get_embedder().encode([by_hash[h] for h in missing], prefix)
+            log.info("embedded in %.1fs", time.time() - t0)
+            vecs = new if vecs is None else np.vstack([vecs, new])
+            for h in missing:
+                pos[h] = len(keys)
+                keys.append(h)
+            np.save(vpath, vecs)
+            kpath.write_text(json.dumps(keys))
+        if not texts:
+            return np.zeros((0, 384), dtype=np.float32)
+        return vecs[[pos[h] for h in hashes]].astype(np.float32)
+
+    def get_embedder(self) -> Embedder:
+        with self._lock:
+            if self.embedder is None:
+                self.embedder = Embedder(settings.embed_model)
+            return self.embedder
+
+    def _build_indexes(self) -> None:
+        self.bm25 = BM25([tokens(c.text) for c in self.chunks])
+        self.chunk_emb = self._embed_cached([c.text for c in self.chunks], settings.embed_passage_prefix, "chunks")
+        self.claim_doc_idx, self.claim_texts = [], []
+        for di, d in enumerate(self.docs):
+            if d.source_type in ("factcheck", "incident") and (d.claim or d.title):
+                self.claim_doc_idx.append(di)
+                self.claim_texts.append(normalize_ws(d.claim or d.title)[:500])
+        self.claim_emb = self._embed_cached(self.claim_texts, settings.embed_query_prefix, "claims")
+        self.claim_bm25 = BM25([tokens(t) for t in self.claim_texts])
+
+    # ------------------------------------------------------------------ search
+    def encode_query(self, texts: list[str]) -> np.ndarray:
+        return self.get_embedder().encode(texts, settings.embed_query_prefix)
+
+    def search_chunks(self, query: str, q_emb: np.ndarray, k: int = 40) -> list[tuple[int, float, float]]:
+        """Hybrid retrieval with reciprocal-rank fusion. Returns (chunk_idx, fused_score, cosine)."""
+        bm = self.bm25.search(tokens(query), k=k) if self.bm25 else []
+        cos = self.chunk_emb @ q_emb if self.chunk_emb is not None and len(self.chunk_emb) else np.zeros(0)
+        dense_top = np.argsort(-cos)[:k] if len(cos) else []
+        fused: dict[int, float] = defaultdict(float)
+        for r, (i, _) in enumerate(bm):
+            fused[i] += 1.0 / (60 + r)
+        for r, i in enumerate(dense_top):
+            fused[int(i)] += 1.0 / (60 + r)
+        ranked = sorted(fused.items(), key=lambda x: -x[1])[:k]
+        return [(i, s, float(cos[i]) if len(cos) else 0.0) for i, s in ranked]
+
+    def match_claims(self, q_emb: np.ndarray, query: str, k: int = 8) -> list[tuple[int, float]]:
+        """Nearest fact-checked claims: (doc_idx, cosine). Lexical hits are re-scored with cosine."""
+        if self.claim_emb is None or not len(self.claim_emb):
+            return []
+        cos = self.claim_emb @ q_emb
+        cand = set(np.argsort(-cos)[:k].tolist())
+        if self.claim_bm25:
+            cand |= {i for i, _ in self.claim_bm25.search(tokens(query), k=k)}
+        ranked = sorted(((self.claim_doc_idx[i], float(cos[i])) for i in cand), key=lambda x: -x[1])
+        return ranked[:k]
+
+    def match_claims_batch(self, q_embs: np.ndarray, verdicts: tuple = ("false", "misleading", "mixed")
+                           ) -> tuple[np.ndarray, np.ndarray]:
+        """Extension fast path: best fact-checked claim (restricted to the given verdicts) per query row."""
+        rows = [i for i, di in enumerate(self.claim_doc_idx) if self.docs[di].verdict in verdicts]
+        if not rows or not len(q_embs):
+            return np.zeros(len(q_embs), dtype=int), np.zeros(len(q_embs))
+        sims = q_embs @ self.claim_emb[rows].T
+        best = sims.argmax(axis=1)
+        return np.array([self.claim_doc_idx[rows[i]] for i in best]), sims[np.arange(len(best)), best]
+
+    def doc_age(self, doc: SourceDoc) -> int | None:
+        return _age_days(doc.published_at)
+
+
+INDEX = CorpusIndex()

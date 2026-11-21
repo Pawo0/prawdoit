@@ -1,0 +1,21 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — katalog źródeł</title></head><body>
+<main class="wrap">
+  <h1>Katalog źródeł</h1>
+  <p class="lead">Prawdowid odpowiada wyłącznie na podstawie jawnego, zamkniętego zbioru źródeł. Każde źródło ma przypisaną kategorię, licencję oraz datę publikacji i pobrania. Lista jest dostępna do audytu.</p>
+  <div class="card" id="stats">Wczytywanie…</div>
+  <div class="card"><h2 style="margin-top:0">Zasady kwalifikacji źródeł</h2><ul>
+    <li><b>Kategoria 1 — źródła pierwotne i urzędowe:</b> komunikaty ministerstw (gov.pl), akty prawne (ISAP/ELI, EUR-Lex), dane publiczne (GUS, NBP, dane.gov.pl).</li>
+    <li><b>Kategoria 2 — fact-checking i zweryfikowane bazy incydentów:</b> organizacje stosujące standardy IFCN/EFCSN oraz instytucjonalne bazy (np. EUvsDisinfo).</li>
+    <li><b>Kategoria 3 — media:</b> wyłącznie jako kontekst; sama obecność w mediach nie przesądza o ocenie.</li>
+    <li>Ocena nigdy nie wynika z samej domeny, autora, popularności ani liczby udostępnień — tylko z treści dowodów.</li>
+    <li>Źródła są odświeżane skryptami pobierającymi (z poszanowaniem robots.txt i licencji); przechowujemy fragmenty i odnośniki, nie pełne kopie, chyba że licencja na to pozwala.</li>
+  </ul></div>
+  <div class="card"><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+fetch("/api/sources").then(r => r.json()).then(d => {
+  const s = d.stats;
+  document.getElementById("stats").innerHTML = `<b>${s.documents}</b> dokumentów · <b>${s.domains}</b> domen · <b>${s.publishers}</b> wydawców · <b>${s.factchecked_claims}</b> zweryfikowanych twierdzeń · typy: ${Object.entries(s.by_type).map(([k,v]) => esc(k)+": "+v).join(", ")} · model wyszukiwania: <span class="kbd">${esc(s.embed_model)}</span>`;
+  document.querySelector("#t tbody").innerHTML = d.publishers.map(p => `<tr><td>${esc(p.publisher)}</td><td>${esc(p.tier_label)}</td><td>${p.domains.map(esc).join("<br>")}</td><td>${p.documents}</td><td>${fmtDate(p.oldest)} – ${fmtDate(p.newest)}</td><td class="small">${p.licenses.map(esc).join("<br>")}</td></tr>`).join("");
+});
+</script></body></html>

@@ -1,0 +1,15 @@
+# torch (CPU): uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+fastapi
+uvicorn[standard]
+httpx
+trafilatura
+numpy
+sentence-transformers
+transformers
+pydantic
+python-multipart
+rapidfuzz
+pyyaml
+pillow
+discord.py
+playwright

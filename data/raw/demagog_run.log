@@ -1,0 +1,20 @@
+[sitemap] fake_news: 3903 PL urls
+[sitemap] wypowiedzi: 6545 PL urls
+[demagog] 380 urls selected
+  25/380 written=25 {'fetched': 37, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  50/380 written=50 {'fetched': 62, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  75/380 written=75 {'fetched': 87, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  100/380 written=100 {'fetched': 112, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  125/380 written=125 {'fetched': 137, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  150/380 written=150 {'fetched': 162, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  175/380 written=175 {'fetched': 187, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  200/380 written=200 {'fetched': 212, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  225/380 written=225 {'fetched': 237, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  250/380 written=250 {'fetched': 262, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  275/380 written=275 {'fetched': 287, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  300/380 written=300 {'fetched': 312, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  325/380 written=325 {'fetched': 337, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  350/380 written=350 {'fetched': 362, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+  375/380 written=375 {'fetched': 387, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
+[done] wrote 380 records -> /home/pawel/dev/hackathon_2026/prawdowid/data/corpus/demagog.jsonl
+[demagog] stats {'fetched': 392, 'cached': 0, 'blocked_robots': 0, 'errors': 0}

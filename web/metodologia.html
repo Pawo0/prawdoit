@@ -1,0 +1,42 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — metodologia</title></head><body>
+<main class="wrap">
+<h1>Metodologia Prawdowida</h1>
+<p class="lead"><b>Prawdowid nie jest sędzią prawdy.</b> Pomagamy sprawdzić doniesienie i pokazujemy, na jakich źródłach opieramy odpowiedź. Pokazujemy, co mówią źródła — ocenę zostawiamy Tobie.</p>
+<section class="card"><h2 style="margin-top:0">Jak sprawdzamy</h2><ol>
+<li><b>Wyodrębniamy twierdzenia.</b> Dzielimy wiadomość na pojedyncze twierdzenia i oddzielamy fakty od opinii, ocen i przewidywań.</li>
+<li><b>Szukamy dowodów</b> wyłącznie w jawnym <a href="/zrodla">katalogu źródeł</a>: dokumenty urzędowe i dane publiczne (np. ISAP, EUR-Lex, GUS, NBP, gov.pl), artykuły organizacji fact-checkingowych stosujących standardy IFCN lub EFCSN oraz instytucjonalne bazy incydentów (np. EUvsDisinfo).</li>
+<li><b>Porównujemy</b> każde twierdzenie z konkretnym, dosłownie cytowanym fragmentem źródła. Sprawdzamy datę i to, czy źródła są od siebie niezależne.</li>
+<li><b>Podajemy wynik</b> według stałych, jawnych reguł (poniżej) — nie według „wrażenia” modelu.</li>
+<li><b>Zapisujemy przebieg</b> sprawdzenia: pytanie (z zamaskowanymi danymi osobowymi), czas, źródła, użyte reguły i wynik.</li></ol></section>
+<section class="card"><h2 style="margin-top:0">Możliwe wyniki</h2><ul>
+<li><span class="badge v-potwierdzone">✓ Potwierdzone</span> — wiarygodne źródła potwierdzają twierdzenie.</li>
+<li><span class="badge v-falszywe">✕ Fałszywe</span> — wiarygodne źródła przeczą twierdzeniu.</li>
+<li><span class="badge v-wprowadzajace_w_blad">! Wprowadzające w błąd</span> — część faktów się zgadza, ale brakuje kontekstu, dane są nieaktualne albo prowadzą do błędnego wniosku.</li>
+<li><span class="badge v-brak_dowodow">? Brak wystarczających dowodów</span> — nie znaleźliśmy dość materiałów albo źródła są sprzeczne. <b>To nie znaczy, że informacja jest prawdziwa, ani że jest fałszywa.</b></li>
+<li><span class="badge v-nie_podlega_weryfikacji">💬 Nie podlega weryfikacji</span> — opinia, ocena lub przewidywanie, których nie da się sprawdzić faktami.</li></ul>
+<p>Awarię techniczną, potrzebę doprecyzowania pytania i pytania spoza zakresu komunikujemy osobno — <b>to nie są werdykty</b>.</p></section>
+<section class="card" id="reguly"><h2 style="margin-top:0">Reguły rozstrzygania (wersja 1.0)</h2>
+<p>Kategorie źródeł wynikają z <b>rodzaju i procesu</b> powstawania źródła, nigdy z poglądów politycznych ani „reputacji” domeny: <b>A</b> — źródła pierwotne i urzędowe; <b>B</b> — fact-checking IFCN/EFCSN i instytucjonalne bazy incydentów; <b>C</b> — media (tylko kontekst).</p>
+<p><b>Bramki ważności dowodu</b> (dowód liczy się tylko, gdy spełnia wszystkie): V1 — pochodzi z katalogu i ma datę publikacji oraz pobrania; V2 — cytowany fragment występuje <i>dosłownie</i> w źródle; V3 — model NLI ocenia zgodność/sprzeczność fragmentu z twierdzeniem z pewnością ≥ 0,70, a dopasowanie do twierdzenia sprawdzonego przez fact-checkerów wymaga podobieństwa ≥ 0,82 (lub ≥ 0,74 z potwierdzeniem NLI); V5 — treść zawierająca polecenia dla systemu jest neutralizowana i odnotowywana.</p>
+<ol>
+<li><b>R1 Nie podlega weryfikacji</b> — opinia, ocena, przewidywanie.</li>
+<li><b>R2 Sprzeczność</b> — są ważne dowody kat. A/B potwierdzające i przeczące → „Brak wystarczających dowodów” z jawnym pokazaniem obu stron.</li>
+<li><b>R3 Fałszywe</b> — ważny dowód przeczący z kat. A lub B i brak potwierdzeń z kat. A/B.</li>
+<li><b>R4 Wprowadzające w błąd</b> — fact-checker ocenił twierdzenie jako manipulację / brak kontekstu / częściową prawdę, albo prawdziwy materiał jest przedstawiany jako bieżący, choć pochodzi sprzed ponad roku.</li>
+<li><b>R5 Potwierdzone</b> — ważny dowód potwierdzający z kat. A lub B i brak dowodów przeczących z kat. A/B.</li>
+<li><b>R6 Domyślnie</b> — „Brak wystarczających dowodów” z kodem przyczyny, opisem, czego nie ustalono, i wskazaniem, co mogłoby to rozstrzygnąć.</li></ol>
+<p><b>Siła podstaw:</b> <i>mocna</i> — źródło pierwotne i ≥ 2 niezależnych wydawców (lub ≥ 2 niezależnych wydawców z bardzo wysoką zgodnością), bez sprzeczności; <i>umiarkowana</i> — progi werdyktu spełnione, ale bez powyższych warunków. Nie pokazujemy „procentu pewności” — siła wynika z listy przesłanek widocznej przy każdym wyniku.</p>
+<p><b>Tematy wysokiego ryzyka</b> (bezpieczeństwo, wojsko, wybory, zdrowie, sytuacje kryzysowe, sankcje): jeżeli ocena opiera się na jednym źródle kat. B, sprawa jest automatycznie kierowana do analityka. Nierozstrzygnięte zgłoszenia są grupowane według podobieństwa — powtarzające się pytania bez odpowiedzi trafiają do kolejki jako jedna sprawa.</p></section>
+<section class="card"><h2 style="margin-top:0">Czego nie robimy</h2><ul>
+<li>Nie oceniamy prawdziwości treści na podstawie samej domeny, autora, kanału, popularności ani liczby udostępnień. Nie oznaczamy żadnego medium jako „fałszywego” w całości — również we wtyczce do przeglądarki oznaczamy wyłącznie konkretne treści zbieżne z już zweryfikowanymi twierdzeniami.</li>
+<li>Informacje o statusie źródła (np. sankcje UE) mogą być pokazane jako osobna, neutralna informacja — nigdy jako dowód.</li>
+<li>Nie przedstawiamy odpowiedzi modelu językowego jako faktu bez źródła. Opcjonalny model językowy może jedynie uprościć język już ustalonego wyjaśnienia; jego tekst jest odrzucany, jeśli dodaje liczby lub linki spoza źródeł.</li>
+<li>Nie oceniamy intencji autorów ani poglądów politycznych. Te same reguły stosujemy wobec wszystkich.</li></ul></section>
+<section class="card"><h2 style="margin-top:0">Sztuczna inteligencja i bezpieczeństwo</h2>
+<p>Odpowiedź przygotowuje automatyczny system. Modele (wyszukiwanie semantyczne <span class="kbd">sdadas/mmlw-retrieval-e5-small</span>, model NLI <span class="kbd">mDeBERTa-v3 XNLI</span>) działają lokalnie na naszym serwerze — treść nie jest wysyłana do zewnętrznych dostawców. Polecenia ukryte w analizowanych treściach (np. „zignoruj instrukcje”) traktujemy jako zwykły tekst, a zdarzenie odnotowujemy. Sprawy nierozstrzygnięte i wysokiego ryzyka trafiają do kolejki analityka — zawsze informujemy, czy sprawę faktycznie dodano do kolejki.</p></section>
+<section class="card"><h2 style="margin-top:0">Błędy, korekty, prywatność</h2>
+<p>Każdy może zgłosić błąd przyciskiem „Zgłoś błąd” pod wynikiem. Wynik odzwierciedla stan katalogu źródeł z dnia sprawdzenia. Przetwarzamy tylko to, co potrzebne do sprawdzenia; automatycznie maskujemy dane osobowe (PESEL, telefon, e-mail, numer konta). Zapis przebiegu przechowujemy 30 dni; historię sprawdzeń z danej przeglądarki możesz usunąć. Nie trenujemy modeli na danych użytkowników.</p></section>
+<section class="card"><h2 style="margin-top:0">Sprawdzaj także sam</h2>
+<p>Skorzystaj z metody <b>SPRAWDŹ</b> z kampanii NASK „Sprawdź, zanim udostępnisz”: <b>S</b>ensacyjność, <b>P</b>rowokowanie, <b>R</b>acjonalność, <b>A</b>utor, <b>W</b>adliwy kontekst, <b>D</b>yskredytacja, <b>Ź</b>ródła (aktualna wersja: <a href="https://www.nask.pl/dezinfo" target="_blank" rel="noopener">SPRAWDZAM — nask.pl/dezinfo</a>). Dezinformację zgłosisz na <a href="https://zglos-dezinformacje.nask.pl" target="_blank" rel="noopener">zglos-dezinformacje.nask.pl</a>, a podejrzane SMS-y przekażesz na numer 8080 (CERT Polska).</p>
+<p class="small muted">Punkty odniesienia: Kodeks Zasad IFCN, Europejski Kodeks Standardów EFCSN, zasady EDMO, praktyki NASK dotyczące analizy dezinformacji.</p></section>
+</main></body></html>

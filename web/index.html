@@ -1,0 +1,27 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — sprawdź informację</title></head><body>
+<main class="wrap">
+  <h1>Sprawdź informację, zanim ją udostępnisz</h1>
+  <p class="lead">Wklej treść wiadomości, posta lub link. Pokażemy, co na ten temat mówią wiarygodne źródła — urzędowe dokumenty i organizacje fact-checkingowe — oraz czego nie da się ustalić.</p>
+  <form class="card" id="f">
+    <label for="q"><b>Co chcesz sprawdzić?</b></label>
+    <textarea id="q" name="q" required maxlength="6000" placeholder="np. „Od stycznia rząd zabiera emerytom 13. emeryturę” albo https://…"></textarea>
+    <div class="row" style="margin-top:12px"><button id="go" type="submit">Sprawdź</button><span class="small muted">Nie podawaj danych osobowych. Zapisujemy przebieg sprawdzenia bez Twoich danych (maskujemy np. telefony, PESEL).</span></div>
+    <div class="examples small" style="margin-top:12px" id="ex"><span class="muted">Przykłady:</span></div>
+  </form>
+  <div class="card"><h2 style="margin-top:0">Inne sposoby</h2>
+    <ul>
+      <li><b>Czat</b> — prześlij wiadomość jak znajomemu (WhatsApp / Messenger; w prototypie: <a href="/czat">czat demonstracyjny</a>).</li>
+      <li><b>Wtyczka do przeglądarki</b> — oznacza na Facebooku, X i portalach treści zbieżne z już obalonymi fałszywymi informacjami; przycisk „Sprawdź fragment” pozwala zaznaczyć dowolny post.</li>
+      <li><b>Telefon</b> — zainstaluj tę stronę jako aplikację (menu przeglądarki → „Dodaj do ekranu głównego”), a potem w aplikacji Facebook/X wybierz <i>Udostępnij → Prawdowid</i>.</li>
+    </ul></div>
+</main>
+<script>
+const EX = ["Szczepionki przeciw COVID-19 zawierają mikroczipy", "Czy Polska musi przyjąć migrantów w ramach paktu migracyjnego?", "Uważam, że rząd jest najgorszy w historii", "Ukraińcy dostają w Polsce wyższe świadczenia niż Polacy"];
+const ex = document.getElementById("ex");
+EX.forEach(t => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.onclick = () => { document.getElementById("q").value = t; }; ex.append(b); });
+document.getElementById("f").addEventListener("submit", e => {
+  e.preventDefault();
+  const q = document.getElementById("q").value.trim();
+  if (q) location.href = "/sprawdz#t=" + encodeURIComponent(q);
+});
+</script></body></html>

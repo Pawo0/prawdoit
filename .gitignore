@@ -1,0 +1,14 @@
+.venv/
+**/.venv*/
+__pycache__/
+*.pyc
+data/runtime/
+data/index/
+*.sqlite
+*.sqlite-journal
+.env
+models/
+node_modules/
+extension/dist/
+eval/results*/ext_*.png
+ingest/__pycache__/

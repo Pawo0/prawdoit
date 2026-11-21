@@ -1,0 +1,47 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — czat (adapter demonstracyjny)</title>
+<style>
+.phone{max-width:420px;margin:0 auto;border-radius:28px;border:10px solid #1f2937;background:#efeae2;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.ph-head{background:#075e54;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.ph-head img{width:34px;height:34px;border-radius:50%;background:#1d3557;padding:4px}
+.msgs{height:520px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:85%;padding:8px 12px;border-radius:10px;white-space:pre-wrap;word-wrap:break-word;font-size:.92rem;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.me{align-self:flex-end;background:#d9fdd3}.bot{align-self:flex-start;background:#fff}
+.ph-in{display:flex;gap:8px;padding:10px;background:#f0f2f5}
+.ph-in input{flex:1;font:inherit;padding:10px 14px;border-radius:999px;border:1px solid #d0d5dd}
+.ph-in button{border-radius:999px;background:#00a884}
+.tabs button{margin-right:6px}
+</style></head><body>
+<main class="wrap">
+  <h1>Czat — adapter demonstracyjny</h1>
+  <p class="lead">Symulacja kanału WhatsApp/Messenger. Ta strona wysyła do serwera <b>dokładnie taki sam webhook</b> jak platforma Meta (<span class="kbd">POST /webhooks/whatsapp</span>), a serwer odpowiada tą samą logiką weryfikacji co strona WWW. W trybie demo odpowiedź <b>nie jest</b> wysyłana przez WhatsApp — wraca bezpośrednio tutaj.</p>
+  <div class="row tabs" style="margin-bottom:12px"><span class="small muted">Format webhooka:</span><button class="secondary" id="t-wa" type="button">WhatsApp Cloud API</button><button class="secondary" id="t-fb" type="button">Messenger</button></div>
+  <div class="phone"><div class="ph-head"><img src="/static/logo.svg" alt=""><div><b>Prawdowid</b><div class="small" id="mode" style="opacity:.8">WhatsApp (demo)</div></div></div>
+    <div class="msgs" id="msgs" aria-live="polite"><div class="msg bot">Dzień dobry! Prześlij mi wiadomość lub link, który chcesz sprawdzić.</div></div>
+    <form class="ph-in" id="f"><input id="in" autocomplete="off" placeholder="Wklej wiadomość…" aria-label="Wiadomość"><button type="submit" aria-label="Wyślij">➤</button></form></div>
+  <details class="card"><summary>Ostatni wysłany webhook (JSON)</summary><pre id="raw" class="small" style="white-space:pre-wrap"></pre></details>
+</main>
+<script>
+let fmt = "whatsapp"; const user = "48" + Math.floor(100000000 + Math.random() * 899999999);
+document.getElementById("t-wa").onclick = () => { fmt = "whatsapp"; document.getElementById("mode").textContent = "WhatsApp (demo)"; };
+document.getElementById("t-fb").onclick = () => { fmt = "messenger"; document.getElementById("mode").textContent = "Messenger (demo)"; };
+const msgs = document.getElementById("msgs");
+function add(t, who) { const d = document.createElement("div"); d.className = "msg " + who; d.textContent = t; msgs.append(d); msgs.scrollTop = msgs.scrollHeight; return d; }
+function linkify(el) { el.innerHTML = esc(el.textContent).replace(/\*(.+?)\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+document.getElementById("f").addEventListener("submit", async e => {
+  e.preventDefault(); const t = document.getElementById("in").value.trim(); if (!t) return;
+  document.getElementById("in").value = ""; add(t, "me"); const wait = add("…", "bot");
+  const ts = Math.floor(Date.now() / 1000).toString();
+  const payload = fmt === "whatsapp"
+    ? {object: "whatsapp_business_account", entry: [{id: "demo", changes: [{field: "messages", value: {messaging_product: "whatsapp", metadata: {phone_number_id: "demo"}, contacts: [{wa_id: user, profile: {name: "Demo"}}], messages: [{from: user, id: "wamid.demo" + ts, timestamp: ts, type: "text", text: {body: t}}]}}]}]}
+    : {object: "page", entry: [{id: "demo", time: Date.now(), messaging: [{sender: {id: user}, recipient: {id: "page"}, timestamp: Date.now(), message: {mid: "m_demo" + ts, text: t}}]}]};
+  document.getElementById("raw").textContent = JSON.stringify(payload, null, 2);
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/webhooks/" + fmt + "?demo=1", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
+    const d = await r.json();
+    wait.textContent = (d.replies || []).map(x => x.body).join("\n\n") || "(brak odpowiedzi)";
+    linkify(wait);
+    add("⏱ " + ((performance.now() - t0) / 1000).toFixed(1) + " s", "bot").style.opacity = .6;
+  } catch (err) { wait.textContent = "Błąd techniczny (to nie jest ocena treści): " + err.message; }
+});
+</script></body></html>
