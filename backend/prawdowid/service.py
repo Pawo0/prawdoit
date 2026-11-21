@@ -175,7 +175,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             store.log_error(cid, "fetch", str(e))
         timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
 
-    # a message with a link ("Czy X? Sprawdź też tę stronę: https://…"): the question stays the claim source, the page
+    # a message with a link ("Czy X? Zobacz ten artykuł: https://…"): the question stays the claim source, the page
     # is fetched with the same SSRF guard, scanned for injected instructions (scenario E) and used for claims only
     # when the message itself has none. A failed fetch is a notice, never a verdict and never a failed check.
     page_text = ""

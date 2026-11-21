@@ -384,7 +384,7 @@ def _gist(s: str) -> str:
 def result_short_answer(res: CheckResult) -> str:
     if res.status != "ok":
         if res.status == "blad_techniczny":
-            return res.status_message or "Nie mogę teraz tego sprawdzić z powodu błędu technicznego. To nie jest ocena treści."
+            return res.status_message or "Tego nie dało się teraz sprawdzić: wystąpił błąd techniczny. To nie jest ocena treści."
         return res.status_message or ""
     if not res.claims:
         return ""
