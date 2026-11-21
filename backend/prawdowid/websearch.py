@@ -31,7 +31,8 @@ sites themselves** (provider `sitesearch`):
   Optional, better recall when configured: self-hosted SearXNG (`PRAWDOWID_SEARXNG_URL`, JSON API) and Brave Search
   API (`PRAWDOWID_BRAVE_KEY`), both queried with `site:` filters and strictly post-filtered on the whitelist.
 
-Failures are never verdicts: an error/timeout yields a notice ("Nie mogę teraz…") and the local answer stays as it is;
+Failures are never verdicts: an error/timeout yields a notice ("…niedostępny (błąd techniczny)…") and the local answer
+stays as it is;
 every failure is logged with store.log_error. Demo/eval switches:
   PRAWDOWID_FORCE_FAIL=google_factcheck,websearch  simulate an outage (also without a key)
   PRAWDOWID_LIVE_SEARCH=0                          disable the whole live stage (reproducible eval)
@@ -266,7 +267,7 @@ def robots_allowed(url: str, timeout: float = 3.0) -> bool:
 #   * demagog.org.pl matches the WHOLE query as one phrase, in titles only ("Wrocław latk" → 0 hits, "Wrocław" → 75);
 #   * gov.pl runs a full-text engine that ranks by any word.
 # So we never send the claim itself. We pick its 2–4 most distinctive words — proper names and rare content words
-# (rarity = IDF in the local corpus), never meta words ("czy Demagog sprawdzał…", fact-checker names) and only
+# (rarity = IDF in the local corpus), never meta words ("czy ktoś sprawdzał…", fact-checker names) and only
 # reluctantly verbs, which are usually paraphrased — and run several short variants in parallel: all top terms
 # together (AND engines) and each top term alone (phrase/title engines). For substring engines the words are cut to
 # a stem (Wrocławiu → Wrocław, 65-latkowie → latk, darmowymi → darmow), so other inflections still match. The union of
@@ -276,7 +277,7 @@ _SEARCH_STOP = set("""czy prawda prawdą nieprawda podobno ponoć słyszałem s�
     zostało zostały została będą była było były jest są ma mają można mogą tylko już od wczoraj dziś dzisiaj jutro
     teraz obecnie nowy nowa nowe wszystkie wszyscy ludzie każdy około ponad prawie dlaczego czemu skąd kiedyś
     ostatnio naprawdę rzeczywiście faktycznie mln mld tys proc""".split())
-# meta words: about checking, not about the topic ("Czy Demagog sprawdzał, czy…", "w analizie…", "to fałsz?")
+# meta words: about checking, not about the topic ("Czy ktoś weryfikował, czy…", "w analizie…", "to fałsz?")
 # (matches surface words and 6-letter stems: sprawdzał/sprawd, weryfikował/weryfi, artykule/artyku)
 _META_RX = re.compile(r"^(sprawd|weryfi|zweryf|analiz|przean|oceni|ocenił|fact|prawd|nieprawd|artyku|tekst|twierd|"
                       r"źródł|zrodl|tez[aęey]$|wpis$|wpisu$|post$|posta$|postu$|link|stron[aęeyi]?$|stronie$)", re.I)
@@ -653,9 +654,9 @@ def google_queries(text: str) -> list[list[str]]:
     """Rounds of query forms for claims:search, most specific first.
 
     Measured against the real API (2026-11-21): the engine stems Polish words ('65-latkowie' finds '65-latków') but
-    wants every query word in the review's claim or title, so a whole sentence or question returns nothing — 'Czy PAP
-    usunęła depeszę o wypowiedzi Donalda Tuska przed powodzią?' → 0 results, 'Donalda Tuska PAP wypowiedzi powodzią'
-    → the Demagog review. Rare proper names alone can fail ('Rzeszów IRINN' → 0) while the opening words of the
+    wants every query word in the review's claim or title, so a whole sentence or question returns nothing — a full
+    question about a deleted news-agency dispatch → 0 results, its four rarest words (names, agency, topic) → the
+    review. Rare proper names alone can fail ('Rzeszów IRINN' → 0) while the opening words of the
     claim as the fact-checker wrote it succeed ('Stacja IRINN pokazała mapę' → the AFP review). Hence rounds: the 4
     most distinctive words of the claim; its first words as written; the 3 most distinctive words; then pairs of the
     most distinctive word with each of the next three (a user rarely uses the fact-checker's exact wording)."""
@@ -870,16 +871,16 @@ def persist(docs: list[SourceDoc]) -> int:
 
 
 # ---------------------------------------------------------------- orchestration used by service.run_check
-NOTICE_GOOGLE_FAIL = ("Nie mogę teraz sprawdzić indeksu Google z powodu błędu dostępu. "
-                      "Odpowiedź opiera się na lokalnej bazie źródeł.")
-NOTICE_WEB_FAIL = ("Nie mogę teraz przeszukać zaufanych stron w internecie z powodu błędu dostępu. "
-                   "Odpowiedź opiera się na lokalnej bazie źródeł.")
+NOTICE_GOOGLE_FAIL = ("Indeks Google Fact Check jest teraz niedostępny (błąd techniczny), więc go nie sprawdziłem. "
+                      "Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
+NOTICE_WEB_FAIL = ("Wyszukiwanie na zaufanych stronach jest teraz niedostępne (błąd techniczny). "
+                   "Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
 NOTICE_GOOGLE_OFF = ("Indeksu Google Fact Check nie sprawdzano: na serwerze nie skonfigurowano klucza API "
                      "(ustawienie serwera, nie ocena treści).")
 NOTICE_LIVE_OFF = ("Wyszukiwanie na żywo (Google Fact Check, zaufane strony) jest wyłączone na tym serwerze — "
                    "sprawdzono tylko lokalną bazę źródeł.")
-NOTICE_BOTH_FAIL = ("Nie mogę teraz sprawdzić indeksu Google ani przeszukać zaufanych stron w internecie z powodu błędu "
-                    "dostępu. Odpowiedź opiera się na lokalnej bazie źródeł.")
+NOTICE_BOTH_FAIL = ("Indeks Google Fact Check i wyszukiwanie na zaufanych stronach są teraz niedostępne (błąd "
+                    "techniczny). Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
 
 
 def _usable(r: ClaimResult) -> bool:

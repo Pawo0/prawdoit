@@ -102,7 +102,9 @@ Obsługuje DM, wzmianki, `/sprawdz`, menu wiadomości i `/usun_sesje`. [Konfigur
 Trzy zbiory (łącznie 145 przypadków, scenariusze A–J), przebieg 21.11.2026 na korpusie 4,4 tys. dok. (`eval/results_2026-11-21*/`),
 bez wyszukiwania na żywo (`PRAWDOWID_LIVE_SEARCH=0`, powtarzalność). Zbiory „ślepe” przygotowały niezależne agenty wyłącznie na podstawie
 korpusu i opisu wyzwania, bez wglądu w kod. **Uczciwą estymatą jakości są pierwsze przebiegi na zbiorach ślepych**
-(kolumny „1. przebieg”); kolejne kolumny pokazują wynik po poprawkach ogólnych (reguły, nie łatki pod przypadki).
+(kolumny „1. przebieg”); kolejne kolumny pokazują wynik po poprawkach. Część tych poprawek powtarzała sformułowania
+przypadków ze zbiorów ślepych (usunięte albo uogólnione 22.11.2026), więc oba zbiory są dziś **zbiorami strojenia**, nie
+testami ślepymi — zob. [COMPLIANCE: dopasowanie do przypadków testowych](docs/COMPLIANCE.md#dopasowanie-do-przypadków-testowych).
 
 | Miernik | Cel MVP | Dev (38) | Ślepy 1 (57): 1. przebieg → po poprawkach | Ślepy 2 (50): 1. przebieg → po poprawkach |
 |---|---|---|---|---|

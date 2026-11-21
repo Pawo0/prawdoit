@@ -70,6 +70,7 @@
 | Spójność kanałów | ✅ | eval: 100%; scenariusz G |
 | Pętla: rekomendacja ≠ faktyczne przekazanie | ✅ | `case_status`: „dodana do kolejki analityka … nie wysłano żadnych powiadomień poza tę kolejkę” |
 | Zależności zewnętrzne: klucze, limity, koszty, miejsce, awarie; brak klucza ≠ wynik | ✅ | `docs/COSTS.md`; `PRAWDOWID_FORCE_FAIL` → scenariusz J |
+| Wynik nie zależy od zakodowanych przykładów ani odpowiedzi testowych | ✅ (od 22.11) | audyt kodu względem przypadków `eval/` i scenariuszy A–J: [Dopasowanie do przypadków testowych](#dopasowanie-do-przypadków-testowych) |
 | Zakaz: LLM jako fakt bez źródła | ✅ | LLM nie decyduje; wynik LLM odrzucany, gdy doda liczbę/link (`llm.simplify`) |
 | Zakaz: obchodzenie zabezpieczeń/płatnych baz | ✅ | robots.txt (RFC 9309), brak obchodzenia Incapsula/CAPTCHA (np. pap.pl → komunikat), brak DuckDuckGo HTML |
 | Zakaz: werdykt z domeny/autora/kanału/popularności/etykiety tego samego modelu | ✅ | domena tylko filtruje; dowód = fragment + NLI/reguła liczbowa |
@@ -104,6 +105,39 @@ ręczna próba — do wykonania przez jury.
 | Potencjał wdrożeniowy (20%) | rejestr źródeł + harmonogram, wymienne modele, `docs/COSTS.md`, `docs/ARCHITECTURE.md` |
 | Użyteczność (15%) | krótkie odpowiedzi, czat, PWA, wtyczka, komunikaty błędów oddzielone od wyników |
 | Innowacyjność (15%) | pętla informacji, łańcuch dowodów, wyszukiwanie na żywo w zaufanych serwisach, wtyczka |
+
+## Dopasowanie do przypadków testowych
+Regulamin: wynik nie może zależeć od zakodowanych przykładów ani odpowiedzi testowych. Audyt 22.11.2026: każde
+3–4-wyrazowe zdanie z wejść `eval/cases*.jsonl`, z pytań A–J i z przykładowych odpowiedzi organizatorów
+(`rules/…strajk generalny.docx`) porównane z kodem `backend/`, `web/`, `extension/`, `bots/` i z promptem `llm.py`.
+
+**Usunięte albo uogólnione** (zachowanie poza wymienionymi przypadkami bez zmian):
+
+| Gdzie | Co było | Co jest |
+|---|---|---|
+| `security.py` (wzorce injection) | sformułowania przypadków H43 („rules are void”, „verdict=”, „confidence=1”, „do not cite”) i B2-46 („zagrajmy w grę”, „zostań w tej roli”, „nigdy nie podważa”) | rodziny wzorców według techniki ataku (PL/EN); test `backend/tests/test_injection_patterns.py` na własnych atakach (23/23 wykrytych, poprzednio 6/23) i zdaniach podobnych do wiadomości prasowych (1/45 fałszywych alarmów, poprzednio 6/45) |
+| `textutil._OPINION`, `_LEADIN`, `_TRAILING_META` | słowa i zwroty z H35, B2-33, B2-36, B2-05, H01 | leksykony według kategorii; żaden przypadek eval ani twierdzenie korpusu nie zmienia rodzaju |
+| `answer.SETTLE` | wskazówka dla zakazu wjazdu diesli (przykładowa odpowiedź H słowo w słowo), wskazówka dla biletów (przykładowa odpowiedź D słowo w słowo), „strajk” w temacie podróży (A2) | wpis dla diesli usunięty, bilety własnymi słowami, „strajk” usunięty; ogólne wpisy tematyczne zostają |
+| `answer._number_discrepancy`, `service.OCR_NOTICE`, `websearch.NOTICE_*_FAIL` | zdania z przykładowych odpowiedzi C, F i J | ta sama treść własnymi słowami |
+| komentarze, docstringi, `/help` bota Discord | pytania A–J i przypadek E3 jako przykłady | własne przykłady |
+| `claims._NOISE` | „pilne!+” nigdy nie pasowało (błąd wyrażenia) | „PILNE!!” / „PILNE:” usuwane z twierdzenia i zapytania (3 przypadki eval) |
+
+**Zostaje świadomie.** Krótkie formuły odpowiedzi w stylu przykładów organizatorów („Nie.” / „Tak.” / „Częściowo…” /
+„Nie udało mi się tego potwierdzić.”, „Tak, X to sprawdził i ocenił…”, „Brak wyniku w bazie nie oznacza…”) —
+organizatorzy podali je jako wzór odpowiedzi; stosujemy je do każdego wyniku, nie do konkretnych wejść. Reguły
+zainspirowane scenariuszami (R3a stare nagranie, M2 ten sam materiał, pytanie o liczbę z analizy, „Czy X to
+sprawdzał?”) są ogólne; komentarze podają scenariusz, który je zainspirował. Materiały demonstracyjne
+(`web/demo/feed.html`, `docs/DEMO.md`, `docs/DISCORD.md`, `eval/screens.py`) używają tekstów przypadków eval jako
+przykładowych wejść — nie wpływają na wyniki. Istniejące testy `backend/tests/test_answer_layer.py` (sformułowanie C)
+i `test_organizers_scenarios.py` (uruchamia scenariusze A–J) używają tekstów organizatorów celowo.
+
+**Status zbiorów ewaluacyjnych.** `eval/cases.jsonl` (dev) to zbiór strojenia z założenia. Zbiór „ślepy 1”
+(`cases_heldout.jsonl`) przestał być ślepy po rundach poprawek (`docs/RESEARCH_SUMMARY.md`). Zbiór „ślepy 2”
+(`cases_blind2.jsonl`) trafił do repozytorium w commicie `ae553ba` razem ze wzorcami, które naprawiały jego błędy
+(injection B2-43…46, opinie B2-33/B2-36, zwrot B2-05), i z `eval/results_blind2_after_fixes/` — **jest więc zbiorem
+strojenia, nie testem ślepym**. Jakość na nieznanych danych szacują tylko pierwsze przebiegi obu zbiorów
+(macro-F1 0,774 i 0,747, README). Scenariusze A–J są specyfikacją, pod którą system budowano; ich zaliczenie nie jest
+niezależną miarą jakości.
 
 ## Ochrona danych osobowych
 **Zasada: maskujemy bezpośrednie identyfikatory, a nie treść potrzebną do weryfikacji.** Za wyjaśnieniem organizatorów

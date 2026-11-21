@@ -79,7 +79,7 @@ TASK_MESSAGE = ("To prośba o napisanie lub przetłumaczenie tekstu, a nie infor
                 "werdyktu. Prawdowid sprawdza twierdzenia o faktach — wklej wiadomość lub zdanie, które chcesz "
                 "zweryfikować.")
 OCR_NOTICE = ("Tekst odczytałem automatycznie z obrazu (OCR) — mogą w nim być błędy odczytu. "
-              "Data widoczna na obrazie nie potwierdza sama w sobie rzeczywistej daty publikacji.")
+              "Data na zrzucie ekranu jest tylko częścią obrazu i nie dowodzi, kiedy tekst naprawdę opublikowano.")
 
 
 def _read_image(req: CheckRequest, res: CheckResult, cid: str, timings: dict) -> str:
@@ -226,7 +226,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
         elif page_text and res.url_meta and provenance.asks_same_item(user_text):
-            # "Czy ten wpis dotyczy tej samej depeszy, którą sprawdzał Demagog? <link>": a question about the identity
+            # "Czy ten artykuł to ten sam tekst, który oceniał <checker>? <link>": a question about the identity
             # of the linked item, answered by comparing its headline and date with the fact-check records (scenario I)
             try:
                 res.claims = [provenance.check_linked_item(claims[0].text, res.url_meta)]

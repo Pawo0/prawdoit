@@ -34,7 +34,7 @@ Każde sprawdzenie zapisuje szacunek kosztu (`engine.cost_estimate`: czas × sta
 | WhatsApp/Messenger Graph API | tak (`PRAWDOWID_WA_*`, `PRAWDOWID_FB_*`) | bez kluczy: adapter demo; błąd wysyłki logowany, nie udajemy doręczenia |
 | Opcjonalny LLM | zależnie od dostawcy | wyjaśnienie z szablonu; w audycie `llm_calls.used=false` |
 | Wyszukiwarki zaufanych serwisów (gov.pl, WordPress REST: Demagog, FakeNews.pl, CheckFirst) | nie | publiczne funkcje wyszukiwania operatorów, 0 zł; robots.txt sprawdzany; 7 s na serwis — timeout/awaria → komunikat, odpowiedź z bazy |
-| Google Fact Check Tools API | tak (`PRAWDOWID_GOOGLE_FACTCHECK_KEY`) | bezpłatne, limit wg przydziału projektu w Google Cloud; bez klucza nieaktywne; błąd/limit → „Nie mogę teraz sprawdzić indeksu Google…”; zapytanie (tekst twierdzenia) trafia do Google (USA) |
+| Google Fact Check Tools API | tak (`PRAWDOWID_GOOGLE_FACTCHECK_KEY`) | bezpłatne, limit wg przydziału projektu w Google Cloud; bez klucza nieaktywne; błąd/limit → „Indeks Google Fact Check jest teraz niedostępny (błąd techniczny)…”; zapytanie (tekst twierdzenia) trafia do Google (USA) |
 | SearXNG (opcjonalnie, `PRAWDOWID_SEARXNG_URL`) | nie | własna instancja (np. VPS w UE, rząd wielkości 20–40 zł/mies.); awaria → komunikat |
 | Brave Search API (opcjonalnie, `PRAWDOWID_BRAVE_KEY`) | tak | płatne wg cennika Brave (pakiet darmowy + opłata za 1 000 zapytań — sprawdzić aktualny cennik); dostawca spoza EOG |
 | EUvsDisinfo MCP (`PRAWDOWID_EUVSDISINFO_TOKEN`) | tak (od organizatora) | pobierane w tle przez harmonogram, nie w ścieżce zapytania; brak tokenu → status źródła „błąd”, korpus z ostatniej kopii |

@@ -10,7 +10,7 @@ reviewDate, textualRating, languageCode}. It checks that
     and disabled sources are merely counted);
   * `textualRating` is mapped with exactly the rules used for the harvested corpus (ingest/common.py), including the
     Demagog labels that differ from plain true/false;
-  * an outage is reported as a technical notice ("Nie mogę teraz sprawdzić indeksu Google…"), never as "no such
+  * an outage is reported as a technical notice ("Indeks Google Fact Check jest teraz niedostępny…"), never as "no such
     article", and a missing key leaves the provider inactive without any request — reported as `nieaktywne`;
   * the key never appears in an error message.
 
@@ -241,7 +241,7 @@ class GoogleFactCheckTest(unittest.TestCase):
         self.assertEqual(stage._join_google(), [])
         self.assertEqual(stage.google["status"], "blad")
         self.assertEqual(stage.warnings, [W.NOTICE_GOOGLE_FAIL])
-        self.assertIn("Nie mogę teraz sprawdzić indeksu Google", W.NOTICE_GOOGLE_FAIL)
+        self.assertIn("niedostępny (błąd techniczny)", W.NOTICE_GOOGLE_FAIL)
         with self.assertRaises(W.LiveError) as ctx:
             W.google_factcheck("inne pytanie")
         self.assertNotIn(KEY, str(ctx.exception))

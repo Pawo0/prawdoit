@@ -25,20 +25,21 @@ REASON = {"BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źróde�
           "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika",
           "BRAK_DOPASOWANIA_MATERIALU": "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"}
 
-# Per-topic "what would settle it" hints, more specific than the engine's generic one. Keyed to a TOPIC (any claim
-# about transport tickets, clean-transport zones, weather, scams, travel, municipal decisions), never to a test case.
+# Per-topic "what would settle it" hints, more specific than the engine's generic one (engine._would_settle). Each
+# entry is a broad TOPIC with the kind of primary source that decides claims about it, worded for the topic — not
+# taken from a test case or an organiser example answer (an entry for diesel bans that repeated scenario H's example
+# answer, and "strajk" in the travel cue for scenario A2, were removed on 2026-11-22).
 SETTLE = [
-    (re.compile(r"\b(diesl\w*|stref\w* czyst\w*|zakaz\w* wjazd\w*|wjazd\w* do centrum|sct\b)", re.I),
-     "oficjalna uchwała gminy określająca granice strefy i datę wejścia przepisów w życie"),
     (re.compile(r"\b(bilet\w*|autobus\w*|tramwaj\w*|komunikacj\w*|mpk|ztm|metr[oa]\b|przejazd\w*|jeźdz\w*|jeździ\w*)", re.I),
-     "komunikat lokalnego organizatora transportu albo aktualny regulamin sprzedaży biletów"),
+     "komunikat przewoźnika lub miejskiego zarządu transportu albo obowiązujący cennik i regulamin przewozu"),
     (re.compile(r"\b(pogod\w*|burz\w*|upał\w*|ulew\w*|powód\w*|powodz\w*|wichur\w*|ostrzeżeni\w* meteo\w*)", re.I),
      "aktualne ostrzeżenie IMGW lub komunikat Rządowego Centrum Bezpieczeństwa"),
     (re.compile(r"\b(sms\w*|oszust\w*|wyłudz\w*|phishing\w*|hak\w*|cyber\w*|wyciek\w*)", re.I),
      "komunikat CERT Polska, banku lub instytucji, pod którą ktoś się podszywa"),
-    (re.compile(r"\b(podróż\w*|wyjazd\w*|wiz[aąy]\b|paszport\w*|ambasad\w*|konsulat\w*|strajk\w*)", re.I),
+    (re.compile(r"\b(podróż\w*|wyjazd\w*|wiz[aąy]\b|paszport\w*|ambasad\w*|konsulat\w*)", re.I),
      "komunikat MSZ dla podróżujących (Odyseusz) lub oficjalne źródło danego kraju"),
-    (re.compile(r"\b(gmin\w*|burmistrz\w*|wójt\w*|starost\w*|ratusz\w*|rad\w* miasta|urząd miasta|urzęd\w* gminy)", re.I),
+    (re.compile(r"\b(gmin\w*|burmistrz\w*|wójt\w*|starost\w*|ratusz\w*|rad\w* miasta|urząd miasta|urzęd\w* gminy|"
+                r"uchwał\w*|stref\w*|zakaz\w* wjazd\w*|parking\w*)", re.I),
      "komunikat lub uchwała właściwego urzędu gminy albo miasta"),
 ]
 
@@ -107,7 +108,7 @@ def main_evidence(c: ClaimResult) -> int | None:
 
 # ------------------------------------------------------------------ per-claim short answer
 def _who_checked(e: Evidence) -> str:
-    """'Demagog ocenił twierdzenie „…” jako „Fałsz”.' — only from fields of the evidence item."""
+    """'<publisher> ocenił twierdzenie „…” jako „…”.' — only from fields of the evidence item."""
     pub = e.publisher
     checked = _q(e.factcheck_claim or e.title, 150)
     opposite = "odwrotne " if e.same_claim is False else ""
@@ -117,7 +118,7 @@ def _who_checked(e: Evidence) -> str:
 
 
 def _checked_answer(c: ClaimResult, e: Evidence) -> str | None:
-    """'Czy Demagog sprawdzał, czy X?' asks WHETHER it was checked: the answer is 'Tak, Demagog to sprawdził i ocenił…',
+    """'Czy <fact-checker> sprawdzał, czy X?' asks WHETHER it was checked: the answer is 'Tak, <it> to sprawdził…',
     not 'Nie.' (which would read as 'no, it did not check'). When the user named another checker than the one that
     rated the claim, we say who did check it instead of claiming the named one did."""
     who = asks_who_checked(c.claim)
@@ -191,7 +192,7 @@ _YEAR = re.compile(r"\b((?:19|20)\d\d)\b")
 
 
 def _number_discrepancy(c: ClaimResult) -> tuple[str, int] | None:
-    """'Czy X wydaje około 700 mln zł? Dlaczego w analizie Demagoga jest 650 mln zł?' — two figures that are not two
+    """'Czy X kosztuje około 40 mln zł? Skąd w raporcie 36 mln zł?' — two figures that are not two
     measurements of one thing: the user's number comes from the checked STATEMENT (its fact-checked claim states it)
     and the asked number from the analysis, in the verbatim passage the engine quoted (engine.asked_number_fragment).
     Built only from the evidence item: its checked claim, its fragment, its rating. (text, evidence index) or None."""
@@ -217,11 +218,11 @@ def _number_discrepancy(c: ClaimResult) -> tuple[str, int] | None:
         noun = "kwota" if "zł" in n1[2] or n1[1] == "zł" else "liczba"
         year = _YEAR.search(e.fragment)
         pub = e.publisher
-        first = "szacunkiem z wypowiedzi" if hedged else "liczbą podaną w wypowiedzi"
+        first = "przybliżeniem podanym w wypowiedzi" if hedged else "liczbą podaną w wypowiedzi"
         txt = (f"{n1[2]} to {'przybliżona ' if hedged else ''}{noun} z ocenianej wypowiedzi („{_q(said, 200)}”), "
                f"a {n2[2]} to {noun}, którą podaje {pub} w swojej analizie: „{_q(e.fragment, 260)}”. "
-               f"To nie są dwa sprzeczne pomiary: pierwsza jest {first}, druga odnosi się do konkretnej pozycji"
-               f"{f' i roku ({year.group(1)})' if year else ''} w danych przytoczonych w analizie. "
+               f"Te liczby sobie nie przeczą — mierzą co innego: {n1[2]} jest {first}, a {n2[2]} to wartość "
+               f"jednej pozycji{f' za rok {year.group(1)}' if year else ''} w danych, na które powołuje się analiza. "
                f"Całą wypowiedź {pub} {_past(pub, 'ocenił')} jako „{_fc_label(e)}”.")
         return txt, i
     return None
@@ -272,8 +273,8 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
                     "a twierdzenie nie mówi, o którą chodzi.")
         txt = "Nie udało mi się tego potwierdzić."
         if live == "blad":  # scenario J: a failed search is reported as such, never as "there is no such article"
-            txt = ("Nie udało mi się tego potwierdzić w lokalnej bazie, a zaufanych stron w internecie nie mogę teraz "
-                   "przeszukać z powodu błędu dostępu.")
+            txt = ("Nie udało mi się tego potwierdzić w lokalnej bazie, a wyszukiwanie na zaufanych stronach jest teraz "
+                   "niedostępne (błąd techniczny), więc nie wiem, czy coś tam jest.")
         rel = _related(c)
         if rel is not None:  # say what the closest material does say, without turning it into a verdict
             txt += " " + _related_sentence(rel)

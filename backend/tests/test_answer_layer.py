@@ -89,7 +89,7 @@ class LiveOutage(unittest.TestCase):
         res = CheckResult(id="abc", created_at="2026-11-21", channel="web", status="ok", input_kind="text",
                           input_excerpt="", claims=[claim(verdict, evidence, strength_label="umiarkowana")],
                           live_search=LiveSearchInfo(provider="google_factcheck", status=status,
-                                                     notice="Nie mogę teraz sprawdzić indeksu Google z powodu błędu dostępu."))
+                                                     notice="Indeks Google Fact Check jest teraz niedostępny (błąd techniczny)."))
         res.warnings.append(res.live_search.notice)
         answer.finalize(res)
         return res
@@ -172,7 +172,7 @@ class AskedNumber(unittest.TestCase):
         self.assertTrue(a.startswith("700 mln zł to przybliżona kwota z ocenianej wypowiedzi"), a)
         self.assertIn("650 mln zł", a)
         self.assertIn("2023", a)
-        self.assertIn("nie są dwa sprzeczne pomiary", a)
+        self.assertIn("Te liczby sobie nie przeczą — mierzą co innego", a)
         self.assertIn("„Częściowa prawda”", a)
         self.assertEqual(c.related_evidence, 0)
         self.assertIn(e.url, reply)

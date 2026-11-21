@@ -64,7 +64,7 @@
    (gov.pl, WordPress REST: Demagog, FakeNews.pl, CheckFirst; opcjonalnie SearXNG/Brave z filtrem `site:`). Każdy serwis
    ma jeden zegar (robots.txt + zapytania, 7 s), potem ≤ 5 stron jest pobieranych (SSRF, robots.txt, skan injection) i
    ocenianych tymi samymi regułami. Wynik trafia do `live_web.jsonl` (następne pytanie = baza). Awaria/timeout → komunikat
-   „Nie mogę teraz…”, nigdy werdykt. Szczegóły: nagłówek `backend/prawdowid/websearch.py`.
+   „…jest teraz niedostępny (błąd techniczny)…”, nigdy werdykt. Szczegóły: nagłówek `backend/prawdowid/websearch.py`.
 7. **Pętla informacji**: nierozstrzygnięte twierdzenia faktyczne i tematy wysokiego ryzyka z jednym źródłem →
    sprawa w kolejce analityka; podobne zgłoszenia (cos ≥ 0,86) łączone w jedną sprawę z licznikiem i priorytetem.
 8. **Audyt**: każde sprawdzenie (ID, czas, kanał, zamaskowane wejście, źródła, werdykty, czasy etapów, modele,
