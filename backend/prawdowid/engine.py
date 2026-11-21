@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from . import measures
 from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
@@ -49,7 +50,8 @@ class _Cand:
     nli_claim_rev: object | None = None  # NLI(fact-checked claim -> user claim): used only for negation detection
     numeric: str | None = None  # deterministic number check vs. an official fact card: "zgodne" | "niezgodne"
     extra_irrelevant: bool = False  # official card about another period / currency / act
-    definitional: bool = False  # number differs, but the card uses a measure the claim did not name
+    # number differs, but the claim may use another definition of the indicator (measures.py): the note saying why
+    definitional: str = ""
     # one sentence of a multi-sentence checked claim (see _claim_units): the user often repeats only the rated core
     unit: str = ""
     unit_cos: float = 0.0
@@ -283,8 +285,8 @@ _MEASURES = [  # (source marker, words that must appear in the claim for the com
 ]
 
 
-def _compatible(claim: str, source_title: str) -> bool:
-    if re.search(r"hicp", claim, re.I) and re.search(r"\bCPI\b", source_title):
+def _compatible(claim: str, source_title: str, source_text: str = "") -> bool:
+    if not measures.compatible(claim, source_title, source_text):  # claim names another definition (HICP vs CPI…)
         return False
     return all(rx_claim.search(claim) for rx_src, rx_claim in _MEASURES if rx_src.search(source_title))
 
@@ -310,34 +312,36 @@ _CURR_NAMES = {"EUR": "euro", "USD": "dolar", "CHF": "frank", "GBP": "funt", "NO
                "CZK": "koron", "JPY": "jen", "HUF": "forint", "UAH": "hrywn", "CNY": "juan", "CAD": "dolar kanad",
                "AUD": "dolar austral"}
 _ACT = re.compile(r"^(Ustawa|Rozporządzenie|Dyrektywa|Decyzja|Konstytucja|Uchwała)\b", re.I)
-_QUALIFIED = [  # measures whose value depends on the definition; a mismatch is only meaningful if the claim names it
-    (re.compile(r"\bCPI\b"), re.compile(r"\bcpi\b|\bgus\b", re.I)),
-    (re.compile(r"\bHICP\b"), re.compile(r"hicp|eurostat|zharmonizowan", re.I)),
-    (re.compile(r"rejestrowan", re.I), re.compile(r"rejestrowan|\bgus\b|urzęd\w* pracy", re.I)),
-    (re.compile(r"\b(BAEL|LFS)\b|Eurostat", re.I), re.compile(r"bael|lfs|eurostat", re.I)),
-]
-
-
-_ALT = {"CPI": r"\bHICP\b", "HICP": r"\bCPI\b", "rejestrowan": r"\b(BAEL|LFS)\b|bezroboci\w* .*Eurostat|Eurostat.*bezroboci"}
-
-
-def _competing_measure(claim: str, title: str) -> bool:
-    """Does the claimed number match ANOTHER official card for the same period that measures the same thing with a
-    different definition (CPI vs HICP, registered vs LFS unemployment)? Then the mismatch is definitional, not false.
-    If the number matches no definition at all, it stays 'niezgodne'."""
-    for key, alt in _ALT.items():
-        if re.search(key, title, re.I):
-            rx = re.compile(alt, re.I)
-            return any(d.source_type == "official" and rx.search(d.title) and same_subject(claim, d.title)
-                       and numeric_stance(claim, f"{d.title}. {d.text[:6000]}") == "zgodne"
-                       for d in INDEX.docs)
-    return False
-
-
-def measure_named(claim: str, title: str) -> bool:
-    """False if the card measures something definition-dependent (CPI vs HICP, registered vs LFS unemployment)
-    and the claim does not say which measure it means."""
-    return all(rx_c.search(claim) for rx_t, rx_c in _QUALIFIED if rx_t.search(title))
+def _other_definition(claim: str, d) -> str:
+    """After a numeric mismatch with official card `d`: could the claim be using another definition of the same
+    indicator (CPI vs HICP, registered vs LFS unemployment, real vs nominal GDP — see measures.py)?
+    Returns "" when the mismatch stands: the claim names the card's definition, or for every other definition a card
+    for the same period is indexed and none of them gives the claimed number. Otherwise returns the note saying why
+    the card does not decide the claim (another definition gives the claimed number, or no card for it is indexed)."""
+    open_dims = measures.unnamed(claim, d.title, d.text)
+    if not open_dims:
+        return ""
+    m = measures.measure_of(d.title, d.text)
+    missing: list[str] = []
+    for dim, own in open_dims:
+        for alt in dim.variants:
+            if alt.name == own.name:
+                continue
+            cards = [o for o in INDEX.docs if o.source_type == "official" and o is not d
+                     and measures.uses(o.title, o.text, m.key, dim.key) == alt.name
+                     and measures.compatible(claim, o.title, o.text) and same_subject(claim, o.title)]
+            agree = next((o for o in cards if numeric_stance(claim, f"{o.title}. {o.text[:6000]}") == "zgodne"), None)
+            if agree is not None:
+                return (f"Wartość zależy od przyjętej miary: {agree.publisher} („{short(agree.title, 80)}”) podaje tę "
+                        f"liczbę według definicji {alt.name}, a {d.publisher} („{short(d.title, 80)}”) inną według "
+                        f"definicji {own.name}. Twierdzenie nie mówi, o którą miarę chodzi.")
+            if not cards:
+                missing.append(alt.name)
+    if missing:
+        return (f"Wartość zależy od przyjętej miary: {d.publisher} („{short(d.title, 80)}”) podaje inną liczbę według "
+                f"definicji {open_dims[0][1].name}; dla innej definicji ({', '.join(missing)}) nie mam danych za ten "
+                "okres, a twierdzenie nie mówi, o którą miarę chodzi.")
+    return ""
 
 
 _ALTERNATIONS = (("sz", "ch"), ("cz", "c"), ("rz", "r"))
@@ -655,10 +659,12 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         if d.source_type != "official" or max(c.frag_cos, c.cos) < 0.65 or c.extra_irrelevant:
             continue
         num = None
-        if _compatible(claim.query, d.title):
+        if _compatible(claim.query, d.title, d.text):
             num = numeric_stance(claim.query, f"{d.title}. {d.text[:6000]}")
-            if num == "niezgodne" and not measure_named(claim.query, d.title) and _competing_measure(claim.query, d.title):
-                num, c.definitional = None, True  # e.g. CPI vs HICP: different measure, not a contradiction
+            if num == "niezgodne":
+                c.definitional = _other_definition(claim.query, d)
+                if c.definitional:  # e.g. CPI vs HICP: the claim may use the other measure — not a contradiction
+                    num = None
         num = num or legal_date_stance(claim.query, d.title, d.text)
         if num:
             c.numeric = num
@@ -721,9 +727,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                   keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
     res.meta_question = getattr(claim, "meta", "") or None
     if definitional:
-        d0 = INDEX.docs[definitional[0].doc_idx]
-        note = (f"Wartość zależy od przyjętej miary: {d0.publisher} („{short(d0.title, 80)}”) podaje inną liczbę dla innej "
-                "definicji wskaźnika. Twierdzenie nie mówi, o którą miarę chodzi.")
+        note = definitional[0].definitional
         res.premises.append(Premise(label="Różne definicje wskaźnika", value=note, effect="-"))
         if res.verdict == "potwierdzone":
             res.missing_context = note
