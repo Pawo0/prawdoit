@@ -30,7 +30,8 @@ Test transportu i zapisu ustawień bez dodatkowych zależności: `node eval/test
 
 Dowolny tekst lub URL na `/`, w `/czat` albo przez `POST /api/check {"text": "..."}`. Wynik nie zależy od wpisanych
 wcześniej odpowiedzi — nie ma listy przykładów w kodzie. Przebieg każdego sprawdzenia: `/analiza/<id>` → „Zapis
-przebiegu sprawdzenia”, oraz `/moderator` (token `demo-moderator`).
+przebiegu sprawdzenia”, oraz `/moderator` (token `demo-moderator` przy lokalnym uruchomieniu z `PRAWDOWID_DEV_MODE=1`;
+na serwerze — własny `PRAWDOWID_MODERATOR_TOKEN`).
 
 ## Ewaluacja
 Test samego interfejsu wtyczki, bez backendu i modeli: po zainstalowaniu `playwright` dla Node.js oraz Chromium

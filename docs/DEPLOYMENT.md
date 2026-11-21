@@ -17,9 +17,12 @@ W katalogu projektu:
 cp .env.example .env
 ```
 
-W `.env` ustaw `PRAWDOWID_MODERATOR_TOKEN` na własny losowy token. Możesz wygenerować go poleceniem
-`openssl rand -hex 32`. Zachowaj go — służy do dostępu do panelu analityka. `.env` nie trafia do repozytorium ani obrazu.
-Kontener nie uruchomi się z pustym tokenem lub domyślnym `demo-moderator`.
+W `.env` ustaw `PRAWDOWID_MODERATOR_TOKEN` i `PRAWDOWID_ADMIN_TOKEN` na dwa różne, własne losowe tokeny. Każdy możesz
+wygenerować poleceniem `openssl rand -hex 32`. Zachowaj je — służą do dostępu do panelu analityka (`/moderator`) i panelu
+źródeł (`/admin`). `.env` nie trafia do repozytorium ani obrazu. `docker compose` przerwie start, gdy któregoś brakuje,
+a kontener nie uruchomi się z pustym tokenem, z jawnymi wartościami `demo-moderator` / `demo-admin` ani z
+`PRAWDOWID_DEV_MODE=1`. Poza kontenerem brak tokenu oznacza zamknięty panel (API odpowiada 503), a wartości demo działają
+wyłącznie w trybie lokalnym `PRAWDOWID_DEV_MODE=1`.
 
 ```bash
 docker compose up -d --build
@@ -107,7 +110,7 @@ To polecenie buduje obraz dla architektury hosta. Na Apple Silicon jest to ARM64
 `docker buildx build --platform linux/amd64 -t REGISTRY/TEAM/prawdowid:VERSION --push .` na maszynie
 z obsługą tej architektury lub emulacji.
 
-Ustaw zmienne `PRAWDOWID_MODERATOR_TOKEN` i `PRAWDOWID_PUBLIC_URL`. Proces nasłuchuje na `0.0.0.0`,
+Ustaw zmienne `PRAWDOWID_MODERATOR_TOKEN`, `PRAWDOWID_ADMIN_TOKEN` i `PRAWDOWID_PUBLIC_URL`. Proces nasłuchuje na `0.0.0.0`,
 obsługuje zmienną `PORT` narzuconą przez platformę (domyślnie 8000) i przejmuje sygnały zatrzymania bez powłoki pośredniej.
 Zapewnij trwały, zapisywalny dysk pod `/var/lib/prawdowid` oraz opcjonalnie cache pod `/var/cache/huggingface`,
 dostępny dla UID/GID 10001. Backend potrzebuje dostępu do stron źródłowych przy sprawdzaniu URL i do Hugging Face

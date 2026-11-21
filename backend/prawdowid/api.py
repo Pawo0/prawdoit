@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__, ratelimit, store
-from .admin_api import public_registry, router as admin_router
+from .admin_api import check_token, public_registry, router as admin_router
 from .channels.meta import router as meta_router
 from .jobs import guard_auto, router as jobs_router
 from .config import settings
@@ -154,8 +154,7 @@ def api_stats():
 
 # ------------------------------------------------------------------ moderator / analyst
 def _mod(token: str | None) -> None:
-    if token != settings.moderator_token:
-        raise HTTPException(401, "Wymagany token moderatora (nagłówek X-Moderator-Token).")
+    check_token(token, settings.moderator_token, "X-Moderator-Token", "PRAWDOWID_MODERATOR_TOKEN", "moderatora")
 
 
 @app.get("/api/cases")

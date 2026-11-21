@@ -12,6 +12,9 @@ def _env(name: str, default: str) -> str:
     return os.environ.get(f"PRAWDOWID_{name}", default)
 
 
+_DEV_MODE = _env("DEV_MODE", "0") == "1"  # explicit local development only (README); never set in the container
+
+
 @dataclass(frozen=True)
 class Settings:
     root: Path = ROOT
@@ -65,8 +68,12 @@ class Settings:
     wa_app_secret: str = _env("WA_APP_SECRET", "")
     fb_page_token: str = _env("FB_PAGE_TOKEN", "")
     fb_verify_token: str = _env("FB_VERIFY_TOKEN", "")
-    moderator_token: str = _env("MODERATOR_TOKEN", "demo-moderator")
-    admin_token: str = _env("ADMIN_TOKEN", "demo-admin")          # source registry admin panel (/admin)
+    # Panel tokens fail closed: unset = the moderator / admin API answers 503 and the panel stays locked. The public
+    # demo values exist only in explicit local-dev mode (PRAWDOWID_DEV_MODE=1); the container refuses to start
+    # without two private tokens (docker/start.py).
+    dev_mode: bool = _DEV_MODE
+    moderator_token: str = _env("MODERATOR_TOKEN", "").strip() or ("demo-moderator" if _DEV_MODE else "")
+    admin_token: str = _env("ADMIN_TOKEN", "").strip() or ("demo-admin" if _DEV_MODE else "")  # source registry (/admin)
     scheduler: bool = _env("SCHEDULER", "1") == "1"                 # background fetching of registry sources
 
     # --- cost estimate per answer (observability; docs/COSTS.md). CPU: 4 vCPU VPS ~120 zł/mies. -> zł per vCPU-second

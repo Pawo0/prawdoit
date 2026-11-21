@@ -23,7 +23,7 @@ pokazuje, co mówią źródła.
 
 ## Docker — backend i strona WWW
 
-Skopiuj `.env.example` do `.env`, ustaw prywatny `PRAWDOWID_MODERATOR_TOKEN`, następnie uruchom:
+Skopiuj `.env.example` do `.env`, ustaw prywatne `PRAWDOWID_MODERATOR_TOKEN` i `PRAWDOWID_ADMIN_TOKEN`, następnie uruchom:
 
 ```bash
 docker compose up -d --build
@@ -39,12 +39,13 @@ cd backend
 uv venv --python 3.12 .venv && source .venv/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu
 uv pip install -r requirements.txt
-uvicorn prawdowid.api:app --port 8000        # start ~10 s: repo zawiera gotowy cache embeddingów (data/index/)
+PRAWDOWID_DEV_MODE=1 uvicorn prawdowid.api:app --port 8000   # start ~10 s: repo zawiera gotowy cache embeddingów (data/index/)
 ```
 Otwórz http://localhost:8000 · czat demo: http://localhost:8000/czat · panel analityka: http://localhost:8000/moderator
-(token demo: `demo-moderator`, zmień przez `PRAWDOWID_MODERATOR_TOKEN`) · **panel źródeł: http://localhost:8000/admin**
-(token demo: `demo-admin`, zmień przez `PRAWDOWID_ADMIN_TOKEN`; wpisz go w polu tokenu panelu — trafia do nagłówka
-`X-Admin-Token`). W panelu: dodawanie źródła z „Wykryj automatycznie”, test bez zapisu, włącz/wyłącz, „Uruchom teraz”,
+(token `demo-moderator` tylko w trybie lokalnym `PRAWDOWID_DEV_MODE=1`, inaczej `PRAWDOWID_MODERATOR_TOKEN`) ·
+**panel źródeł: http://localhost:8000/admin** (token `demo-admin` tylko w trybie lokalnym, inaczej
+`PRAWDOWID_ADMIN_TOKEN`; wpisz go w polu tokenu panelu — trafia do nagłówka `X-Admin-Token`). Bez ustawionego tokenu
+i bez trybu lokalnego oba panele są zamknięte (API odpowiada 503); kontener nie wystartuje bez dwóch prywatnych tokenów. W panelu: dodawanie źródła z „Wykryj automatycznie”, test bez zapisu, włącz/wyłącz, „Uruchom teraz”,
 historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), model danych: [DATA_MODEL](docs/DATA_MODEL.md).
 
 ## Co nowego (21.11.2026)
@@ -68,8 +69,9 @@ historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), mod
 ## Zmienne środowiskowe (wszystkie opcjonalne)
 | Zmienna | Domyślnie | Do czego |
 |---|---|---|
-| `PRAWDOWID_ADMIN_TOKEN` | `demo-admin` | token panelu źródeł `/admin` (zmień poza demo) |
-| `PRAWDOWID_MODERATOR_TOKEN` | `demo-moderator` | token panelu analityka `/moderator` |
+| `PRAWDOWID_ADMIN_TOKEN` | — (panel zamknięty) | token panelu źródeł `/admin`; wymagany w kontenerze |
+| `PRAWDOWID_MODERATOR_TOKEN` | — (panel zamknięty) | token panelu analityka `/moderator`; wymagany w kontenerze |
+| `PRAWDOWID_DEV_MODE` | `0` | `1` = tylko lokalnie: puste tokeny zastępują jawne `demo-moderator` / `demo-admin`; kontener odmawia startu z `1` |
 | `PRAWDOWID_SCHEDULER` | `1` | `0` = harmonogram pobierania źródeł wyłączony (np. w testach) |
 | `PRAWDOWID_LIVE_SEARCH` | `1` | `0` = bez wyszukiwania na żywo (powtarzalna ewaluacja, praca offline) |
 | `PRAWDOWID_GOOGLE_FACTCHECK_KEY` | — | klucz Google Fact Check Tools API; bez klucza dostawca jest nieaktywny |
