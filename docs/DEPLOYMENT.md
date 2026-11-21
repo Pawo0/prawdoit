@@ -163,6 +163,8 @@ nie zezwala na żądania do nowego serwera. Następnie przeładuj rozszerzenie i
 `backend/requirements-container.txt` przypina bezpośrednie zależności runtime do wersji z lokalnego środowiska
 Python 3.12. Zależności pośrednie są rozwiązywane podczas budowania — nie jest to pełny lockfile.
 PyTorch jest instalowany z oficjalnego indeksu CPU; Discord jest dołączony do obrazu jako opcjonalny proces; Playwright i MCP nie są instalowane.
+Odczyt zrzutów ekranu (`image_b64` w `/api/check`) używa lokalnego Tesseracta z pakietów Debiana `tesseract-ocr`
+i `tesseract-ocr-pol` (ok. 20 MB). Obraz nie jest zapisywany; bez programu `tesseract` API zwraca komunikat techniczny.
 Przy ustawionym tokenie entrypoint nadzoruje API i bota oraz przekazuje zatrzymanie obu procesom;
 bez tokenu zastępuje się procesem API.
 Fonty i grafiki strony są częścią obrazu, bez zależności od CDN.
