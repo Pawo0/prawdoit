@@ -33,7 +33,7 @@
         ▼                                             ▼
  KORPUS data/corpus/<id>.jsonl (jeden schemat) → indeks (przeładowanie bez restartu) → rdzeń
    kat. A: Odyseusz MSZ, gov.pl (RCB, RSO, MSWiA, PSP, GIS, PAA, MI, MON, KPRM…), IMGW, CERT, Policja, urzędy morskie,
-           ISAP/ELI, EUR-Lex, GUS/BDL, NBP, dane.gov.pl (Eurostat, PKW, KE PL — wyłączone decyzją zespołu)
+           ISAP/ELI, EUR-Lex, GUS/BDL, NBP, dane.gov.pl, Eurostat, PKW, KE PL
    kat. B: Demagog, FakeNews.pl, Stowarzyszenie Pravda, Konkret24, EUvsDisinfo (+ MCP), CheckFirst
 ```
 

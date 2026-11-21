@@ -11,7 +11,7 @@
     "args": [],
     "timeout_s": 3600
   },
-  "enabled": false,
+  "enabled": true,
   "schedule_hours": 168,
   "web_search": true,
   "topics": [
@@ -22,8 +22,8 @@
   "license": "© Unia Europejska, CC BY 4.0 (informacja prawna Komisji Europejskiej); podać źródło",
   "qualification": "Oficjalne przedstawicielstwo Komisji Europejskiej w Polsce; komunikaty i sprostowania mitów o UE. Kategoria A dla stanowiska i działań Komisji.",
   "scope": "outside",
-  "scope_basis": "",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf: „Preferowane są dokumenty urzędowe, dane publiczne oraz korpusy zweryfikowanych informacji”; rules/resources.txt to przykłady („nie musicie implementować wszystkich”); oficjalne stanowiska Komisji Europejskiej (CC BY 4.0)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21",
-  "notes": "Wyłączone 2026-11-21: źródło spoza listy organizatora (rules/resources.txt). Można je włączyć w panelu /admin."
+  "notes": "Włączone ponownie 2026-11-22: rules/resources.txt to lista przykładów, a treść zadania preferuje dokumenty urzędowe i dane publiczne; licencja pozwala na ponowne użycie (ocena: docs/COMPLIANCE.md, tabela licencji). Wyłączone 2026-11-21 decyzją zespołu jako źródło spoza listy organizatora."
 }
