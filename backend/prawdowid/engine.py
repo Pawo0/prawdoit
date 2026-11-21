@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .agreement import disagreement
+from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
@@ -57,6 +57,7 @@ class _Cand:
     nli_unit_rev: object | None = None  # NLI(unit -> user claim)
     nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
     explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
+    archival: tuple[int, int] | None = None  # (year of the material per the analysis, year it is presented as)
 
 
 def _fmt_date(s: str | None) -> str:
@@ -134,6 +135,60 @@ def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str
     hits = [w for w in _fragment_windows(text, text)
             if w not in in_claim and any(same_amount(a, x) for a in asked for x in amounts(w))]
     return min(hits, key=lambda w: (not _YEAR_RX.search(w), len(w))) if hits else None
+
+
+# ------------------------------------------------------------------ old material presented as current (rule R3a)
+# "Czy film udostępniony przez X w 2026 r. pokazywał ówczesny protest pod Y?" — a claim that a recording / photo shows
+# an event of the time it was shared. A fact-check about that material that dates it to an EARLIER year refutes it
+# deterministically (the NLI model reads almost every sentence of such an analysis as a contradiction, so it cannot
+# be used here). Same material = the analysis names at least two of the claim's proper names.
+_MATERIAL = re.compile(r"\b(film\w*|nagra\w*|wideo|video|klip\w*|zdjęci\w*|zdjęć|fotografi\w*|materiał\w*)\b", re.I)
+_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|tegoroczn\w*|teraz|dziś|"
+                            r"dzisiaj|niedawn\w*)\b", re.I)
+_ORIGIN = re.compile(r"\b(pochodz\w*|nagran\w*|nakręcon\w*|zarejestrowan\w*|wykonan\w*|zrobion\w*|powstał\w*)\b"
+                     r"[^.]{0,40}?\b(?:z|w|we)\s+(?:[^\W\d]+\s+){0,2}?((?:19|20)\d\d)\b", re.I)
+_PROPER = re.compile(r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}")
+
+
+def presented_year(claim: str, published_at: str | None) -> int | None:
+    """The year a claim about a material presents it as from: an explicit year, or — for 'ówczesny / aktualny /
+    teraz' without one — the year the fact-check was published (when the material was being shared)."""
+    if not _MATERIAL.search(claim):
+        return None
+    years = [int(y) for y in re.findall(r"\b((?:19|20)\d\d)\b", claim)]
+    if years:
+        return max(years)
+    if _PRESENTED_NOW.search(claim) and (published_at or "")[:4].isdigit():
+        return int(published_at[:4])
+    return None
+
+
+def _names_shared(claim: str, text: str) -> int:
+    names = {fold(w) for w in _PROPER.findall(f" {claim}")}
+    words = {fold(w) for w in re.findall(r"[^\W\d_]+", text)}
+    return sum(1 for n in names if any(same_word(n, w) for w in words))
+
+
+def archival_origin(d, claim: str, year: int) -> tuple[str, int] | None:
+    """(verbatim passage, year of the material) when the analysis says the material comes from before `year`."""
+    names = {fold(w) for w in _PROPER.findall(f" {claim}")}
+    if not names:
+        return None
+    in_claim = _squash(d.claim or "")
+    best = None
+    for w in _fragment_windows(d.text or "", d.text or ""):
+        if w in in_claim:
+            continue
+        m = next((m for s in split_sentences(w) if _MATERIAL.search(s) for m in [_ORIGIN.search(s)] if m), None)
+        if not m or int(m.group(2)) >= year:
+            continue
+        shared = _names_shared(claim, f"{d.title} {d.claim or ''} {w}")
+        if shared < min(2, len(names)):
+            continue
+        key = (_names_shared(claim, w), -len(w))
+        if best is None or key > best[0]:
+            best = (key, w.lstrip("-–•* "), int(m.group(2)))  # a leading bullet is not quoted
+    return (best[1], best[2]) if best else None
 
 
 def _relevance(q_tokens: set[str], text: str) -> float:
@@ -538,6 +593,12 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             frag = asked_number_fragment(d.text or "", d.claim, asked)
             if frag:
                 c.fragment, c.explains = frag, True
+    for c in ranked:  # rule R3a: old material presented as current
+        d = INDEX.docs[c.doc_idx]
+        if d.source_type == "factcheck" and (year := presented_year(claim.query, d.published_at)):
+            hit = archival_origin(d, claim.query, year)
+            if hit:
+                c.fragment, c.archival = hit[0], (hit[1], year)
     _claim_units(ranked, q_emb)
     timings["fragments_ms"] = timings.get("fragments_ms", 0) + (time.perf_counter() - t0) * 1000
     t0 = time.perf_counter()
@@ -604,6 +665,8 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
+            if mapped is None and same is None and c.archival:  # R3a: the analysis dates the material earlier
+                refute.append(c); evidence.append(_evidence(c, "przeczy", max(c.claim_cos, c.cos), None)); continue
             if mapped == "falszywe":
                 refute.append(c); evidence.append(_evidence(c, "przeczy", c.claim_cos, same)); continue
             if mapped == "potwierdzone":
@@ -714,6 +777,11 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
         main = max(decisive, key=lambda c: (TIER[INDEX.docs[c.doc_idx].source_type] == 1, _score(c)))
         d = INDEX.docs[main.doc_idx]
         age = INDEX.doc_age(d)
+        if main.archival and verdict == "falszywe":  # R3a
+            rules.append("R3a:STARY_MATERIAL")
+            context_type = "FALSZYWY_KONTEKST"
+            missing_context = (f"Materiał pochodzi z {main.archival[0]} r., a twierdzenie przedstawia go jako z "
+                               f"{main.archival[1]} r. (źródło: {d.publisher}).")
         # R4 (archival context): supported, but presented as current while the evidence is old
         if verdict == "potwierdzone" and time_sensitive and age is not None and age > settings.stale_days:
             verdict, context_type = "wprowadzajace_w_blad", "NIEAKTUALNE"
@@ -726,7 +794,11 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
     tiers = _tiers(decisive)
     if main is not None:
         d = INDEX.docs[main.doc_idx]
-        if main.numeric:
+        if main.archival:
+            premises.append(Premise(label="Data materiału według analizy fact-checkingowej (reguła deterministyczna)",
+                                    value=f"materiał pochodzi z {main.archival[0]} r., a twierdzenie przedstawia go "
+                                          f"jako z {main.archival[1]} r.", effect="+"))
+        elif main.numeric:
             premises.append(Premise(label="Porównanie liczb ze źródłem urzędowym (reguła deterministyczna)",
                                     value=("liczba z twierdzenia zgadza się z danymi źródła" if main.numeric == "zgodne"
                                            else "liczba z twierdzenia NIE zgadza się z danymi źródła za ten sam okres"),
@@ -804,7 +876,9 @@ def _explain(verdict: str, main: _Cand | None, evidence: list[Evidence], conflic
     lead = {"falszywe": "Źródła przeczą tej informacji.",
             "potwierdzone": "Źródła potwierdzają tę informację.",
             "wprowadzajace_w_blad": "Ta informacja wprowadza w błąd."}[verdict]
-    if main.nli is None and d.verdict_raw:
+    if main.archival:
+        body = f" Według źródła: {who} ({when})."
+    elif main.nli is None and d.verdict_raw:
         body = (f" {who} ({when}) sprawdził bardzo podobne twierdzenie: „{short(d.claim or d.title, 160)}” i ocenił je "
                 f"jako „{d.verdict_raw}”.")
         if main.nli_claim is not None and main.nli_claim.contra >= 0.8:

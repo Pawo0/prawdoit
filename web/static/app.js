@@ -174,7 +174,8 @@ const REASON = {BRAK_MATERIALOW: "brak materiałów w katalogu źródeł", TYLKO
   NIEAKTUALNE_DOWODY: "dowody są nieaktualne", ROZNE_DEFINICJE: "wynik zależy od przyjętej miary wskaźnika",
   BRAK_DOPASOWANIA_MATERIALU: "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"};
 const CTX = {NIEAKTUALNE: "materiał nieaktualny / przedstawiony jako bieżący", MIESZANE: "część twierdzenia jest fałszywa i zmienia jego sens",
-  WYBIORCZOSC_LUB_KONTEKST: "brakujący kontekst lub wybiórcze przedstawienie faktów"};
+  WYBIORCZOSC_LUB_KONTEKST: "brakujący kontekst lub wybiórcze przedstawienie faktów",
+  FALSZYWY_KONTEKST: "materiał z innego czasu przedstawiony jako bieżący"};
 const KIND = {fakt: "twierdzenie o faktach", opinia: "opinia / ocena", prognoza: "przewidywanie", pytanie: "pytanie"};
 const DECISIVE = ["falszywe", "potwierdzone", "wprowadzajace_w_blad"];
 

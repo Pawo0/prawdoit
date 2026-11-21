@@ -297,6 +297,9 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
         return f"{opener} {_who_checked(e)}"
 
     opener = "Nie." if v == "falszywe" else "Tak."
+    if v == "falszywe" and c.context_type == "FALSZYWY_KONTEKST" and c.missing_context:
+        # old material presented as current (engine rule R3a): the analysis' own passage that dates it
+        return f"Nie. {c.missing_context} {e.publisher} pisze: „{_q(e.fragment, 420)}”."
     if e.factcheck_verdict_raw and e.source_type in ("factcheck", "incident"):
         txt = f"{opener} {_who_checked(e)}"
         if e.same_claim is False:
@@ -355,6 +358,8 @@ def _verdict_limitation(c: ClaimResult) -> str:
     i = c.main_evidence
     e = c.evidence[i] if i is not None and i < len(c.evidence) else None
     pubs = {c.evidence[j].publisher for j in _decisive(c)}
+    if c.context_type == "FALSZYWY_KONTEKST":
+        return "datę materiału podaje analiza fact-checkingowa — w niej sprawdzisz, na jakiej podstawie ją ustalono"
     if e is not None and e.factcheck_claim and e.similarity < 0.9:
         return "źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie"
     if c.context_type == "NIEAKTUALNE":
