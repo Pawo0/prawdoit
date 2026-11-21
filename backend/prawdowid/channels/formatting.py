@@ -38,8 +38,24 @@ def _source(c: ClaimResult) -> str | None:
     e = c.evidence[i]
     return f"{label}: {e.publisher}, {_date(e.published_at)} — {short(e.title, 90)}\n{e.url}"
 
+def _sources_long(c: ClaimResult) -> list[str]:
+    """Discord (markdown, split into several messages, no length cap): every decisive source with its verbatim
+    quote, the decisive one (main_evidence) first. Empty when nothing is decisive — an abstention then keeps the
+    single related item from _source, labelled as not decisive, never another claim's rating."""
+    decisive = [e for e in c.evidence if e.stance in ("przeczy", "popiera")]
+    if c.main_evidence is not None and c.main_evidence < len(c.evidence):
+        main = c.evidence[c.main_evidence]
+        decisive = [main] + [e for e in decisive if e is not main]
+    out = []
+    for j, e in enumerate(decisive[:3], 1):
+        out.append(f"{j}. {e.publisher}, {_date(e.published_at)} — {short(e.title, 80)}\n   {e.url}")
+        if e.fragment:
+            out.append(f"   Cytat: „{short(e.fragment, 220)}”")
+    return ["Źródła:"] + out if out else []
 
-def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool = False) -> str:
+
+
+def chat_text(res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms: bool = False) -> str:
     b = lambda s: f"{bold}{s}{bold}" if bold else s  # noqa: E731
     link = f"{settings.public_base_url}/analiza/{res.id}"
     if res.status != "ok":
@@ -53,9 +69,11 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool 
             lines.append(f"{i}. „{short(c.claim, 120)}”")
         lines.append(f"{ICON[c.verdict]} {b(c.verdict_label)}")
         lines.append(_answer(c, sms))
-        src = _source(c)
+        long = _sources_long(c) if bold == "**" and not sms else []
+        src = None if long else _source(c)
         if src and not sms:
             lines.append(src)
+        lines.extend(long)
         if c.basis_line and not sms and c.verdict != "nie_podlega_weryfikacji":
             lines.append(c.basis_line)
             if c.limitation_line:
@@ -73,4 +91,4 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool 
     if not sms:
         lines.append("(Odpowiedź automatyczna — zajrzyj do źródła.)")
     txt = "\n".join(lines)
-    return txt if len(txt) <= max_len else txt[: max_len - 1] + "…"
+    return txt if max_len is None or len(txt) <= max_len else txt[: max_len - 1] + "…"

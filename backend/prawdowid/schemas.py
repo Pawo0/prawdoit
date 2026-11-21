@@ -139,6 +139,12 @@ class LiveSearchInfo(BaseModel):
     steps: list[dict] = Field(default_factory=list)  # per provider: provider, query, n_results, status, notice
 
 
+class ChatRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=6000)
+    channel: str = Field(default="chat", max_length=20)
+    session: Optional[str] = Field(default=None, max_length=32)
+
+
 class CheckResult(BaseModel):
     id: str
     created_at: str

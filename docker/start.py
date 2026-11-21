@@ -1,10 +1,15 @@
-"""Initialize writable container state, then replace this process with the server."""
+"""Initialize state; run API alone or supervise API + optional Discord adapter."""
 from __future__ import annotations
 
 import os
 import shutil
+import signal
+import subprocess
 import sys
+import time
 from pathlib import Path
+from urllib.error import URLError
+from urllib.request import urlopen
 
 
 def prepare(seed: Path = Path("/app/data/index")) -> None:
@@ -28,8 +33,68 @@ def prepare(seed: Path = Path("/app/data/index")) -> None:
     os.environ["UVICORN_PORT"] = os.environ.get("PORT", os.environ.get("UVICORN_PORT", "8000"))
 
 
-if __name__ == "__main__":
+def stop_children(children: list[subprocess.Popen]) -> None:
+    for child in children:
+        if child.poll() is None:
+            child.terminate()
+    deadline = time.monotonic() + 10
+    for child in children:
+        try:
+            child.wait(timeout=max(0, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+
+
+def supervise(command: list[str]) -> int:
+    """Keep the API alive independently of Discord outages; forward container shutdown."""
+    stopping = False
+
+    def shutdown(signum, frame):
+        nonlocal stopping
+        stopping = True
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(sig, shutdown)
+    children = []
+    try:
+        server = subprocess.Popen(command)
+        children.append(server)
+        bot = None
+        restart_at = 0.0
+        health_url = f"http://127.0.0.1:{os.environ['UVICORN_PORT']}/api/health"
+        while not stopping:
+            if server.poll() is not None:
+                return server.returncode or 1  # unexpected API exit must trigger container restart
+            if bot is not None and bot.poll() is not None:
+                print(f"Discord adapter exited ({bot.returncode}); retrying in 30 s.", flush=True)
+                children.remove(bot)
+                bot = None
+                restart_at = time.monotonic() + 30
+            if bot is None and time.monotonic() >= restart_at:
+                try:
+                    with urlopen(health_url, timeout=1) as response:
+                        ready = response.status == 200
+                except (URLError, TimeoutError, OSError):
+                    ready = False
+                if ready and not stopping:
+                    env = {**os.environ, "PRAWDOWID_API": f"http://127.0.0.1:{os.environ['UVICORN_PORT']}"}
+                    bot = subprocess.Popen([sys.executable, "/app/bots/discord_bot.py"], env=env)
+                    children.append(bot)
+            time.sleep(0.5)
+        return 0
+    finally:
+        stop_children(children)
+
+
+def main() -> int:
     prepare()
     if len(sys.argv) < 2:
         raise SystemExit("Missing server command")
+    if os.environ.get("PRAWDOWID_DISCORD_TOKEN", "").strip():
+        return supervise(sys.argv[1:])
     os.execvp(sys.argv[1], sys.argv[1:])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

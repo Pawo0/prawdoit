@@ -154,6 +154,15 @@ Kanały, korpus i reguły są niezależne od modelu.
 - Facebook/X zmieniają strukturę DOM — adaptery wtyczki wymagają utrzymania (fallback: przycisk „Wybierz fragment”).
 - OCR zrzutów ekranu i odwrotne wyszukiwanie obrazów nie są włączone (komunikowane jako ograniczenie techniczne).
 
+## Discord
+
+Bot jest uruchamiany przez entrypoint kontenera po gotowości API, jeśli ustawiono token Discorda.
+Wysyła tekst do `/api/chat-reply`; wynik przechodzi przez ten sam `run_check` co WWW.
+Obsługuje limity per użytkownik, pojedyncze aktywne zgłoszenie na użytkownika, `/usun_sesje`,
+komunikaty o nieobsługiwanych załącznikach i dzielenie długich odpowiedzi bez obcinania analizy.
+Opcjonalne alerty o priorytetowych sprawach są kierowane na wskazany prywatny kanał moderatorów,
+z potwierdzeniami wysyłek w trwałym wolumenie. [Uruchomienie i ograniczenia](DISCORD.md).
+
 ## Interfejs rozszerzenia
 - Główne wejście: stale widoczna lupka „Sprawdź” w prawym dolnym rogu zwykłych stron HTTP/HTTPS.
   Wymaga przyznanego dostępu do witryn; strony wewnętrzne przeglądarki i inne chronione strony nie pozwalają na wstrzyknięcie skryptu.

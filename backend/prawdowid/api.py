@@ -18,7 +18,7 @@ from .channels.meta import router as meta_router
 from .jobs import guard_auto, router as jobs_router
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
-from .schemas import CheckRequest, CheckResult, QuickRequest, QuickResult
+from .schemas import ChatRequest, CheckRequest, CheckResult, QuickRequest, QuickResult
 from .service import QuickBusy, engine_info, quick_score, run_check
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -38,7 +38,8 @@ async def rate_limit(request: Request, call_next):
     background page scanning cannot use up the budget for checks, and the other way round."""
     if request.method == "POST":
         path = request.url.path
-        limit = (("check", settings.rate_limit_per_min) if path.startswith("/api/check")
+        limit = (("check", settings.rate_limit_per_min)
+                 if path.startswith("/api/check") or path == "/api/chat-reply"
                  else ("quick", settings.rate_limit_quick_per_min) if path == "/api/quick" else None)
         if limit:
             wait = ratelimit.hit(limit[0], ratelimit.client_ip(request), limit[1])
@@ -82,17 +83,17 @@ def api_get_check(check_id: str):
 
 
 @app.post("/api/chat-reply")
-def api_chat_reply(body: dict):
+def api_chat_reply(body: ChatRequest):
     """For thin channel adapters (Discord bot, SMS gateway): same verification, chat-formatted reply."""
     from .channels.formatting import chat_text
 
-    text = str(body.get("text", ""))[:6000]
-    channel = str(body.get("channel", "chat"))[:20]
+    text = body.text
+    channel = body.channel
     if not text.strip():
         raise HTTPException(422, "Pusta wiadomość")
-    res = run_check(CheckRequest(text=text, channel=channel, session=str(body.get("session", ""))[:32] or None))
+    res = run_check(CheckRequest(text=text, channel=channel, session=body.session or None))
     bold = "**" if channel == "discord" else "*"
-    return {"id": res.id, "text": chat_text(res, bold=bold, max_len=1900 if channel == "discord" else 3500,
+    return {"id": res.id, "text": chat_text(res, bold=bold, max_len=None if channel == "discord" else 3500,
                                             sms=channel == "sms"), "status": res.status,
             "verdicts": [c.verdict for c in res.claims]}
 

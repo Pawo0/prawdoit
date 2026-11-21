@@ -29,6 +29,7 @@ RUN python -m pip install 'torch==2.15.0' --index-url https://download.pytorch.o
     && python -m pip check
 
 COPY backend/prawdowid /app/backend/prawdowid
+COPY bots/discord_bot.py /app/bots/discord_bot.py
 COPY web /app/web
 COPY data/corpus /app/data/corpus
 COPY data/index /app/data/index

@@ -35,6 +35,9 @@ Okno startowe healthchecka wynosi 30 minut; przez ten czas kontener może mieć 
 curl --fail http://localhost:8000/api/health
 ```
 
+Opcjonalny bot Discord uruchamia się w tym samym kontenerze po gotowości API, gdy ustawisz
+`PRAWDOWID_DISCORD_TOKEN` w `.env`. Nie potrzebuje publicznego webhooka. [Konfiguracja Discorda](DISCORD.md).
+
 Serwer działa jako użytkownik UID/GID 10001, z jednym workerem. Kolejny worker oznacza kolejną kopię modeli
 w pamięci; współdzielenie SQLite przez repliki nie jest obecnie obsługiwanym sposobem skalowania.
 
@@ -159,7 +162,9 @@ nie zezwala na żądania do nowego serwera. Następnie przeładuj rozszerzenie i
 
 `backend/requirements-container.txt` przypina bezpośrednie zależności runtime do wersji z lokalnego środowiska
 Python 3.12. Zależności pośrednie są rozwiązywane podczas budowania — nie jest to pełny lockfile.
-PyTorch jest instalowany z oficjalnego indeksu CPU; Playwright, Discord i MCP nie są potrzebne do uruchomienia API.
+PyTorch jest instalowany z oficjalnego indeksu CPU; Discord jest dołączony do obrazu jako opcjonalny proces; Playwright i MCP nie są instalowane.
+Przy ustawionym tokenie entrypoint nadzoruje API i bota oraz przekazuje zatrzymanie obu procesom;
+bez tokenu zastępuje się procesem API.
 Fonty i grafiki strony są częścią obrazu, bez zależności od CDN.
 
 ## Sprawdzenie wdrożenia
