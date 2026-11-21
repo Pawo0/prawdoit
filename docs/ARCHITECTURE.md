@@ -48,6 +48,13 @@
    wersja reguł, zdarzenia bezpieczeństwa) w SQLite; retencja 30 dni; usuwanie sesji; eksport CSV/JSON.
 
 ## Szybka ścieżka wtyczki (`/api/quick`)
+Ręczne sprawdzanie: „Wybierz fragment” → kliknięcie/dotknięcie treści od razu uruchamia `/api/check`, bez dodatkowego
+zatwierdzenia. Okno w Shadow DOM pokazuje stan ładowania, następnie wynik, cytaty i link do pełnej analizy.
+Styl okna: klasyczny Macintosh (paskowany pasek tytułu, ostre ramki), kremowe tło, kobaltowe akcenty i pikselowa grafika.
+Zamknięcie okna lub nowy wybór unieważnia poprzednią odpowiedź w interfejsie; nie anuluje już rozpoczętej analizy
+na serwerze. Opcjonalna adnotacja `/api/quick` działa niezależnie i nie opóźnia pełnej odpowiedzi.
+Esc zamyka okno/anuluje wybieranie. Błąd techniczny umożliwia ponowienie; żądania API mają limit 45 sekund.
+
 Wtyczka wysyła **tylko tekst** widocznych postów/nagłówków (bez URL strony, bez ciasteczek, bez identyfikatora
 użytkownika), paczkami co ~0,5 s. Serwer: embedding zdań → najbliższe twierdzenie ocenione jako fałsz /
 manipulacja → NLI (czy to samo twierdzenie, a nie zaprzeczenie) → prawdopodobieństwo powtórzenia obalonej

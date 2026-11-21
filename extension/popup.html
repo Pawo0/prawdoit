@@ -8,9 +8,12 @@ label{display:flex;gap:8px;align-items:center;margin:8px 0}
 input[type=text]{width:100%;font:inherit;padding:6px 8px;border:1px solid #d0d5dd;border-radius:8px}
 .m{color:#475467;font-size:12px}
 .st{background:#f2f4f7;border-radius:10px;padding:8px 10px;margin:8px 0}
+.demo{background:#f4f3eb;border:2px solid #191919;padding:10px;margin-bottom:12px}
+.demo label{margin:0;font-weight:700;color:#3027cf}.demo p{margin:6px 0 0;font-size:12px;line-height:1.5}
 </style></head><body>
 <header><img src="icons/icon48.png" width="24" height="24" alt="">Prawdowid</header>
 <main>
+  <div class="demo"><label><input type="checkbox" id="mock" aria-describedby="mock-help"> Tryb demonstracyjny</label><p id="mock-help">Przykładowe wyniki bez backendu. Tekst nie jest wysyłany na serwer ani faktycznie weryfikowany.</p><p id="mock-status" role="status"></p></div>
   <div class="st" id="st">Na tej karcie: …</div>
   <button id="pick">🎯 Wybierz fragment do sprawdzenia</button>
   <button class="s" id="web">Otwórz stronę Prawdowid</button>

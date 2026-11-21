@@ -17,11 +17,27 @@ Start: `cd backend && .venv/bin/uvicorn prawdowid.api:app --port 8000` (indeks z
 | 2:50 | Metodologia (SPRAWDŹ/NASK, reguły R1–R6), katalog źródeł z licencjami | `/metodologia`, `/zrodla` | — |
 
 ## Własne pytania jury
+### Praca nad wyglądem wtyczki bez backendu
+W oknie rozszerzenia włącz **Tryb demonstracyjny**, następnie kliknij „Wybierz fragment do sprawdzenia” i wybierz
+tekst na zwykłej stronie WWW. Po około 1,2 s ładowania pojawi się przykładowy wynik w stylu Macintosh.
+Ustawienie jest zapisywane lokalnie i pozostaje aktywne po ponownym otwarciu przeglądarki. Tryb jest domyślnie wyłączony.
+W tym trybie ręczne sprawdzenia i automatyczne skanowanie nie wywołują API; nie są dodawane fikcyjne ostrzeżenia
+na postach. Wynik i materiały źródłowe są wyraźnie oznaczone jako fikcyjne. Linki źródeł prowadzą do example.org;
+przycisk pełnej analizy zastępuje wybór kolejnego fragmentu. Wyłącz przełącznik, aby przywrócić rzeczywiste sprawdzanie.
+Test transportu i zapisu ustawień bez dodatkowych zależności: `node eval/test_extension_mock.cjs`.
+
 Dowolny tekst lub URL na `/`, w `/czat` albo przez `POST /api/check {"text": "..."}`. Wynik nie zależy od wpisanych
 wcześniej odpowiedzi — nie ma listy przykładów w kodzie. Przebieg każdego sprawdzenia: `/analiza/<id>` → „Zapis
 przebiegu sprawdzenia”, oraz `/moderator` (token `demo-moderator`).
 
 ## Ewaluacja
+Test samego interfejsu wtyczki, bez backendu i modeli: po zainstalowaniu `playwright` dla Node.js oraz Chromium
+(`npx playwright install chromium`) uruchom `node eval/test_extension_ui.cjs` z katalogu projektu.
+Opcjonalnie `CHROME_PATH` wskazuje lokalną przeglądarkę, a `SCREENSHOT_DIR` katalog zrzutów ekranu.
+Test używa kontrolowanych odpowiedzi transportu: sprawdza wybór jednym kliknięciem, ładowanie, wynik, cytaty,
+błędy i ponowienie, zamknięcie przed odpowiedzią, konkurencyjne sprawdzenia, Escape i układ przy 320/390 px.
+Pełny test z rzeczywistą wtyczką i działającym serwerem: `backend/.venv/bin/python eval/test_extension.py`.
+
 `backend/.venv/bin/python eval/run_eval.py` (zbiór deweloperski) i
 `backend/.venv/bin/python eval/run_eval.py --cases eval/cases_heldout.jsonl --out eval/results_heldout` (zbiór
 przygotowany niezależnie). Własny zbiór jury: ten sam format JSONL (`id, scenario, text|url, expected[], expected_status`).
