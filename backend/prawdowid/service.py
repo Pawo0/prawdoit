@@ -24,7 +24,7 @@ from .schemas import CheckRequest, CheckResult, QuickConflict, QuickMatch, Quick
 from .security import ResolveError, UnsafeURL, neutralize, scan
 from .signals import sprawdz_signals
 from .schemas import RULES_VERSION
-from .textutil import mask_pii, normalize_ws, short, split_sentences, tokens
+from .textutil import is_task_request, mask_pii, normalize_ws, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.service")
 
@@ -72,6 +72,9 @@ def cost_estimate(res: CheckResult) -> dict:
             "external_calls": len(ls.steps) if ls else 0}
 
 
+TASK_MESSAGE = ("To prośba o napisanie lub przetłumaczenie tekstu, a nie informacja do sprawdzenia, więc nie wydajemy "
+                "werdyktu. Prawdowid sprawdza twierdzenia o faktach — wklej wiadomość lub zdanie, które chcesz "
+                "zweryfikować.")
 OCR_NOTICE = ("Tekst odczytałem automatycznie z obrazu (OCR) — mogą w nim być błędy odczytu. "
               "Data widoczna na obrazie nie potwierdza sama w sobie rzeczywistej daty publikacji.")
 
@@ -204,13 +207,17 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                                 "instrukcje”). Potraktowaliśmy je jako zwykły tekst — nie wpływają na ocenę. "
                                 "Zdarzenie zostało zapisane.")
         clean = neutralize(re.sub(r"https?://\S+", " ", text) if page_text else text)
-        claims = extract_claims(clean, max_claims=3)
-        if page_text and not any(len(c.query.split()) >= 3 for c in claims):
+        task = is_task_request(clean)  # "napisz wiersz…", "przetłumacz…": a task, not information to check
+        claims = [] if task else extract_claims(clean, max_claims=3)
+        if page_text and not task and not any(len(c.query.split()) >= 3 for c in claims):
             clean = neutralize(page_text)  # "Co z tym artykułem? <link>": the claims are on the linked page
             claims = extract_claims(clean, max_claims=3)
         vocab = INDEX.bm25.postings if INDEX.bm25 else {}
         known = [t for t in tokens(clean) if t in vocab and not t[0].isdigit()]
-        if not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
+        if task:
+            res.status = "poza_zakresem"
+            res.status_message = TASK_MESSAGE
+        elif not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
             res.status = "doprecyzuj"
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")

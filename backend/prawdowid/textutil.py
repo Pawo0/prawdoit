@@ -115,6 +115,31 @@ def is_question(s: str) -> bool:
     return s.endswith("?") or bool(re.match(r"^(czy|kiedy|dlaczego|ile|jak|kto|co|gdzie|po co)\b", s, re.I))
 
 
+# A request to produce or transform text ("napisz wiersz", "przetłumacz to", "write a story") is a task, not information
+# to check. Generic: an imperative production verb at the start + a text-genre object (or a translation), and no sign
+# of a fact-check request anywhere in the message — "Napisz, czy to prawda, że…" is still checked.
+_POLITE = re.compile(r"^\s*(?:(?:proszę|prosze|please|hej|cześć|czesc)[,!]?\s+)?(?:(?:czy\s+)?(?:możesz|mozesz|"
+                     r"mógłbyś|mogłabyś|can you|could you)\s+)?(?:mi\s+|me\s+)?", re.I)
+_TASK_REQUEST = re.compile(
+    r"^(?:"
+    r"(?:napisz|napisać|stwórz|stworzyć|wygeneruj|wygenerować|ułóż|ułożyć|wymyśl|wymyślić|zredaguj|przygotuj|"
+    r"opowiedz|opowiedzieć|narysuj|zaprojektuj|zaprogramuj|dokończ|write|compose|generate|create|draw|tell)\b"
+    r"(?:\s+\S+){0,4}?\s+(?:wiersz\w*|wierszyk\w*|piosenk\w*|tekst\w*\s+piosenk\w*|rymowank\w*|limeryk\w*|haiku|"
+    r"fraszk\w*|bajk\w*|baśń|basn\w*|opowiadani\w*|histori\w*|esej\w*|wypracowani\w*|rozprawk\w*|list\w*|mail\w*|"
+    r"e-mail\w*|życzeni\w*|zyczeni\w*|przemówieni\w*|toast\w*|dowcip\w*|żart\w*|zart\w*|kawał\w*|przepis\w*|kod\w*|"
+    r"program\w*|skrypt\w*|funkcj\w*|slogan\w*|hasł\w*\s+reklam\w*|ogłoszeni\w*|post\w*|tweet\w*|wpis\w*\s+na|"
+    r"obraz\w*|rysun\w*|logo|poem|song|story|essay|letter|joke|code|recipe)\b"
+    r"|(?:przetłumacz|przetlumacz|przetłumaczyć|translate)\b)", re.I)
+_FACTCHECK_INTENT = re.compile(r"\b(?:prawd\w*|fałsz\w*|falsz\w*|sprawd\w*|zweryfik\w*|weryfik\w*|potwierdz\w*|"
+                               r"fake\w*|true|false|czy|że|iż|ze\s+niby)\b", re.I)
+
+
+def is_task_request(s: str) -> bool:
+    """'Napisz mi wiersz o jesieni' -> True; 'Napisz, czy to prawda, że VAT spadnie' -> False."""
+    body = _POLITE.sub("", re.sub(r"https?://\S+", " ", s or ""), count=1)
+    return bool(_TASK_REQUEST.match(body)) and not _FACTCHECK_INTENT.search(body)
+
+
 _PREAMBLE = re.compile(
     r"^\s*(?:(?:czy\s+)?to\s+prawda,?\s+że|prawda,?\s+że|czy|podobno|ponoć|"
     r"(?:słyszał\w*|czytał\w*|widział\w*|dostał\w*|ktoś\s+(?:mi\s+)?(?:napisał|powiedział|wysłał|przesłał)\w*|"

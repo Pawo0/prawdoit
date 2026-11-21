@@ -48,7 +48,9 @@
 2. **Bezpieczeństwo**: wzorce poleceń (PL/EN, tokeny szablonów czatu, ukryte znaki) → zdarzenie `prompt_injection`
    w dzienniku + neutralizacja fragmentu. Instrukcje są kodem, treść jest danymi — żaden tekst nie zmienia reguł.
 3. **Twierdzenia**: do 3 najbardziej „sprawdzalnych” zdań (liczby, nazwy własne, czasowniki faktów); opinie i prognozy
-   → „nie podlega weryfikacji”; pytania („Czy…?”) zamieniane na twierdzenia.
+   → „nie podlega weryfikacji”; pytania („Czy…?”) zamieniane na twierdzenia. Prośba o wykonanie zadania zamiast
+   informacji („napisz wiersz…”, „przetłumacz…”, „wygeneruj kod…”, bez słów typu „czy”, „prawda”, „sprawdź”) dostaje
+   status `poza_zakresem` bez werdyktu (`textutil.is_task_request`); brak sprawdzalnego zdania → `doprecyzuj`.
 4. **Wyszukiwanie**: hybryda BM25 (prosty stemming prefiksowy dla polskiego) + gęste embeddingi, fuzja RRF; osobny
    indeks twierdzeń sprawdzonych przez fact-checkerów (dopasowanie semantyczne, próg 0,82 lub 0,74 + NLI).
 5. **Dowody**: dla każdego źródła wybierany jest 1–2-zdaniowy fragment najbardziej zbieżny z twierdzeniem; ten sam
