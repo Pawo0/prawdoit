@@ -1,0 +1,3 @@
+# item_id|problem and reason|date   — errata for the frozen v2 split.
+# variants_v2.tsv is never edited after the freeze. A labelling mistake found later is recorded here, and the item is
+# excluded or re-labelled only in analyses that say so explicitly.

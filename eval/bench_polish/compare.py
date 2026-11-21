@@ -1,4 +1,6 @@
-"""Paired comparison of two benchmark runs:  compare.py <baseline-name> <variant-name>
+"""Paired comparison of two benchmark runs:  compare.py <baseline-name> <variant-name> [--set v1|v2]
+
+--set v2 compares the held-out runs results/<name>_v2.json (default v1: results/<name>.json).
 
 Prints aggregate numbers, items FIXED / BROKEN by the variant (paired flips), new false verdicts, per-type deltas and an
 exact two-sided sign test (McNemar) on the discordant pairs. With ~170 items only the flips are informative.
@@ -13,8 +15,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 
-def load(name: str) -> dict:
-    return json.loads((HERE / "results" / f"{name}.json").read_text(encoding="utf-8"))
+def load(name: str, sfx: str = "") -> dict:
+    return json.loads((HERE / "results" / f"{name}{sfx}.json").read_text(encoding="utf-8"))
 
 
 def sign_test(b: int, c: int) -> float:
@@ -23,8 +25,17 @@ def sign_test(b: int, c: int) -> float:
 
 
 def main() -> None:
-    a_name, b_name = sys.argv[1], sys.argv[2]
-    a, b = load(a_name), load(b_name)
+    argv = sys.argv[1:]
+    split = "v1"
+    if "--set" in argv:
+        i = argv.index("--set")
+        split = argv[i + 1]
+        del argv[i:i + 2]
+    if split not in ("v1", "v2") or len(argv) != 2:
+        sys.exit("usage: compare.py <baseline-name> <variant-name> [--set v1|v2]")
+    sfx = "" if split == "v1" else f"_{split}"
+    a_name, b_name = argv
+    a, b = load(a_name, sfx), load(b_name, sfx)
     ra, rb = {r["id"]: r for r in a["rows"]}, {r["id"]: r for r in b["rows"]}
     for k in ("accuracy", "macro_f1", "correct", "abstain_miss", "false_verdicts"):
         print(f"{k:16} {a['summary'][k]!s:>8} -> {b['summary'][k]!s:>8}")
