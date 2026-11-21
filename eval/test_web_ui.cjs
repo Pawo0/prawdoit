@@ -31,7 +31,10 @@ const fixture = {
   await route.fulfill({contentType: types[extname(file)] || 'application/json', body: readFileSync(file)});
  });
  const shot = async name => { if (process.env.SCREENSHOT_DIR) { mkdirSync(process.env.SCREENSHOT_DIR, {recursive: true}); await page.screenshot({path: resolve(process.env.SCREENSHOT_DIR, name + '.png'), fullPage: true}); }};
- await page.goto('http://localhost:5500/'); await page.locator('.hero-art').evaluate(img => img.decode()); await page.evaluate(() => document.fonts.ready);
+ await page.goto('http://localhost:5500/');
+ assert.equal(await page.locator('#hero-title').innerText(), 'PRAWDOWID');
+ assert.equal(await page.getByText('Mniej domysłów. Więcej źródeł.', {exact: true}).count(), 0);
+ await page.locator('.hero-art').evaluate(img => img.decode()); await page.evaluate(() => document.fonts.ready);
  assert.ok((await page.locator('#go').boundingBox()).y < 850, 'Primary action must be visible immediately');
  await shot('home-desktop');
  for (const width of [768, 390, 320]) {
@@ -65,6 +68,16 @@ const fixture = {
  response = {status: 'doprecyzuj', status_message: 'Podaj datę wydarzenia.'};
  await page.locator('#go').click(); await page.locator('[role="progressbar"]').waitFor(); release();
  await page.locator('.result-error').waitFor(); assert.equal(await page.locator('.claim-card').count(), 0);
+ const ordered = structuredClone(fixture);
+ ordered.claims = [
+  {...fixture.claims[0], verdict: 'potwierdzone', verdict_label: 'Potwierdzone'},
+  {...fixture.claims[0], claim: 'Pierwszy fałsz'},
+  {...fixture.claims[0], verdict: 'brak_dowodow', verdict_label: 'Brak wystarczających dowodów'},
+  {...fixture.claims[0], claim: 'Drugi fałsz'}
+ ];
+ await page.evaluate(data => renderResult(data, document.getElementById('out')), ordered);
+ assert.deepEqual(await page.locator('.verdict-hero h2').allTextContents(), ['Fałsz', 'Fałsz', 'Brak wystarczających dowodów', 'Potwierdzone']);
+ assert.equal(ordered.claims[0].verdict, 'potwierdzone');
  // Direct links from the extension still render saved analyses.
  await page.goto('http://localhost:5500/analiza/abc123'); await page.locator('.verdict-hero').waitFor();
  assert.equal(await page.locator('.verdict-hero h2').innerText(), 'Fałsz');

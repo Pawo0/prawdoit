@@ -28,7 +28,7 @@
     document.getElementById('again').disabled = true;
     document.getElementById('result-link').hidden = true;
     out.setAttribute('aria-busy', 'true');
-    out.innerHTML = '<section class="window"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Sprawdzanie informacji</span><span class="window-lines" aria-hidden="true"></span></div><div class="loading-window"><h2>Sprawdzam, co mówią źródła.</h2><p role="status">Analizujemy treść i szukamy dowodów. Poczekaj chwilę.</p><div class="loading-track" role="progressbar" aria-label="Trwa sprawdzanie"><span></span></div></div></section>';
+    out.innerHTML = '<section class="window"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Sprawdzanie informacji</span><span class="window-lines" aria-hidden="true"></span></div><div class="loading-window"><h2>Sprawdzanie informacji</h2><p role="status">Analizujemy treść i szukamy dowodów. Poczekaj chwilę.</p><div class="loading-track" role="progressbar" aria-label="Trwa sprawdzanie"><span></span></div></div></section>';
     showResults();
     try {
       const res = await runCheck(text); renderResult(res, out);

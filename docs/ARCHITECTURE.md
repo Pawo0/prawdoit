@@ -83,7 +83,7 @@ Kanały, korpus i reguły są niezależne od modelu.
 - Główne wejście: stale widoczna lupka „Sprawdź” w prawym dolnym rogu zwykłych stron HTTP/HTTPS.
   Wymaga przyznanego dostępu do witryn; strony wewnętrzne przeglądarki i inne chronione strony nie pozwalają na wstrzyknięcie skryptu.
   Interfejs przywraca swój element po usunięciu przez stronę. Wstrzymanie ostrzeżeń nie usuwa lupki.
-- Menu lupki: wybór fragmentu, sprawdzanie zaznaczonego tekstu, strona Prawdowid i wstrzymanie ostrzeżeń na danej stronie.
+- Kliknięcie lupki od razu uruchamia wybór fragmentu — bez menu pośredniego. Escape anuluje wybór.
 - Panel na pasku przeglądarki: konfiguracja ostrzeżeń, zasłon, trybu demonstracyjnego i adresów serwera/strony.
 - Automatyczny skan pozostaje ograniczony do dotychczas obsługiwanych portali, mediów społecznościowych i lokalnego demo.
   Na pozostałych witrynach treść jest wysyłana dopiero po ręcznym wyborze. Na obsługiwanych stronach automatyczny skan
@@ -92,3 +92,6 @@ Kanały, korpus i reguły są niezależne od modelu.
   Geist Pixel Square 1.9.2 jest dołączony lokalnie (SIL OFL, `extension/fonts/LICENSE.txt`); font nie jest pobierany z CDN.
   Dłuższe teksty pozostają w systemowym kroju sans-serif. Zasłony informują o dopasowaniu do znanego fact-checku,
   nie przedstawiają go jako pełnej weryfikacji i zawsze umożliwiają odsłonięcie materiału.
+
+Wtyczka i WWW wyświetlają twierdzenia w kolejności: fałszywe, wprowadzające w błąd, brak dowodów, nieweryfikowalne, potwierdzone.
+Sortowanie dotyczy kopii wyników w interfejsie, zachowuje kolejność w ramach tej samej klasy i nie zmienia ocen ani danych API.

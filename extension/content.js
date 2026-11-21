@@ -79,11 +79,6 @@
   .fab{position:fixed;right:18px;bottom:18px;z-index:2147483603;min-height:56px;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 14px;background:#443cf2;color:white;border:2px solid #191919;box-shadow:4px 4px 0 #191919}
   .fab svg{width:28px;height:28px;shape-rendering:crispEdges}.fab-label{font-size:16px}.fab .n{position:absolute;top:-10px;right:-5px;background:#f4f3eb;color:#191919;border:1px solid #191919;font:700 12px system-ui;padding:2px 6px}
   .fab:hover{background:#3027cf;color:white}
-  .menu{position:fixed;right:18px;bottom:88px;z-index:2147483600;background:#f4f3eb;border:2px solid #191919;box-shadow:5px 5px 0 #191919;width:min(350px,calc(100vw - 36px));max-height:calc(100dvh - 110px);overflow:auto;font-size:15px;color:#191919}
-  .menu-header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:2px solid #191919;font:16px "Geist Pixel",monospace}
-  .menu-header:after{content:"";flex:1;height:13px;background:repeating-linear-gradient(#191919 0 1px,transparent 1px 3px)}
-  .menu-body{padding:18px}.menu-body p{margin:0 0 16px;line-height:1.5}.menu button{display:block;width:100%;text-align:left;margin-top:8px}
-  .menu .t{font-size:13px;color:#55554f;line-height:1.5}.menu-status{margin:14px 0;border-top:1px solid #c4c3ba;padding-top:12px}.menu details{border-top:1px solid #c4c3ba;margin-top:16px;padding-top:6px}.menu summary{cursor:pointer;min-height:44px;padding:10px 0;font-weight:650}
   .hl{position:fixed;z-index:2147483500;pointer-events:none;border:2px solid #443cf2;background:rgba(68,60,242,.1)}
   .pbar{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:2147483601;background:#f4f3eb;color:#191919;border:2px solid #191919;box-shadow:4px 4px 0 #191919;
     padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:max-content;max-width:calc(100vw - 36px);font-size:15px}
@@ -98,7 +93,7 @@
   .sheet button:hover{background:var(--sage)}
   .sheet button.p{background:var(--blue);color:#fff;border-color:var(--blue)}
   .sheet button.p:hover{background:#3027cf}
-  .sheet :focus-visible,.pbar :focus-visible,.menu :focus-visible{outline:3px solid #443cf2;outline-offset:3px}
+  .sheet :focus-visible,.pbar :focus-visible{outline:3px solid #443cf2;outline-offset:3px}
   .sheet .window-bar{display:flex;align-items:center;gap:10px;padding:7px 9px;border-bottom:2px solid var(--ink);flex-shrink:0}
   .sheet .window-name{font:400 15px/1.2 "Geist Pixel",ui-monospace,monospace;letter-spacing:.02em;white-space:nowrap}
   .sheet .window-stripes{flex:1;height:14px;background:repeating-linear-gradient(to bottom,var(--ink) 0 1px,transparent 1px 3px)}
@@ -268,62 +263,22 @@
   let scanTimer = null;
   const mo = new MutationObserver(() => { if (!scanTimer) scanTimer = setTimeout(() => { scanTimer = null; scan(); }, 700); });
 
-  // ------------------------------------------------------------------ floating button + menu + picker
+  // ------------------------------------------------------------------ floating button + picker
   const ui = shadowHost(document.documentElement, true);
   const fab = document.createElement("button");
   fab.className = "fab"; fab.title = "Prawdowid — sprawdź fragment"; fab.setAttribute("aria-label", "Prawdowid — sprawdź fragment");
   fab.innerHTML = `<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M8 3h12v3h4v4h3v10h-3v4h-4v3H8v-3H4v-4H1V10h3V6h4V3Z" stroke="currentColor" stroke-width="2"/><path d="m23 24 7 7M8 10h3V7h7" stroke="currentColor" stroke-width="3"/></svg><span class="fab-label">Sprawdź</span><span class="n" hidden></span>`;
-  fab.setAttribute("aria-expanded", "false");
   // Keep the main entry point available even when a SPA replaces its DOM.
   new MutationObserver(() => { if (!ui.host.isConnected) document.documentElement.append(ui.host); }).observe(document.documentElement, {childList: true});
   ui.root.append(fab);
   function updateFab() { const n = fab.querySelector(".n"); n.hidden = !flaggedCount; n.textContent = flaggedCount; }
 
-  let menu = null;
-  fab.addEventListener("click", e => { e.stopPropagation(); menu ? closeMenu() : openMenu(); });
-  function closeMenu() { menu?.remove(); menu = null; fab.setAttribute("aria-expanded", "false"); }
-  function openMenu() {
-    stopPicker(); closeSheet(false);
-    closeMenu();
-    menu = document.createElement("section"); menu.className = "menu"; menu.setAttribute("aria-label", "Sprawdzanie informacji");
-    fab.setAttribute("aria-expanded", "true");
-    const sel = String(getSelection() || "").trim();
-    const disabled = S.disabledSites.includes(host);
-    const paused = disabled || !S.autoScan;
-    menu.innerHTML = `<div class="menu-header">Prawdowid</div><div class="menu-body">
-      <p>Nie wiesz, czy wierzyć tej informacji?</p>
-      <button class="p" data-m="pick">Wybierz fragment do sprawdzenia</button>
-      <p class="t" style="margin-top:8px">Potem kliknij tekst na stronie. Resztą zajmiemy się my.</p>
-      ${sel.length > 20 ? '<button data-m="sel">Sprawdź zaznaczony tekst</button>' : ""}
-      <button data-m="web">Otwórz stronę Prawdowid ↗</button>
-      <div class="menu-status t">${S.mockMode ? "Tryb demo · wyniki są przykładowe." : !supportsAutoScan ? "Na tej stronie sprawdzaj treści przez wybór fragmentu." : paused ? "Automatyczne ostrzeżenia są wstrzymane." : "Automatyczne ostrzeżenia są włączone."}</div>
-      ${supportsAutoScan ? `<details><summary>Ostrzeżenia na tej stronie</summary><button data-m="toggle">${paused ? "Włącz ostrzeżenia tutaj" : "Wstrzymaj ostrzeżenia tutaj"}</button><p class="t" style="margin-top:10px">Lupka i ręczne sprawdzanie pozostają dostępne.</p></details>` : ""}
-      <details><summary>Jak to działa?</summary><p class="t">${S.mockMode ? "W trybie demonstracyjnym tekst zostaje w przeglądarce. Wynik jest fikcyjny." : "Do sprawdzenia wysyłamy tekst fragmentu, bez adresu strony. Wynik opieramy na źródłach. Brak ostrzeżenia nie oznacza, że informacja jest prawdziwa."}</p><p class="t">Ustawienia znajdziesz pod ikoną Prawdowida na pasku przeglądarki.</p></details></div>`;
-    menu.addEventListener("click", async e => {
-      const m = e.target.closest("button")?.dataset.m; if (!m) return;
-      closeMenu();
-      if (m === "pick") startPicker();
-      if (m === "sel") checkText(sel, null);
-      if (m === "web") send({type: "openWebsite", demo: !!S.mockMode});
-      if (m === "toggle") {
-        const on = paused;
-        S.disabledSites = on ? S.disabledSites.filter(h => h !== host) : [...S.disabledSites, host];
-        if (on) S.autoScan = true;
-        await send({type: "setSettings", data: {disabledSites: S.disabledSites, autoScan: S.autoScan}});
-        if (on) scan();
-        openMenu();
-      }
-    });
-    menu.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); fab.focus(); } });
-    ui.root.append(menu);
-    menu.querySelector("button")?.focus({preventScroll: true});
-  }
-  document.addEventListener("click", e => { if (menu && !isOurs(e.target)) closeMenu(); }, true);
+  fab.addEventListener("click", e => { e.stopPropagation(); startPicker(); });
 
   // Element picker: one click/tap immediately starts verification.
   let picking = false, hovered = null, hl = null, pbar = null;
   function startPicker() {
-    stopPicker(); closeMenu(); closeSheet(false);
+    stopPicker(); closeSheet(false);
     picking = true;
     hl = document.createElement("div"); hl.className = "hl"; hl.hidden = true; ui.root.append(hl);
     pbar = document.createElement("div"); pbar.className = "pbar";
@@ -410,8 +365,7 @@
   }
   async function checkText(text, el) {
     const version = ++checkVersion;
-    closeMenu();
-    openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>Sprawdzam, co mówią źródła.</h2></div></div>
+    openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>Sprawdzanie informacji</h2></div></div>
       <div class="selected-text"><span class="selected-label">Wybrany fragment</span>${esc(text.slice(0, 280))}${text.length > 280 ? "…" : ""}</div>
       <div class="loader-track" role="progressbar" aria-label="Trwa sprawdzanie informacji"><div class="loader-blocks"></div></div>
       <p role="status">${S.mockMode ? "Ładowanie przykładowego wyniku…" : "Trwa analiza treści i wyszukiwanie dowodów."}</p><p class="muted">${S.mockMode ? "Tryb demonstracyjny · tekst pozostaje w przeglądarce." : "Wysyłamy tylko tekst fragmentu, bez adresu strony."}</p>`, {title: S.mockMode ? "Demo · sprawdzanie…" : "Sprawdzanie…", loading: true});
@@ -439,7 +393,9 @@
       brak_dowodow: {label: "Brak dowodów", icon: "?", tone: "unknown", hint: "Nie można ustalić, czy to prawda. Brak dowodów nie oznacza fałszu."},
       nie_podlega_weryfikacji: {label: "To nie jest fakt do sprawdzenia", icon: "—", tone: "unknown", hint: "Opinii lub przewidywania nie można ocenić jako prawdy albo fałszu."}
     };
-    const claims = res.claims.map((c, i) => {
+    const priority = {falszywe: 0, wprowadzajace_w_blad: 1, brak_dowodow: 2, nie_podlega_weryfikacji: 3, potwierdzone: 4};
+    const orderedClaims = [...res.claims].sort((a, b) => (priority[a.verdict] ?? 2) - (priority[b.verdict] ?? 2));
+    const claims = orderedClaims.map((c, i) => {
       const v = verdictView[c.verdict] || verdictView.brak_dowodow;
       const src = c.evidence.slice(0, 2);
       // Keep every claim's verdict distinct; a mixed passage must not get a single red/green label.
@@ -469,7 +425,7 @@
   // ------------------------------------------------------------------ first-run privacy notice + start
   function notice() {
     const n = document.createElement("div"); n.className = "notice";
-    n.innerHTML = `<div class="card"><div class="mini-title">Prawdowid · pierwsze uruchomienie</div><div class="hd">Sprawdź, zanim uwierzysz.</div>
+    n.innerHTML = `<div class="card"><div class="mini-title">Prawdowid · pierwsze uruchomienie</div><div class="hd">Prawdowid na tej stronie</div>
       <p style="margin:8px 0">${S.mockMode ? "Włączony jest tryb demonstracyjny. Wyniki są fikcyjne, a tekst pozostaje w przeglądarce." : "Możemy ostrzegać o widocznych treściach podobnych do obalonych informacji. Wysyłamy sam tekst fragmentów na serwer, bez adresu strony. Brak ostrzeżenia nie oznacza, że treść jest prawdziwa."}</p>
       <div class="row"><button class="p" data-n="ok">Włącz ostrzeżenia</button><button data-n="off">Sprawdzam tylko ręcznie</button></div></div>`;
     n.addEventListener("click", async e => {
@@ -492,8 +448,7 @@
   })();
   api.storage?.onChanged?.addListener(ch => {
     for (const k in ch) S[k] = ch[k].newValue;
-    if (menu) openMenu();
     if (ch.mockMode) closeSheet(); // Do not show a reply from the previous mode.
   });
-  api.runtime.onMessage.addListener(msg => { if (msg?.type === "startPicker") startPicker(); if (msg?.type === "openMenu") openMenu(); });
+  api.runtime.onMessage.addListener(msg => { if (msg?.type === "startPicker") startPicker(); if (msg?.type === "openMenu") startPicker(); });
 })();

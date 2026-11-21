@@ -45,6 +45,6 @@ const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new 
       window.close();
     } catch { document.getElementById("action-status").textContent = "Na tej stronie przeglądarka nie pozwala wyświetlić lupki. Otwórz zwykłą stronę internetową i spróbuj ponownie."; }
   }
-  document.getElementById("show").onclick = () => activate("openMenu");
+  document.getElementById("show").onclick = () => activate("startPicker");
   document.getElementById("pick").onclick = () => activate("startPicker");
 })();

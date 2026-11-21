@@ -1,37 +1,36 @@
 <!doctype html>
-<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3eb"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><script src="/static/home.js" defer></script><title>Prawdowid — sprawdź, zanim uwierzysz</title><meta name="description" content="Sprawdź wiadomość lub link. Zobacz jasną ocenę, źródła i informację o tym, czego nie udało się ustalić."></head>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3eb"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><script src="/static/home.js" defer></script><title>Prawdowid — sprawdzanie informacji</title><meta name="description" content="Sprawdź wiadomość lub link. Zobacz jasną ocenę, źródła i informację o tym, czego nie udało się ustalić."></head>
 <body class="home-page">
 <main class="desktop wrap" id="main">
   <section class="home-hero" aria-labelledby="hero-title">
     <img class="hero-art" src="/static/hero-dither.png" width="1536" height="1024" alt="" fetchpriority="high" aria-hidden="true">
     <div class="hero-content">
-      <div class="eyebrow hero-eyebrow">Mniej domysłów. Więcej źródeł.</div>
-      <h1 id="hero-title">Sprawdź, zanim<br>uwierzysz.</h1>
-      <p class="hero-lead">Informacje oparte na źródłach.</p>
+      <h1 id="hero-title">PRAWDOWID</h1>
+      <p class="hero-lead">Sprawdź wiadomość lub link.</p>
       <form class="window check-window" id="f">
         <div class="window-bar"><span class="window-square" aria-hidden="true"></span><h2>Nowe sprawdzenie</h2><span class="window-lines" aria-hidden="true"></span><span class="window-square" aria-hidden="true"></span></div>
         <div class="window-body">
           <div class="input-tabs" role="group" aria-label="Co chcesz sprawdzić?"><button type="button" class="input-tab active" id="tab-text" aria-pressed="true">Wiadomość</button><button type="button" class="input-tab" id="tab-url" aria-pressed="false">Link do strony</button></div>
           <label for="q" id="q-label">Wklej tekst, który chcesz sprawdzić</label>
           <textarea id="q" name="q" required maxlength="6000" placeholder="Wklej wiadomość lub fragment posta…" aria-describedby="privacy-hint"></textarea>
-          <div class="form-actions"><p class="small muted" id="privacy-hint">Bez danych osobowych. <br>Wystarczy treść informacji.</p><button id="go" type="submit">Sprawdź informację <span aria-hidden="true">↗</span></button></div>
+          <div class="form-actions"><p class="small muted" id="privacy-hint">Nie wpisuj danych osobowych.</p><button id="go" type="submit">Sprawdź informację <span aria-hidden="true">↗</span></button></div>
           <p class="form-error" id="form-error" role="status" hidden></p>
         </div>
       </form>
-      <div class="preview-action"><span>Chcesz najpierw zobaczyć, jak to działa?</span><button type="button" class="text-button" id="preview">Pokaż przykładowy wynik →</button></div>
+      <div class="preview-action"><span>Zobacz, jak wygląda odpowiedź.</span><button type="button" class="text-button" id="preview">Pokaż przykładowy wynik →</button></div>
     </div>
   </section>
   <section id="results" hidden aria-label="Wynik sprawdzenia" tabindex="-1"><div id="out" aria-busy="false"></div><div class="result-actions"><button type="button" class="secondary" id="again">Sprawdź kolejną informację</button><a class="btn secondary" id="result-link" hidden>Otwórz osobny wynik ↗</a></div></section>
   <div class="home-support">
     <section class="window source-window" aria-labelledby="source-title"><div class="window-bar"><span class="window-square" aria-hidden="true"></span><h2 id="source-title">Na czym się opieramy?</h2><span class="window-lines" aria-hidden="true"></span></div>
-      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">▤</span><span>Dokumenty urzędowe<small>Informacje u źródła</small></span><span aria-hidden="true">↗</span></a>
-      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">▥</span><span>Dane publiczne<small>Liczby z kontekstem</small></span><span aria-hidden="true">↗</span></a>
-      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">⌕</span><span>Analizy fact-checkerów<small>Informacje już sprawdzone</small></span><span aria-hidden="true">↗</span></a>
+      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">▤</span><span>Dokumenty urzędowe<small>Komunikaty i dokumenty instytucji</small></span><span aria-hidden="true">↗</span></a>
+      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">▥</span><span>Dane publiczne<small>Statystyki i raporty</small></span><span aria-hidden="true">↗</span></a>
+      <a class="source-type" href="/zrodla"><span class="pixel-file" aria-hidden="true">⌕</span><span>Analizy fact-checkerów<small>Weryfikacje opublikowane przez redakcje</small></span><span aria-hidden="true">↗</span></a>
     </section>
-    <section class="window how-window" aria-labelledby="how-title"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><h2 id="how-title">Jasny wynik. Bez zgadywania.</h2><span class="window-lines" aria-hidden="true"></span></div><div class="window-body">
-      <h2>Nie musisz znać się<br>na weryfikowaniu informacji.</h2>
-      <p>Wklejasz wiadomość. My porównujemy ją ze źródłami i pokazujemy ocenę wraz z dowodami.</p>
-      <p class="honest-note"><span aria-hidden="true">?</span> Jeśli dowodów brakuje, powiemy to wprost.</p>
+    <section class="window how-window" aria-labelledby="how-title"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><h2 id="how-title">Jak działa Prawdowid?</h2><span class="window-lines" aria-hidden="true"></span></div><div class="window-body">
+      <h2>Porównujemy wiadomość<br>z dostępnymi źródłami.</h2>
+      <p>Przy każdej ocenie znajdziesz uzasadnienie oraz linki do wykorzystanych materiałów.</p>
+      <p class="honest-note"><span aria-hidden="true">?</span> Jeśli źródła nie wystarczają, nie rozstrzygamy, czy to prawda.</p>
       <a href="/metodologia" class="text-link">Zobacz, jak ustalamy wynik ↗</a>
     </div></section>
   </div>

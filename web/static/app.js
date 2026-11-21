@@ -20,8 +20,7 @@ function chrome_() {
   if (!document.querySelector("main").id) document.querySelector("main").id = "main";
   document.body.prepend(h);
   const f = document.createElement("footer");
-  f.innerHTML = `Prawdowid — prototyp hackathonowy. Pomagamy ocenić informacje na podstawie jawnych źródeł; nie jesteśmy „sędzią prawdy”.
-    Zawsze możesz samodzielnie zajrzeć do źródeł. <a href="/metodologia">Jak to działa?</a> · <a href="/zrodla">Katalog źródeł</a>`;
+  f.innerHTML = `Prawdowid — prototyp do sprawdzania informacji. Wyniki dotyczą dostępnych materiałów i mogą wymagać uzupełnienia. <a href="/metodologia">Jak to działa?</a> · <a href="/zrodla">Katalog źródeł</a>`;
   document.body.append(f);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   const m = document.createElement("link"); m.rel = "manifest"; m.href = "/manifest.webmanifest"; document.head.append(m);
@@ -106,10 +105,12 @@ function renderResult(res, el) {
     return;
   }
   const t = res.timings_ms?.total_ms;
+  const priority = {falszywe: 0, wprowadzajace_w_blad: 1, brak_dowodow: 2, nie_podlega_weryfikacji: 3, potwierdzone: 4};
+  const orderedClaims = [...res.claims].sort((a, b) => (priority[a.verdict] ?? 2) - (priority[b.verdict] ?? 2));
   el.innerHTML = `
     ${res.demo ? '<div class="demo-banner"><b>Przykładowy wynik.</b> Dane są fikcyjne — to podgląd wyglądu, bez sprawdzania przez serwer.</div>' : ""}
     ${res.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join("")}
-    ${res.claims.map((c, i) => renderClaim(c, i, res.claims.length)).join("")}
+    ${orderedClaims.map((c, i) => renderClaim(c, i, orderedClaims.length)).join("")}
     ${res.case_status ? `<div class="info"><b>Pętla informacji:</b> ${esc(res.case_status)}</div>` : ""}
     ${res.signals?.length ? `<details class="card result-secondary"><summary>Jak samodzielnie rozpoznawać manipulację?</summary>${renderSignals(res.signals)}</details>` : ""}
     <details class="card result-secondary"><summary>Zgłoś błąd w wyniku</summary>

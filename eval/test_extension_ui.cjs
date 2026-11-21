@@ -57,11 +57,12 @@ const result = {
   await sheet.locator('[data-s="full"]').click();
   assert.equal(await page.evaluate(() => window.calls.at(-1).id), 'test-result');
   await page.keyboard.press('Escape');
-  // Primary floating entry point remains visible and uses a short task-focused menu.
+  // The floating button starts selection immediately, without a menu.
   assert.equal(await page.locator('prawdowid-ui .fab').isVisible(), true);
   await page.locator('prawdowid-ui .fab').click();
-  assert.equal(await page.locator('prawdowid-ui .menu [data-m="pick"]').isVisible(), true);
-  await screenshot('floating-menu');
+  assert.equal(await page.locator('prawdowid-ui .menu').count(), 0);
+  assert.equal(await page.locator('prawdowid-ui .pbar').isVisible(), true);
+  await screenshot('floating-picker');
   await page.keyboard.press('Escape');
   // A matched post uses the same flat window style, and can always be revealed.
   await pick();
@@ -112,6 +113,22 @@ const result = {
     assert.equal(await sheet.evaluate(el => el.scrollWidth > el.clientWidth), false);
     await screenshot('evidence-mobile-' + width);
   }
+  await page.keyboard.press('Escape');
+  // Mixed selections put false claims first, preserving order within a verdict class.
+  await pick();
+  const mixed = structuredClone(result);
+  mixed.claims = [
+    {...result.claims[0], verdict: 'potwierdzone', verdict_label: 'Potwierdzone', claim: 'Potwierdzona informacja'},
+    {...result.claims[0], verdict: 'falszywe', verdict_label: 'Fałszywe', claim: 'Pierwszy fałsz'},
+    {...result.claims[0], verdict: 'wprowadzajace_w_blad', verdict_label: 'Wprowadzające w błąd', claim: 'Brakujący kontekst'},
+    {...result.claims[0], verdict: 'falszywe', verdict_label: 'Fałszywe', claim: 'Drugi fałsz'},
+    {...result.claims[0], claim: 'Brak dowodów'}
+  ];
+  await reply(mixed);
+  assert.deepEqual(await sheet.locator('.verdict-heading h2').allTextContents(), ['Fałsz', 'Fałsz', 'Wprowadza w błąd', 'Brak dowodów', 'Potwierdzone']);
+  assert.match((await sheet.locator('.compact-result .claim-text').allTextContents())[0], /Pierwszy fałsz/);
+  assert.equal(mixed.claims[0].verdict, 'potwierdzone');
+  await screenshot('mixed-verdicts');
   await page.keyboard.press('Escape');
   // Technical API statuses stay distinct from factual verdicts.
   await pick(); await reply({status: 'doprecyzuj', status_message: 'Podaj datę wydarzenia.'});
@@ -169,7 +186,7 @@ const result = {
   await page.addScriptTag({content: script});
   await page.locator('prawdowid-ui .fab').waitFor();
   await page.locator('prawdowid-ui .fab').click();
-  assert.match(await page.locator('prawdowid-ui .menu').innerText(), /wybór fragmentu/);
+  assert.equal(await page.locator('prawdowid-ui .pbar').isVisible(), true);
   assert.equal(await page.evaluate(() => window.calls.filter(m => m.type === 'quick').length), 0);
   assert.deepEqual(errors, []);
   await browser.close();
