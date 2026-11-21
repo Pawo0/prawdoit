@@ -39,7 +39,7 @@ Indeks ładuje korpusy źródeł z `enabled: true` oraz pliki korpusu, które ni
 
 | Tabela | Kolumny | Znaczenie | Retencja |
 |---|---|---|---|
-| `checks` | `id`, `created_at`, `channel`, `session`, `input_masked`, `status`, `verdicts` (JSON), `sources` (JSON z URL), `result_json`, `total_ms`, `case_id` | przebieg każdego sprawdzenia; wejście z zamaskowanymi danymi osobowymi | `RETENTION_DAYS` (30 dni), czyszczone przy starcie serwera; `DELETE /api/session/<id>` usuwa sesję |
+| `checks` | `id`, `created_at`, `channel`, `session`, `input_masked`, `status`, `verdicts` (JSON), `sources` (JSON z URL), `result_json`, `total_ms`, `case_id` | przebieg każdego sprawdzenia; wejście z zamaskowanymi danymi osobowymi | `RETENTION_DAYS` (30 dni), czyszczone przy starcie serwera; `DELETE /api/session/<id>` usuwa sesję. Sprawdzenia w tle wtyczki (`mode: "auto"`, kanał `…-auto`) zapisują wiersz **bez tekstu**: `input_masked` = `sha256:<skrót>`, `session` puste, `result_json` tylko z werdyktem, regułami, metadanymi użytych źródeł i czasami; retencja `AUTO_RETENTION_DAYS` (7 dni); nie tworzą spraw w `cases` |
 | `security_events` | `id`, `created_at`, `check_id`, `kind`, `location`, `detail` | wykryte próby wstrzyknięcia poleceń i inne zdarzenia bezpieczeństwa | bez automatycznego czyszczenia |
 | `cases` | `id`, `created_at`, `updated_at`, `status` (nowa / w toku / zamknięta), `title`, `count`, `channels`, `sample_check_ids`, `centroid` (embedding), `priority`, `note` | sprawy w kolejce analityka (podobne zgłoszenia łączone) | bez automatycznego czyszczenia |
 | `feedback` | `id`, `created_at`, `check_id`, `message` (zamaskowane), `status` | uwagi użytkowników | bez automatycznego czyszczenia |
