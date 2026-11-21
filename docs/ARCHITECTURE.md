@@ -7,7 +7,7 @@
  │ (Web Share Target Android)│  │                       │ 1. Wejście: walidacja, limit, maskowanie PII     │
  ├──────────────────────────┤  │                       │    URL → bezpieczne pobranie (SSRF guard)        │
  │ Wtyczka przeglądarki      │──┤   POST /api/quick     │    + ekstrakcja treści (trafilatura)             │
- │ (Chrome/Edge/Vivaldi,     │  │   (szybka ścieżka)    │ 2. Skan prompt-injection → neutralizacja + log   │
+ │ (Chrome/Edge/Vivaldi,     │  │   (router) + /check   │ 2. Skan prompt-injection → neutralizacja + log   │
  │  Firefox Android)         │  │                       │ 3. Twierdzenia: podział na zdania, fakty vs      │
  ├──────────────────────────┤  │                       │    opinie/prognozy, check-worthiness             │
  │ WhatsApp Cloud API webhook│──┤   /webhooks/whatsapp  │ 4. Wyszukiwanie hybrydowe: BM25 + embeddingi     │
@@ -68,20 +68,64 @@
    pobierane, indeksowane i przeszukiwane na żywo; harmonogram w procesie API pobiera źródła co `schedule_hours`,
    a indeks przeładowuje się bez restartu. EUvsDisinfo przez MCP: [MCP_EUVSDISINFO](MCP_EUVSDISINFO.md).
 
-## Szybka ścieżka wtyczki (`/api/quick`)
-Ręczne sprawdzanie: „Wybierz fragment” → kliknięcie/dotknięcie treści od razu uruchamia `/api/check`, bez dodatkowego
-zatwierdzenia. Okno w Shadow DOM pokazuje stan ładowania, następnie wynik, cytaty i link do pełnej analizy.
-Styl okna: klasyczny Macintosh (paskowany pasek tytułu, ostre ramki), kremowe tło, kobaltowe akcenty i pikselowa grafika.
-Zamknięcie okna lub nowy wybór unieważnia poprzednią odpowiedź w interfejsie; nie anuluje już rozpoczętej analizy
-na serwerze. Opcjonalna adnotacja `/api/quick` działa niezależnie i nie opóźnia pełnej odpowiedzi.
-Esc zamyka okno/anuluje wybieranie. Błąd techniczny umożliwia ponowienie; żądania API mają limit 45 sekund.
+## Wtyczka: dwa poziomy — router (`/api/quick`) i pełne sprawdzenie (`/api/check/async`)
+Projekt i uzasadnienie: `research/09_architecture_two_tier_and_containers.md` §3. Zasada: wtyczka **nie ocenia treści
+po stylu, źródle ani „podejrzanym” wyglądzie**. Poziom 1 tylko kieruje ruchem, a wszystko, co widzi użytkownik, ma
+nazwane źródło.
 
-Wtyczka wysyła **tylko tekst** widocznych postów/nagłówków (bez URL strony, bez ciasteczek, bez identyfikatora
-użytkownika), paczkami co ~0,5 s. Serwer: embedding zdań → najbliższe twierdzenie ocenione jako fałsz /
-manipulacja → NLI (czy to samo twierdzenie, a nie zaprzeczenie) → prawdopodobieństwo powtórzenia obalonej
-informacji = σ(30·(cos − 0,80)) × zgodność NLI × waga oceny. Wynik cache'owany po haszu tekstu.
-≥ 0,60 → zasłona „kliknij, aby odsłonić”; 0,35–0,60 → przycisk ostrzeżenia; poniżej — nic (unikamy ogólnych
-ostrzeżeń, które obniżają zaufanie do prawdziwych informacji).
+**Ręczne sprawdzanie.** Lupka → kliknięcie/dotknięcie treści od razu uruchamia pełne sprawdzenie, bez dodatkowego
+zatwierdzenia. Wtyczka zaczyna zadanie (`POST /api/check/async`) i co 0,7 s odpytuje `GET /api/jobs/{id}`; okno
+w Shadow DOM pokazuje etap podawany przez serwer („Szukam w bazie…”, „…przeszukuję zaufane strony…”), potem wynik,
+cytaty i link do pełnej analizy. Żadne żądanie nie czeka na cały wynik: Chrome zatrzymuje service worker rozszerzenia,
+gdy odpowiedź na `fetch()` nie przychodzi przez 30 s (dokumentacja „extension service worker lifecycle”), a sprawdzenie
+z pobraniem strony i wyszukiwaniem na żywo może trwać dłużej. Odpytuje strona (krótkie wiadomości do tła), więc
+uśpienie workera niczego nie przerywa. Serwer bez API zadań (404/405/501) dostaje dawne, synchroniczne
+`POST /api/check` (limit 45 s) — tylko dla sprawdzeń ręcznych. Zamknięcie okna lub nowy wybór unieważnia poprzednią
+odpowiedź w interfejsie; nie anuluje analizy na serwerze. Esc zamyka okno/anuluje wybieranie; błąd techniczny i limit
+zapytań są komunikowane osobno i można ponowić.
+
+**Poziom 1 — router.** Na obsługiwanych stronach (po zgodzie) wtyczka wysyła **tylko tekst** widocznych postów/nagłówków
+(bez URL strony, bez ciasteczek, bez identyfikatora użytkownika), paczkami ≤ 16 fragmentów, kolejną dopiero po odpowiedzi
+na poprzednią. Serwer (`service.quick_score`): embedding zdań → najbliższe twierdzenie ocenione przez fact-checkera
+jako fałsz / manipulacja / częściowy fałsz → od cos ≥ 0,80 NLI i wspólna reguła `engine.same_claim` (to samo
+twierdzenie, a nie zaprzeczenie; poniżej 0,80 reguła nie może dać dopasowania, więc NLI nie jest liczone).
+Odpowiedź dla każdego fragmentu ma pole `state`:
+
+| `state` | Kiedy | Co widzi użytkownik | Co dalej |
+|---|---|---|---|
+| `none` | nic sprawdzalnego (opinia, za krótki tekst) | nic | — |
+| `candidate` | zdanie faktyczne, które pełne sprawdzenie mogłoby ocenić; `priority` 0–1 porządkuje kolejkę: bliskość ocenionego twierdzenia (cos 0,74–…, `NEAR_MISS`) > temat wysokiego ryzyka > „sprawdzalność” zdania | **nic** | najwyżej 3 na stronę trafiają w tle do poziomu 2 w trybie `auto` |
+| `match` | tekst powtarza twierdzenie ocenione przez nazwanego fact-checkera (`match`: wydawca, ocena, data, link) | oznaczenie: „Podobna informacja: Demagog — „Fałsz” (02.03.2026) ↗” + „Sprawdź” | kliknięcie „Sprawdź” = pełne sprawdzenie ręczne |
+
+- **Reguła konfliktu.** Jeżeli twierdzenie ocenione jako *prawda* jest równie blisko tekstu (cos w granicach 0,03 od
+  obalonego), oznaczenia nie ma: fact-checkerzy ocenili niemal identyczne zdania różnie, a samo podobieństwo nie
+  rozstrzyga, które z nich tekst powtarza. Fragment staje się kandydatem (`conflict`, `CONFLICTING_RATINGS`).
+- `match` bez wydawcy, oceny, daty lub linku nie jest pokazywany. Pola `risk`/`level` zostały dla starszych wersji
+  wtyczki (`level != "brak"` dokładnie wtedy, gdy `state == "match"`); procent ani „ryzyko” nie są nigdzie wyświetlane.
+- Wynik jest cache'owany po haszu tekstu do następnego przeładowania indeksu. Naraz liczy się jedna paczka
+  (`PRAWDOWID_QUICK_CONCURRENCY`); gdy serwer jest zajęty dłużej niż 3 s, odpowiada 503 z `Retry-After`, a przy limicie
+  429 z `Retry-After` — wtyczka czeka wskazany czas i **nigdy nie rysuje oznaczenia z błędu**.
+
+**Poziom 2 w tle — tryb `auto`** (`POST /api/check/async` z `mode: "auto"`). Ten sam potok co sprawdzenie ręczne
+(te same reguły R1–R6 i dowody), ale tylko na lokalnej bazie i bez śladu po tekście:
+- bez wyszukiwania na żywo (wysłałoby treść twierdzenia do zewnętrznych wyszukiwarek), bez pobierania linków z tekstu,
+  bez LLM;
+- bez sprawy moderatora — bierne przeglądanie nie zapełnia kolejki analityka;
+- w dzienniku zostaje wiersz bez tekstu: `sha256` treści, kanał `extension-auto`, werdykt, użyte źródła, czasy;
+  retencja 7 dni (`PRAWDOWID_AUTO_RETENTION_DAYS`); zdarzenie prompt-injection jest odnotowane bez cytowanego fragmentu;
+- wynik zadania znika z pamięci serwera po pierwszym odebraniu; zadania `auto` mają osobny, jednowątkowy wykonawca
+  (nie zajmują miejsca sprawdzeniom ręcznym), krótką kolejkę i własny limit (20/min na adres).
+
+Wtyczka pokazuje oznaczenie z poziomu 2 **tylko** dla rozstrzygającego werdyktu (fałszywe / wprowadzające w błąd,
+bez sprzecznych źródeł) z cytowanym, podlinkowanym źródłem: „Źródła przeczą tej informacji: FakeNews.pl, 14.05.2025 ↗”.
+„Brak dowodów”, opinia, błąd techniczny i przekroczony limit nie pokazują nic. Sprawdzenie ręczne tego samego fragmentu
+(z wyszukiwaniem na żywo) zastępuje oznaczenie automatyczne. Wtyczka uruchamia sprawdzenia w tle tylko wobec serwera,
+który zwraca `state` — starszy serwer potraktowałby je jak zwykłe sprawdzenia. Można je wyłączyć w panelu wtyczki.
+
+**Zasłona** („kliknij, aby odsłonić”) jest ustawieniem do włączenia w panelu; domyślnie jest samo oznaczenie.
+
+Pomiar routera na danych z repozytorium (odzysk, fałszywe oznaczenia, oszczędzone wywołania NLI, czas paczki):
+`backend/.venv/bin/python eval/measure_router.py --tier2`; wyniki: `eval/results/router_measure.json` i `.md`.
 
 ## Modele i dostawcy (wszystko lokalnie, CPU)
 | Rola | Model | Licencja | Uwagi |
@@ -106,14 +150,19 @@ Kanały, korpus i reguły są niezależne od modelu.
   Wymaga przyznanego dostępu do witryn; strony wewnętrzne przeglądarki i inne chronione strony nie pozwalają na wstrzyknięcie skryptu.
   Interfejs przywraca swój element po usunięciu przez stronę. Wstrzymanie ostrzeżeń nie usuwa lupki.
 - Kliknięcie lupki od razu uruchamia wybór fragmentu — bez menu pośredniego. Escape anuluje wybór.
-- Panel na pasku przeglądarki: konfiguracja ostrzeżeń, zasłon, trybu demonstracyjnego i adresów serwera/strony.
+- Panel na pasku przeglądarki: oznaczenia przy treściach (wł./wył.), sprawdzanie w tle do 3 fragmentów na stronę
+  (wł./wył.), zasłony (domyślnie wyłączone), tryb demonstracyjny i adresy serwera/strony.
 - Automatyczny skan pozostaje ograniczony do dotychczas obsługiwanych portali, mediów społecznościowych i lokalnego demo.
   Na pozostałych witrynach treść jest wysyłana dopiero po ręcznym wyborze. Na obsługiwanych stronach automatyczny skan
-  zaczyna się po zaakceptowaniu informacji o działaniu lub wcześniejszym zapisaniu tej zgody.
+  zaczyna się po zaakceptowaniu informacji o działaniu (mówi też o sprawdzaniu w tle) lub wcześniejszym zapisaniu zgody.
+- Oznaczenie to pasek w prawym górnym rogu fragmentu: tekst jest linkiem do publikacji źródłowej (wydawca, ocena, data),
+  obok przycisk „Sprawdź”. Pełne zdanie („Podobną informację … ocenił(a) jako … To dopasowanie treści, a nie pełna
+  weryfikacja”) jest w podpowiedzi i etykiecie dostępności. Przy krótkich fragmentach (nagłówek, jednowierszowy wpis)
+  wtyczka dodaje nad nimi miejsce zamiast zasłaniać tekst. Bez koloru ostrzegawczego, bez wykrzyknika, bez procentów.
 - Wszystkie powierzchnie używają kremowego tła, kobaltu, ostrych ramek i nagłówków inspirowanych Macintoshem.
   Geist Pixel Square 1.9.2 jest dołączony lokalnie (SIL OFL, `extension/fonts/LICENSE.txt`); font nie jest pobierany z CDN.
-  Dłuższe teksty pozostają w systemowym kroju sans-serif. Zasłony informują o dopasowaniu do znanego fact-checku,
-  nie przedstawiają go jako pełnej weryfikacji i zawsze umożliwiają odsłonięcie materiału.
+  Dłuższe teksty pozostają w systemowym kroju sans-serif. Zasłony (opcja) informują o dopasowaniu do znanego fact-checku,
+  podają link do publikacji, nie przedstawiają dopasowania jako pełnej weryfikacji i zawsze umożliwiają odsłonięcie.
 
 Wtyczka i WWW wyświetlają twierdzenia w kolejności: fałszywe, wprowadzające w błąd, brak dowodów, nieweryfikowalne, potwierdzone.
 Sortowanie dotyczy kopii wyników w interfejsie, zachowuje kolejność w ramach tej samej klasy i nie zmienia ocen ani danych API.
