@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .agreement import disagreement
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
@@ -59,9 +60,9 @@ def _fmt_date(s: str | None) -> str:
 
 
 def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple[str, float]:
-    """Pick the quoted fragment WITHOUT re-encoding: best verbatim chunk of the document by (cached) embedding
-    similarity, then the 1–2 consecutive sentences with the highest lexical overlap with the claim.
-    This exact span is both quoted to the user and judged by NLI."""
+    """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
+    then the 1–2 consecutive sentences with the highest lexical overlap with the claim, cut verbatim out of the
+    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI."""
     ids = [i for i in INDEX.doc_chunks[doc_idx] if i not in INDEX.synthetic]
     d = INDEX.docs[doc_idx]
     if not ids:
@@ -69,14 +70,50 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
     sims = INDEX.chunk_emb[ids] @ q_emb
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
-    sents = [x for x in split_sentences(text) if len(x) > 15] or [text]
-    windows = [w for w in sents + [f"{a} {b}" for a, b in zip(sents, sents[1:])] if len(w) <= 520] or [sents[0][:520]]
+    windows = _fragment_windows(text, d.text or "")
+    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
+        windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
 
     def score(w: str) -> float:
         wt = set(tokens(w))
         return len(q_tokens & wt) / max(1, len(q_tokens)) - len(w) / 5000  # prefer shorter on ties
 
     return max(windows, key=score), cos
+
+
+def _squash(s: str) -> str:
+    """Whitespace-normalised text: the form in which gate V2 compares a quote with its source."""
+    return re.sub(r"\s+", " ", normalize_ws(s)).strip()
+
+
+def _fragment_windows(passage: str, source: str, max_len: int = 520, min_len: int = 16, max_gap: int = 6) -> list[str]:
+    """Candidate quotes for a passage: every sentence, and every two NEIGHBOURING sentences, cut out of `source`.
+
+    The sentence splitter is only used to find where sentences start and end. Each window is then a slice of the
+    (whitespace-normalised) source text, so it is verbatim by construction: joining sentence strings instead would
+    lose the closing quotation mark or bracket that the splitter consumes between two sentences, and joining the
+    neighbours that remain after short sentences were filtered out would glue together sentences that are not
+    adjacent in the source ("… – przyp." + "Po wojnie …", skipping "Demagog]."). Sentences shorter than `min_len` are
+    not quoted on their own but do take part in pairs. A sentence the splitter has altered, so that it is no longer
+    found in the source, is left out together with its pairs."""
+    src = _squash(source)
+    spans: list[tuple[int, int] | None] = []
+    pos = 0
+    for s in split_sentences(passage):
+        s = _squash(s)
+        i = src.find(s, pos) if s else -1
+        if i < 0:
+            spans.append(None)
+            continue
+        spans.append((i, i + len(s)))
+        pos = i + len(s)
+    singles = [(a, b) for sp in spans if sp for a, b in [sp] if b - a >= min_len]
+    pairs = [(x[0], y[1]) for x, y in zip(spans, spans[1:]) if x and y and y[0] - x[1] <= max_gap]
+    windows = [src[a:b] for a, b in singles + pairs if min_len <= b - a <= max_len]
+    if not windows and singles:
+        a, b = singles[0]
+        windows = [src[a:a + max_len]]
+    return windows
 
 
 def _relevance(q_tokens: set[str], text: str) -> float:
@@ -86,8 +123,7 @@ def _relevance(q_tokens: set[str], text: str) -> float:
 
 def _quote_ok(fragment: str, doc_text: str) -> bool:
     """Validity gate V2: the quoted fragment must be a verbatim substring of the stored source text."""
-    squash = lambda s: re.sub(r"\s+", " ", normalize_ws(s)).strip()  # noqa: E731
-    return squash(fragment) in squash(doc_text)
+    return _squash(fragment) in _squash(doc_text)
 
 
 def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidence:
@@ -345,20 +381,38 @@ def numeric_stance(claim: str, source: str) -> str | None:
     return "zgodne" if all(verdicts) else "niezgodne"
 
 
-def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
-    """Single decision used by BOTH the full analysis and the browser extension, so the extension never flags
-    content that the full analysis would not match. True = the user asserts the checked claim; False = the user
-    asserts its opposite; None = only related (context, never a verdict or a flag)."""
+def claim_match(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> tuple[bool | None, str | None]:
+    """(decision, guard note). Decision: True = the user asserts the checked claim; False = the user asserts its
+    opposite; None = only related (context, never a verdict or a flag).
+
+    Guard G1 (names and numbers): very high similarity alone (`cos >= 0.88`) is accepted as "the same claim" only
+    while the two texts do not disagree on a name or a number (agreement.disagreement). If they do, the pair has to
+    qualify through one of the routes backed by NLI entailment; when it does not, the decision is None and the note
+    says what differed (it goes to the audit trail). The guard never rejects a pair that entailment supports. It
+    is not applied to the negation rule, which already requires NLI contradiction in both directions: the guard
+    exists to demand NLI support where similarity is the only evidence."""
     incident = source_type == "incident"  # long, multi-part (often English) narratives -> stricter
     lex = _relevance(set(tokens(checked_claim)), user_text)
     if cos >= 0.85 and min(fwd.contra, rev.contra) >= 0.80:
-        return False
-    if max(fwd.contra, rev.contra) < 0.5 and (
-            (cos >= 0.88 and not incident)
-            or (cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
-            or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):
-        return True
-    return None
+        return False, None
+    if max(fwd.contra, rev.contra) < 0.5:
+        if ((cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
+                or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):
+            return True, None
+        if cos >= 0.88 and not incident:  # similarity alone
+            try:
+                note = disagreement(user_text, checked_claim)
+            except Exception:  # noqa: BLE001 — a failing text heuristic must not fail the check; keep the old behaviour
+                log.exception("agreement guard failed")
+                note = None
+            return (None, note) if note else (True, None)
+    return None, None
+
+
+def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
+    """Single decision used by BOTH the full analysis and the browser extension, so the extension never flags
+    content that the full analysis would not match. See claim_match."""
+    return claim_match(cos, fwd, rev, checked_claim, user_text, source_type)[0]
 
 
 # ======================================================================================================== main
@@ -433,6 +487,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     # ---- evidence validity gates + stance classification
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
     quote_failures = 0
+    guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
@@ -443,7 +498,9 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         if d.source_type in ("factcheck", "incident"):
             nc, same = c.nli_claim, None
             if c.is_claim_match and nc is not None:
-                same = same_claim(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
+                same, differs = claim_match(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
+                if differs:
+                    guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
@@ -481,6 +538,11 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         elif res.verdict == "brak_dowodow":
             res.reason_codes.append("ROZNE_DEFINICJE")
             res.what_unknown = note
+    if guarded:  # audit trail: similarity alone would have matched these; the names or numbers differ
+        res.rules_fired.append("G1:ROZNE_NAZWY_LUB_LICZBY")
+        for d, differs in guarded[:2]:
+            res.limitations.append(f"Bardzo podobnego twierdzenia sprawdzonego przez {d.publisher} („{short(d.claim or d.title, 110)}”) "
+                                   f"nie uznano za to samo: różni się nazwą lub liczbą ({differs}) (reguła G1).")
     if quote_failures:
         res.limitations.append(f"Pominięto {quote_failures} materiał(y), których cytatu nie dało się dosłownie "
                                "odnaleźć w źródle (bramka V2).")
