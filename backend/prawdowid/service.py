@@ -13,7 +13,7 @@ from collections import OrderedDict
 from urllib.parse import urlparse
 from datetime import date, datetime, timezone
 
-from . import llm, store, websearch
+from . import llm, provenance, store, websearch
 from .claims import extract_claims
 from .config import settings
 from .engine import same_claim, verify_claim
@@ -166,6 +166,16 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             res.status = "doprecyzuj"
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
+        elif page_text and res.url_meta and provenance.asks_same_item(req.text or ""):
+            # "Czy ten wpis dotyczy tej samej depeszy, którą sprawdzał Demagog? <link>": a question about the identity
+            # of the linked item, answered by comparing its headline and date with the fact-check records (scenario I)
+            try:
+                res.claims = [provenance.check_linked_item(claims[0].text, res.url_meta)]
+            except Exception as e:  # noqa: BLE001
+                log.exception("provenance check failure")
+                store.log_error(cid, "engine", repr(e))
+                res.status = "blad_techniczny"
+                res.status_message = "Wystąpił błąd techniczny podczas analizy. To nie jest ocena treści — spróbuj ponownie."
         else:
             live = websearch.LiveStage(cid, progress)  # Google Fact Check + trusted-domain fallback; never raises
             if auto or req.live_search is False:

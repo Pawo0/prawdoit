@@ -22,7 +22,8 @@ REASON = {"BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źróde�
           "ZRODLA_SPRZECZNE": "źródła są ze sobą sprzeczne",
           "FACTCHECK_NIEWERYFIKOWALNE": "fact-checkerzy uznali to za nieweryfikowalne",
           "NIEAKTUALNE_DOWODY": "dowody są nieaktualne",
-          "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika"}
+          "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika",
+          "BRAK_DOPASOWANIA_MATERIALU": "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"}
 
 # Per-topic "what would settle it" hints, more specific than the engine's generic one. Keyed to a TOPIC (any claim
 # about transport tickets, clean-transport zones, weather, scams, travel, municipal decisions), never to a test case.
@@ -233,6 +234,8 @@ def _live(res: CheckResult | None) -> str:
 
 
 def short_answer(c: ClaimResult, live: str = "") -> str:
+    if any(r.startswith("M2:") for r in c.rules_fired):  # "is the linked item the analysed one?" (provenance.py)
+        return c.explanation
     disc = _number_discrepancy(c) if c.verdict != "nie_podlega_weryfikacji" else None
     if disc is None:
         return _short_answer(c, live)

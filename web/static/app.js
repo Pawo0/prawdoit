@@ -171,7 +171,8 @@ function renderEvidence(e) {
 
 const REASON = {BRAK_MATERIALOW: "brak materiałów w katalogu źródeł", TYLKO_MATERIALY_POKREWNE: "są tylko materiały na pokrewny temat",
   ZRODLA_SPRZECZNE: "źródła są ze sobą sprzeczne", FACTCHECK_NIEWERYFIKOWALNE: "fact-checkerzy uznali to za nieweryfikowalne",
-  NIEAKTUALNE_DOWODY: "dowody są nieaktualne", ROZNE_DEFINICJE: "wynik zależy od przyjętej miary wskaźnika"};
+  NIEAKTUALNE_DOWODY: "dowody są nieaktualne", ROZNE_DEFINICJE: "wynik zależy od przyjętej miary wskaźnika",
+  BRAK_DOPASOWANIA_MATERIALU: "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"};
 const CTX = {NIEAKTUALNE: "materiał nieaktualny / przedstawiony jako bieżący", MIESZANE: "część twierdzenia jest fałszywa i zmienia jego sens",
   WYBIORCZOSC_LUB_KONTEKST: "brakujący kontekst lub wybiórcze przedstawienie faktów"};
 const KIND = {fakt: "twierdzenie o faktach", opinia: "opinia / ocena", prognoza: "przewidywanie", pytanie: "pytanie"};
