@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .agreement import disagreement
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
@@ -380,20 +381,38 @@ def numeric_stance(claim: str, source: str) -> str | None:
     return "zgodne" if all(verdicts) else "niezgodne"
 
 
-def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
-    """Single decision used by BOTH the full analysis and the browser extension, so the extension never flags
-    content that the full analysis would not match. True = the user asserts the checked claim; False = the user
-    asserts its opposite; None = only related (context, never a verdict or a flag)."""
+def claim_match(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> tuple[bool | None, str | None]:
+    """(decision, guard note). Decision: True = the user asserts the checked claim; False = the user asserts its
+    opposite; None = only related (context, never a verdict or a flag).
+
+    Guard G1 (names and numbers): very high similarity alone (`cos >= 0.88`) is accepted as "the same claim" only
+    while the two texts do not disagree on a name or a number (agreement.disagreement). If they do, the pair has to
+    qualify through one of the routes backed by NLI entailment; when it does not, the decision is None and the note
+    says what differed (it goes to the audit trail). The guard never rejects a pair that entailment supports. It
+    is not applied to the negation rule, which already requires NLI contradiction in both directions: the guard
+    exists to demand NLI support where similarity is the only evidence."""
     incident = source_type == "incident"  # long, multi-part (often English) narratives -> stricter
     lex = _relevance(set(tokens(checked_claim)), user_text)
     if cos >= 0.85 and min(fwd.contra, rev.contra) >= 0.80:
-        return False
-    if max(fwd.contra, rev.contra) < 0.5 and (
-            (cos >= 0.88 and not incident)
-            or (cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
-            or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):
-        return True
-    return None
+        return False, None
+    if max(fwd.contra, rev.contra) < 0.5:
+        if ((cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
+                or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):
+            return True, None
+        if cos >= 0.88 and not incident:  # similarity alone
+            try:
+                note = disagreement(user_text, checked_claim)
+            except Exception:  # noqa: BLE001 — a failing text heuristic must not fail the check; keep the old behaviour
+                log.exception("agreement guard failed")
+                note = None
+            return (None, note) if note else (True, None)
+    return None, None
+
+
+def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_type: str) -> bool | None:
+    """Single decision used by BOTH the full analysis and the browser extension, so the extension never flags
+    content that the full analysis would not match. See claim_match."""
+    return claim_match(cos, fwd, rev, checked_claim, user_text, source_type)[0]
 
 
 # ======================================================================================================== main
@@ -468,6 +487,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     # ---- evidence validity gates + stance classification
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
     quote_failures = 0
+    guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
@@ -478,7 +498,9 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         if d.source_type in ("factcheck", "incident"):
             nc, same = c.nli_claim, None
             if c.is_claim_match and nc is not None:
-                same = same_claim(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
+                same, differs = claim_match(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
+                if differs:
+                    guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
@@ -516,6 +538,11 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         elif res.verdict == "brak_dowodow":
             res.reason_codes.append("ROZNE_DEFINICJE")
             res.what_unknown = note
+    if guarded:  # audit trail: similarity alone would have matched these; the names or numbers differ
+        res.rules_fired.append("G1:ROZNE_NAZWY_LUB_LICZBY")
+        for d, differs in guarded[:2]:
+            res.limitations.append(f"Bardzo podobnego twierdzenia sprawdzonego przez {d.publisher} („{short(d.claim or d.title, 110)}”) "
+                                   f"nie uznano za to samo: różni się nazwą lub liczbą ({differs}) (reguła G1).")
     if quote_failures:
         res.limitations.append(f"Pominięto {quote_failures} materiał(y), których cytatu nie dało się dosłownie "
                                "odnaleźć w źródle (bramka V2).")

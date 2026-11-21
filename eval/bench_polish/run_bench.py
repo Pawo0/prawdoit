@@ -164,10 +164,10 @@ def patch_rules(kind: str) -> None:
         sub("cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)", "cos >= 0.74 and fwd.entail >= 0.8)")
     elif kind == "bidir_nli":
         sub("if c.claim_cos >= 0.85:  # reverse direction", "if c.claim_cos >= 0.74:  # reverse direction")
-        sub("""            (cos >= 0.88 and not incident)
-            or (cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
-            or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):""",
-            """            cos >= 0.74 and max(fwd.entail, 0.0 if incident else rev.entail) >= 0.8):""")
+        sub("""        if ((cos >= 0.86 and fwd.entail >= (0.8 if incident else 0.5))
+                or (not incident and cos >= 0.80 and fwd.entail >= 0.8 and lex >= 0.4)):""",
+            """        if cos >= 0.74 and max(fwd.entail, 0.0 if incident else rev.entail) >= 0.8:""")
+        sub("if cos >= 0.88 and not incident:  # similarity alone", "if False:  # similarity alone: switched off by --rule bidir_nli")
     else:
         raise SystemExit(f"unknown rule variant {kind}")
     exec(compile(src, engine.__file__, "exec"), engine.__dict__)
@@ -225,8 +225,10 @@ def trace(text: str, gold_idx: int) -> dict:
     t["nli_rev"] = [round(rev.entail, 3), round(rev.neutral, 3), round(rev.contra, 3)]
     t["lex"] = round(engine._relevance(set(engine.tokens(d.claim)), q), 3)
     cos = t["gold_cos"]
-    same = engine.same_claim(cos, fwd, rev if cos >= 0.85 else fwd, d.claim, q, d.source_type) if cos >= 0.78 else None
+    same, guard = engine.claim_match(cos, fwd, rev if cos >= 0.85 else fwd, d.claim, q, d.source_type) if cos >= 0.78 else (None, None)
     t["same_claim"] = same
+    if guard:
+        t["guard"] = guard  # rule G1: similarity alone was not accepted because a name or number differs
     # first stage at which the gold document stops being able to produce a verdict
     if c.kind in ("opinia", "prognoza"):
         t["stage"] = "1_kind_gate(R1 regex)"
@@ -237,7 +239,9 @@ def trace(text: str, gold_idx: int) -> dict:
     elif cos < 0.78:
         t["stage"] = "4_match_threshold(cos<0.78: NLI never asked)"
     elif same is None:
-        if max(fwd.contra, rev.contra if cos >= 0.85 else fwd.contra) >= 0.5:
+        if guard:
+            t["stage"] = "5_agreement_guard(G1: name or number differs)"
+        elif max(fwd.contra, rev.contra if cos >= 0.85 else fwd.contra) >= 0.5:
             t["stage"] = "5_nli_contradiction_veto"
         elif cos < 0.80:
             t["stage"] = "5_cos_0.78-0.80_dead_zone"

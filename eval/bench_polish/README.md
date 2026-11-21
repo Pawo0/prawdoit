@@ -14,7 +14,8 @@ Report with results and interpretation: `research/08_polish_language_benchmark.m
 | `compare.py` | Paired comparison of two runs: fixed / broken / new false verdicts, per phenomenon, sign test. |
 | `lexical_bench.py` | Analyzer only (no neural model): BM25 rank of the gold document and the lexical gate, for 4 analyzers. |
 | `signal_bench.py` | Threshold-free comparison of "same claim?" signals: embedders and cross-encoder rerankers. |
-| `results/*.json` | Outputs of the runs described in the report. |
+| `guard_check.py` | No model, about half a minute: the name/number agreement guard (`backend/prawdowid/agreement.py`) on every Polish fact-checked claim of the corpus — benign rewrites must not be read as disagreement, synthetic in-place swaps must be. |
+| `results/*.json` | Outputs of the runs described in the report. `eng0_baseline` … `eng4_all` belong to report section 11 (fragment fix, diacritics, agreement guard). |
 
 Item groups and what counts as correct:
 
