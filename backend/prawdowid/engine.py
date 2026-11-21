@@ -50,6 +50,12 @@ class _Cand:
     numeric: str | None = None  # deterministic number check vs. an official fact card: "zgodne" | "niezgodne"
     extra_irrelevant: bool = False  # official card about another period / currency / act
     definitional: bool = False  # number differs, but the card uses a measure the claim did not name
+    # one sentence of a multi-sentence checked claim (see _claim_units): the user often repeats only the rated core
+    unit: str = ""
+    unit_cos: float = 0.0
+    nli_unit: object | None = None  # NLI(user claim -> unit)
+    nli_unit_rev: object | None = None  # NLI(unit -> user claim)
+    nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
 
 
 def _fmt_date(s: str | None) -> str:
@@ -415,6 +421,62 @@ def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_
     return claim_match(cos, fwd, rev, checked_claim, user_text, source_type)[0]
 
 
+# ------------------------------------------------------------------ sentence units of a checked claim
+# A fact-checked statement is often a quote of several sentences ("X została usunięta. Tusk wszedł w buty …"), and a
+# user repeats only the one that was rated. Matched as a whole, the other sentences add content the user never stated
+# and can make NLI read a contradiction (e.g. a year in the second sentence). A single sentence, however, inherits
+# the rating only when it is the part the fact-checker ruled on: its own headline must deny it (rating "false") or
+# state it (rating "true"). Mixed / misleading ratings are about the combination and never transfer to one sentence.
+UNIT_RATINGS = {"false": "contra", "true": "entail"}
+UNIT_MIN_COS = 0.80
+UNIT_HEADLINE_NLI = 0.80
+
+
+def claim_units(claim: str) -> list[str]:
+    """Declarative sentences of a checked claim with at least four content words (rhetorical questions and
+    exclamations like 'W jakim kraju my żyjemy?!' are not units). Fewer than two -> no units."""
+    units = [s for s in split_sentences(claim) if len(tokens(s)) >= 4 and "?" not in s[-3:]]
+    return units if len(units) >= 2 else []
+
+
+def headline_statement(title: str) -> str:
+    """The declarative part of a fact-check headline: question segments ('Darmowa komunikacja tylko we Wrocławiu?')
+    and one-word tags ('Sprawdzamy') are dropped. Empty if nothing declarative remains."""
+    keep = [s for s in split_sentences(title or "") if not s.rstrip().endswith("?") and len(tokens(s)) >= 3]
+    return " ".join(keep)
+
+
+def _claim_units(ranked: list[_Cand], q_emb: np.ndarray) -> None:
+    """Best sentence unit (by cosine) for every candidate fact-check that can inherit its rating per sentence."""
+    todo = []
+    for c in ranked:
+        d = INDEX.docs[c.doc_idx]
+        if not (c.is_claim_match and d.claim and d.source_type == "factcheck" and d.verdict in UNIT_RATINGS
+                and headline_statement(d.title)):
+            continue
+        units = claim_units(d.claim)
+        if units:
+            todo.append((c, units))
+    if not todo:
+        return
+    embs = INDEX.encode_query([u for _, units in todo for u in units])
+    pos = 0
+    for c, units in todo:
+        sims = embs[pos:pos + len(units)] @ q_emb
+        pos += len(units)
+        j = int(np.argmax(sims))
+        c.unit, c.unit_cos = units[j], float(sims[j])
+
+
+def unit_match(c: _Cand, d, user_text: str) -> bool | None:
+    """Decision of the sentence route (see claim_units): None unless the fact-checker's headline rules on the unit."""
+    if not c.unit or c.nli_unit is None or c.nli_head_unit is None:
+        return None
+    if getattr(c.nli_head_unit, UNIT_RATINGS[d.verdict]) < UNIT_HEADLINE_NLI:
+        return None
+    return same_claim(c.unit_cos, c.nli_unit, c.nli_unit_rev or c.nli_unit, c.unit, user_text, d.source_type)
+
+
 # ======================================================================================================== main
 def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     high_risk = bool(HIGH_RISK.search(claim.text))
@@ -452,6 +514,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     q_tokens = set(tokens(claim.query))
     for c in ranked:
         c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
+    _claim_units(ranked, q_emb)
     timings["fragments_ms"] = timings.get("fragments_ms", 0) + (time.perf_counter() - t0) * 1000
     t0 = time.perf_counter()
     pairs, owners = [], []
@@ -461,13 +524,19 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             pairs.append((claim.query, d.claim)); owners.append((c, "claim"))
             if c.claim_cos >= 0.85:  # reverse direction only needed for the negation test
                 pairs.append((d.claim, claim.query)); owners.append((c, "claim_rev"))
+        if c.unit and c.unit_cos >= UNIT_MIN_COS:  # sentence route (claim_units)
+            pairs.append((claim.query, c.unit)); owners.append((c, "unit"))
+            if c.unit_cos >= 0.85:
+                pairs.append((c.unit, claim.query)); owners.append((c, "unit_rev"))
+            pairs.append((headline_statement(d.title), c.unit)); owners.append((c, "head_unit"))
         if d.source_type == "official" and not same_subject(claim.query, d.title):
             c.extra_irrelevant = True  # another period/currency/act — not evidence either way
             continue
         if d.source_type in ("official", "media") and _relevance(q_tokens, f"{d.title} {c.fragment}") >= 0.4:
             pairs.append((c.fragment, claim.query)); owners.append((c, "frag"))
     for (c, kind), s_ in zip(owners, NLI_MODEL.score(pairs)):
-        setattr(c, {"claim": "nli_claim", "claim_rev": "nli_claim_rev", "frag": "nli"}[kind], s_)
+        setattr(c, {"claim": "nli_claim", "claim_rev": "nli_claim_rev", "frag": "nli", "unit": "nli_unit",
+                    "unit_rev": "nli_unit_rev", "head_unit": "nli_head_unit"}[kind], s_)
     # deterministic checks override NLI for structured official cards (NLI is weak at numbers and dates)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
@@ -488,6 +557,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
     quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
+    by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
@@ -496,11 +566,17 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             quote_failures += 1  # V2 failed: never show a quote we cannot find verbatim in the source
             continue
         if d.source_type in ("factcheck", "incident"):
-            nc, same = c.nli_claim, None
+            nc, same, differs = c.nli_claim, None, None
             if c.is_claim_match and nc is not None:
                 same, differs = claim_match(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
-                if differs:
-                    guarded.append((d, differs))
+            if same is None and c.is_claim_match:
+                same = unit_match(c, d, claim.query)
+                if same is not None:
+                    differs = None  # the whole quote differed, the sentence the fact-checker ruled on does not
+                    c.claim_cos = max(c.claim_cos, c.unit_cos)
+                    by_unit.append((d, c.unit))
+            if differs:
+                guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
@@ -538,6 +614,14 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         elif res.verdict == "brak_dowodow":
             res.reason_codes.append("ROZNE_DEFINICJE")
             res.what_unknown = note
+    if by_unit and res.verdict in ("falszywe", "potwierdzone"):  # audit trail of the sentence route (claim_units)
+        d, unit = by_unit[0]
+        res.rules_fired.append("M1:ZDANIE_SPRAWDZONEJ_WYPOWIEDZI")
+        res.premises.insert(0, Premise(
+            label="Dopasowanie do jednego zdania sprawdzonej wypowiedzi",
+            value=(f"Twoje zdanie odpowiada zdaniu „{short(unit, 140)}” z wypowiedzi sprawdzonej przez {d.publisher}; "
+                   f"nagłówek analizy („{short(headline_statement(d.title), 100)}”) "
+                   f"{'zaprzecza' if d.verdict == 'false' else 'potwierdza'} właśnie temu zdaniu."), effect="+"))
     if guarded:  # audit trail: similarity alone would have matched these; the names or numbers differ
         res.rules_fired.append("G1:ROZNE_NAZWY_LUB_LICZBY")
         for d, differs in guarded[:2]:
