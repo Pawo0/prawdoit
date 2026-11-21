@@ -27,6 +27,8 @@
   "language": "pl",
   "license": "© Stowarzyszenie Demagog. 'Ogólne Warunki Licencji' (demagog.org.pl/zasady-udostepniania-tresci): non-commercial reuse allowed without modification (non-distorting shortening OK) with attribution 'Źródło informacji: www.demagog.org.pl' + link; commercial use needs consent. robots Content-Signal: search=yes, ai-train=no, use=reference -> RAG/citation only, never training.",
   "qualification": "Polska organizacja fact-checkingowa, sygnatariusz IFCN i członek EFCSN; oceny wypowiedzi i fałszywych informacji z jawną metodologią i źródłami (ClaimReview). Kategoria B: liczy się tylko po dopasowaniu twierdzenia. robots: ai-train=no — tylko cytowanie, nigdy trenowanie.",
+  "scope": "organiser_implied",
+  "scope_basis": "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: przykładowe odpowiedzi scenariuszy A–C, E–G, I, J powołują się na Demagoga (linki demagog.org.pl/wypowiedzi/…); oceny Demagoga są też w bazie Google Fact Check (rules/resources.txt)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

@@ -42,8 +42,8 @@ FIELD_ORDER = ("id", "name", "publisher", "url", "category", "tier", "method", "
 SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended", "outside")
 ORGANISER_SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended")
 STRICT_SCOPES = ("organiser_listed", "organiser_implied")  # the narrow reading: list + scenarios only
-# Scope of entries whose file does not carry the field yet. data/sources/demagog.json was reserved for a running
-# Demagog harvest when the field was introduced (2026-11-21); once that is merged, move the two keys into the file.
+# Scope of entries whose file does not carry the field. data/sources/demagog.json was reserved for a running Demagog
+# harvest when the field was introduced (2026-11-21); the file now carries the keys, this stays as the fallback.
 DEFAULT_SCOPE = {
     "demagog": ("organiser_implied",
                 "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: przykładowe odpowiedzi scenariuszy "
