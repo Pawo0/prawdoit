@@ -53,7 +53,7 @@
 | Źródła, licencje, kwalifikacja, aktualizacja | ✅ | `docs/SOURCES.md` (generowany z rejestru), `docs/SOURCE_REGISTRY.md` |
 | Wyniki testów (sekcja 6) z danymi do odtworzenia | ✅ | `eval/cases*.jsonl`, `eval/run_eval.py`, `eval/results_2026-11-21*/` |
 | Ryzyka: halucynacje, stronniczość, prywatność, injection, dostępność, nadużycia | ✅ | `docs/RISKS.md` |
-| Brak kluczy/sekretów/danych osobowych w repo | ✅ | sekrety tylko w env (`config.py`); `.gitignore`: `.env`, `data/runtime/`; skan repo bez kluczy; tokeny demo jawne i opisane |
+| Brak kluczy/sekretów/danych osobowych w repo | ✅ | sekrety tylko w env (`config.py`); `.gitignore`: `.env`, `data/runtime/`; tokeny paneli bez wartości domyślnych poza trybem lokalnym (`PRAWDOWID_DEV_MODE`). Skan 21.11.2026 (drzewo robocze + pełna historia 18 gałęzi i zdalnych refów; wzorce kluczy Google `AIza`, `sk-`, `ghp_`/`github_pat_`, `xox?-`, `hf_`, tokenów Discord, `Bearer`, kluczy prywatnych, przypisań `*_TOKEN/KEY/SECRET=`; pliki `.env*`): **brak sekretów**, w historii nigdy nie było pliku `.env` (tylko `.env.example`); zrzuty ekranu panelu mają zamaskowane pole tokenu. Dane osobowe: tylko adresy e-mail autorów w metadanych commitów (decyzja zespołu przy ewentualnym przepisaniu historii) |
 | Opcjonalnie: OpenAPI, Docker | ⚠️ | OpenAPI: `/docs`, `/openapi.json` (FastAPI); Dockerfile brak (luka 9) |
 
 ## Sekcja 5 — wymagania techniczne i zakazy
