@@ -171,9 +171,11 @@ function renderEvidence(e) {
 
 const REASON = {BRAK_MATERIALOW: "brak materiałów w katalogu źródeł", TYLKO_MATERIALY_POKREWNE: "są tylko materiały na pokrewny temat",
   ZRODLA_SPRZECZNE: "źródła są ze sobą sprzeczne", FACTCHECK_NIEWERYFIKOWALNE: "fact-checkerzy uznali to za nieweryfikowalne",
-  NIEAKTUALNE_DOWODY: "dowody są nieaktualne", ROZNE_DEFINICJE: "wynik zależy od przyjętej miary wskaźnika"};
+  NIEAKTUALNE_DOWODY: "dowody są nieaktualne", ROZNE_DEFINICJE: "wynik zależy od przyjętej miary wskaźnika",
+  BRAK_DOPASOWANIA_MATERIALU: "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"};
 const CTX = {NIEAKTUALNE: "materiał nieaktualny / przedstawiony jako bieżący", MIESZANE: "część twierdzenia jest fałszywa i zmienia jego sens",
-  WYBIORCZOSC_LUB_KONTEKST: "brakujący kontekst lub wybiórcze przedstawienie faktów"};
+  WYBIORCZOSC_LUB_KONTEKST: "brakujący kontekst lub wybiórcze przedstawienie faktów",
+  FALSZYWY_KONTEKST: "materiał z innego czasu przedstawiony jako bieżący"};
 const KIND = {fakt: "twierdzenie o faktach", opinia: "opinia / ocena", prognoza: "przewidywanie", pytanie: "pytanie"};
 const DECISIVE = ["falszywe", "potwierdzone", "wprowadzajace_w_blad"];
 
@@ -202,9 +204,11 @@ function renderClaim(c, i, n, full = false) {
   const evid = shown.length ? shown.map(renderEvidence).join("") + (shown.length < c.evidence.length ? `<p class="small muted">+${c.evidence.length - shown.length} dalszych materiałów pokrewnych pominięto.</p>` : "") : `<p class="muted">Brak materiałów źródłowych do pokazania.</p>`;
   const main = mainEvidence(c);
   const facts = [basisLine(c), c.limitation_line].filter(Boolean);
-  const src = main ? `<div class="mainsrc"><small>Główne źródło</small>
-      <a href="${safeUrl(main.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(main.title)}</b></a>
-      <div class="small muted">${esc(main.publisher)} · ${fmtDate(main.published_at)}${main.domain ? ` · ${esc(main.domain)}` : ""}</div></div>` : "";
+  // an abstention that names related material links it too, labelled as not settling the claim (answer.py)
+  const shownSrc = main || (c.related_evidence != null ? c.evidence[c.related_evidence] || null : null);
+  const src = shownSrc ? `<div class="mainsrc"><small>${main ? "Główne źródło" : "Materiał pokrewny (nie rozstrzyga)"}</small>
+      <a href="${safeUrl(shownSrc.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(shownSrc.title)}</b></a>
+      <div class="small muted">${esc(shownSrc.publisher)} · ${fmtDate(shownSrc.published_at)}${shownSrc.domain ? ` · ${esc(shownSrc.domain)}` : ""}</div></div>` : "";
   const kind = [KIND[c.kind] || esc(c.kind), c.high_risk ? '<span class="chip przeczy">temat wysokiego ryzyka</span>' : ""].filter(Boolean).join(" · ");
   const interp = c.short_answer && c.explanation && c.explanation !== c.short_answer
     ? `<div class="interp"><div class="small muted">Nasza interpretacja (na podstawie źródeł poniżej):</div><p style="margin:4px 0 0">${esc(c.explanation)}</p></div>` : "";

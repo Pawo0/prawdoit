@@ -16,13 +16,13 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .agreement import disagreement
+from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import is_time_sensitive, normalize_ws, short, split_sentences, tokens
+from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.engine")
 
@@ -50,6 +50,14 @@ class _Cand:
     numeric: str | None = None  # deterministic number check vs. an official fact card: "zgodne" | "niezgodne"
     extra_irrelevant: bool = False  # official card about another period / currency / act
     definitional: bool = False  # number differs, but the card uses a measure the claim did not name
+    # one sentence of a multi-sentence checked claim (see _claim_units): the user often repeats only the rated core
+    unit: str = ""
+    unit_cos: float = 0.0
+    nli_unit: object | None = None  # NLI(user claim -> unit)
+    nli_unit_rev: object | None = None  # NLI(unit -> user claim)
+    nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
+    explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
+    archival: tuple[int, int] | None = None  # (year of the material per the analysis, year it is presented as)
 
 
 def _fmt_date(s: str | None) -> str:
@@ -71,14 +79,41 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
     windows = _fragment_windows(text, d.text or "")
+    head_tokens: set[str] = set()
+    if d.claim and d.source_type in ("factcheck", "incident"):
+        # A fact-check's text starts by restating the checked claim, which always overlaps the user's words most and
+        # wins the best chunk. Quoting it back proves nothing: the quote must be the analysis' finding. So the whole
+        # analysis is searched (the claim's own sentences left out) for the passage that shares most words with the
+        # user's claim AND with the fact-checker's headline, which states the finding ("Depesza PAP nie została
+        # usunięta"). The claim itself is quoted only when the record has nothing else.
+        own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
+        if own:
+            windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
     if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
 
     def score(w: str) -> float:
         wt = set(tokens(w))
-        return len(q_tokens & wt) / max(1, len(q_tokens)) - len(w) / 5000  # prefer shorter on ties
+        head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
+        return len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
 
-    return max(windows, key=score), cos
+    best = max(windows, key=score)
+    if head_tokens:  # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI)
+        best = best.lstrip("-–•* ") or best
+    return best, cos
+
+
+def _words(s: str) -> str:
+    return " ".join(re.findall(r"[^\W_]+", (s or "").lower()))
+
+
+def _restates(window: str, claim: str) -> bool:
+    """Is this quote (part of) the checked claim? Compared word by word, so a hyphen in the claim field and an en dash
+    in the text do not matter."""
+    w, c = _words(window), _words(claim)
+    if not w or w in c:
+        return True
+    return any(len(s) >= 20 and s in w for s in (_words(x) for x in split_sentences(claim)))
 
 
 def _squash(s: str) -> str:
@@ -114,6 +149,73 @@ def _fragment_windows(passage: str, source: str, max_len: int = 520, min_len: in
         a, b = singles[0]
         windows = [src[a:a + max_len]]
     return windows
+
+
+_YEAR_RX = re.compile(r"\b(19|20)\d\d\b")
+
+
+def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str | None:
+    """'Dlaczego w analizie jest 650 mln zł?': the verbatim passage of the analysis that gives the asked number.
+    Sentences of the checked claim itself are skipped. Among the passages that contain the number, the one that also
+    states its period (a year) is preferred, so the quote shows what the figure refers to; then the shortest."""
+    in_claim = _squash(claim_text)
+    hits = [w for w in _fragment_windows(text, text)
+            if w not in in_claim and any(same_amount(a, x) for a in asked for x in amounts(w))]
+    return min(hits, key=lambda w: (not _YEAR_RX.search(w), len(w))) if hits else None
+
+
+# ------------------------------------------------------------------ old material presented as current (rule R3a)
+# "Czy film udostępniony przez X w 2026 r. pokazywał ówczesny protest pod Y?" — a claim that a recording / photo shows
+# an event of the time it was shared. A fact-check about that material that dates it to an EARLIER year refutes it
+# deterministically (the NLI model reads almost every sentence of such an analysis as a contradiction, so it cannot
+# be used here). Same material = the analysis names at least two of the claim's proper names.
+_MATERIAL = re.compile(r"\b(film\w*|nagra\w*|wideo|video|klip\w*|zdjęci\w*|zdjęć|fotografi\w*|materiał\w*)\b", re.I)
+_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|tegoroczn\w*|teraz|dziś|"
+                            r"dzisiaj|niedawn\w*)\b", re.I)
+_ORIGIN = re.compile(r"\b(pochodz\w*|nagran\w*|nakręcon\w*|zarejestrowan\w*|wykonan\w*|zrobion\w*|powstał\w*)\b"
+                     r"[^.]{0,40}?\b(?:z|w|we)\s+(?:[^\W\d]+\s+){0,2}?((?:19|20)\d\d)\b", re.I)
+_PROPER = re.compile(r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}")
+
+
+def presented_year(claim: str, published_at: str | None) -> int | None:
+    """The year a claim about a material presents it as from: an explicit year, or — for 'ówczesny / aktualny /
+    teraz' without one — the year the fact-check was published (when the material was being shared)."""
+    if not _MATERIAL.search(claim):
+        return None
+    years = [int(y) for y in re.findall(r"\b((?:19|20)\d\d)\b", claim)]
+    if years:
+        return max(years)
+    if _PRESENTED_NOW.search(claim) and (published_at or "")[:4].isdigit():
+        return int(published_at[:4])
+    return None
+
+
+def _names_shared(claim: str, text: str) -> int:
+    names = {fold(w) for w in _PROPER.findall(f" {claim}")}
+    words = {fold(w) for w in re.findall(r"[^\W\d_]+", text)}
+    return sum(1 for n in names if any(same_word(n, w) for w in words))
+
+
+def archival_origin(d, claim: str, year: int) -> tuple[str, int] | None:
+    """(verbatim passage, year of the material) when the analysis says the material comes from before `year`."""
+    names = {fold(w) for w in _PROPER.findall(f" {claim}")}
+    if not names:
+        return None
+    in_claim = _squash(d.claim or "")
+    best = None
+    for w in _fragment_windows(d.text or "", d.text or ""):
+        if w in in_claim:
+            continue
+        m = next((m for s in split_sentences(w) if _MATERIAL.search(s) for m in [_ORIGIN.search(s)] if m), None)
+        if not m or int(m.group(2)) >= year:
+            continue
+        shared = _names_shared(claim, f"{d.title} {d.claim or ''} {w}")
+        if shared < min(2, len(names)):
+            continue
+        key = (_names_shared(claim, w), -len(w))
+        if best is None or key > best[0]:
+            best = (key, w.lstrip("-–•* "), int(m.group(2)))  # a leading bullet is not quoted
+    return (best[1], best[2]) if best else None
 
 
 def _relevance(q_tokens: set[str], text: str) -> float:
@@ -415,6 +517,62 @@ def same_claim(cos: float, fwd, rev, checked_claim: str, user_text: str, source_
     return claim_match(cos, fwd, rev, checked_claim, user_text, source_type)[0]
 
 
+# ------------------------------------------------------------------ sentence units of a checked claim
+# A fact-checked statement is often a quote of several sentences ("X została usunięta. Tusk wszedł w buty …"), and a
+# user repeats only the one that was rated. Matched as a whole, the other sentences add content the user never stated
+# and can make NLI read a contradiction (e.g. a year in the second sentence). A single sentence, however, inherits
+# the rating only when it is the part the fact-checker ruled on: its own headline must deny it (rating "false") or
+# state it (rating "true"). Mixed / misleading ratings are about the combination and never transfer to one sentence.
+UNIT_RATINGS = {"false": "contra", "true": "entail"}
+UNIT_MIN_COS = 0.80
+UNIT_HEADLINE_NLI = 0.80
+
+
+def claim_units(claim: str) -> list[str]:
+    """Declarative sentences of a checked claim with at least four content words (rhetorical questions and
+    exclamations like 'W jakim kraju my żyjemy?!' are not units). Fewer than two -> no units."""
+    units = [s for s in split_sentences(claim) if len(tokens(s)) >= 4 and "?" not in s[-3:]]
+    return units if len(units) >= 2 else []
+
+
+def headline_statement(title: str) -> str:
+    """The declarative part of a fact-check headline: question segments ('Darmowa komunikacja tylko we Wrocławiu?')
+    and one-word tags ('Sprawdzamy') are dropped. Empty if nothing declarative remains."""
+    keep = [s for s in split_sentences(title or "") if not s.rstrip().endswith("?") and len(tokens(s)) >= 3]
+    return " ".join(keep)
+
+
+def _claim_units(ranked: list[_Cand], q_emb: np.ndarray) -> None:
+    """Best sentence unit (by cosine) for every candidate fact-check that can inherit its rating per sentence."""
+    todo = []
+    for c in ranked:
+        d = INDEX.docs[c.doc_idx]
+        if not (c.is_claim_match and d.claim and d.source_type == "factcheck" and d.verdict in UNIT_RATINGS
+                and headline_statement(d.title)):
+            continue
+        units = claim_units(d.claim)
+        if units:
+            todo.append((c, units))
+    if not todo:
+        return
+    embs = INDEX.encode_query([u for _, units in todo for u in units])
+    pos = 0
+    for c, units in todo:
+        sims = embs[pos:pos + len(units)] @ q_emb
+        pos += len(units)
+        j = int(np.argmax(sims))
+        c.unit, c.unit_cos = units[j], float(sims[j])
+
+
+def unit_match(c: _Cand, d, user_text: str) -> bool | None:
+    """Decision of the sentence route (see claim_units): None unless the fact-checker's headline rules on the unit."""
+    if not c.unit or c.nli_unit is None or c.nli_head_unit is None:
+        return None
+    if getattr(c.nli_head_unit, UNIT_RATINGS[d.verdict]) < UNIT_HEADLINE_NLI:
+        return None
+    return same_claim(c.unit_cos, c.nli_unit, c.nli_unit_rev or c.nli_unit, c.unit, user_text, d.source_type)
+
+
 # ======================================================================================================== main
 def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     high_risk = bool(HIGH_RISK.search(claim.text))
@@ -452,6 +610,23 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     q_tokens = set(tokens(claim.query))
     for c in ranked:
         c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
+    # "Czy X wydaje 700 mln zł? Dlaczego w analizie jest 650 mln zł?": an analysis of a statement that gave the user's
+    # number quotes the passage with the asked number instead (the answer layer explains the two figures)
+    stated = amounts(claim.query)
+    asked = [a for a in amounts(getattr(claim, "meta", "")) if not any(same_amount(a, x) for x in stated)]
+    for c in ranked if asked and stated else []:
+        d = INDEX.docs[c.doc_idx]
+        if d.source_type == "factcheck" and d.claim and any(same_amount(x, y) for x in stated for y in amounts(d.claim)):
+            frag = asked_number_fragment(d.text or "", d.claim, asked)
+            if frag:
+                c.fragment, c.explains = frag, True
+    for c in ranked:  # rule R3a: old material presented as current
+        d = INDEX.docs[c.doc_idx]
+        if d.source_type == "factcheck" and (year := presented_year(claim.query, d.published_at)):
+            hit = archival_origin(d, claim.query, year)
+            if hit:
+                c.fragment, c.archival = hit[0], (hit[1], year)
+    _claim_units(ranked, q_emb)
     timings["fragments_ms"] = timings.get("fragments_ms", 0) + (time.perf_counter() - t0) * 1000
     t0 = time.perf_counter()
     pairs, owners = [], []
@@ -461,13 +636,19 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             pairs.append((claim.query, d.claim)); owners.append((c, "claim"))
             if c.claim_cos >= 0.85:  # reverse direction only needed for the negation test
                 pairs.append((d.claim, claim.query)); owners.append((c, "claim_rev"))
+        if c.unit and c.unit_cos >= UNIT_MIN_COS:  # sentence route (claim_units)
+            pairs.append((claim.query, c.unit)); owners.append((c, "unit"))
+            if c.unit_cos >= 0.85:
+                pairs.append((c.unit, claim.query)); owners.append((c, "unit_rev"))
+            pairs.append((headline_statement(d.title), c.unit)); owners.append((c, "head_unit"))
         if d.source_type == "official" and not same_subject(claim.query, d.title):
             c.extra_irrelevant = True  # another period/currency/act — not evidence either way
             continue
         if d.source_type in ("official", "media") and _relevance(q_tokens, f"{d.title} {c.fragment}") >= 0.4:
             pairs.append((c.fragment, claim.query)); owners.append((c, "frag"))
     for (c, kind), s_ in zip(owners, NLI_MODEL.score(pairs)):
-        setattr(c, {"claim": "nli_claim", "claim_rev": "nli_claim_rev", "frag": "nli"}[kind], s_)
+        setattr(c, {"claim": "nli_claim", "claim_rev": "nli_claim_rev", "frag": "nli", "unit": "nli_unit",
+                    "unit_rev": "nli_unit_rev", "head_unit": "nli_head_unit"}[kind], s_)
     # deterministic checks override NLI for structured official cards (NLI is weak at numbers and dates)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
@@ -488,6 +669,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
     quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
+    by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
@@ -496,14 +678,22 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             quote_failures += 1  # V2 failed: never show a quote we cannot find verbatim in the source
             continue
         if d.source_type in ("factcheck", "incident"):
-            nc, same = c.nli_claim, None
+            nc, same, differs = c.nli_claim, None, None
             if c.is_claim_match and nc is not None:
                 same, differs = claim_match(c.claim_cos, nc, c.nli_claim_rev or nc, d.claim or "", claim.query, d.source_type)
-                if differs:
-                    guarded.append((d, differs))
+            if same is None and c.is_claim_match:
+                same = unit_match(c, d, claim.query)
+                if same is not None:
+                    differs = None  # the whole quote differed, the sentence the fact-checker ruled on does not
+                    c.claim_cos = max(c.claim_cos, c.unit_cos)
+                    by_unit.append((d, c.unit))
+            if differs:
+                guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
+            if mapped is None and same is None and c.archival:  # R3a: the analysis dates the material earlier
+                refute.append(c); evidence.append(_evidence(c, "przeczy", max(c.claim_cos, c.cos), None)); continue
             if mapped == "falszywe":
                 refute.append(c); evidence.append(_evidence(c, "przeczy", c.claim_cos, same)); continue
             if mapped == "potwierdzone":
@@ -512,7 +702,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 misleading.append(c); evidence.append(_evidence(c, "kontekst", c.claim_cos, same)); continue
             if mapped == "brak_dowodow":
                 unverif.append(c)
-            if max(c.claim_cos, c.frag_cos) >= 0.70:
+            if max(c.claim_cos, c.frag_cos) >= 0.70 or c.explains:
                 evidence.append(_evidence(c, "kontekst", max(c.claim_cos, c.frag_cos), same))
         elif c.definitional:
             evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
@@ -527,7 +717,9 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 refute.append(c); evidence.append(_evidence(c, "przeczy", s_.contra, None))
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
-    res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk)
+    res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
+                  keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
+    res.meta_question = getattr(claim, "meta", "") or None
     if definitional:
         d0 = INDEX.docs[definitional[0].doc_idx]
         note = (f"Wartość zależy od przyjętej miary: {d0.publisher} („{short(d0.title, 80)}”) podaje inną liczbę dla innej "
@@ -538,6 +730,14 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         elif res.verdict == "brak_dowodow":
             res.reason_codes.append("ROZNE_DEFINICJE")
             res.what_unknown = note
+    if by_unit and res.verdict in ("falszywe", "potwierdzone"):  # audit trail of the sentence route (claim_units)
+        d, unit = by_unit[0]
+        res.rules_fired.append("M1:ZDANIE_SPRAWDZONEJ_WYPOWIEDZI")
+        res.premises.insert(0, Premise(
+            label="Dopasowanie do jednego zdania sprawdzonej wypowiedzi",
+            value=(f"Twoje zdanie odpowiada zdaniu „{short(unit, 140)}” z wypowiedzi sprawdzonej przez {d.publisher}; "
+                   f"nagłówek analizy („{short(headline_statement(d.title), 100)}”) "
+                   f"{'zaprzecza' if d.verdict == 'false' else 'potwierdza'} właśnie temu zdaniu."), effect="+"))
     if guarded:  # audit trail: similarity alone would have matched these; the names or numbers differ
         res.rules_fired.append("G1:ROZNE_NAZWY_LUB_LICZBY")
         for d, differs in guarded[:2]:
@@ -564,7 +764,10 @@ def _score(c: _Cand) -> float:
     return c.claim_cos
 
 
-def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[Evidence], high_risk: bool) -> ClaimResult:
+def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[Evidence], high_risk: bool,
+            keep: set[str] = frozenset()) -> ClaimResult:
+    """keep: doc ids of context items that answer the user's question about the check (asked_number_fragment);
+    they are listed before other context items, so the evidence cut cannot drop them."""
     premises: list[Premise] = []
     rules: list[str] = []
     reasons: list[str] = []
@@ -601,6 +804,11 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
         main = max(decisive, key=lambda c: (TIER[INDEX.docs[c.doc_idx].source_type] == 1, _score(c)))
         d = INDEX.docs[main.doc_idx]
         age = INDEX.doc_age(d)
+        if main.archival and verdict == "falszywe":  # R3a
+            rules.append("R3a:STARY_MATERIAL")
+            context_type = "FALSZYWY_KONTEKST"
+            missing_context = (f"Materiał pochodzi z {main.archival[0]} r., a twierdzenie przedstawia go jako z "
+                               f"{main.archival[1]} r. (źródło: {d.publisher}).")
         # R4 (archival context): supported, but presented as current while the evidence is old
         if verdict == "potwierdzone" and time_sensitive and age is not None and age > settings.stale_days:
             verdict, context_type = "wprowadzajace_w_blad", "NIEAKTUALNE"
@@ -613,7 +821,11 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
     tiers = _tiers(decisive)
     if main is not None:
         d = INDEX.docs[main.doc_idx]
-        if main.numeric:
+        if main.archival:
+            premises.append(Premise(label="Data materiału według analizy fact-checkingowej (reguła deterministyczna)",
+                                    value=f"materiał pochodzi z {main.archival[0]} r., a twierdzenie przedstawia go "
+                                          f"jako z {main.archival[1]} r.", effect="+"))
+        elif main.numeric:
             premises.append(Premise(label="Porównanie liczb ze źródłem urzędowym (reguła deterministyczna)",
                                     value=("liczba z twierdzenia zgadza się z danymi źródła" if main.numeric == "zgodne"
                                            else "liczba z twierdzenia NIE zgadza się z danymi źródła za ten sam okres"),
@@ -657,7 +869,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
         rules.append("R6:BRAK_DOWODOW")
 
     order = {"przeczy": 0, "popiera": 0, "kontekst": 1, "neutralne": 2}
-    evidence.sort(key=lambda e: (order[e.stance], e.tier, -e.similarity))
+    evidence.sort(key=lambda e: (order[e.stance], e.doc_id not in keep, e.tier, -e.similarity))
     evidence = evidence[: settings.top_k_evidence]
     limitations.append("Odpowiedź opiera się wyłącznie na jawnym katalogu źródeł (zob. „Źródła”); brak wyniku nie oznacza, "
                        "że informacja jest prawdziwa lub fałszywa.")
@@ -691,7 +903,9 @@ def _explain(verdict: str, main: _Cand | None, evidence: list[Evidence], conflic
     lead = {"falszywe": "Źródła przeczą tej informacji.",
             "potwierdzone": "Źródła potwierdzają tę informację.",
             "wprowadzajace_w_blad": "Ta informacja wprowadza w błąd."}[verdict]
-    if main.nli is None and d.verdict_raw:
+    if main.archival:
+        body = f" Według źródła: {who} ({when})."
+    elif main.nli is None and d.verdict_raw:
         body = (f" {who} ({when}) sprawdził bardzo podobne twierdzenie: „{short(d.claim or d.title, 160)}” i ocenił je "
                 f"jako „{d.verdict_raw}”.")
         if main.nli_claim is not None and main.nli_claim.contra >= 0.8:

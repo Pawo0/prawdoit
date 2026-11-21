@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 
 from .schemas import CheckResult, ClaimResult, Evidence
-from .textutil import asks_who_checked, short, tokens
+from .textutil import amounts, asks_who_checked, same_amount, short, split_sentences, tokens
 
 FC_LABEL = {"false": "fałsz", "true": "prawda", "misleading": "wprowadzające w błąd", "mixed": "częściowa prawda",
             "unverifiable": "nieweryfikowalne"}
@@ -22,7 +22,8 @@ REASON = {"BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źróde�
           "ZRODLA_SPRZECZNE": "źródła są ze sobą sprzeczne",
           "FACTCHECK_NIEWERYFIKOWALNE": "fact-checkerzy uznali to za nieweryfikowalne",
           "NIEAKTUALNE_DOWODY": "dowody są nieaktualne",
-          "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika"}
+          "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika",
+          "BRAK_DOPASOWANIA_MATERIALU": "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"}
 
 # Per-topic "what would settle it" hints, more specific than the engine's generic one. Keyed to a TOPIC (any claim
 # about transport tickets, clean-transport zones, weather, scams, travel, municipal decisions), never to a test case.
@@ -173,12 +174,57 @@ def _related(c: ClaimResult) -> Evidence | None:
 
 
 def _related_sentence(e: Evidence) -> str:
-    if e.source_type in ("factcheck", "incident") and e.factcheck_verdict_raw:
-        return f"Najbliższy materiał: {_who_checked(e).rstrip('.')} — sprawdź w pełnej analizie, czy dotyczy tego samego."
+    """Related material for an abstention. A fact-check (or incident record) that the engine did NOT match to the
+    claim is named by its headline only: its rating belongs to the claim IT checked, and repeating that rating next to
+    an abstention reads as an answer to the user's question. Other sources are quoted by their verbatim fragment."""
     d = (e.published_at or "")[:10]
     when = f" ({d[8:10]}.{d[5:7]}.{d[:4]})" if re.fullmatch(r"\d{4}-\d\d-\d\d", d) else ""
+    if e.source_type in ("factcheck", "incident"):
+        return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, 140)}”. Nie rozstrzyga on "
+                "samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy.")
     return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), 170)}”. "
             "Nie rozstrzyga on samego twierdzenia.")
+
+
+_HEDGE = re.compile(r"\b(ok\.|około|bodajże|blisko|prawie|mniej więcej|rzędu|niecał\w*|szacunkowo)\s*$", re.I)
+_YEAR = re.compile(r"\b((?:19|20)\d\d)\b")
+
+
+def _number_discrepancy(c: ClaimResult) -> tuple[str, int] | None:
+    """'Czy X wydaje około 700 mln zł? Dlaczego w analizie Demagoga jest 650 mln zł?' — two figures that are not two
+    measurements of one thing: the user's number comes from the checked STATEMENT (its fact-checked claim states it)
+    and the asked number from the analysis, in the verbatim passage the engine quoted (engine.asked_number_fragment).
+    Built only from the evidence item: its checked claim, its fragment, its rating. (text, evidence index) or None."""
+    meta = c.meta_question or ""
+    claim_part = c.claim.replace(meta, " ") if meta else c.claim
+    stated, asked = amounts(claim_part), amounts(meta)
+    asked = [a for a in asked if not any(same_amount(a, s) for s in stated)]
+    if not (stated and asked):
+        return None
+    for i, e in enumerate(c.evidence):
+        if e.source_type != "factcheck" or not e.factcheck_claim or not e.factcheck_verdict_raw:
+            continue
+        n1 = next((s for s in stated if any(same_amount(s, x) for x in amounts(e.factcheck_claim))), None)
+        n2 = next((a for a in asked if any(same_amount(a, x) for x in amounts(e.fragment))), None)
+        if n1 is None or n2 is None:
+            continue
+        # the sentence of the checked statement that gives the user's number, verbatim from the record
+        said = next((s for s in split_sentences(e.factcheck_claim) if any(same_amount(n1, x) for x in amounts(s))),
+                    e.factcheck_claim)
+        lit = next(x[2] for x in amounts(said) if same_amount(n1, x))
+        hedged = bool(_HEDGE.search(said[: said.find(lit.split()[0])] if lit.split()[0] in said else "")) or bool(
+            _HEDGE.search(claim_part[: claim_part.find(n1[2].split()[0])]))
+        noun = "kwota" if "zł" in n1[2] or n1[1] == "zł" else "liczba"
+        year = _YEAR.search(e.fragment)
+        pub = e.publisher
+        first = "szacunkiem z wypowiedzi" if hedged else "liczbą podaną w wypowiedzi"
+        txt = (f"{n1[2]} to {'przybliżona ' if hedged else ''}{noun} z ocenianej wypowiedzi („{_q(said, 200)}”), "
+               f"a {n2[2]} to {noun}, którą podaje {pub} w swojej analizie: „{_q(e.fragment, 260)}”. "
+               f"To nie są dwa sprzeczne pomiary: pierwsza jest {first}, druga odnosi się do konkretnej pozycji"
+               f"{f' i roku ({year.group(1)})' if year else ''} w danych przytoczonych w analizie. "
+               f"Całą wypowiedź {pub} {_past(pub, 'ocenił')} jako „{_fc_label(e)}”.")
+        return txt, i
+    return None
 
 
 def _live(res: CheckResult | None) -> str:
@@ -188,6 +234,23 @@ def _live(res: CheckResult | None) -> str:
 
 
 def short_answer(c: ClaimResult, live: str = "") -> str:
+    if any(r.startswith("M2:") for r in c.rules_fired):  # "is the linked item the analysed one?" (provenance.py)
+        return c.explanation
+    disc = _number_discrepancy(c) if c.verdict != "nie_podlega_weryfikacji" else None
+    if disc is None:
+        return _short_answer(c, live)
+    # scenario C: the user asks why the analysis gives another number than the one they know
+    txt, i = disc
+    if c.main_evidence is None:
+        c.related_evidence = i  # linked as the source of the explanation (it does not decide the claim)
+        return txt
+    if c.main_evidence == i:
+        opener = {"falszywe": "Nie.", "potwierdzone": "Tak.", "wprowadzajace_w_blad": "Częściowo."}.get(c.verdict, "")
+        return f"{opener} {txt}".strip()
+    return f"{_short_answer(c, live)} {txt}"
+
+
+def _short_answer(c: ClaimResult, live: str = "") -> str:
     v = c.verdict
     if v == "nie_podlega_weryfikacji":
         what = ("To przewidywanie dotyczące przyszłości — nie da się go dziś potwierdzić ani obalić."
@@ -214,6 +277,7 @@ def short_answer(c: ClaimResult, live: str = "") -> str:
         rel = _related(c)
         if rel is not None:  # say what the closest material does say, without turning it into a verdict
             txt += " " + _related_sentence(rel)
+            c.related_evidence = next(i for i, e in enumerate(c.evidence) if e is rel)
         elif c.would_settle:
             txt += f" Potrzebne byłoby źródło, np. {c.would_settle.rstrip('.')}."
         return txt + " Brak wyniku w bazie nie oznacza, że to nieprawda."
@@ -233,6 +297,9 @@ def short_answer(c: ClaimResult, live: str = "") -> str:
         return f"{opener} {_who_checked(e)}"
 
     opener = "Nie." if v == "falszywe" else "Tak."
+    if v == "falszywe" and c.context_type == "FALSZYWY_KONTEKST" and c.missing_context:
+        # old material presented as current (engine rule R3a): the analysis' own passage that dates it
+        return f"Nie. {c.missing_context} {e.publisher} pisze: „{_q(e.fragment, 420)}”."
     if e.factcheck_verdict_raw and e.source_type in ("factcheck", "incident"):
         txt = f"{opener} {_who_checked(e)}"
         if e.same_claim is False:
@@ -278,22 +345,32 @@ def limitation_line(c: ClaimResult, live: str = "") -> str:
         if live in ("brak_wynikow", "ok"):
             return "Ograniczenie: przeszukano katalog źródeł i wybrane zaufane strony w internecie — mogło w nich zabraknąć tej sprawy."
         return "Ograniczenie: przeszukano tylko katalog zaufanych źródeł — mogło w nim zabraknąć tej sprawy."
+    why = _verdict_limitation(c)
+    if live == "blad":  # scenario J: an outage of the live stage is reported with every answer, not only abstentions
+        return ("Ograniczenie: wyszukiwanie na żywo (indeks Google lub zaufane strony) było niedostępne (błąd "
+                f"techniczny), więc wynik opiera się tylko na lokalnej bazie; poza tym {why}.")
+    return f"Ograniczenie: {why}."
+
+
+def _verdict_limitation(c: ClaimResult) -> str:
     if "HR:JEDNO_ZRODLO_ESKALACJA" in c.rules_fired:
-        return "Ograniczenie: temat wysokiego ryzyka, a ocena opiera się na jednym źródle — sprawa trafia do analityka."
+        return "temat wysokiego ryzyka, a ocena opiera się na jednym źródle — sprawa trafia do analityka"
     i = c.main_evidence
     e = c.evidence[i] if i is not None and i < len(c.evidence) else None
     pubs = {c.evidence[j].publisher for j in _decisive(c)}
+    if c.context_type == "FALSZYWY_KONTEKST":
+        return "datę materiału podaje analiza fact-checkingowa — w niej sprawdzisz, na jakiej podstawie ją ustalono"
     if e is not None and e.factcheck_claim and e.similarity < 0.9:
-        return "Ograniczenie: źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie."
+        return "źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie"
     if c.context_type == "NIEAKTUALNE":
-        return "Ograniczenie: dowód pochodzi sprzed ponad roku — sytuacja mogła się od tego czasu zmienić."
+        return "dowód pochodzi sprzed ponad roku — sytuacja mogła się od tego czasu zmienić"
     if c.missing_context:  # definitional note (CPI vs HICP …) — the answer already says it depends on the measure
-        return "Ograniczenie: twierdzenie nie mówi, o którą miarę wskaźnika chodzi — szczegóły w pełnej analizie."
+        return "twierdzenie nie mówi, o którą miarę wskaźnika chodzi — szczegóły w pełnej analizie"
     if len(pubs) <= 1:
-        return "Ograniczenie: ocena opiera się na jednym źródle."
+        return "ocena opiera się na jednym źródle"
     if e is not None and e.age_days is not None and e.age_days > 365:
-        return "Ograniczenie: najnowszy dowód ma ponad rok."
-    return "Ograniczenie: wynik odzwierciedla stan źródeł z dnia sprawdzenia."
+        return "najnowszy dowód ma ponad rok"
+    return "wynik odzwierciedla stan źródeł z dnia sprawdzenia"
 
 
 # ------------------------------------------------------------------ whole result
@@ -328,6 +405,7 @@ def finalize(res: CheckResult) -> None:
                     c.would_settle = hint
                     break
         c.main_evidence = main_evidence(c)
+        c.related_evidence = None  # set by short_answer when it names a related item
         c.short_answer = short_answer(c, live)
         c.basis_line = basis_line(c)
         c.limitation_line = limitation_line(c, live)

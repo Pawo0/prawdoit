@@ -8,6 +8,7 @@ _ABBREV = {
     "np", "m.in", "tzw", "tj", "itd", "itp", "ok", "godz", "ul", "al", "dr", "prof", "hab", "inż", "mgr", "św",
     "r", "w", "tys", "mln", "mld", "zł", "proc", "pkt", "art", "ust", "poz", "nr", "str", "tel", "wg", "por",
     "jw", "ds", "gen", "płk", "mjr", "kpt", "pt", "ww", "zob", "cd", "sp", "z.o.o", "s.a", "dz.u", "dz",
+    "przyp",  # "[we Wrocławiu – przyp. Demagog]", "przyp. red.": an editor's note inside a quoted sentence
 }
 
 _SENT_RE = re.compile(r"(?<=[.!?…])[\"'”»)]*\s+(?=[\"'„«(]*[A-ZĄĆĘŁŃÓŚŹŻ0-9])")
@@ -142,8 +143,26 @@ _META_SENTENCE = re.compile(
     r"(?:stron\w*|link\w*|artyku\w*|wpis\w*|post\w*|materiał\w*|adres\w*)\b[^.?!]*[.?!:]?\s*$", re.I)
 
 
+_CHECK_VERB = (r"(?:sprawdza\w*|sprawdzi\w*|zweryfikowa\w*|weryfikowa\w*|analizowa\w*|przeanalizowa\w*|ocenia\w*|"
+               r"ocenil\w*|ocenił\w*|zbada\w*|bada\w*|opisywa\w*|opisa\w*)")
+_OBJ = r"(?:to|tego|tę\s+\w+|ten\s+\w+|tą\s+\w+|o\s+tym|już)"
+# A sentence that only asks WHETHER / WHO checked the rest of the message, with no claim of its own:
+# "Czy Demagog to sprawdzał?", "Czy ktoś już to zweryfikował?", "Czy fact-checkerzy sprawdzali tę informację?".
+_CHECKED_QUESTION = re.compile(
+    rf"^\s*czy\s+(?P<who>(?:(?!(?:to|tego|tę|ten|już|kiedyś)\b)[\w.-]+\s+){{0,3}}?)(?:już\s+|kiedyś\s+)?(?:{_OBJ}\s+)?"
+    rf"(?:już\s+)?{_CHECK_VERB}(?:\s+{_OBJ})?(?:\s+(?:informacj\w*|wiadomoś\w*|tez\w*|twierdzeni\w*|wpis\w*))?"
+    r"\s*[?!.]*\s*$", re.I)
+
+
+def checked_question(s: str) -> str | None:
+    """'Czy Demagog to sprawdzał?' -> 'Demagog'; 'Czy ktoś to sprawdził?' -> 'ktoś'; any other sentence -> None."""
+    m = _CHECKED_QUESTION.match(s or "")
+    return m.group("who").strip() if m else None
+
+
 def is_meta_sentence(s: str) -> bool:
-    return bool(_META_SENTENCE.search(re.sub(r"https?://\S+", " ", s or "")))
+    s = re.sub(r"https?://\S+", " ", s or "")
+    return bool(_META_SENTENCE.search(s)) or checked_question(s) is not None
 
 
 def split_meta(s: str) -> tuple[str, str]:
@@ -160,7 +179,14 @@ def asks_who_checked(s: str) -> str | None:
     """'Czy Demagog sprawdzał, czy X?' -> 'Demagog'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
     s = _TRAILING_META.sub("", s.strip())
     m = _CHECKED_BY.match(s) or _CHECKED_BY.match(_PREAMBLE.sub("", s))
-    return re.sub(r"\s+(to|już)$", "", m.group("who").strip(), flags=re.I) if m else None
+    if m:
+        return re.sub(r"\s+(to|już)$", "", m.group("who").strip(), flags=re.I)
+    # "Czy Demagog to sprawdzał? <claim>" — the question is a sentence of its own, before or after the claim
+    for sent in split_sentences(s):
+        who = checked_question(sent)
+        if who is not None:
+            return who
+    return None
 
 
 def strip_preamble(s: str) -> str:
@@ -237,6 +263,28 @@ def checkworthiness(s: str) -> float:
     if n > 60:
         score -= 0.15
     return max(0.0, min(1.0, score))
+
+
+# an amount with its unit: "700 mln zł", "3,3 proc.", "207,9 mln" (engine.numeric_stance uses the same pattern)
+AMOUNT_RX = re.compile(r"(\d+(?:[.,]\d+)?)\s*(%|proc\w*|zł\b|złotych|zl\b|mln|mld|tys)", re.I)
+
+
+def amount_unit(u: str) -> str:
+    u = u.lower()
+    return "%" if u.startswith(("%", "proc")) else "zł" if u.startswith(("zł", "zl")) else u
+
+
+def amounts(s: str) -> list[tuple[float, str, str]]:
+    """(value, unit, the amount as written incl. a following 'zł') for every amount in the text."""
+    out = []
+    for m in AMOUNT_RX.finditer(s or ""):
+        lit = m.group(0) + (re.match(r"\s*(zł|złotych)\b", s[m.end():]) or [""])[0] if amount_unit(m.group(2)) != "zł" else m.group(0)
+        out.append((float(m.group(1).replace(",", ".")), amount_unit(m.group(2)), lit.strip()))
+    return out
+
+
+def same_amount(a: tuple, b: tuple) -> bool:
+    return a[1] == b[1] and abs(a[0] - b[0]) <= max(0.051, abs(a[0]) * 0.005)
 
 
 def is_time_sensitive(s: str) -> bool:

@@ -44,8 +44,10 @@ function chatReply(res) {
     if (multi) L.push(`${i + 1}. „${cut(c.claim, 120)}”`);
     L.push(`${ICON[c.verdict]} *${c.verdict_label}*`);
     L.push(c.short_answer || cut(c.explanation, 420));
-    const e = c.main_evidence != null ? c.evidence[c.main_evidence] : null;
-    if (e) L.push(`Źródło: ${e.publisher}, ${dmy(e.published_at)} — ${cut(e.title, 90)}\n${e.url}`);
+    const i = c.main_evidence != null ? c.main_evidence : c.related_evidence;
+    const e = i != null ? c.evidence[i] : null;
+    const label = c.main_evidence != null ? "Źródło" : "Materiał pokrewny (nie rozstrzyga)";
+    if (e) L.push(`${label}: ${e.publisher}, ${dmy(e.published_at)} — ${cut(e.title, 90)}\n${e.url}`);
     if (c.basis_line && c.verdict !== "nie_podlega_weryfikacji") { L.push(c.basis_line); if (c.limitation_line) L.push(c.limitation_line); }
   });
   if (res.security_events?.length) L.push("\nℹ️ W treści była instrukcja skierowana do systemu — zignorowałem ją i zapisałem zdarzenie. Nie wpływa na ocenę.");
