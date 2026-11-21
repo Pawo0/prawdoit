@@ -11,7 +11,7 @@
     "args": [],
     "timeout_s": 3600
   },
-  "enabled": false,
+  "enabled": true,
   "schedule_hours": 168,
   "web_search": true,
   "topics": [
@@ -24,5 +24,5 @@
   "scope_basis": "",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21",
-  "notes": "Wyłączone 2026-11-21 decyzją zespołu: źródło spoza listy organizatora (rules/resources.txt). Można je włączyć w panelu /admin."
+  "notes": "EKSPERYMENT (gałąź fix/decision-layer, 2026-11-22): włączone ponownie do pomiaru wpływu na ocenę; czeka na potwierdzenie zgodności z listą źródeł organizatora. Wcześniej wyłączone 2026-11-21 decyzją zespołu: źródło spoza listy organizatora (rules/resources.txt)."
 }
