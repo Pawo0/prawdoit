@@ -6,8 +6,10 @@ Laptop i5-8365U (4 rdzenie, bez GPU), obciążony innymi procesami (load average
 - szybka ścieżka wtyczki (`/api/quick`): 9 postów w paczce ≈ 3–12 s na obciążonym laptopie (embedding + NLI tylko dla kandydatów); wyniki cache'owane po haszu tekstu;
 - start serwera z gotowym indeksem: ~10 s; pierwsze zbudowanie indeksu embeddingów dla ~11 tys. fragmentów: ~20 min na tym CPU (jednorazowo, potem przyrostowo).
 
-**Wyszukiwanie na żywo** uruchamia się tylko wtedy, gdy baza nie dała dowodu (w zbiorach `eval/` 32–35% przypadków).
-Wtedy czas odpowiedzi rośnie do ok. 6–15 s (budżet 15 s), a koszt obliczeń praktycznie się nie zmienia (czekanie na sieć).
+**Wyszukiwanie na żywo.** Z kluczem Google zapytanie do Google Fact Check API idzie równolegle z wyszukiwaniem lokalnym
+dla każdego twierdzenia faktycznego. Wyszukiwarki zaufanych serwisów działają tylko wtedy, gdy baza nie dała dowodu
+(najwyżej 2 twierdzenia; w zbiorach `eval/` 32–35% przypadków). Wtedy czas odpowiedzi rośnie do ok. 6–15 s (budżet 15 s),
+a koszt obliczeń praktycznie się nie zmienia (czekanie na sieć).
 Każde sprawdzenie zapisuje szacunek kosztu (`engine.cost_estimate`: czas × stawka CPU + tokeny LLM × stawka; stawki
 `PRAWDOWID_COST_PLN_PER_CPU_S`, `PRAWDOWID_COST_PLN_PER_1K_LLM_TOKENS`), suma i mediana są w `/api/stats`.
 
@@ -48,4 +50,16 @@ Każde sprawdzenie zapisuje szacunek kosztu (`engine.cost_estimate`: czas × sta
 ## Gdzie przetwarzane są dane
 Domyślnie wszystko na serwerze zespołu/MSZ (modele lokalne). Wyszukiwanie na żywo wysyła **słowa kluczowe** twierdzenia
 (nie całe wejście, nie dane użytkownika) do wyszukiwarek zaufanych serwisów, a z kluczem Google — tekst twierdzenia do
-Google Fact Check API (USA); `PRAWDOWID_LIVE_SEARCH=0` wyłącza ten przepływ. Kanały Meta (WhatsApp/Messenger) przetwarzają treść wiadomości również na infrastrukturze Meta (także poza EOG) — użytkownik jest o tym informowany; strona WWW, wtyczka i Discord-demo nie wymagają Meta.
+Google Fact Check API (USA); `PRAWDOWID_LIVE_SEARCH=0` wyłącza ten przepływ.
+
+**Co opuszcza serwer** (wszystko po maskowaniu identyfikatorów, `textutil.mask_pii`; wynik zawsze mówi, który krok
+nie działał — `engine.unavailable`):
+
+| Odbiorca | Kiedy | Co dostaje | Gdzie | Jak wyłączyć |
+|---|---|---|---|---|
+| Google Fact Check Tools API | z kluczem, każde twierdzenie faktyczne | tekst twierdzenia (zapytanie bez znaczników PII) | Google, USA | brak klucza / `PRAWDOWID_LIVE_SEARCH=0` |
+| Wyszukiwarki zaufanych serwisów (gov.pl, WordPress REST Demagog / FakeNews.pl / CheckFirst; opcjonalnie SearXNG, Brave) | twierdzenie bez dowodu w bazie (≤ 2) | 1–4 słowa kluczowe twierdzenia | operatorzy serwisów (PL/UE); Brave — USA | `PRAWDOWID_LIVE_SEARCH=0`, `live_search: false` w żądaniu |
+| Strona z URL od użytkownika | URL w żądaniu lub w treści | żądanie HTTP z serwera (bez danych użytkownika) | właściciel strony | nie wklejać URL; tryb `auto` nie pobiera |
+| Opcjonalny LLM (`PRAWDOWID_LLM_*`) | po werdykcie, gdy skonfigurowany | etykieta werdyktu i gotowe wyjaśnienie z szablonu | wg dostawcy (lokalnie: nigdzie) | domyślnie wyłączony |
+| Meta (WhatsApp/Messenger), Discord | wiadomość w danym kanale | treść wiadomości i odpowiedź | Meta / Discord, także poza EOG | nie uruchamiać kanału |
+| Źródła z rejestru, EUvsDisinfo MCP (organizator), Hugging Face | harmonogram / pierwsza instalacja | nic z zapytań użytkowników | wg operatora | `PRAWDOWID_SCHEDULER=0`, `HF_HUB_OFFLINE=1` | Kanały Meta (WhatsApp/Messenger) przetwarzają treść wiadomości również na infrastrukturze Meta (także poza EOG) — użytkownik jest o tym informowany; strona WWW, wtyczka i Discord-demo nie wymagają Meta.

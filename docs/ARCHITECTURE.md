@@ -175,7 +175,8 @@ Kanały, korpus i reguły są niezależne od modelu.
 - NLI na CPU jest słabe w porównywaniu liczb i dat — dlatego reguła liczbowa dla kart danych urzędowych.
 - Dopasowanie do fact-checków działa na poziomie twierdzeń; satyra, ironia i bardzo krótkie posty mogą być mylone.
 - Facebook/X zmieniają strukturę DOM — adaptery wtyczki wymagają utrzymania (fallback: przycisk „Wybierz fragment”).
-- OCR zrzutów ekranu i odwrotne wyszukiwanie obrazów nie są włączone (komunikowane jako ograniczenie techniczne).
+- OCR zrzutów ekranu działa lokalnie (Tesseract, `ocr.py`; bez pliku `tesseract` → błąd techniczny). Data widoczna na
+  zrzucie nie jest traktowana jako data publikacji. Wyszukiwania wcześniejszych wystąpień obrazu nie ma.
 
 ## Discord
 

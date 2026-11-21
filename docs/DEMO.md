@@ -46,7 +46,8 @@ Pełny test z rzeczywistą wtyczką i działającym serwerem: `backend/.venv/bin
 przygotowany niezależnie). Własny zbiór jury: ten sam format JSONL (`id, scenario, text|url, expected[], expected_status`).
 
 ## Przypadki, których system nie obsługuje (jawnie)
-- Odczyt obrazów/zrzutów ekranu (OCR), nagrań i wideo — komunikat o ograniczeniu technicznym.
+- Nagrania, wideo i wyszukiwanie wcześniejszych wystąpień obrazu — komunikat o ograniczeniu technicznym (tekst ze
+  zrzutu ekranu jest odczytywany lokalnie przez OCR, gdy na serwerze jest Tesseract).
 - Wydarzenia sprzed kilku godzin bez publikacji w katalogu → „brak dowodów” + sprawa dla analityka.
 - Twierdzenia wymagające wnioskowania z wielu źródeł naraz (np. porównania między krajami z różnych tabel).
 - Ironia/satyra, bardzo krótkie posty, mocno skrócone parafrazy bez kluczowych nazw (np. bez nazwiska z oryginału).
