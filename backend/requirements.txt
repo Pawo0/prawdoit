@@ -13,3 +13,4 @@ pyyaml
 pillow
 discord.py
 playwright
+mcp

@@ -115,6 +115,7 @@ def _would_settle(claim: str) -> str:
 
 _NUM = re.compile(r"(\d+(?:[.,]\d+)?)\s*(%|proc\w*|zł\b|złotych|zl\b|mln|mld|tys)", re.I)
 _MONTHS = ["stycz", "lut", "marc|marz", "kwie", "maj", "czerw", "lip", "sierp", "wrze", "paźdz|pazdz", "listop", "grud"]
+_MONTHS_STEMS = ["stycz", "luty", "lute", "marz", "marc", "kwie", "maj", "czerw", "lipi", "sier", "wrze", "pazd", "listo", "grud"]
 
 
 def _unit(u: str) -> str:
@@ -179,6 +180,22 @@ _QUALIFIED = [  # measures whose value depends on the definition; a mismatch is 
 ]
 
 
+_ALT = {"CPI": r"\bHICP\b", "HICP": r"\bCPI\b", "rejestrowan": r"\b(BAEL|LFS)\b|bezroboci\w* .*Eurostat|Eurostat.*bezroboci"}
+
+
+def _competing_measure(claim: str, title: str) -> bool:
+    """Does the claimed number match ANOTHER official card for the same period that measures the same thing with a
+    different definition (CPI vs HICP, registered vs LFS unemployment)? Then the mismatch is definitional, not false.
+    If the number matches no definition at all, it stays 'niezgodne'."""
+    for key, alt in _ALT.items():
+        if re.search(key, title, re.I):
+            rx = re.compile(alt, re.I)
+            return any(d.source_type == "official" and rx.search(d.title) and same_subject(claim, d.title)
+                       and numeric_stance(claim, f"{d.title}. {_anchor_text(claim, d)}") == "zgodne"
+                       for d in INDEX.docs)
+    return False
+
+
 def measure_named(claim: str, title: str) -> bool:
     """False if the card measures something definition-dependent (CPI vs HICP, registered vs LFS unemployment)
     and the claim does not say which measure it means."""
@@ -195,6 +212,11 @@ def same_subject(claim: str, title: str) -> bool:
         m = re.search(r"\b(?:o|w sprawie)\s+(.+)$", title)
         subject = set(tokens(m.group(1), stem=5)) if m else set(tokens(title, stem=5))
         return len(subject & set(tokens(claim, stem=5))) / max(1, len(subject)) >= 0.4
+    head = re.split(r"[:—–]\s*\d", title)[0]  # e.g. "Ceny — transport — wrzesień 2026" / "Inflacja CPI w Polsce — marzec 2026"
+    subj = _anchors(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head)) - {t for t in tokens(" ".join(_PL_MONTHS))}
+    subj = {t for t in subj if not any(t.startswith(m[:4]) for m in _MONTHS_STEMS)}
+    if subj and not (subj & set(tokens(claim))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
+        return False  # the card is about another indicator (e.g. transport prices vs. headline inflation)
     cur = re.search(r"\b([A-Z]{3})/PLN\b", title)
     if cur:
         code = cur.group(1)
@@ -225,6 +247,22 @@ def legal_date_stance(claim: str, title: str, text: str) -> str | None:
     return None
 
 
+_GENERIC = set(tokens("polsce polska polski gus nbp eurostat kurs średni dane wskaźnik według wyniósł wyniosła wynosi "
+                     "procent proc r/r rok roku miesiąc ceny obwieszczenie państwowej komisji wyborczej dnia"))
+
+
+def _anchors(claim: str) -> set[str]:
+    return {t for t in tokens(claim) if not t[0].isdigit() and t not in _GENERIC and len(t) > 2}
+
+
+def _anchor_text(claim: str, d) -> str:
+    """Sentences of the source that mention the claim's subject (e.g. 'frekwencja', 'Nawrocki'), for number checks."""
+    anchors = _anchors(claim)
+    scored = [(len(anchors & set(tokens(x))), i, x) for i, x in enumerate(split_sentences(d.text[:6000]))]
+    best = sorted([t for t in scored if t[0] > 0], key=lambda t: (-t[0], t[1]))[:3]
+    return " ".join(x for _, _, x in sorted(best, key=lambda t: t[1]))
+
+
 def numeric_stance(claim: str, source: str) -> str | None:
     """Deterministic check of a numeric claim against an official fact card. Applies only when the claim's year and
     month (if given) also appear in the source — otherwise we would compare different periods."""
@@ -236,13 +274,16 @@ def numeric_stance(claim: str, source: str) -> str | None:
     if not cy or not cy <= sy or (cm and not cm <= sm):
         return None
     sn = _numbers(source)
+    op = ">" if re.search(r"przekrocz\w*|ponad|powyżej|więcej niż|wyższ\w* niż", claim, re.I) else \
+         "<" if re.search(r"poniżej|mniej niż|niższ\w* niż|nie przekrocz\w*", claim, re.I) else "="
     for v, u in cn:
         same_unit = [x for x, su in sn if su == u]
         if not same_unit:
             continue
-        if any(abs(x - v) <= max(0.051, abs(v) * 0.005) for x in same_unit):
-            return "zgodne"
-        return "niezgodne"
+        if op == "=":
+            return "zgodne" if any(abs(x - v) <= max(0.051, abs(v) * 0.005) for x in same_unit) else "niezgodne"
+        x = same_unit[0]  # the card's headline value comes first in the anchor sentence
+        return "zgodne" if (x > v if op == ">" else x < v) else "niezgodne"
     return None
 
 
@@ -306,8 +347,8 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             continue
         num = None
         if _compatible(claim.query, d.title):
-            num = numeric_stance(claim.query, f"{d.title}. {c.fragment}")
-            if num == "niezgodne" and not measure_named(claim.query, d.title):
+            num = numeric_stance(claim.query, f"{d.title}. {_anchor_text(claim.query, d)}")
+            if num == "niezgodne" and not measure_named(claim.query, d.title) and _competing_measure(claim.query, d.title):
                 num, c.definitional = None, True  # e.g. CPI vs HICP: different measure, not a contradiction
         num = num or legal_date_stance(claim.query, d.title, d.text)
         if num:
@@ -329,14 +370,15 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             nc, same = c.nli_claim, None
             if c.is_claim_match and nc is not None:
                 rev = c.nli_claim_rev or nc
+                lex = _relevance(set(tokens(d.claim or "")), claim.query)  # share of the checked claim's words used
+                incident = d.source_type == "incident"
                 if c.claim_cos >= 0.85 and min(nc.contra, rev.contra) >= 0.80:
                     same = False  # the user states the opposite of the checked claim (contradiction both ways)
-                elif (c.claim_cos >= settings.claim_match_soft + 0.04 and nc.entail > nc.contra
-                      and nc.entail >= (0.8 if d.source_type == "incident" else settings.nli_weak)):
-                    same = True  # the user's text asserts the checked claim (user -> claim entailment);
-                    # incident narratives (EUvsDisinfo) bundle true facts with false framing -> stricter
-                elif c.claim_cos >= 0.95 and max(nc.contra, rev.contra) < 0.5:
-                    same = True  # near-verbatim repetition
+                elif max(nc.contra, rev.contra) < 0.5 and (
+                        (c.claim_cos >= 0.88 and not incident)  # near-paraphrase, no contradiction
+                        or (c.claim_cos >= 0.86 and nc.entail >= (0.8 if incident else 0.5))  # user asserts it
+                        or (not incident and c.claim_cos >= 0.80 and nc.entail >= 0.8 and lex >= 0.4)):
+                    same = True
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)

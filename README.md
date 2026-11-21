@@ -13,6 +13,7 @@ pokazuje, co mówią źródła.
 | `web/` | Strona WWW (bez frameworka): sprawdzanie, wynik z dowodami, czat demo, katalog źródeł, metodologia, panel analityka, PWA (udostępnianie z aplikacji na Androidzie) |
 | `extension/` | Wtyczka MV3 (Chrome/Edge/Vivaldi + Firefox Android): oznaczanie w czasie rzeczywistym treści zbieżnych z obalonymi twierdzeniami (zasłona / odznaka z prawdopodobieństwem), przycisk „Wybierz fragment” |
 | `bots/discord_bot.py` | Bot Discord (`/sprawdz`, wzmianka, DM, menu kontekstowe wiadomości) |
+| `bots/mcp_server.py` | Serwer MCP (tylko odczyt): `sprawdz`, `katalog_zrodel`, `kurs_nbp` (na żywo), `akt_prawny` / `szukaj_aktow` (Sejm ELI na żywo) |
 | `ingest/` | Skrypty pobierające źródła → jednolity JSONL (`data/corpus/`) |
 | `eval/` | Zbiór testowy (scenariusze A–J), `run_eval.py` (mierniki z sekcji 6), test E2E wtyczki |
 | `docs/` | Architektura, źródła i licencje, ryzyka, koszty |
@@ -38,4 +39,22 @@ Strona testowa: http://localhost:8000/demo/feed.html. Firefox (także Android): 
 **Ewaluacja:** `backend/.venv/bin/python eval/run_eval.py` → `eval/results/results.md`.
 **Odświeżenie źródeł:** `ingest/run_factchecks.sh`, `ingest/run_official.sh`.
 
-Szczegóły: [architektura](docs/ARCHITECTURE.md) · [ryzyka](docs/RISKS.md) · [metodologia](web/metodologia.html)
+## Wyniki testów (sekcja 6 wyzwania)
+| Miernik | Cel MVP | Zbiór deweloperski (38) | Zbiór niezależny „held-out” (57) — 1. przebieg ślepy | po poprawkach ogólnych |
+|---|---|---|---|---|
+| Trafność werdyktu (macro-F1) | ≥ 0,75 | 1,00 | **0,774** | 0,936 |
+| Pokrycie cytowań | ≥ 95% | 100% | 100% | 100% |
+| Wstrzymanie się przy braku dowodów | ≥ 80% | 100% | 100% | 100% |
+| Odporność na prompt injection | ≥ 90% | 100% | 60% | 100% |
+| Czas (mediana) | ≤ 30 s | 0,4 s | 0,5 s | 0,5 s |
+| Spójność kanałów (WWW vs WhatsApp-demo) | 100% | 100% | 100% | 100% |
+| Pętla informacji (deduplikacja spraw) | 100% | tak | tak | tak |
+
+Zbiór „held-out” napisał niezależny agent na podstawie korpusu, bez wglądu w kod. Kolejne poprawki były regułami
+ogólnymi (miary statystyczne, formy prompt injection, powitania), nie łatkami pod przypadki — ale po nich zbiór nie
+jest już w pełni ślepy; uczciwą estymatą jest 1. przebieg. Wszystkie pozostałe błędy to „brak dowodów” zamiast werdyktu
+(błąd bezpieczny), nie fałszywe werdykty. Wyniki: `eval/results*/results.md`; odtworzenie: sekcja „Ewaluacja”.
+
+Szczegóły: [architektura](docs/ARCHITECTURE.md) · [źródła i licencje](docs/SOURCES.md) · [ryzyka](docs/RISKS.md) ·
+[koszty](docs/COSTS.md) · [scenariusz demo](docs/DEMO.md) · [podsumowanie researchu](docs/RESEARCH_SUMMARY.md) ·
+[metodologia](web/metodologia.html)

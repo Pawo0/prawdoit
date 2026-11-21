@@ -30,9 +30,10 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool 
                                                                   if c.verdict not in ("brak_dowodow", "nie_podlega_weryfikacji") else ""))
         lines.append(f"Twierdzenie: „{short(c.claim, 160)}”")
         lines.append(short(c.explanation, 160 if sms else 420))
-        srcs = [e for e in c.evidence if e.stance in ("przeczy", "popiera")] or c.evidence[:2]
+        decisive = [e for e in c.evidence if e.stance in ("przeczy", "popiera")]
+        srcs = decisive or ([] if c.verdict == "nie_podlega_weryfikacji" else c.evidence[:2])
         if srcs and not sms:
-            lines.append("Źródła:")
+            lines.append("Źródła:" if decisive else "Najbliższe materiały (nie rozstrzygają sprawy):")
             for j, e in enumerate(srcs[:3], 1):
                 lines.append(f"{j}. {e.publisher}, {_date(e.published_at)} — {short(e.title, 80)}\n   {e.url}")
         if c.what_unknown and not sms:
