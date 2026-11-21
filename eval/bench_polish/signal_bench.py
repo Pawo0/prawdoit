@@ -69,7 +69,7 @@ def main() -> None:
 
     INDEX.load()
     gold_idx = {d.id: i for i, d in enumerate(INDEX.docs)}
-    claim_row = {d: r for r, d in enumerate(INDEX.claim_doc_idx)}
+    claim_row = dict(INDEX.claim_row)  # doc -> its checked-claim row (a doc may also have a headline row)
     items = [json.loads(l) for l in (HERE / "bench.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
     # query = what the engine would search with (preamble stripped, question -> statement); for multi-claim inputs
     # the claim closest to the gold claim under the baseline embedder

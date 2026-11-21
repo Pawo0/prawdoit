@@ -712,7 +712,10 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     cands: dict[int, _Cand] = {}
     for doc_idx, cos in INDEX.match_claims(q_emb, claim.query, k=8):
         if cos >= settings.claim_match_soft - 0.06:
-            cands[doc_idx] = _Cand(doc_idx, "", cos, cos, is_claim_match=True, claim_cos=cos)
+            # cos: closest row (checked claim or headline) — finds and ranks the analysis; claim_cos: the checked
+            # claim itself — what claim matching rules on (a headline may state the correction, not the claim)
+            ccos = INDEX.checked_claim_cos(doc_idx, q_emb)
+            cands[doc_idx] = _Cand(doc_idx, "", cos, cos, is_claim_match=True, claim_cos=ccos)
     for chunk_idx, fused, cos in INDEX.search_chunks(claim.query, q_emb, k=settings.top_k_retrieval):
         ch = INDEX.chunks[chunk_idx]
         if cos < 0.55:  # dense-similarity floor: below it the passage is off-topic
