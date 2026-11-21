@@ -398,3 +398,40 @@ def disagreement(user_text: str, checked_claim: str) -> str | None:
     if nums:
         parts.append(f"liczby: {', '.join(nums[0][:3])} zamiast {', '.join(nums[1][:3])}")
     return "; ".join(parts) or None
+
+
+# ------------------------------------------------------------------------------------------------ specificity
+# Which of several sources that decide a claim is about THIS claim, not only a similar one? Count the concrete details
+# of the user's text (who, where, what kind of event, what kind of material, when) that the source also states. Only
+# agreement counts: a source that gives another date is not penalised, because an analysis of old material presented
+# as new states exactly that other date.
+_MEDIA = [re.compile(rx, re.I) for rx in (
+    r"\b(film\w*|nagra[nńl]\w*|wideo|video|klip\w*|transmisj\w*)",
+    r"\b(zdjęci\w*|zdjec\w*|fotografi\w*|fotk\w*)",
+    r"\b(grafik\w*|infografik\w*|mem(y|ów|ow|a|ie)?\b|plakat\w*)",
+    r"\b(zrzut\w* ekranu|screen\w*)",
+    r"\b(wpis\w*|post(y|a|u|ów|ow|em|cie)?\b|tweet\w*|twee?t\w*)",
+    r"\b(artykuł\w*|artykul\w*|depesz\w*)",
+)]
+_EVENTS = [re.compile(rx, re.I) for rx in (
+    r"\b(protest\w*|manifestac\w*|demonstrac\w*|strajk\w*|marsz(u|em|e|ach|ów|ow)?\b|blokad\w*)",
+    r"\b(wybor\w*|wybór|głosowa\w*|glosowa\w*|referend\w*|frekwencj\w*)",
+    r"\b(powód\w*|powodz\w*|pożar\w*|pozar\w*|katastrof\w*|trzęsieni\w*|trzesieni\w*|huragan\w*|wichur\w*)",
+    r"\b(atak\w*|zamach\w*|ostrzał\w*|ostrzal\w*|bombard\w*|inwazj\w*|dron\w*|rakiet\w*)",
+    r"\b(wypadek|wypadk\w*|zderzeni\w*|kolizj\w*)",
+    r"\b(epidemi\w*|pandemi\w*|szczepi\w*)",
+    r"\b(koncert\w*|festiwal\w*|uroczystoś\w*|uroczystos\w*|obchody|obchodów|rocznic\w*)",
+)]
+_YEAR_RX = re.compile(r"(?<!\d)(19[5-9]\d|20[0-4]\d)(?!\d)")
+
+
+def specificity(user_text: str, source_text: str) -> int:
+    """Number of the user's concrete details the source states too: each name (actor or place) it mentions, the
+    kind of event and the kind of material when both texts name one of the same kind, each year both give."""
+    u, s = _read(user_text), _read(source_text)
+    n = sum(1 for si, first, last, sure in u.groups if sure
+            and _group_mentioned([t.text for t in u.sentences[si][first:last + 1]], s))
+    for kinds in (_MEDIA, _EVENTS):
+        n += sum(1 for rx in kinds if rx.search(user_text) and rx.search(source_text))
+    n += len(set(_YEAR_RX.findall(user_text)) & set(_YEAR_RX.findall(source_text)))
+    return n
