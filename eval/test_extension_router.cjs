@@ -1,7 +1,7 @@
 /** Extension as a ROUTER client (mock transport; no models/server required).
  * Covers: candidate is never shown; match badge names fact-checker, rating, date and link; background checks are
  * capped at 3 per page, run one at a time in priority order, and earn a badge only for a decisive verdict that cites
- * a source; overlay is off by default (opt-in); stage messages from job polling; batching, deduplication, back-off
+ * a source and are opt-in; overlay is off by default (opt-in); stage messages from job polling; batching, deduplication, back-off
  * on 429; only text leaves the page; older servers (no `state`) never trigger background checks.
  *   npm install --no-save playwright
  *   node eval/test_extension_router.cjs
@@ -140,7 +140,7 @@ const CHECK = [
   const verified = tag('Chorwacki lekarz').locator('.badge');
   assert.match(await verified.innerText(), /Źródła przeczą tej informacji: FakeNews\.pl, 14\.05\.2025/);
   assert.equal(await verified.locator('a').getAttribute('href'), 'https://fakenews.pl/zdrowie/lek-na-cukrzyce/');
-  assert.equal(await tag('Niemieckie służby').count(), 0, 'no evidence → nothing shown');
+  assert.equal(await tag('Niemieckie służby').count(), 0, 'related sources but no verdict → nothing shown');
   assert.equal(await tag('490 miliardów').count(), 0, 'verdict without a source → nothing shown');
   assert.equal(await tag('robota, który ma rodzić').count(), 0, 'beyond the budget → not checked, nothing shown');
   assert.equal(await tag('mikrochipy').count(), 0);
@@ -202,7 +202,8 @@ const CHECK = [
   assert.equal(await page.locator('prawdowid-ui .badge').count(), 2);
 
   // ---------------------------------------------------------------- 4. rate limited: wait, re-send, render nothing meanwhile
-  await load({settings: {...defaults, autoVerify: false}, quick: QUICK, check: CHECK, router: true, quickFail: 1});
+  const {autoVerify, ...shipped} = defaults; // no stored choice: the extension's own default applies (background checks off)
+  await load({settings: shipped, quick: QUICK, check: CHECK, router: true, quickFail: 1});
   await page.waitForFunction(() => window.calls.some(m => m.type === 'quick'));
   await page.waitForTimeout(600);
   assert.equal(await page.locator('prawdowid-ui .badge').count(), 0, 'an error never renders a tag');
@@ -212,6 +213,8 @@ const CHECK = [
   assert.equal(retried.length, 2);
   assert.ok(retried[1].at - retried[0].at >= 2000, 'waited as long as the server asked');
   assert.deepEqual(retried[1].items.map(i => i.text), retried[0].items.map(i => i.text), 'the same items are sent again');
+  await page.waitForTimeout(1500);
+  assert.equal((await calls('check')).length, 0, 'background checks are opt-in: none without the setting');
 
   // ---------------------------------------------------------------- 5. background results that must stay silent
   await load({settings: defaults, quick: QUICK, router: true, check: [

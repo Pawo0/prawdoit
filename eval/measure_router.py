@@ -13,8 +13,8 @@ What it reports (research/09_architecture_two_tier_and_containers.md §3.8), eac
   NLI saved   NLI pairs with the old gate (cosine 0.74) and with the new one (0.80), and whether any legacy output
               field (risk, level, match, reason) differs between the two;
   latency     wall time per batch of 16 items, old gate and new;
-  --tier2     what the background check adds: for the bench items, how many would get a badge from an auto-mode
-              check (decisive verdict + cited source), on positives and on items that must stay unmarked.
+  --tier2     what the background check adds: how many items would get a badge from an auto-mode check (decisive
+              verdict + cited source), on positives and on items that must stay unmarked.
 
 Sets, all from the repo:
   bench/*        eval/bench_polish/bench.jsonl — 170 hand-written variants of 32 Demagog claims (ground truth: the
@@ -35,6 +35,7 @@ import json
 import math
 import os
 import random
+import re
 import shutil
 import statistics
 import sys
@@ -246,8 +247,8 @@ def run_tier2(sets: dict[str, dict], quick: dict[str, dict[str, object]]) -> lis
 
     rows = []
     for name, spec in sets.items():
-        if not name.startswith(("bench/", "cases/")):
-            continue
+        if spec.get("loo") or name == "corpus/debunked-verbatim":
+            continue  # the verbatim claims are in the index: nothing to learn from a full check
         n = len(spec["items"])
         decisive = badge = dropped = top3 = 0
         lat = []
@@ -273,7 +274,8 @@ def main() -> None:
     ap.add_argument("--official", type=int, default=400, help="sample of official-source sentences (0 = skip)")
     ap.add_argument("--verbatim", type=int, default=300, help="sample of debunked Demagog claims, word for word")
     ap.add_argument("--loo", type=int, default=150, help="of those, how many to repeat with their own document hidden")
-    ap.add_argument("--tier2", action="store_true", help="also run a background (auto) check on the bench and case items")
+    ap.add_argument("--tier2", action="store_true", help="also run a background (auto) check on every item (not verbatim/loo)")
+    ap.add_argument("--sets", default="", help="regular expression: only the sets whose name matches (default: all)")
     ap.add_argument("--seed", type=int, default=20261121)
     ap.add_argument("--out", default=str(ROOT / "eval" / "results" / "router_measure.json"))
     args = ap.parse_args()
@@ -291,7 +293,7 @@ def main() -> None:
     counter = NLICounter(NLI_MODEL)
     print(f"index: {INDEX.stats}; models ready in {time.perf_counter() - t0:.1f}s", file=sys.stderr)
 
-    sets = build_sets(args)
+    sets = {name: spec for name, spec in build_sets(args).items() if re.search(args.sets, name)}
     quick: dict[str, dict[str, object]] = {}
     rows, gate = [], {"items": 0, "nli_pairs_old_gate": 0, "nli_pairs_new_gate": 0, "legacy_fields_differ": [],
                       "changed_by_conflict_rule": 0, "batch_s_old": [], "batch_s_new": []}
