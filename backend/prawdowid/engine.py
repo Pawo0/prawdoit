@@ -267,11 +267,27 @@ def _numbers(s: str) -> list[tuple[float, str]]:
     return [(float(v.replace(",", ".")), _unit(u)) for v, u in _NUM.findall(s)]
 
 
+_ORDINAL = {"i": 1, "ii": 2, "iii": 3, "iv": 4, "1": 1, "2": 2, "3": 3, "4": 4, "pierwsz": 1, "drug": 2, "trzeci": 3,
+            "czwart": 4}
+_QUARTER_RX = re.compile(r"\b(i{1,3}|iv|[1-4])\s*(?:kw\.|kwarta\w*)|\bq([1-4])\b|\b(pierwsz|drug|trzeci|czwart)\w*\s+kwarta\w*")
+_HALF_RX = re.compile(r"\b(i{1,2}|[12])\s*półrocz\w*|\b(pierwsz|drug)\w*\s+(?:półrocz\w*|połow\w*\s+(?:roku|20\d\d))"
+                      r"|\b20\d\d-s([12])\b")
+
+
 def _date_keys(s: str) -> tuple[set[str], set[int]]:
+    """Years and months a text refers to. Months come from month names, YYYY-MM, MM.YYYY / MM/YYYY, quarters
+    ("III kwartał", "Q3", "w trzecim kwartale") and halves ("I półrocze", "w pierwszej połowie roku", "2026-S1")."""
     low = s.lower()
     years = {y for y in re.findall(r"\b(20\d\d)\b", low)}
     months = {i + 1 for i, m in enumerate(_MONTHS) if re.search(rf"\b({m})\w*", low)}
     months |= {int(m) for _, m in re.findall(r"\b(20\d\d)-(\d\d)\b", low)}
+    months |= {int(m) for m, _ in re.findall(r"(?<![\d,])(0?[1-9]|1[0-2])[./](20\d\d)\b", low)}
+    for m in _QUARTER_RX.finditer(low):
+        q = _ORDINAL[next(g for g in m.groups() if g)]
+        months |= {3 * q - 2, 3 * q - 1, 3 * q}
+    for m in _HALF_RX.finditer(low):
+        h = _ORDINAL[next(g for g in m.groups() if g)]
+        months |= set(range(6 * h - 5, 6 * h + 1))
     return years, months
 
 
@@ -308,9 +324,41 @@ def _dates(s: str) -> list[tuple[int, int, int]]:
     return out
 
 
-_CURR_NAMES = {"EUR": "euro", "USD": "dolar", "CHF": "frank", "GBP": "funt", "NOK": "koron", "SEK": "koron", "DKK": "koron",
-               "CZK": "koron", "JPY": "jen", "HUF": "forint", "UAH": "hrywn", "CNY": "juan", "CAD": "dolar kanad",
-               "AUD": "dolar austral"}
+_OTHER_DOLLARS = r"(?!\s+(?:kanadyj|australij|nowozeland|hongkoń|hongkon|singapur|tajwań|tajwan))"
+_CURR_NAMES = {  # currency names in any inflected form; the crowns and the dollars only with their country
+    "EUR": r"\beuro\b|\beur\b", "USD": rf"\bdolar\w*\b{_OTHER_DOLLARS}", "CHF": r"\bfrank(?:a|i|ów|ow|om|ami|ach|iem)?\b",
+    "GBP": r"\bfunt\w*\b", "NOK": r"\bkoron\w*\s+norwe", "SEK": r"\bkoron\w*\s+szwedz", "DKK": r"\bkoron\w*\s+du[nń]s",
+    "CZK": r"\bkoron\w*\s+czes", "JPY": r"\bjen(?:a|y|ów|ow|om|ami|ach|ie)?\b", "HUF": r"\bforint\w*", "UAH": r"\bhrywn\w*",
+    "CNY": r"\bjuan\w*|\byuan\w*|\brenminbi", "CAD": r"\bdolar\w*\s+kanadyj", "AUD": r"\bdolar\w*\s+australij"}
+
+
+def _names_currency(claim: str, code: str) -> bool:
+    return bool(re.search(rf"\b{code}\b", claim, re.I) or (code in _CURR_NAMES and re.search(_CURR_NAMES[code], claim, re.I)))
+
+
+# the same indicator or subject named differently in a claim and in an official card's title: synonyms, abbreviations
+# and inflected forms (general Polish vocabulary of statistics and law). Both texts are rewritten to one word per
+# subject before the subject gate compares stems ("płaca minimalna" ~ "minimalne wynagrodzenie", "zmarło" ~ "zgonów").
+_SUBJECT_SYNONYMS = [(re.compile(rf"\b(?:{p})\b", re.I), w) for p, w in (
+    (r"produkt\w* krajow\w* brutto", "PKB"),
+    (r"wynagrodze\w*|płac(?:a|y|ę|e|om|ach|ami)|plac[ay]|pensj\w*|zarobk\w*|zarabia\w*|zarobi\w*", "wynagrodzenie"),
+    (r"zgon\w*|zmar[łl]\w*|umar[łl]\w*|umiera\w*|śmier[cć]\w*|smierc\w*|śmiertelnoś\w*|smiertelnos\w*", "zgon"),
+    (r"urodze\w*|urodzi\w*|narodzin\w*", "urodzenie"),
+    (r"ludnoś\w*|ludnos\w*|mieszkańc\w*|mieszkanc\w*|populacj\w*", "ludność"),
+    (r"inflacj\w*|inflacyjn\w*|drożyzn\w*|drozyzn\w*", "inflacja"),
+    (r"bezroboci\w*|bezrobotn\w*", "bezrobocie"),
+    (r"zadłużeni\w*|zadluzeni\w*|zadłużon\w*|zadluzon\w*|dług(?:u|iem|i|ów|ow|om|ach|ami)?|dlug(?:u|iem|i|ow|om|ach|ami)?",
+     "dług"),
+    (r"emerytur\w*|emeryt(?:a|ów|ow|om|ami|ach|y|ka|ki)?", "emerytura"),
+    (r"azyl\w*|ochron\w* międzynarodow\w*", "azyl"),
+    (r"prąd\w*|prad(?:u|em)?|energi\w* elektryczn\w*", "prąd"),
+)]
+
+
+def _subject_text(s: str) -> str:
+    for rx, word in _SUBJECT_SYNONYMS:
+        s = rx.sub(word, s)
+    return s
 _ACT = re.compile(r"^(Ustawa|Rozporządzenie|Dyrektywa|Decyzja|Konstytucja|Uchwała)\b", re.I)
 def _other_definition(claim: str, d) -> str:
     """After a numeric mismatch with official card `d`: could the claim be using another definition of the same
@@ -374,18 +422,16 @@ def same_subject(claim: str, title: str) -> bool:
         if nums:
             return any(n in title for n in nums)
         m = re.search(r"\b(?:o|w sprawie)\s+(.+)$", title)
-        subject = set(tokens(m.group(1), stem=5)) if m else set(tokens(title, stem=5))
-        return len(subject & set(tokens(claim, stem=5))) / max(1, len(subject)) >= 0.4
+        subject = set(tokens(_subject_text(m.group(1) if m else title), stem=5))
+        return len(subject & set(tokens(_subject_text(claim), stem=5))) / max(1, len(subject)) >= 0.4
     head = re.split(r"[:—–]\s*\d", title)[0]  # e.g. "Ceny — transport — wrzesień 2026" / "Inflacja CPI w Polsce — marzec 2026"
-    subj = _anchors(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head)) - {t for t in tokens(" ".join(_PL_MONTHS))}
+    subj = _anchors(_subject_text(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head))) - {t for t in tokens(" ".join(_PL_MONTHS))}
     subj = {t for t in subj if not any(t.startswith(m[:4]) for m in _MONTHS_STEMS)}
-    if subj and not (_alt_stems(subj) & _alt_stems(tokens(claim))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
+    if subj and not (_alt_stems(subj) & _alt_stems(tokens(_subject_text(claim)))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
         return False  # the card is about another indicator (e.g. transport prices vs. headline inflation)
     cur = re.search(r"\b([A-Z]{3})/PLN\b", title)
-    if cur:
-        code = cur.group(1)
-        if not (re.search(rf"\b{code}\b", claim, re.I) or (_CURR_NAMES.get(code) and _CURR_NAMES[code] in claim.lower())):
-            return False
+    if cur and not _names_currency(claim, cur.group(1)):
+        return False
     cy, cm = _date_keys(claim)
     ty, tm = _date_keys(title)
     if cy and ty and not (cy & ty):
