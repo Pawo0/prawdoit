@@ -8,6 +8,7 @@ _ABBREV = {
     "np", "m.in", "tzw", "tj", "itd", "itp", "ok", "godz", "ul", "al", "dr", "prof", "hab", "inż", "mgr", "św",
     "r", "w", "tys", "mln", "mld", "zł", "proc", "pkt", "art", "ust", "poz", "nr", "str", "tel", "wg", "por",
     "jw", "ds", "gen", "płk", "mjr", "kpt", "pt", "ww", "zob", "cd", "sp", "z.o.o", "s.a", "dz.u", "dz",
+    "przyp",  # "[we Wrocławiu – przyp. Demagog]", "przyp. red.": an editor's note inside a quoted sentence
 }
 
 _SENT_RE = re.compile(r"(?<=[.!?…])[\"'”»)]*\s+(?=[\"'„«(]*[A-ZĄĆĘŁŃÓŚŹŻ0-9])")

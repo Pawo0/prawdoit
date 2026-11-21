@@ -13,9 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from prawdowid.engine import _fragment_windows, _quote_ok, _squash  # noqa: E402
 from prawdowid.textutil import split_sentences  # noqa: E402
 
-# A Demagog-style quote: the editor's note "– przyp. Demagog]." is split after the abbreviation "przyp.", which
-# leaves the 9-character sentence "Demagog]." between two real sentences.
-NOTE = ("Przed wojną przecież była połączona funkcja [Prokuratora Generalnego i Ministra Sprawiedliwości – przyp. "
+# A Demagog-style quote with an editor's note. "– dop. Demagog]." is split after the abbreviation "dop.", which the
+# splitter does not know, and leaves the 9-character sentence "Demagog]." between two real sentences. ("przyp." used
+# to be split the same way; it is a known abbreviation now, see test_editor_note_przyp_is_not_split.)
+NOTE = ("Przed wojną przecież była połączona funkcja [Prokuratora Generalnego i Ministra Sprawiedliwości – dop. "
         "Demagog]. Po wojnie przez lata była połączona. A potem wy ją rozdzieliliście.")
 # A closing quotation mark after the full stop is consumed by the splitter.
 QUOTE = "Minister powiedział: „Budżet został przyjęty bez poprawek.” Posłowie opozycji wyszli wtedy z sali obrad."
@@ -40,16 +41,21 @@ class FragmentWindows(unittest.TestCase):
         self.assertIn("Demagog].", split_sentences(NOTE))
 
     def test_old_construction_joined_non_adjacent_sentences(self):
-        glued = "Ministra Sprawiedliwości – przyp. Po wojnie przez lata była połączona."
+        glued = "Ministra Sprawiedliwości – dop. Po wojnie przez lata była połączona."
         self.assertTrue(any(glued in w for w in old_windows(NOTE)))  # the bug this guards against
         self.assertFalse(_quote_ok(next(w for w in old_windows(NOTE) if glued in w), NOTE))
 
     def test_no_window_skips_a_short_sentence(self):
         windows = self.assert_all_verbatim(NOTE, NOTE)
-        self.assertFalse(any("przyp. Po wojnie" in w for w in windows))
+        self.assertFalse(any("dop. Po wojnie" in w for w in windows))
         self.assertIn("Przed wojną przecież była połączona funkcja [Prokuratora Generalnego i Ministra Sprawiedliwości "
-                      "– przyp. Demagog].", windows)  # the short sentence is quoted together with its neighbour
+                      "– dop. Demagog].", windows)  # the short sentence is quoted together with its neighbour
         self.assertIn("Po wojnie przez lata była połączona. A potem wy ją rozdzieliliście.", windows)
+
+    def test_editor_note_przyp_is_not_split(self):
+        s = "Natomiast MPK [we Wrocławiu – przyp. Demagog] i tak nas sporo kosztuje. Drugie zdanie."
+        self.assertEqual(split_sentences(s), ["Natomiast MPK [we Wrocławiu – przyp. Demagog] i tak nas sporo kosztuje.",
+                                              "Drugie zdanie."])
 
     def test_short_sentence_is_not_quoted_alone(self):
         self.assertNotIn("Demagog].", _fragment_windows(NOTE, NOTE))
