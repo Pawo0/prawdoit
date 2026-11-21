@@ -59,9 +59,9 @@ def _fmt_date(s: str | None) -> str:
 
 
 def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple[str, float]:
-    """Pick the quoted fragment WITHOUT re-encoding: best verbatim chunk of the document by (cached) embedding
-    similarity, then the 1–2 consecutive sentences with the highest lexical overlap with the claim.
-    This exact span is both quoted to the user and judged by NLI."""
+    """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
+    then the 1–2 consecutive sentences with the highest lexical overlap with the claim, cut verbatim out of the
+    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI."""
     ids = [i for i in INDEX.doc_chunks[doc_idx] if i not in INDEX.synthetic]
     d = INDEX.docs[doc_idx]
     if not ids:
@@ -69,14 +69,50 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
     sims = INDEX.chunk_emb[ids] @ q_emb
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
-    sents = [x for x in split_sentences(text) if len(x) > 15] or [text]
-    windows = [w for w in sents + [f"{a} {b}" for a, b in zip(sents, sents[1:])] if len(w) <= 520] or [sents[0][:520]]
+    windows = _fragment_windows(text, d.text or "")
+    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
+        windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
 
     def score(w: str) -> float:
         wt = set(tokens(w))
         return len(q_tokens & wt) / max(1, len(q_tokens)) - len(w) / 5000  # prefer shorter on ties
 
     return max(windows, key=score), cos
+
+
+def _squash(s: str) -> str:
+    """Whitespace-normalised text: the form in which gate V2 compares a quote with its source."""
+    return re.sub(r"\s+", " ", normalize_ws(s)).strip()
+
+
+def _fragment_windows(passage: str, source: str, max_len: int = 520, min_len: int = 16, max_gap: int = 6) -> list[str]:
+    """Candidate quotes for a passage: every sentence, and every two NEIGHBOURING sentences, cut out of `source`.
+
+    The sentence splitter is only used to find where sentences start and end. Each window is then a slice of the
+    (whitespace-normalised) source text, so it is verbatim by construction: joining sentence strings instead would
+    lose the closing quotation mark or bracket that the splitter consumes between two sentences, and joining the
+    neighbours that remain after short sentences were filtered out would glue together sentences that are not
+    adjacent in the source ("… – przyp." + "Po wojnie …", skipping "Demagog]."). Sentences shorter than `min_len` are
+    not quoted on their own but do take part in pairs. A sentence the splitter has altered, so that it is no longer
+    found in the source, is left out together with its pairs."""
+    src = _squash(source)
+    spans: list[tuple[int, int] | None] = []
+    pos = 0
+    for s in split_sentences(passage):
+        s = _squash(s)
+        i = src.find(s, pos) if s else -1
+        if i < 0:
+            spans.append(None)
+            continue
+        spans.append((i, i + len(s)))
+        pos = i + len(s)
+    singles = [(a, b) for sp in spans if sp for a, b in [sp] if b - a >= min_len]
+    pairs = [(x[0], y[1]) for x, y in zip(spans, spans[1:]) if x and y and y[0] - x[1] <= max_gap]
+    windows = [src[a:b] for a, b in singles + pairs if min_len <= b - a <= max_len]
+    if not windows and singles:
+        a, b = singles[0]
+        windows = [src[a:a + max_len]]
+    return windows
 
 
 def _relevance(q_tokens: set[str], text: str) -> float:
@@ -86,8 +122,7 @@ def _relevance(q_tokens: set[str], text: str) -> float:
 
 def _quote_ok(fragment: str, doc_text: str) -> bool:
     """Validity gate V2: the quoted fragment must be a verbatim substring of the stored source text."""
-    squash = lambda s: re.sub(r"\s+", " ", normalize_ws(s)).strip()  # noqa: E731
-    return squash(fragment) in squash(doc_text)
+    return _squash(fragment) in _squash(doc_text)
 
 
 def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidence:
