@@ -3,7 +3,7 @@
 __pycache__/
 *.pyc
 data/runtime/
-data/index/
+data/index/*.tmp
 *.sqlite
 *.sqlite-journal
 .env
