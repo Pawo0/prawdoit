@@ -114,6 +114,12 @@ class CheckRequest(BaseModel):
     session: Optional[str] = None  # opaque, client-generated; lets the user delete their demo session
 
 
+class ChatRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=6000)
+    channel: str = Field(default="chat", max_length=20)
+    session: Optional[str] = Field(default=None, max_length=32)
+
+
 class CheckResult(BaseModel):
     id: str
     created_at: str

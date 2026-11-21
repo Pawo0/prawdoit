@@ -16,7 +16,7 @@ def _date(s: str | None) -> str:
     return f"{d}.{m}.{y}" if d else s
 
 
-def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool = False) -> str:
+def chat_text(res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms: bool = False) -> str:
     b = lambda s: f"{bold}{s}{bold}" if bold else s  # noqa: E731
     link = f"{settings.public_base_url}/analiza/{res.id}"
     if res.status != "ok":
@@ -36,6 +36,8 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool 
             lines.append("Źródła:" if decisive else "Najbliższe materiały (nie rozstrzygają sprawy):")
             for j, e in enumerate(srcs[:3], 1):
                 lines.append(f"{j}. {e.publisher}, {_date(e.published_at)} — {short(e.title, 80)}\n   {e.url}")
+                if bold == "**":
+                    lines.append(f"   Cytat: „{short(e.fragment, 220)}”")
         if c.what_unknown and not sms:
             lines.append(f"Czego nie ustaliliśmy: {short(c.what_unknown, 200)}")
     for w in res.warnings[:2]:
@@ -46,4 +48,4 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool 
     if not sms:
         lines.append("Prawdowid pomaga ocenić informacje, ale nie jest sędzią prawdy — zajrzyj do źródeł.")
     txt = "\n".join(lines)
-    return txt if len(txt) <= max_len else txt[: max_len - 1] + "…"
+    return txt if max_len is None or len(txt) <= max_len else txt[: max_len - 1] + "…"

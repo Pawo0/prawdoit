@@ -17,7 +17,7 @@ from . import __version__, store
 from .channels.meta import router as meta_router
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
-from .schemas import CheckRequest, CheckResult, QuickRequest, QuickResult
+from .schemas import ChatRequest, CheckRequest, CheckResult, QuickRequest, QuickResult
 from .service import engine_info, quick_score, run_check
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -34,14 +34,19 @@ _hits: dict[str, deque] = defaultdict(deque)
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if request.url.path.startswith("/api/check") and request.method == "POST":
+    if (request.url.path.startswith("/api/check") or request.url.path == "/api/chat-reply") and request.method == "POST":
         ip = request.client.host if request.client else "?"
-        q, now = _hits[ip], time.time()
+        now = time.monotonic()
+        for key in list(_hits):
+            if not _hits[key] or now - _hits[key][-1] > 60:
+                del _hits[key]
+        q = _hits[ip]
         while q and now - q[0] > 60:
             q.popleft()
+        if len(q) >= settings.rate_limit_per_min:
+            return JSONResponse({"detail": "Za dużo zapytań — spróbuj za minutę."}, status_code=429,
+                                headers={"Retry-After": "60"})
         q.append(now)
-        if len(q) > settings.rate_limit_per_min:
-            return JSONResponse({"detail": "Za dużo zapytań — spróbuj za minutę."}, status_code=429)
     return await call_next(request)
 
 
@@ -79,17 +84,17 @@ def api_get_check(check_id: str):
 
 
 @app.post("/api/chat-reply")
-def api_chat_reply(body: dict):
+def api_chat_reply(body: ChatRequest):
     """For thin channel adapters (Discord bot, SMS gateway): same verification, chat-formatted reply."""
     from .channels.formatting import chat_text
 
-    text = str(body.get("text", ""))[:6000]
-    channel = str(body.get("channel", "chat"))[:20]
+    text = body.text
+    channel = body.channel
     if not text.strip():
         raise HTTPException(422, "Pusta wiadomość")
-    res = run_check(CheckRequest(text=text, channel=channel, session=str(body.get("session", ""))[:32] or None))
+    res = run_check(CheckRequest(text=text, channel=channel, session=body.session or None))
     bold = "**" if channel == "discord" else "*"
-    return {"id": res.id, "text": chat_text(res, bold=bold, max_len=1900 if channel == "discord" else 3500,
+    return {"id": res.id, "text": chat_text(res, bold=bold, max_len=None if channel == "discord" else 3500,
                                             sms=channel == "sms"), "status": res.status,
             "verdicts": [c.verdict for c in res.claims]}
 

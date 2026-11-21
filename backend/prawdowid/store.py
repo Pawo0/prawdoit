@@ -84,17 +84,37 @@ def get_check(check_id: str) -> dict | None:
 
 def delete_session(session: str) -> int:
     with _lock:
-        n = _db.execute("DELETE FROM checks WHERE session=?", (session,)).rowcount
-        _db.commit()
-    return n
+        return _delete_checks("session=?", (session,))
+
+
+def _delete_checks(where: str, params: tuple) -> int:
+    """Called under _lock. Remove audit children and repair shared moderator cases atomically."""
+    with _db:
+        cases = _db.execute(f"SELECT DISTINCT case_id FROM checks WHERE {where} AND case_id IS NOT NULL",
+                            params).fetchall()
+        for table in ("security_events", "errors", "feedback"):
+            _db.execute(f"DELETE FROM {table} WHERE check_id IN (SELECT id FROM checks WHERE {where})", params)
+        n = _db.execute(f"DELETE FROM checks WHERE {where}", params).rowcount
+        for case in cases:
+            case_id = case["case_id"]
+            remaining = _db.execute("SELECT id, channel, input_masked, result_json FROM checks WHERE case_id=? "
+                                    "ORDER BY created_at DESC", (case_id,)).fetchall()
+            if not remaining:
+                _db.execute("DELETE FROM cases WHERE id=?", (case_id,))
+                continue
+            high_risk = any(c.get("high_risk") for row in remaining
+                            for c in json.loads(row["result_json"]).get("claims", []))
+            _db.execute("UPDATE cases SET count=?, channels=?, sample_check_ids=?, title=?, priority=? WHERE id=?",
+                        (len(remaining), json.dumps(sorted({r["channel"] for r in remaining})),
+                         json.dumps([r["id"] for r in remaining[:20]]), remaining[0]["input_masked"][:300],
+                         "wysoki" if high_risk or len(remaining) >= 3 else "normalny", case_id))
+        return n
 
 
 def purge_expired() -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.retention_days)).isoformat()
     with _lock:
-        n = _db.execute("DELETE FROM checks WHERE created_at < ?", (cutoff,)).rowcount
-        _db.commit()
-    return n
+        return _delete_checks("created_at < ?", (cutoff,))
 
 
 # ------------------------------------------------------------------ moderator cases (pętla informacji)

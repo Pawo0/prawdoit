@@ -45,7 +45,8 @@ Otwórz http://localhost:8000 · czat demo: http://localhost:8000/czat · panel 
 **Wtyczka:** `chrome://extensions` → tryb dewelopera → „Załaduj rozpakowane” → katalog `extension/`.
 Strona testowa: http://localhost:8000/demo/feed.html. Firefox (także Android): `about:debugging` → „Załaduj tymczasowy dodatek” → `extension/manifest.json`.
 
-**Discord:** `PRAWDOWID_DISCORD_TOKEN=... python bots/discord_bot.py` (instrukcja w pliku).
+**Discord:** ustaw `PRAWDOWID_DISCORD_TOKEN` w `.env` — bot startuje razem z API przez `docker compose up -d --build`.
+Obsługuje DM, wzmianki, `/sprawdz`, menu wiadomości i `/usun_sesje`. [Konfiguracja i testy](docs/DISCORD.md).
 **WhatsApp/Messenger:** zmienne `PRAWDOWID_WA_*`, `PRAWDOWID_FB_*` + publiczny HTTPS (np. `cloudflared tunnel --url http://localhost:8000`); bez nich działa adapter demonstracyjny z identycznym formatem webhooka.
 
 **Ewaluacja:** `backend/.venv/bin/python eval/run_eval.py [--cases eval/cases_heldout.jsonl|eval/cases_blind2.jsonl] [--out ...]`

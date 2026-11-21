@@ -5,6 +5,8 @@
 !backend/requirements-container.txt
 !backend/prawdowid/
 !backend/prawdowid/**
+!bots/
+!bots/discord_bot.py
 !web/
 !web/**
 !data/
