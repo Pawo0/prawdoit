@@ -155,7 +155,7 @@ _YEAR_RX = re.compile(r"\b(19|20)\d\d\b")
 
 
 def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str | None:
-    """'Dlaczego w analizie jest 650 mln zł?': the verbatim passage of the analysis that gives the asked number.
+    """'Skąd w analizie 36 mln zł?': the verbatim passage of the analysis that gives the asked number.
     Sentences of the checked claim itself are skipped. Among the passages that contain the number, the one that also
     states its period (a year) is preferred, so the quote shows what the figure refers to; then the shortest."""
     in_claim = _squash(claim_text)
@@ -165,13 +165,14 @@ def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str
 
 
 # ------------------------------------------------------------------ old material presented as current (rule R3a)
-# "Czy film udostępniony przez X w 2026 r. pokazywał ówczesny protest pod Y?" — a claim that a recording / photo shows
-# an event of the time it was shared. A fact-check about that material that dates it to an EARLIER year refutes it
+# "Nagranie z wczorajszej demonstracji w X pokazuje Y" — a claim that a recording / photo shows an event of the time it
+# was shared (a common misinformation pattern: real but old material re-shared as current). A fact-check about that material that dates it to an EARLIER year refutes it
 # deterministically (the NLI model reads almost every sentence of such an analysis as a contradiction, so it cannot
 # be used here). Same material = the analysis names at least two of the claim's proper names.
 _MATERIAL = re.compile(r"\b(film\w*|nagra\w*|wideo|video|klip\w*|zdjęci\w*|zdjęć|fotografi\w*|materiał\w*)\b", re.I)
-_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|tegoroczn\w*|teraz|dziś|"
-                            r"dzisiaj|niedawn\w*)\b", re.I)
+# time markers that place the material at the time it was shared (used only when the claim gives no year)
+_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|wówczas|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|wczorajsz\w*|tegoroczn\w*|"
+                            r"najnowsz\w*|śwież\w*|teraz|dziś|dzisiaj|wczoraj|niedawn\w*|w tym roku)\b", re.I)
 _ORIGIN = re.compile(r"\b(pochodz\w*|nagran\w*|nakręcon\w*|zarejestrowan\w*|wykonan\w*|zrobion\w*|powstał\w*)\b"
                      r"[^.]{0,40}?\b(?:z|w|we)\s+(?:[^\W\d]+\s+){0,2}?((?:19|20)\d\d)\b", re.I)
 _PROPER = re.compile(r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}")
@@ -610,7 +611,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     q_tokens = set(tokens(claim.query))
     for c in ranked:
         c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
-    # "Czy X wydaje 700 mln zł? Dlaczego w analizie jest 650 mln zł?": an analysis of a statement that gave the user's
+    # "Czy X kosztuje 40 mln zł? Skąd w analizie 36 mln zł?": an analysis of a statement that gave the user's
     # number quotes the passage with the asked number instead (the answer layer explains the two figures)
     stated = amounts(claim.query)
     asked = [a for a in amounts(getattr(claim, "meta", "")) if not any(same_amount(a, x) for x in stated)]

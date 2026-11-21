@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from .textutil import (checked_question, checkworthiness, claim_kind, content_words, drop_pii_tags, is_meta_sentence,
                        is_question, normalize_ws, question_to_claim, split_meta, split_sentences, strip_preamble)
 
-_NOISE = re.compile(r"(https?://\S+|#\w+|@\w+|\b(udostępnij|udostępniaj|przekaż dalej|share|pilne!+|zobacz)\b)", re.I)
+# "pilne!+" inside \b…\b never matched (no word boundary after "!"), so "PILNE!!" stayed in the query
+_NOISE = re.compile(r"(https?://\S+|#\w+|@\w+|\b(udostępnij|udostępniaj|przekaż dalej|share|zobacz)\b|\bpilne\s*[!:]+)", re.I)
 
 
 @dataclass
@@ -16,7 +17,7 @@ class Claim:
     query: str  # normalised form used for retrieval (questions turned into statements)
     kind: str  # fakt | opinia | pytanie | prognoza
     score: float
-    meta: str = ""  # sentences about the check itself ("Dlaczego w analizie Demagoga jest 650 mln zł?"), not in the query
+    meta: str = ""  # sentences about the check itself ("Skąd w tym raporcie 12 tys. osób?"), not in the query
 
 
 def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
@@ -40,7 +41,7 @@ def _extract(text: str, max_claims: int) -> list[Claim]:
         joined = clean(" ".join(sents)) or text
         if len(content_words(joined)) < 2:
             return []  # greeting / meta request without a checkable statement -> ask to clarify
-        # a sentence about the check itself ("Dlaczego w analizie … jest 650 mln zł?") is not part of the claim
+        # a sentence about the check itself ("Skąd w raporcie … 12 tys. osób?") is not part of the claim
         kept, meta = split_meta(" ".join(sents))
         core = strip_preamble(clean(kept) or joined)
         kind = claim_kind(core)
@@ -64,8 +65,8 @@ def _extract(text: str, max_claims: int) -> list[Claim]:
     # keep original order for readability
     order = {id(c): i for i, c in enumerate(cands)}
     chosen = sorted(chosen, key=lambda c: order[id(c)])
-    # "Czy Demagog to sprawdzał? <claim> <date>": the question about who checked it stays out of the query, but is
-    # kept in the text shown with each claim, so the answer can say "Tak, Demagog to sprawdził…" (answer.py)
+    # "Czy ktoś to sprawdzał? <claim> <date>": the question about who checked it stays out of the query, but is
+    # kept in the text shown with each claim, so the answer can say who checked it (answer.py)
     asked = next((clean(s) for s in sents if checked_question(clean(s)) is not None), None)
     if asked:
         chosen = [Claim(f"{asked} {c.text}", c.query, c.kind, c.score) for c in chosen]

@@ -29,8 +29,8 @@ MODERATOR_TOKEN = os.environ.get("PRAWDOWID_MODERATOR_TOKEN", "")
 PUBLIC_URL = os.environ.get("PRAWDOWID_PUBLIC_URL", "http://localhost:8000").rstrip("/")
 STATE = Path(os.environ.get("PRAWDOWID_RUNTIME_DIR", str(Path(__file__).resolve().parents[1] / "data/runtime")))
 NOTICE = "\n-# 🤖 Automatyczny system (SI) · ocena wynika z jawnych reguł i źródeł · nie jest „sędzią prawdy”."
-HELP = ("Napisz jedno konkretne pytanie lub wklej sam link, np. „Czy to prawda, że Ukraina nie płaci "
-        "Orlenowi za paliwo?”. Użyj /sprawdz albo oznacz mnie na kanale. "
+HELP = ("Napisz jedno konkretne pytanie lub wklej sam link, np. „Czy to prawda, że od marca podatek od psa "
+        "wzrośnie do 500 zł?”. Użyj /sprawdz albo oznacz mnie na kanale. "
         "Każde pytanie sprawdzam niezależnie, bez pamięci rozmowy. "
         "Komenda /usun_sesje usuwa Twoje sprawdzenia z Prawdowida; nie usuwa wiadomości z Discorda.")
 ATTACHMENT_NOTICE = ("Nie analizuję załączników: obrazów, zrzutów ekranu, plików, nagrań ani wideo. "

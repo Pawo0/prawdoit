@@ -82,16 +82,21 @@ def tokens(text: str, stem: int = 6) -> list[str]:
 
 
 # ------------------------------------------------------------------ claim heuristics
-_OPINION = re.compile(
-    r"\b(uważam|sądzę|myślę|moim zdaniem|według mnie|wydaje mi się|mam wrażenie|czuję|wierzę|lubię|nie lubię|"
-    r"nienawidzę|kocham|powin(?:ien|na|no|ni|ny)|należy|trzeba by|najlepsz\w*|najgorsz\w*|beznadziejn\w*|"
-    r"wspaniał\w*|okropn\w*|skandal\w*|hańb\w*|żenujące|głupi\w*|piękn\w*|brzydk\w*|zdrajc\w*|obrzydliw\w*|"
-    r"naj(?:piękn|wspanialsz|fajn|cudown|gorsz|lepsz|głupsz|mądrzejsz|brzydsz|okropniejsz)\w*|nie umywa|"
-    r"genialn\w*|fatalny\w*|fatalna|cudown\w*|super\b|beznadzie\w*|"
-    r"jedyn\w* sensown\w*|sensown\w*|fanaberi\w*|bzdur\w*|absurd\w*|"
-    r"byłob[yi]|byłaby|byłyby|gdyby|powinno się)\b",
-    re.IGNORECASE,
-)
+# Opinion / evaluation markers: with no number in the sentence, claim_kind() calls it an opinion. A lexicon by
+# category — not phrases of particular inputs: first-person stance, normative modals, evaluative words (positive and
+# negative, with superlatives), comparison idioms and hypotheticals. Words that also occur in reported facts
+# ("wybitny", "największy", "katastrofa", "kompromitacja", "byłby" in a relative clause) are left out on purpose.
+_STANCE = (r"uważam|sądzę|myślę|moim zdaniem|według mnie|wydaje mi się|mam wrażenie|czuję|wierzę|nie wierzę|"
+           r"jestem przekonan\w*|lubię|nie lubię|nienawidzę|kocham|uwielbiam|(?:nie )?podoba mi się")
+_NORMATIVE = r"powin(?:ien|na|no|ni|ny)|powinno się|należy|należałoby|trzeba by|trzeba było"
+_EVALUATIVE = (
+    r"najlepsz\w*|najgorsz\w*|naj(?:piękn|wspanialsz|fajn|cudown|gorsz|lepsz|głupsz|mądrzejsz|brzydsz|okropniejsz)\w*|"
+    r"wspaniał\w*|piękn\w*|cudown\w*|genialn\w*|świetn\w*|rewelacyjn\w*|super\b|sensown\w*|"
+    r"beznadzie\w*|okropn\w*|fataln\w*|skandal\w*|hańb\w*|haniebn\w*|żenując\w*|żałosn\w*|głupi\w*|idiotyczn\w*|"
+    r"brzydk\w*|obrzydliw\w*|zdrajc\w*|bzdur\w*|absurd\w*|nonsens\w*|bezsens\w*|niedorzeczn\w*|fanaberi\w*")
+_COMPARISON = r"nie umywa\w*|nie dorasta\w* do pięt|bije na głowę|nie ma porównania"
+_HYPOTHETICAL = r"byłob[yi]|byłaby|byłyby|gdyby"
+_OPINION = re.compile(rf"\b({_STANCE}|{_NORMATIVE}|{_EVALUATIVE}|{_COMPARISON}|{_HYPOTHETICAL})\b", re.IGNORECASE)
 _PREDICTION = re.compile(r"\b(będzie|będą|zostanie|zostaną|wkrótce|za rok|za miesiąc|w przyszłym|prognoz\w*)\b", re.I)
 _FACTUAL_CUE = re.compile(
     r"\b(jest|są|był\w*|wynosi|wyniósł|wyniosła|wzrósł|wzrosła|spadł\w*|ogłosił\w*|wprowadz\w*|zakaz\w*|nakaz\w*|"
@@ -145,11 +150,13 @@ _PREAMBLE = re.compile(
     r"(?:słyszał\w*|czytał\w*|widział\w*|dostał\w*|ktoś\s+(?:mi\s+)?(?:napisał|powiedział|wysłał|przesłał)\w*|"
     r"(?:w|na)\s+(?:telewizji|tv|internecie|necie|radiu|fejsie|facebooku|grupie)\s+(?:mówią|mówili|piszą|pisali|podali|podają)"
     r")[^,.?!]{0,60}?,?\s*że)\s+", re.I)
-_TRAILING_META = re.compile(r"\s*(to jak to (w końcu )?jest|czy to prawda|prawda to|serio|o co chodzi|co o tym myślicie|"
-                            r"co wy na to|jak to jest)\s*\?*\s*$", re.I)
+# trailing "is that so?" tags of a forwarded message — not part of the claim
+_TRAILING_META = re.compile(r"\s*((?:to\s+|a\s+)?jak\s+to\s+(?:w\s+końcu\s+|właściwie\s+|naprawdę\s+|w\s+ogóle\s+)?jest|"
+                            r"czy to prawda|prawda to|to prawda|serio|naprawdę|o co chodzi|co o tym myślicie|"
+                            r"co wy na to|ktoś coś wie|ktoś wie(?:,? czy to prawda)?)\s*\?*\s*$", re.I)
 
 
-# "Czy Demagog sprawdzał, czy X?", "Czy ktoś już weryfikował informację, że X?", "Czy fact-checkerzy ocenili, czy X?"
+# "Czy Konkret24 weryfikował, czy X?", "Czy ktoś już sprawdzał informację, że X?", "Czy fact-checkerzy ocenili, czy X?"
 # -> X: a question about whether somebody checked a claim is answered by checking the claim itself (the answer then
 # names who checked it). Only stripped when the verb is followed by "czy"/"że", so "Czy NIK zbadała wydatki…" stays.
 _CHECKED_BY = re.compile(
@@ -159,8 +166,8 @@ _CHECKED_BY = re.compile(
     r"(?:czy|że|to,?\s+(?:czy|że)|informacj\w*,?\s+(?:że|o\s+tym,?\s+że)|twierdzeni\w*,?\s+że|tez\w*,?\s+że)\s+", re.I)
 
 
-# Sentences ABOUT a check rather than about the world: "Dlaczego w analizie Demagoga jest 650 mln zł?",
-# "Sprawdź też tę stronę: …". They stay in the text shown to the user but are left out of the retrieval query.
+# Sentences ABOUT a check rather than about the world: "Skąd w tym raporcie liczba 12 tys. osób?",
+# "Zobacz jeszcze ten artykuł: …". They stay in the text shown to the user but are left out of the retrieval query.
 _META_SENTENCE = re.compile(
     r"^\s*(?:(?:a|i|to)\s+)?(?:dlaczego|czemu|skąd|jak\s+to\s+możliwe)\b[^.?!]*\b(?:analiz\w*|weryfikac\w*|"
     r"fact-?check\w*|ocen\w*|sprawdz\w*|artyku\w*|tekś\w*|tekst\w*|raport\w*)"
@@ -172,7 +179,7 @@ _CHECK_VERB = (r"(?:sprawdza\w*|sprawdzi\w*|zweryfikowa\w*|weryfikowa\w*|analizo
                r"ocenil\w*|ocenił\w*|zbada\w*|bada\w*|opisywa\w*|opisa\w*)")
 _OBJ = r"(?:to|tego|tę\s+\w+|ten\s+\w+|tą\s+\w+|o\s+tym|już)"
 # A sentence that only asks WHETHER / WHO checked the rest of the message, with no claim of its own:
-# "Czy Demagog to sprawdzał?", "Czy ktoś już to zweryfikował?", "Czy fact-checkerzy sprawdzali tę informację?".
+# "Czy OKO.press to sprawdzało?", "Czy ktoś już to zweryfikował?", "Czy fact-checkerzy sprawdzali tę informację?".
 _CHECKED_QUESTION = re.compile(
     rf"^\s*czy\s+(?P<who>(?:(?!(?:to|tego|tę|ten|już|kiedyś)\b)[\w.-]+\s+){{0,3}}?)(?:już\s+|kiedyś\s+)?(?:{_OBJ}\s+)?"
     rf"(?:już\s+)?{_CHECK_VERB}(?:\s+{_OBJ})?(?:\s+(?:informacj\w*|wiadomoś\w*|tez\w*|twierdzeni\w*|wpis\w*))?"
@@ -180,7 +187,7 @@ _CHECKED_QUESTION = re.compile(
 
 
 def checked_question(s: str) -> str | None:
-    """'Czy Demagog to sprawdzał?' -> 'Demagog'; 'Czy ktoś to sprawdził?' -> 'ktoś'; any other sentence -> None."""
+    """'Czy AFP to sprawdzało?' -> 'AFP'; 'Czy ktoś to sprawdził?' -> 'ktoś'; any other sentence -> None."""
     m = _CHECKED_QUESTION.match(s or "")
     return m.group("who").strip() if m else None
 
@@ -192,7 +199,7 @@ def is_meta_sentence(s: str) -> bool:
 
 def split_meta(s: str) -> tuple[str, str]:
     """(claim part, meta clauses) — also splits after an abbreviation the sentence splitter keeps
-    ('…700 mln zł. Dlaczego w analizie…?'). If everything is meta, the whole text stays the claim part."""
+    ('…12 tys. osób. Skąd w raporcie…?'). If everything is meta, the whole text stays the claim part."""
     parts = re.split(r"(?<=[.?!:])\s+(?=[„\"(]?[A-ZĄĆĘŁŃÓŚŹŻ])", s or "")
     keep = [x for x in parts if not is_meta_sentence(x)]
     if not keep or len(keep) == len(parts):
@@ -201,12 +208,12 @@ def split_meta(s: str) -> tuple[str, str]:
 
 
 def asks_who_checked(s: str) -> str | None:
-    """'Czy Demagog sprawdzał, czy X?' -> 'Demagog'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
+    """'Czy Konkret24 weryfikował, czy X?' -> 'Konkret24'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
     s = _TRAILING_META.sub("", s.strip())
     m = _CHECKED_BY.match(s) or _CHECKED_BY.match(_PREAMBLE.sub("", s))
     if m:
         return re.sub(r"\s+(to|już)$", "", m.group("who").strip(), flags=re.I)
-    # "Czy Demagog to sprawdzał? <claim>" — the question is a sentence of its own, before or after the claim
+    # "Czy ktoś to sprawdzał? <claim>" — the question is a sentence of its own, before or after the claim
     for sent in split_sentences(s):
         who = checked_question(sent)
         if who is not None:
@@ -215,7 +222,7 @@ def asks_who_checked(s: str) -> str | None:
 
 
 def strip_preamble(s: str) -> str:
-    """'Słyszałam w telewizji, że X. To jak to w końcu jest?' -> 'X' (the reported claim itself)."""
+    """'Kolega mi napisał, że X. Serio?' -> 'X' (the reported claim itself)."""
     s = _TRAILING_META.sub("", s.strip())
     for _ in range(3):  # "Czy to prawda, że Demagog sprawdzał, czy X" → X
         t = _CHECKED_BY.sub("", _PREAMBLE.sub("", s)).strip()
@@ -239,7 +246,9 @@ def content_words(s: str) -> list[str]:
             if w not in STOP and w not in _META and len(w) > 2]
 
 
-_LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat)\b[^.!?]{0,40}[!.]+\s*", re.I)
+# a sensational opener before the claim ("Szok w Sejmie! <fact>", "UWAGA!!! <fact>") — a lexicon of clickbait cues
+_LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat|alarm\w*|sensacj\w*|"
+                     r"wstyd\w*|koszmar\w*|niewiarygodn\w*|breaking)\b[^.!?]{0,40}[!.]+\s*", re.I)
 
 
 _PAST = re.compile(r"\b\w{3,}(?:ł|ła|ło|li|ły)\b")
@@ -259,7 +268,7 @@ def claim_kind(s: str) -> str:
     patterns: stripping there would only add ambiguity ("czuję" I feel / "czuje" he feels, "mają" / "3 maja")."""
     leadin, opinion, prediction, factual, past_rx, compound_future, bedzie = (
         _KIND_RX if _PL_DIACRITIC.search(s) else _KIND_RX_PLAIN)
-    s = leadin.sub("", s) or s  # "Skandal we Wrocławiu! <fact>" — the exclamation is not the claim
+    s = leadin.sub("", s) or s  # "Szok w Sejmie! <fact>" — the exclamation is not the claim
     if opinion.search(s) and not _NUMBER.search(s):
         return "opinia"
     if is_question(s):

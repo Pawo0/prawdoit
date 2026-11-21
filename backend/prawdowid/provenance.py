@@ -1,5 +1,5 @@
-"""Is the linked item the one a fact-checker analysed? (organisers' scenario I: "Czy ten wpis dotyczy tej samej
-depeszy PAP, którą sprawdzał Demagog? <link>")
+"""Is the linked item the one a fact-checker analysed? ("Czy ten artykuł to ten sam tekst, który oceniał <checker>?
+<link>" — the question type of the organisers' scenario I)
 
 The question is about the identity of a material, not about the truth of a claim, so it is answered by comparing the
 linked page with the fact-check records instead of by claim matching. Deterministic, no model:
