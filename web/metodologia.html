@@ -56,7 +56,7 @@
 <li>Nie traktuje braku wyniku jako dowodu: brak materiału w katalogu nie oznacza, że informacja jest fałszywa.</li></ul></section>
 
 <section class="card"><h2 style="margin-top:0">Dane i prywatność</h2><ul>
-<li>Maskujemy dane osobowe (PESEL, telefon, e-mail, numer konta). Przebieg sprawdzenia przechowujemy 30 dni; historię sprawdzeń z danej przeglądarki możesz usunąć.</li>
+<li>Maskujemy bezpośrednie identyfikatory osób (PESEL, numer dowodu i paszportu, telefon, prywatny e-mail, numer konta) zaraz po otrzymaniu tekstu — zanim cokolwiek trafi do wyszukiwarek, modelu językowego czy dziennika. Nie maskujemy nazwisk osób publicznych, nazw, miejsc, dat, kwot ani statystyk, bo bez nich nie da się znaleźć dowodu. Przebieg sprawdzenia przechowujemy 30 dni; historię sprawdzeń z danej przeglądarki możesz usunąć.</li>
 <li>Modele (wyszukiwanie semantyczne <span class="kbd">mmlw-retrieval-e5-small</span>, NLI <span class="kbd">mDeBERTa-v3 XNLI</span>) działają na naszym serwerze. Nie trenujemy modeli na danych użytkowników.</li>
 <li>Gdy katalog nic nie znajdzie, samo sprawdzane zdanie może trafić do wyszukiwarek zaufanych serwisów z rejestru (np. gov.pl, Demagog) lub do Google Fact Check Tools — dlatego nie wpisuj danych osobowych.</li></ul></section>
 

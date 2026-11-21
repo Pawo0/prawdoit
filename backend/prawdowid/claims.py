@@ -4,8 +4,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .textutil import (checked_question, checkworthiness, claim_kind, content_words, is_meta_sentence, is_question,
-                       normalize_ws, question_to_claim, split_meta, split_sentences, strip_preamble)
+from .textutil import (checked_question, checkworthiness, claim_kind, content_words, drop_pii_tags, is_meta_sentence,
+                       is_question, normalize_ws, question_to_claim, split_meta, split_sentences, strip_preamble)
 
 _NOISE = re.compile(r"(https?://\S+|#\w+|@\w+|\b(udostępnij|udostępniaj|przekaż dalej|share|pilne!+|zobacz)\b)", re.I)
 
@@ -20,6 +20,15 @@ class Claim:
 
 
 def extract_claims(text: str, max_claims: int = 3) -> list[Claim]:
+    """PII placeholders left by the early masking (service.run_check) stay in the claim text shown to the user, but
+    never in the query used for retrieval and sent to live search."""
+    claims = _extract(text, max_claims)
+    for c in claims:
+        c.query = drop_pii_tags(c.query)
+    return claims
+
+
+def _extract(text: str, max_claims: int) -> list[Claim]:
     text = normalize_ws(text)
     if not text:
         return []

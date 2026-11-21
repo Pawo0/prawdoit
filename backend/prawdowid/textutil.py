@@ -70,7 +70,7 @@ def tokens(text: str, stem: int = 6) -> list[str]:
     """Lowercase, drop stopwords, strip diacritics and truncate to a prefix — a crude but robust stemmer for
     a highly inflected language (szczepionki/szczepionek/szczepionkach -> szczep)."""
     out = []
-    for m in _TOKEN_RE.finditer(text.lower()):
+    for m in _TOKEN_RE.finditer(PII_TAG.sub(" ", text).lower()):
         t = m.group(0)
         if t in STOP or len(t) < 2:
             continue
@@ -210,7 +210,8 @@ _META = set("hej cześć siema hejka witam dzień dobry elo sprawdź sprawdz spr
 
 
 def content_words(s: str) -> list[str]:
-    return [w for w in re.findall(r"[a-ząćęłńóśźż0-9]+", s.lower()) if w not in STOP and w not in _META and len(w) > 2]
+    return [w for w in re.findall(r"[a-ząćęłńóśźż0-9]+", PII_TAG.sub(" ", s).lower())
+            if w not in STOP and w not in _META and len(w) > 2]
 
 
 _LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat)\b[^.!?]{0,40}[!.]+\s*", re.I)
@@ -296,19 +297,107 @@ def years_in(s: str) -> list[int]:
 
 
 # ------------------------------------------------------------------ PII masking (RODO: data minimisation)
-_PII = [
-    (re.compile(r"\b\d{11}\b"), "[PESEL]"),
-    (re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?\d{4}){6}\b|\b\d{2}(?:[ ]?\d{4}){6}\b"), "[NR_KONTA]"),
-    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[EMAIL]"),
-    (re.compile(r"(?<!\d)(?:\+?48[ -]?)?(?:\d{3}[ -]?\d{3}[ -]?\d{3})(?!\d)"), "[TELEFON]"),
-    (re.compile(r"\b[A-Z]{3}\s?\d{6}\b"), "[DOWOD]"),
-]
+# Policy (organisers' clarification; docs/COMPLIANCE.md): mask the direct identifiers of private persons — PESEL,
+# ID card and passport numbers, phone numbers, bank account numbers, personal e-mail addresses — and nothing the check
+# needs. Names (public figures above all), institutions, places, dates, amounts, statistics and legal references are
+# never masked. Every pattern is validated (checksums, strict formats, phone context), so factual numbers survive.
+PII_TAG = re.compile(r"\[(?:PESEL|DOWOD|PASZPORT|TELEFON|NR_KONTA|EMAIL)\]")
+_URL_SPAN = re.compile(r"(?:https?://|www\.)\S+", re.I)
+_EMAIL = re.compile(r"(?<![\w.+-])([\w.+-]+)@[\w-]+(?:\.[\w-]+)+")
+# role mailboxes of institutions are contact points, not personal data
+_ROLE_MAILBOX = re.compile(r"(?:info|kontakt|contact|biuro|office|sekretariat|kancelaria|press|prasa|media|rzecznik\w*|"
+                           r"redakcja|newsroom|iod|abuse|support|pomoc|help|cert|incydent\w*|zgloszeni\w*|hello|"
+                           r"no-?reply)", re.I)
+_IBAN = re.compile(r"(?<![\w])[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,3})?(?![\w])")
+_NRB = re.compile(r"(?<![\w.,])\d{2}(?:[ ]?\d{4}){6}(?![\w]|[.,]\d| \d)")  # Polish account number = IBAN without "PL"
+_PESEL = re.compile(r"(?<![\w.,+])\d{11}(?![\w]|[.,]\d)")
+# "PL…" + digits are site / register codes (Natura 2000 PLH220032, PLB…), not identity documents
+_ID_CARD = re.compile(r"(?<![\w])(?!PL)[A-Z]{3}[ ]?\d{6}(?![\w])")
+_PASSPORT = re.compile(r"(?<![\w])[A-Z]{2}[ ]?\d{7}(?![\w])")
+_PHONE_INTL = re.compile(r"(?<![\w+])(?:\+|00(?=[1-9]))\d{1,3}[ -]?\(?\d{1,4}\)?(?:[ -]?\d{2,4}){2,4}(?![\w]|[.,]\d)")
+_PHONE_PL = re.compile(r"(?<![\w+.,/-])(?<!\d )(?:\(?\d{2}\)?[ -]?\d{3}[ -]?\d{2}[ -]?\d{2}|\d{3}[ -]?\d{3}[ -]?\d{3})"
+                       r"(?![\w]|[.,]\d| \d)")
+# a number followed by a unit or a currency is an amount or a statistic, never a phone number
+_UNIT_AFTER = re.compile(r"\s*(?:zł|zl\b|pln|eur|euro|usd|dolar|\$|€|£|%|proc|mln|mld|tys|os[óo]b|ludzi|mieszka|głos|"
+                         r"glos|km|kg|ton|ha\b|m2|m²|szt|egz|daw|wyświetl|razy)", re.I)
+# a domestic number counts as a phone only when the text says so ("tel.", "zadzwoń", "mój numer"…) or it is written
+# with dashes; "numer partii 716371209", "nr KRS …" and bare digit groups stay
+_PHONE_CONTEXT = re.compile(r"(?:\b(?:tel|kom|fax|faks)\.?|\b(?:telefon|komórk|komork|zadzwo|dzwo|sms|esemes|whatsapp|"
+                            r"signal|telegram|kontakt|infolini)\w*|\b(?:pod|na|z|ze|ten|tego|tym|m[óo]j|tw[óo]j|jego|jej|ich|nasz|wasz|nieznan)\w*"
+                            r"\s+(?:numer\w*|nr\.?)(?:\s+tel\w*\.?)?)[^.!?\n]{0,25}$", re.I)
+
+
+def _label(s: str, start: int, words: str) -> bool:
+    """The identifier is named right before the number ("PESEL: …", "nr dowodu …")."""
+    return bool(re.search(rf"\b(?:{words})\w*[^.!?\n\d]{{0,15}}$", s[max(0, start - 40): start], re.I))
+
+
+def _pesel_ok(d: str) -> bool:
+    check = (10 - sum(int(x) * w for x, w in zip(d, (1, 3, 7, 9, 1, 3, 7, 9, 1, 3))) % 10) % 10
+    return check == int(d[10]) and 1 <= int(d[2:4]) % 20 <= 12 and 1 <= int(d[4:6]) <= 31
+
+
+def _weighted_ok(code: str, weights: tuple[int, ...]) -> bool:
+    """ID card (AAA + 6 digits) and passport (AA + 7 digits): letters A=10…Z=35, weighted sum ≡ 0 (mod 10)."""
+    return sum(int(ch, 36) * w for ch, w in zip(code.replace(" ", ""), weights)) % 10 == 0
+
+
+def _iban_ok(raw: str) -> bool:
+    s = raw.replace(" ", "").upper()
+    s = "PL" + s if s[:2].isdigit() else s
+    return 15 <= len(s) <= 34 and int("".join(str(int(ch, 36)) for ch in s[4:] + s[:4])) % 97 == 1
+
+
+def pii_spans(s: str) -> list[tuple[str, int, int]]:
+    """(kind, start, end) of every direct identifier in `s`; URLs are left as typed (links must still open)."""
+    taken = [(m.start(), m.end()) for m in _URL_SPAN.finditer(s)]
+    spans: list[tuple[str, int, int]] = []
+
+    def add(kind: str, a: int, b: int) -> None:
+        if not any(a < e and b > st for st, e in taken):
+            spans.append((kind, a, b))
+            taken.append((a, b))
+
+    for m in _EMAIL.finditer(s):
+        if not _ROLE_MAILBOX.fullmatch(m.group(1)):
+            add("EMAIL", m.start(), m.end())
+    for rx in (_IBAN, _NRB):
+        for m in rx.finditer(s):
+            if _iban_ok(m.group(0)) or _label(s, m.start(), "kont|rachun|iban|nrb|przelew"):
+                add("NR_KONTA", m.start(), m.end())
+    for m in _PESEL.finditer(s):
+        if _pesel_ok(m.group(0)) or _label(s, m.start(), "pesel"):
+            add("PESEL", m.start(), m.end())
+    for m in _ID_CARD.finditer(s):
+        if _weighted_ok(m.group(0), (7, 3, 1, 9, 7, 3, 1, 7, 3)) or _label(s, m.start(), "dowod|dowód"):
+            add("DOWOD", m.start(), m.end())
+    for m in _PASSPORT.finditer(s):
+        if _weighted_ok(m.group(0), (7, 3, 9, 1, 7, 3, 1, 7, 3)) or _label(s, m.start(), "paszport"):
+            add("PASZPORT", m.start(), m.end())
+    for m in _PHONE_INTL.finditer(s):
+        if 9 <= sum(ch.isdigit() for ch in m.group(0)) <= 15 and not _UNIT_AFTER.match(s, m.end()):
+            add("TELEFON", m.start(), m.end())
+    for m in _PHONE_PL.finditer(s):
+        g = m.group(0)
+        if _UNIT_AFTER.match(s, m.end()):
+            continue
+        if _PHONE_CONTEXT.search(s[max(0, m.start() - 40): m.start()]) or "-" in g:
+            add("TELEFON", m.start(), m.end())
+    return sorted(spans, key=lambda x: x[1])
 
 
 def mask_pii(s: str) -> str:
-    for rx, rep in _PII:
-        s = rx.sub(rep, s)
-    return s
+    """Replace direct identifiers with [PESEL] / [DOWOD] / [PASZPORT] / [TELEFON] / [NR_KONTA] / [EMAIL]. Idempotent."""
+    out, last = [], 0
+    for kind, a, b in pii_spans(s or ""):
+        out += [s[last:a], f"[{kind}]"]
+        last = b
+    return "".join(out) + (s or "")[last:]
+
+
+def drop_pii_tags(s: str) -> str:
+    """The placeholders stay in what the user sees, never in a retrieval or live-search query."""
+    return normalize_ws(PII_TAG.sub(" ", s))
 
 
 def short(s: str, n: int = 280) -> str:

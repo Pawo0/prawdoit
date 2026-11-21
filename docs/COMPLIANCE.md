@@ -64,7 +64,7 @@
 | Korpus ≥ 100 dok., ≥ 10 domen, ≥ 2 typy, źródła pierwotne + wtórne, lista do audytu | ✅ | 4,4 tys. dok., 24 domeny (`/api/health` → `corpus`), `docs/SOURCES.md` |
 | Znacznik publikacji i pobrania; preferencja aktualnych; ostrzeżenie o archiwalnych | ✅ | `published_at`, `retrieved_at`; `stale_days=365` → ostrzeżenie „Materiał archiwalny” / `NIEAKTUALNE_DOWODY` |
 | Bezpieczeństwo: walidacja, separacja instrukcji, ograniczenia narzędzi, sekrety, limit, logi | ✅ | limit 6000 zn., SSRF guard (`security.check_public_url`), robots.txt, limity na adres klienta: 120 sprawdzeń, 60 paczek wtyczki i 20 sprawdzeń w tle na minutę (`ratelimit.py`), tabele `security_events`, `errors` |
-| Prywatność: minimalizacja, maskowanie PII, retencja, usunięcie sesji | ✅ | `textutil.mask_pii`, `RETENTION_DAYS=30` (`store.purge_expired`), `DELETE /api/session/{id}` |
+| Prywatność: minimalizacja, maskowanie PII, retencja, usunięcie sesji | ✅ | `textutil.mask_pii` na początku `service.run_check` (zasada niżej: [Ochrona danych osobowych](#ochrona-danych-osobowych)), `RETENTION_DAYS=30` (`store.purge_expired`), `DELETE /api/session/{id}` |
 | Obserwowalność: czas, modele, błędy wyszukiwania, abstynencje, **szacunkowy koszt** | ✅ | `timings_ms`, `engine`, tabela `errors`, `/api/stats` (abstentions, `cost_estimate_pln`), `engine.cost_estimate` (dodane 21.11) |
 | Dostępność: responsywność, kontrast, prosty język | ✅ | `web/static/style.css`, zrzut `eval/results/screens/07_mobile_wynik.png` |
 | Spójność kanałów | ✅ | eval: 100%; scenariusz G |
@@ -104,6 +104,31 @@ ręczna próba — do wykonania przez jury.
 | Potencjał wdrożeniowy (20%) | rejestr źródeł + harmonogram, wymienne modele, `docs/COSTS.md`, `docs/ARCHITECTURE.md` |
 | Użyteczność (15%) | krótkie odpowiedzi, czat, PWA, wtyczka, komunikaty błędów oddzielone od wyników |
 | Innowacyjność (15%) | pętla informacji, łańcuch dowodów, wyszukiwanie na żywo w zaufanych serwisach, wtyczka |
+
+## Ochrona danych osobowych
+**Zasada: maskujemy bezpośrednie identyfikatory, a nie treść potrzebną do weryfikacji.** Za wyjaśnieniem organizatorów
+(cytat dosłowny): „nie należy maskować informacji, bez których zmienia się sens zapytania albo nie da się znaleźć
+dowodu. Na pewno nie należy maskować imion i nazwisk osób publicznych. Maskować należy np. numery pesel, numer
+dowodu, numer telefonu itd.”
+
+| Maskujemy (`textutil.mask_pii`) | Warunek, żeby liczba faktograficzna nie została zamaskowana |
+|---|---|
+| PESEL → `[PESEL]` | 11 cyfr z poprawną sumą kontrolną i datą albo podpisane „PESEL” |
+| Nr dowodu osobistego → `[DOWOD]` | 3 wielkie litery + 6 cyfr z poprawną cyfrą kontrolną albo podpisane „dowód”; kody „PL…” (np. Natura 2000) pomijane |
+| Nr paszportu → `[PASZPORT]` | 2 wielkie litery + 7 cyfr z poprawną cyfrą kontrolną albo podpisane „paszport” |
+| Nr konta (NRB/IBAN) → `[NR_KONTA]` | suma kontrolna mod 97 albo podpisane „konto/rachunek/IBAN” |
+| Telefon → `[TELEFON]` | z prefiksem `+`/`00`; numer krajowy tylko z kontekstem („tel.”, „zadzwoń”, „mój numer”, „pod numerem”…) albo zapisany z myślnikami; nigdy, gdy po liczbie stoi jednostka lub waluta (zł, euro, %, mln, osób, głosów…) ani gdy jest częścią dłuższej liczby |
+| Prywatny e-mail → `[EMAIL]` | adresy funkcyjne instytucji (`kontakt@`, `biuro@`, `iod@`, `rzecznik@`…) zostają |
+
+Nie maskujemy nazwisk (zwłaszcza osób publicznych), instytucji, miejsc, dat, kwot, statystyk, przedziałów lat ani
+sygnatur aktów prawnych. Maskowanie działa **raz, na początku** `service.run_check` — na tekście, tekście z OCR
+i treści pobranej strony — więc wyszukiwanie, zapytania do Google Fact Check i wyszukiwarek zaufanych serwisów,
+opcjonalny LLM, `result_json` w audycie i kolejka moderatora dostają tylko znaczniki; same znaczniki są usuwane
+z zapytań wyszukiwania (`claims.extract_claims`). Adresy URL zostają bez zmian (link musi dać się pobrać).
+Sprawdzenie (21.11.2026): 0 z 163 wejść zbiorów `eval/` i scenariuszy organizatorów zawiera coś, co maska zmienia;
+na 8 771 dokumentach korpusu maska trafia wyłącznie w numery telefonów i adresy e-mail (wcześniejsza wersja
+zamieniała kwoty typu „613 499 158 zł” na `[TELEFON]`). Testy: `backend/tests/test_pii_masking.py`. Ograniczenie:
+numer telefonu z samych cyfr, bez kontekstu i bez prefiksu (np. „602 418 977” w środku zdania), nie jest maskowany.
 
 ## Regulamin §4.2 — prawa osób trzecich (licencje)
 | Element | Licencja / podstawa | Gdzie opisane | Status |

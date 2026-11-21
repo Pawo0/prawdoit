@@ -38,8 +38,12 @@
 ```
 
 ## Przepływ danych
-1. **Wejście** (tekst ≤ 6000 znaków lub URL). Dane osobowe (PESEL, telefon, e-mail, nr konta, nr dowodu) są maskowane
-   przed zapisem. Strona z URL jest pobierana z ochroną SSRF (tylko publiczne IP, limity rozmiaru/czasu, ręczna obsługa
+1. **Wejście** (tekst ≤ 6000 znaków lub URL). Bezpośrednie identyfikatory osób prywatnych (PESEL, nr dowodu
+   i paszportu, telefon, nr konta, prywatny e-mail) są maskowane **raz, na początku** `run_check` — przed
+   wyodrębnieniem twierdzeń — w tekście, w tekście z OCR i w treści pobranej strony; dalsze etapy (wyszukiwanie,
+   zapytania na żywo, opcjonalny LLM, `result_json`, kolejka moderatora) widzą tylko znaczniki `[PESEL]`, `[TELEFON]`…,
+   a zapytania wyszukiwania nie zawierają nawet znaczników. Nazwisk, nazw, miejsc, dat, kwot i statystyk nie maskujemy
+   (zasada w [COMPLIANCE](COMPLIANCE.md#ochrona-danych-osobowych)); adresy URL zostają bez zmian, by dało się je pobrać. Strona z URL jest pobierana z ochroną SSRF (tylko publiczne IP, limity rozmiaru/czasu, ręczna obsługa
    przekierowań), treść traktowana jako **niezaufane dane**.
 2. **Bezpieczeństwo**: wzorce poleceń (PL/EN, tokeny szablonów czatu, ukryte znaki) → zdarzenie `prompt_injection`
    w dzienniku + neutralizacja fragmentu. Instrukcje są kodem, treść jest danymi — żaden tekst nie zmienia reguł.

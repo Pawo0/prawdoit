@@ -104,6 +104,11 @@ def _read_image(req: CheckRequest, res: CheckResult, cid: str, timings: dict) ->
     return text
 
 
+def _masked(page: dict) -> dict:
+    """A fetched page goes through the same PII masking as the user's text (claims may come from it)."""
+    return {**page, "title": mask_pii(page.get("title") or ""), "text": mask_pii(page.get("text") or "")}
+
+
 def run_check(req: CheckRequest, progress=None) -> CheckResult:
     """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py).
 
@@ -125,6 +130,12 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     ocr_text = _read_image(req, res, cid, timings) if (req.image_b64 and not auto) else ""
     if ocr_text:  # the question that came with the screenshot first, then what the image says
         text = normalize_ws(f"{text}\n{ocr_text}")[: settings.max_input_chars]
+    # Direct identifiers (PESEL, ID card / passport, phone, bank account, personal e-mail) are masked here, once,
+    # before claim extraction: retrieval, the live-search queries, the optional LLM, the audit row (result_json) and the
+    # moderator queue only ever see the placeholders. Names, places, dates, amounts and statistics are not masked
+    # (policy: textutil.mask_pii, docs/COMPLIANCE.md). URLs stay as typed so links can be fetched.
+    text, ocr_text = mask_pii(text), mask_pii(ocr_text)
+    user_text = mask_pii(req.text or "")
     url = "" if auto else (req.url or "").strip()  # auto: text only, nothing is fetched on the user's behalf
     # a bare URL pasted as text
     if not url and not auto and re.fullmatch(r"https?://\S+", text):
@@ -135,7 +146,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         t0 = time.perf_counter()
         websearch.emit(progress, "pobieranie")
         try:
-            page = fetch_url(url)
+            page = _masked(fetch_url(url))
             res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
             if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
                 raise FetchError(_NO_TEXT)
@@ -167,7 +178,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         t0 = time.perf_counter()
         websearch.emit(progress, "pobieranie")
         try:
-            page = fetch_url(link)
+            page = _masked(fetch_url(link))
             res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
             if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
                 raise FetchError(_NO_TEXT)
@@ -182,10 +193,10 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
 
     res.input_excerpt = short(mask_pii(text or url), 500)
-    domains = {urlparse(u).hostname or "" for u in re.findall(r"https?://\S+", f"{url} {req.text or ''}")}
+    domains = {urlparse(u).hostname or "" for u in re.findall(r"https?://\S+", f"{url} {user_text}")}
     res.warnings += source_status_notices({d.removeprefix("www.") for d in domains if d})
     if res.status == "ok":
-        res.security_events += scan(req.text or "", "wiadomość użytkownika")
+        res.security_events += scan(user_text, "wiadomość użytkownika")
         if ocr_text:
             res.security_events += scan(ocr_text, "tekst odczytany z obrazu")
         if res.security_events:
@@ -203,7 +214,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             res.status = "doprecyzuj"
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
-        elif page_text and res.url_meta and provenance.asks_same_item(req.text or ""):
+        elif page_text and res.url_meta and provenance.asks_same_item(user_text):
             # "Czy ten wpis dotyczy tej samej depeszy, którą sprawdzał Demagog? <link>": a question about the identity
             # of the linked item, answered by comparing its headline and date with the fact-check records (scenario I)
             try:
