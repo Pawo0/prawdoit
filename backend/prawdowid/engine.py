@@ -640,6 +640,13 @@ def unit_match(c: _Cand, d, user_text: str) -> bool | None:
 _NEGATION = re.compile(r"\b(nie|nigdy|żadn\w*|zadn\w*|bez)\b", re.I)
 
 
+def has_own_text(d) -> bool:
+    """Does the record carry text of its own beyond its headline and the checked claim? A ClaimReview metadata entry
+    (rating, claim, headline, link) does not: there is no passage of the analysis to quote as the finding, and the
+    organisers' rule is that every verdict rests on a source quoted verbatim."""
+    return bool(set(tokens(d.text or "")) - set(tokens(d.title or "")) - set(tokens(d.claim or "")))
+
+
 def match_support(c: _Cand) -> tuple[int, float]:
     """How well a fact-check match is backed: the number of NLI directions (user -> checked claim, checked claim ->
     user) that state its polarity — entailment for "same", contradiction for "opposite" (a direction not computed
@@ -793,6 +800,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
+    metadata_only: list[str] = []  # V3: matched records with no text of their own (see has_own_text)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
@@ -817,6 +825,11 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
             c.same, c.implied = same, mapped
+            if mapped in ("falszywe", "potwierdzone", "wprowadzajace_w_blad") and not has_own_text(d):
+                # V3: no passage of its own carries the finding (a ClaimReview metadata entry: headline + checked
+                # claim only), so the record is listed as related and never decides
+                metadata_only.append(d.id)
+                evidence.append(_evidence(c, "kontekst", c.claim_cos, same)); continue
             if mapped is None and same is None and c.archival:  # R3a: the analysis dates the material earlier
                 refute.append(c); evidence.append(_evidence(c, "przeczy", max(c.claim_cos, c.cos), None)); continue
             if mapped == "falszywe":
@@ -846,6 +859,8 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
                   keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
     res.meta_question = getattr(claim, "meta", "") or None
+    if metadata_only:
+        res.rules_fired.append("V3:TYLKO_METADANE")
     if resolved:
         res.rules_fired.append("P1:SPOJNE_DOPASOWANIA")
         res.premises.append(Premise(label="Spójność dopasowań do analiz tego samego twierdzenia lub wydawcy",

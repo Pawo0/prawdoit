@@ -136,5 +136,14 @@ class HeadlineRows(unittest.TestCase):
         self.assertAlmostEqual(float(sim[0]), 0.8, places=5)
 
 
+class MetadataOnly(unittest.TestCase):
+    def test_record_without_text_of_its_own(self):
+        meta = fc("m", "Redakcja C", "Nagranie z koncertu krąży jako protest", "Nagranie pokazuje protest pod Pałacem")
+        self.assertFalse(engine.has_own_text(meta))  # text = headline + checked claim
+        self.assertTrue(engine.has_own_text(SPECIFIC))  # the analysis dates the recording
+        empty = fc("e", "Redakcja C", "Tytuł analizy", "Twierdzenie", text="")
+        self.assertFalse(engine.has_own_text(empty))
+
+
 if __name__ == "__main__":
     unittest.main()
