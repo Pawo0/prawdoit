@@ -51,7 +51,7 @@ const result = {
   await reply(result);
   await sheet.locator('[data-s="full"]').waitFor();
   assert.equal(await sheet.getAttribute('aria-busy'), 'false');
-  assert.match(await sheet.innerText(), /Brak wystarczających dowodów/);
+  assert.match(await sheet.innerText(), /Brak dowodów/);
   await screenshot('result-desktop');
   await sheet.locator('[data-s="full"]').click();
   assert.equal(await page.evaluate(() => window.calls.at(-1).id), 'test-result');
@@ -72,9 +72,14 @@ const result = {
   withEvidence.summary = 'Przykładowy wynik testu interfejsu — nie jest rzeczywistą weryfikacją.';
   withEvidence.claims[0] = {...withEvidence.claims[0], verdict: 'falszywe', verdict_label: 'Fałszywe', strength_label: 'mocna', explanation: 'Przykładowe uzasadnienie wyniku na potrzeby testu interfejsu.', what_unknown: null, would_settle: null, evidence: [{stance: 'przeczy', publisher: 'Źródło testowe', published_at: '2026-11-20', title: 'Tytuł materiału źródłowego', url: 'https://example.org/dowod', fragment: 'Dosłowny fragment materiału. <script>window.pwned=true</script>'}]};
   await reply(withEvidence);
-  assert.match(await sheet.locator('.source').innerText(), /20.11.2026/);
+  assert.match(await sheet.locator('.compact-sources .source').innerText(), /20.11.2026/);
+  assert.equal(await sheet.locator('.result-details').first().getAttribute('open'), null);
+  assert.equal(await sheet.locator('blockquote').isVisible(), false);
+  await screenshot('compact-result-desktop');
+  await sheet.locator('.result-details summary').first().click();
+  assert.equal(await sheet.locator('blockquote').isVisible(), true);
   assert.equal(await sheet.locator('script').count(), 0);
-  assert.equal(await sheet.locator('.source a').getAttribute('href'), 'https://example.org/dowod');
+  assert.equal(await sheet.locator('.compact-sources .source a').getAttribute('href'), 'https://example.org/dowod');
   await screenshot('evidence-desktop');
   // Small viewports: window and footer stay on-screen; the body scrolls.
   for (const width of [390, 320]) {
@@ -98,9 +103,9 @@ const result = {
   await reply({...result, demo: true, warnings: ['TRYB DEMONSTRACYJNY — fikcyjny wynik i źródła.']});
   assert.match(await sheet.getAttribute('aria-label'), /Demo/);
   assert.match(await sheet.innerText(), /Dane testowe/);
-  assert.equal(await sheet.locator('[data-s="full"]').count(), 0);
-  await sheet.locator('[data-s="pick"]').click();
-  assert.equal(await sheet.count(), 0);
+  assert.equal(await sheet.locator('[data-s="full"]').count(), 1);
+  await sheet.locator('[data-s="full"]').click();
+  assert.equal(await page.evaluate(() => window.calls.at(-1).type), 'openWebsite');
   await page.keyboard.press('Escape');
   // Popup switch saves the preference and displays its saved value after reopening.
   await page.route('http://localhost:8000/popup.html', route => route.fulfill({contentType: 'text/html', body: readFileSync(resolve(root, 'extension/popup.html'), 'utf8').replace('<script src="popup.js"></script>', '')}));

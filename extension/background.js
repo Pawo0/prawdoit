@@ -2,7 +2,7 @@
 // All network calls go through here: content scripts never talk to the API directly (CORS/CSP-safe),
 // and only the text of the checked fragment is sent — no cookies, no user identifiers, no page HTML.
 const api = globalThis.browser ?? globalThis.chrome;
-const DEFAULTS = {apiBase: "http://localhost:8000", mockMode: false, autoScan: true, mode: "zaslon", minLevel: "srednie", disabledSites: [], noticeSeen: false};
+const DEFAULTS = {apiBase: "http://localhost:8000", demoWebBase: "http://localhost:5500", mockMode: false, autoScan: true, mode: "zaslon", minLevel: "srednie", disabledSites: [], noticeSeen: false};
 
 async function settings() { return Object.assign({}, DEFAULTS, await api.storage.local.get(Object.keys(DEFAULTS))); }
 
@@ -57,6 +57,13 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           return sendResponse({ok: true, data: mockResult(msg.text)});
         }
         return sendResponse({ok: true, data: await post("/api/check", {text: msg.text, channel: "extension"})});
+      }
+      if (msg.type === "openWebsite") {
+        const s = await settings();
+        const url = new URL(msg.demo ? s.demoWebBase : s.apiBase);
+        if (!/^https?:$/.test(url.protocol)) throw new Error("Nieprawidłowy adres strony");
+        await api.tabs.create({url: url.href});
+        return sendResponse({ok: true});
       }
       if (msg.type === "openAnalysis") {
         const {apiBase} = await settings();

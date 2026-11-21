@@ -23,7 +23,9 @@ tekst na zwykłej stronie WWW. Po około 1,2 s ładowania pojawi się przykłado
 Ustawienie jest zapisywane lokalnie i pozostaje aktywne po ponownym otwarciu przeglądarki. Tryb jest domyślnie wyłączony.
 W tym trybie ręczne sprawdzenia i automatyczne skanowanie nie wywołują API; nie są dodawane fikcyjne ostrzeżenia
 na postach. Wynik i materiały źródłowe są wyraźnie oznaczone jako fikcyjne. Linki źródeł prowadzą do example.org;
-przycisk pełnej analizy zastępuje wybór kolejnego fragmentu. Wyłącz przełącznik, aby przywrócić rzeczywiste sprawdzanie.
+przycisk „Więcej szczegółów na stronie” otwiera frontend (domyślnie `http://localhost:5500`). Adres można zmienić
+w ustawieniach wtyczki. Frontend uruchom przez `python3 -m http.server 5500` w katalogu `web/`.
+Wyłącz przełącznik, aby przywrócić rzeczywiste sprawdzanie; wtedy przycisk otwiera konkretną analizę na serwerze.
 Test transportu i zapisu ustawień bez dodatkowych zależności: `node eval/test_extension_mock.cjs`.
 
 Dowolny tekst lub URL na `/`, w `/czat` albo przez `POST /api/check {"text": "..."}`. Wynik nie zależy od wpisanych

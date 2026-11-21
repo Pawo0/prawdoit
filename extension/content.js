@@ -141,8 +141,27 @@
   .sheet .caveat{font-size:12px;padding:10px 12px;background:var(--sage);margin:12px 0}
   .sheet .sheet-footer{padding:14px 24px 18px;border-top:1px solid var(--ink);flex-shrink:0}
   .sheet .sheet-footer .row{margin:10px 0 0}
+  .sheet:has(.compact-result){width:min(510px,calc(100vw - 48px))}
+  .sheet .compact-result{border-top:0;padding:0 0 18px}
+  .sheet .compact-result + .compact-result{border-top:1px solid #c4c3ba;padding-top:18px}
+  .sheet .verdict-heading{display:flex;gap:16px;align-items:center;--verdict-color:#55554f}
+  .sheet .tone-false{--verdict-color:#a32424}.sheet .tone-true{--verdict-color:#17623b}.sheet .tone-warning{--verdict-color:#815000}
+  .sheet .verdict-heading h2{color:var(--verdict-color);font-size:32px;letter-spacing:-.025em}
+  .sheet .verdict-symbol{display:grid;place-items:center;flex-shrink:0;width:58px;height:58px;border:2px solid currentColor;color:var(--verdict-color);font:700 42px/1 ui-monospace,monospace}
+  .sheet .verdict-hint{font-size:17px;line-height:1.5;margin:16px 0}
+  .sheet .compact-sources .source{padding:8px 0;border:0;border-top:1px solid #d2d1c7;background:none;margin:0}
+  .sheet .compact-sources .source a{font-size:16px;margin:2px 0}
+  .sheet .compact-sources .source .muted{display:block;font-size:13px}
+  .sheet .result-details{border-top:1px solid #d2d1c7;margin-top:10px;font-size:15px}
+  .sheet .result-details summary{cursor:pointer;padding:12px 0;min-height:44px;font-size:15px;font-weight:650}
+  .sheet .demo-note{font-size:13px;background:var(--sage);padding:8px 10px;margin-bottom:18px}
+  .sheet:has(.compact-result) .sheet-footer .row{margin:0}
+  .sheet:has(.compact-result) .sheet-footer button{font-size:15px;min-height:48px}
+  .sheet:has(.compact-result) .sheet-footer .row{display:grid;grid-template-columns:1fr}
+  .sheet:has(.compact-result) .sheet-footer button[data-s="x"]{border-color:transparent;min-height:40px;padding:6px}
   @keyframes scan{from{transform:translateX(-110%)}to{transform:translateX(290%)}}
   @media(max-width:520px){.sheet{right:12px;bottom:82px;width:calc(100vw - 24px);max-height:calc(100dvh - 104px);box-shadow:4px 4px 0 var(--ink)}
+    .sheet:has(.compact-result){width:calc(100vw - 24px)}.sheet .verdict-heading h2{font-size:28px}.sheet .verdict-symbol{width:48px;height:48px;font-size:34px}
     .sheet .sheet-body{padding:18px}.sheet .sheet-footer{padding:12px 18px}.sheet h2{font-size:24px}
     .sheet .pixel-art{width:54px;height:54px}.sheet .pixel-art svg{width:42px;height:42px}.sheet .result-intro{gap:12px}
     .sheet .row button{flex:1}.sheet .window-name{font-size:12px}}
@@ -398,7 +417,7 @@
     checkText(t, el);
   }
   async function checkText(text, el) {
-    const version = ++checkVersion, t0 = performance.now();
+    const version = ++checkVersion;
     closeMenu();
     openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Sprawdzanie informacji</div><h2>Sprawdzam, co mówią źródła.</h2></div></div>
       <div class="selected-text"><span class="selected-label">Wybrany fragment</span>${esc(text.slice(0, 280))}${text.length > 280 ? "…" : ""}</div>
@@ -416,32 +435,43 @@
       messageSheet("Nie udało się sprawdzić", "Nie udało się połączyć z serwerem Prawdowida. Spróbuj ponownie za chwilę. To błąd techniczny, a nie ocena treści.", () => checkText(text, el));
       return;
     }
-    const res = full.data; const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    const res = full.data;
     if (res.status !== "ok") {
       messageSheet(res.status === "blad_techniczny" ? "Błąd techniczny" : res.status === "doprecyzuj" ? "Doprecyzuj pytanie" : "Poza zakresem", res.status_message || "Nie można wykonać tego sprawdzenia.", res.status === "blad_techniczny" ? () => checkText(text, el) : null);
       return;
     }
+    const verdictView = {
+      falszywe: {label: "Fałsz", icon: "×", tone: "false", hint: "Źródła przeczą tej informacji."},
+      potwierdzone: {label: "Potwierdzone", icon: "✓", tone: "true", hint: "Źródła potwierdzają tę informację."},
+      wprowadzajace_w_blad: {label: "Wprowadza w błąd", icon: "!", tone: "warning", hint: "Informacja pomija ważny kontekst lub przedstawia go błędnie."},
+      brak_dowodow: {label: "Brak dowodów", icon: "?", tone: "unknown", hint: "Nie można ustalić, czy to prawda. Brak dowodów nie oznacza fałszu."},
+      nie_podlega_weryfikacji: {label: "To nie jest fakt do sprawdzenia", icon: "—", tone: "unknown", hint: "Opinii lub przewidywania nie można ocenić jako prawdy albo fałszu."}
+    };
     const claims = res.claims.map((c, i) => {
-      const relevant = c.evidence.filter(e => e.stance !== "kontekst");
-      const src = (relevant.length ? relevant : c.evidence).slice(0, 2);
-      return `<article class="claim-result"><span class="verdict-label">Twierdzenie ${String(i + 1).padStart(2, "0")}</span>
-        <h3>${esc(c.verdict_label)}</h3><div class="claim-text">„${esc(c.claim)}”</div>
-        <p>${esc(c.explanation)}</p>
-        ${!["brak_dowodow", "nie_podlega_weryfikacji"].includes(c.verdict) ? `<div class="strength">Siła podstaw: <b>${esc(c.strength_label)}</b></div>` : ""}
-        ${c.what_unknown ? `<p class="muted">Nie ustalono: ${esc(c.what_unknown)}</p>` : ""}
-        ${c.would_settle ? `<p class="muted">Co pomoże rozstrzygnąć: ${esc(c.would_settle)}</p>` : ""}
-        ${src.length ? `<div class="sources-label">Materiały źródłowe · ${src.length}${c.evidence.length > src.length ? ` z ${c.evidence.length}` : ""}</div>` : c.verdict !== "nie_podlega_weryfikacji" ? '<p class="muted">Nie znaleziono źródeł pozwalających rozstrzygnąć to twierdzenie.</p>' : ""}
-        ${src.map(e => `<div class="source"><b>${esc(e.publisher)}</b> · ${esc(fmtDate(e.published_at))}<a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(e.title)} ↗</a>${e.fragment ? `<blockquote>„${esc(e.fragment)}”</blockquote>` : ""}</div>`).join("")}
-        ${(c.limitations || []).map(l => `<p class="muted">${esc(l)}</p>`).join("")}</article>`;
+      const v = verdictView[c.verdict] || verdictView.brak_dowodow;
+      const src = c.evidence.slice(0, 2);
+      // Keep every claim's verdict distinct; a mixed passage must not get a single red/green label.
+      return `<article class="claim-result compact-result">
+        ${res.claims.length > 1 ? `<div class="eyebrow">Informacja ${i + 1} z ${res.claims.length}</div>` : ""}
+        <div class="verdict-heading tone-${v.tone}"><span class="verdict-symbol" aria-hidden="true">${v.icon}</span><h2>${esc(v.label)}</h2></div>
+        <p class="verdict-hint">${esc(v.hint)}</p>
+        ${res.claims.length > 1 ? `<div class="claim-text">„${esc(c.claim)}”</div>` : ""}
+        ${src.length ? `<div class="compact-sources"><div class="sources-label">${res.demo ? "Przykładowe źródła" : "Źródła"}</div>${src.map(e => `<div class="source"><a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(e.publisher)} ↗</a><span class="muted">${esc(fmtDate(e.published_at))} · ${esc(e.title)}</span></div>`).join("")}</div>` : ""}
+        <details class="result-details"><summary>Pokaż uzasadnienie${src.length ? " i cytaty" : ""}</summary>
+          <div class="claim-text">Sprawdzono: „${esc(c.claim)}”</div><p>${esc(c.explanation)}</p>
+          ${!["brak_dowodow", "nie_podlega_weryfikacji"].includes(c.verdict) ? `<p class="strength">Siła podstaw: <b>${esc(c.strength_label)}</b></p>` : ""}
+          ${c.what_unknown ? `<p>Nie ustalono: ${esc(c.what_unknown)}</p>` : ""}
+          ${c.would_settle ? `<p>Co pomoże rozstrzygnąć: ${esc(c.would_settle)}</p>` : ""}
+          ${src.map(e => e.fragment ? `<div class="source"><b>${esc(e.publisher)}</b><blockquote>„${esc(e.fragment)}”</blockquote></div>` : "").join("")}
+          ${(c.limitations || []).map(l => `<p class="muted">${esc(l)}</p>`).join("")}
+        </details></article>`;
     }).join("");
-    const sh = openSheet(`<div class="result-intro">${PIXEL_ART}<div><div class="eyebrow">Analiza zakończona · <span class="elapsed">${secs} s</span></div><h2>Sprawdź, zanim uwierzysz.</h2></div></div>
-      <p>${esc(res.summary)}</p>
-      ${res.warnings.map(w => `<div class="caveat">${esc(w)}</div>`).join("")}${claims}`, {
+    const sh = openSheet(`${res.demo ? '<div class="demo-note" role="note">Dane testowe · przykładowy wynik, nie ocena wybranego tekstu.</div>' : ""}
+      ${claims}${res.warnings.length ? `<details class="result-details"><summary>Ważne uwagi (${res.warnings.length})</summary>${res.warnings.map(w => `<p class="muted">${esc(w)}</p>`).join("")}</details>` : ""}`, {
       title: res.demo ? "Demo · przykładowy wynik" : "Wynik sprawdzenia",
-      footer: `<div class="muted">${res.demo ? "Dane testowe — to nie jest ocena wybranego tekstu." : "Oceniamy treść, nie autora ani portal. Poznaj dowody i ograniczenia."}</div><div class="row">${res.demo ? '<button class="p" data-s="pick">Sprawdź inny fragment</button>' : '<button class="p" data-s="full">Zobacz pełną analizę ↗</button>'}<button data-s="x">Zamknij</button></div>`
+      footer: `<div class="row"><button class="p" data-s="full">Więcej szczegółów na stronie ↗</button><button data-s="x">Zamknij</button></div>`
     });
-    sh.querySelector('[data-s="full"]')?.addEventListener("click", () => send({type: "openAnalysis", id: res.id}));
-    sh.querySelector('[data-s="pick"]')?.addEventListener("click", startPicker);
+    sh.querySelector('[data-s="full"]').addEventListener("click", () => send(res.demo ? {type: "openWebsite", demo: true} : {type: "openAnalysis", id: res.id}));
   }
 
   // ------------------------------------------------------------------ first-run privacy notice + start

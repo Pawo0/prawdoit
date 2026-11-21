@@ -23,12 +23,13 @@ const send = msg => globalThis.browser ? browser.runtime.sendMessage(msg) : new 
   document.getElementById("auto").checked = s.autoScan;
   document.getElementById("mode").checked = s.mode === "zaslon";
   document.getElementById("api").value = s.apiBase;
+  document.getElementById("demo-web").value = s.demoWebBase || "http://localhost:5500";
   const st = (await send({type: "stats", tabId: tab?.id})).data;
   document.getElementById("st").textContent = `Na tej karcie sprawdzono ${st.scanned} fragmentów, oznaczono ${st.flagged}.`;
   document.getElementById("auto").onchange = e => send({type: "setSettings", data: {autoScan: e.target.checked}});
   document.getElementById("mode").onchange = e => send({type: "setSettings", data: {mode: e.target.checked ? "zaslon" : "oznacz"}});
-  document.getElementById("save").onclick = () => send({type: "setSettings", data: {apiBase: document.getElementById("api").value.trim() || "http://localhost:8000"}});
-  document.getElementById("web").onclick = () => api.tabs.create({url: s.apiBase});
+  document.getElementById("save").onclick = () => send({type: "setSettings", data: {apiBase: document.getElementById("api").value.trim() || "http://localhost:8000", demoWebBase: document.getElementById("demo-web").value.trim() || "http://localhost:5500"}});
+  document.getElementById("web").onclick = () => send({type: "openWebsite", demo: !!s.mockMode});
   document.getElementById("pick").onclick = async () => {
     // works on ANY site: inject the content script on demand (activeTab), then start the picker
     try { await api.scripting.executeScript({target: {tabId: tab.id}, files: ["content.js"]}); } catch (e) { /* already injected or restricted page */ }

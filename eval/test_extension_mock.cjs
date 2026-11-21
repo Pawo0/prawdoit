@@ -6,13 +6,14 @@ const assert = require('node:assert/strict');
 let onMessage;
 const stored = {};
 let fetches = 0;
+const opened = [];
 const context = {
-  setTimeout, AbortSignal,
+  setTimeout, AbortSignal, URL,
   fetch: async () => { fetches++; return {ok: true, json: async () => ({status: 'ok', demo: false})}; },
   chrome: {
     storage: {local: {get: async () => stored, set: async data => Object.assign(stored, data)}},
     runtime: {onMessage: {addListener: fn => onMessage = fn}, onInstalled: {addListener() {}}},
-    tabs: {onRemoved: {addListener() {}}}, action: {}
+    tabs: {onRemoved: {addListener() {}}, create: async ({url}) => opened.push(url)}, action: {}
   }
 };
 vm.runInNewContext(readFileSync(resolve(__dirname, '../extension/background.js'), 'utf8'), context);
@@ -30,6 +31,13 @@ const send = msg => new Promise(resolve => onMessage(msg, {}, resolve));
   assert.equal(result.data.claims[0].claim, 'Wybrany tekst do testu interfejsu.');
   assert.match(result.data.warnings[0], /TRYB DEMONSTRACYJNY/);
   assert.equal(fetches, 0, 'No API requests in demo mode');
+  await send({type: 'openWebsite', demo: true});
+  assert.equal(opened.at(-1), 'http://localhost:5500/');
+  await send({type: 'setSettings', data: {demoWebBase: 'http://localhost:5600'}});
+  await send({type: 'openWebsite', demo: true});
+  assert.equal(opened.at(-1), 'http://localhost:5600/');
+  await send({type: 'openAnalysis', id: 'real-result'});
+  assert.equal(opened.at(-1), 'http://localhost:8000/analiza/real-result');
   await send({type: 'setSettings', data: {mockMode: false}});
   await send({type: 'check', text: 'Real check'});
   assert.equal(fetches, 1, 'Turning demo off restores the normal API path');
