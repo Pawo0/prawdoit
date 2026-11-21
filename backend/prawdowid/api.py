@@ -48,6 +48,9 @@ async def rate_limit(request: Request, call_next):
 @app.on_event("startup")
 def _startup() -> None:
     INDEX.load()
+    # A shipped embedding cache can skip loading the retrieval model entirely.
+    # Warm it before readiness, rather than downloading it on the first user's request.
+    INDEX.encode_query(["rozgrzewka"])
     from .nli import NLI_MODEL
 
     NLI_MODEL.score([("rozgrzewka", "rozgrzewka")])  # warm-up so the first user does not wait for model load

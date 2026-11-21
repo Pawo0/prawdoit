@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: .
+    image: prawdowid:local
+    restart: unless-stopped
+    ports:
+      - "${PRAWDOWID_BIND_ADDRESS:-127.0.0.1}:${PRAWDOWID_PORT:-8000}:8000"
+    environment:
+      PRAWDOWID_MODERATOR_TOKEN: ${PRAWDOWID_MODERATOR_TOKEN:?Set PRAWDOWID_MODERATOR_TOKEN in .env}
+      PRAWDOWID_PUBLIC_URL: ${PRAWDOWID_PUBLIC_URL:-http://localhost:8000}
+      PRAWDOWID_RATE_LIMIT: ${PRAWDOWID_RATE_LIMIT:-30}
+      PRAWDOWID_RETENTION_DAYS: ${PRAWDOWID_RETENTION_DAYS:-30}
+      OMP_NUM_THREADS: ${PRAWDOWID_CPU_THREADS:-4}
+      MKL_NUM_THREADS: ${PRAWDOWID_CPU_THREADS:-4}
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+      # Compose exposes the API on loopback; public traffic arrives through Caddy.
+      FORWARDED_ALLOW_IPS: ${PRAWDOWID_TRUSTED_PROXY_IPS:-127.0.0.1}
+    volumes:
+      - state:/var/lib/prawdowid
+      - models:/var/cache/huggingface
+    healthcheck:
+      test: [CMD, python, /app/docker/healthcheck.py]
+      interval: 30s
+      timeout: 5s
+      start_period: 30m
+      retries: 3
+    stop_grace_period: 30s
+
+  # Optional HTTPS gateway: docker compose --profile tls up -d
+  caddy:
+    image: caddy:2-alpine
+    profiles: [tls]
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PRAWDOWID_DOMAIN: ${PRAWDOWID_DOMAIN:-localhost}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  state:
+  models:
+  caddy_data:
+  caddy_config:

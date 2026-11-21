@@ -7,6 +7,8 @@ data/index/*.tmp
 *.sqlite
 *.sqlite-journal
 .env
+.env.*
+!.env.example
 models/
 node_modules/
 extension/dist/

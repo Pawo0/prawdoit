@@ -19,6 +19,18 @@ pokazuje, co mówią źródła.
 | `docs/` | Architektura, źródła i licencje, ryzyka, koszty |
 | `research/` | Raporty z researchu (kanały, źródła, metodologia SPRAWDŹ/IFCN/EFCSN, modele i prior art) |
 
+## Docker — backend i strona WWW
+
+Skopiuj `.env.example` do `.env`, ustaw prywatny `PRAWDOWID_MODERATOR_TOKEN`, następnie uruchom:
+
+```bash
+docker compose up -d --build
+docker compose logs -f backend
+```
+
+Po załadowaniu modeli: http://localhost:8000. Historia i modele pozostają w wolumenach po restarcie.
+Pierwszy start pobiera modele z internetu. [Instrukcja hostowania, HTTPS i trwałych danych](docs/DEPLOYMENT.md).
+
 ## Uruchomienie (≈ 10 min, CPU wystarczy)
 ```bash
 cd backend

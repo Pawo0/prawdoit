@@ -1,0 +1,22 @@
+# Allow only the application and its curated input data into the build context.
+**
+!Dockerfile
+!backend/
+!backend/requirements-container.txt
+!backend/prawdowid/
+!backend/prawdowid/**
+!web/
+!web/**
+!data/
+!data/corpus/
+!data/corpus/**
+!data/index/
+!data/index/*.npy
+!data/index/*.keys.json
+!data/watchlist.json
+!docker/
+!docker/start.py
+!docker/healthcheck.py
+**/__pycache__/
+**/*.pyc
+**/.env*
