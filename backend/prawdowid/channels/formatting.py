@@ -29,11 +29,14 @@ def _answer(c: ClaimResult, sms: bool) -> str:
 
 
 def _source(c: ClaimResult) -> str | None:
-    i = c.main_evidence
+    """The decisive source; for an abstention that names related material, that item, labelled as not decisive."""
+    i, label = c.main_evidence, "Źródło"
+    if i is None:
+        i, label = getattr(c, "related_evidence", None), "Materiał pokrewny (nie rozstrzyga)"
     if i is None or i >= len(c.evidence):
         return None
     e = c.evidence[i]
-    return f"Źródło: {e.publisher}, {_date(e.published_at)} — {short(e.title, 90)}\n{e.url}"
+    return f"{label}: {e.publisher}, {_date(e.published_at)} — {short(e.title, 90)}\n{e.url}"
 
 
 def chat_text(res: CheckResult, bold: str = "*", max_len: int = 3500, sms: bool = False) -> str:

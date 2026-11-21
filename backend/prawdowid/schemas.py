@@ -101,6 +101,9 @@ class ClaimResult(BaseModel):
     basis_line: str = ""  # "Podstawa: mocna — 2 niezależne źródła, w tym urzędowe (…)."
     limitation_line: str = ""  # "Ograniczenie: …"
     main_evidence: Optional[int] = None  # index into `evidence` of the decisive source (the one link we show)
+    # abstentions only: index into `evidence` of the item the short answer names as related material (never decisive;
+    # shown with its link so the reader can open it, labelled as not settling the claim)
+    related_evidence: Optional[int] = None
 
 
 RULES_VERSION = "1.0"

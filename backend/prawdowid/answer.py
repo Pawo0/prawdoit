@@ -173,10 +173,14 @@ def _related(c: ClaimResult) -> Evidence | None:
 
 
 def _related_sentence(e: Evidence) -> str:
-    if e.source_type in ("factcheck", "incident") and e.factcheck_verdict_raw:
-        return f"Najbliższy materiał: {_who_checked(e).rstrip('.')} — sprawdź w pełnej analizie, czy dotyczy tego samego."
+    """Related material for an abstention. A fact-check (or incident record) that the engine did NOT match to the
+    claim is named by its headline only: its rating belongs to the claim IT checked, and repeating that rating next to
+    an abstention reads as an answer to the user's question. Other sources are quoted by their verbatim fragment."""
     d = (e.published_at or "")[:10]
     when = f" ({d[8:10]}.{d[5:7]}.{d[:4]})" if re.fullmatch(r"\d{4}-\d\d-\d\d", d) else ""
+    if e.source_type in ("factcheck", "incident"):
+        return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, 140)}”. Nie rozstrzyga on "
+                "samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy.")
     return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), 170)}”. "
             "Nie rozstrzyga on samego twierdzenia.")
 
@@ -214,6 +218,7 @@ def short_answer(c: ClaimResult, live: str = "") -> str:
         rel = _related(c)
         if rel is not None:  # say what the closest material does say, without turning it into a verdict
             txt += " " + _related_sentence(rel)
+            c.related_evidence = next(i for i, e in enumerate(c.evidence) if e is rel)
         elif c.would_settle:
             txt += f" Potrzebne byłoby źródło, np. {c.would_settle.rstrip('.')}."
         return txt + " Brak wyniku w bazie nie oznacza, że to nieprawda."
@@ -328,6 +333,7 @@ def finalize(res: CheckResult) -> None:
                     c.would_settle = hint
                     break
         c.main_evidence = main_evidence(c)
+        c.related_evidence = None  # set by short_answer when it names a related item
         c.short_answer = short_answer(c, live)
         c.basis_line = basis_line(c)
         c.limitation_line = limitation_line(c, live)
