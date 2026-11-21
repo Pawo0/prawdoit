@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "© KWP zs. w Radomiu — informacja publiczna; cytowanie z podaniem źródła",
   "qualification": "Komunikaty KWP zs. w Radomiu (woj. mazowieckie bez Warszawy). RSS 'Aktualności' z link rel=alternate; pełny tekst zweryfikowany (~2900 znaków, data). robots.txt: tylko /ftp/ zablokowane.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: mazowiecka.policja.gov.pl/ra/aktualnosci/aktualnosci",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

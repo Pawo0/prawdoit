@@ -25,6 +25,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Organ właściwy dla polityki zagranicznej; komunikaty i oświadczenia MSZ oraz komunikacja strategiczna (przeciwdziałanie FIMI). Kategoria A w zakresie kompetencji.",
+  "scope": "organiser_implied",
+  "scope_basis": "Aktualności MSZ (organizatora) w tym samym serwisie co adres z listy: rules/resources.txt: gov.pl/web/dyplomacja/informacje-dla-podrozujacych",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

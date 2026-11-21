@@ -22,6 +22,8 @@
   "language": "pl",
   "license": "© Komenda Główna SOK — cytowanie z podaniem źródła",
   "qualification": "Formacja ochrony kolei (PKP PLK). WordPress RSS; pełny tekst zweryfikowany (~4800 znaków, data).",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: kgsok.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

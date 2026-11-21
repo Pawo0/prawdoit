@@ -16,6 +16,8 @@
   "language": "pl",
   "license": "IMGW-PIB — dane publiczne z podaniem źródła",
   "qualification": "Aplikacja JS (stany wód, mapa). Ostrzeżenia hydrologiczne pobieramy z API danych publicznych: imgw_ostrzezenia.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: hydro.imgw.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

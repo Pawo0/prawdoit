@@ -14,6 +14,8 @@
   "language": "pl",
   "license": "Każdy rekord ma licencję wpisu rejestru, z którego domeny pochodzi (pole license rekordu); krótkie fragmenty z podaniem źródła i linkiem.",
   "qualification": "Dokumenty pobrane na żywo (backend/prawdowid/websearch.py), gdy korpus nie miał materiałów: wyłącznie z domen źródeł rejestru z enabled=true i web_search=true (wyszukiwarki serwisów gov.pl i WordPress, opcjonalnie SearXNG/Brave z filtrem site:) oraz oceny z Google Fact Check Tools API opublikowane w domenach z rejestru. Kategoria i poziom (tier) każdego rekordu pochodzą z pasującego wpisu rejestru (source_type, tag tier:N), nie z tego pliku. Treść skanowana pod kątem prompt injection; przy pobieraniu respektowany robots.txt.",
+  "scope": "organiser_implied",
+  "scope_basis": "Nie jest osobnym źródłem: zapis dokumentów pobranych na żywo wyłącznie z domen włączonych źródeł rejestru (tag registry:<id> w każdym rekordzie) — zakres wynika z tych wpisów",
   "added_by": "zespół Prawdowid (websearch.py)",
   "added_at": "2026-11-21"
 }

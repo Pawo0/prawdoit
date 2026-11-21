@@ -21,6 +21,8 @@
   "language": "pl",
   "license": "GUS — wykorzystanie dozwolone z podaniem źródła (stat.gov.pl/copyright); BDL i DBW: CC BY 4.0 (api.stat.gov.pl); podać źródło",
   "qualification": "Centralny organ statystyki publicznej; oficjalne wskaźniki (inflacja, wynagrodzenia, ludność…) jako karty danych dla reguły liczbowej. Kategoria A.",
+  "scope": "outside",
+  "scope_basis": "",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

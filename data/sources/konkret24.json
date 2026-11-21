@@ -25,6 +25,8 @@
   "language": "pl",
   "license": "© TVN S.A. (Konkret24/TVN24), all rights reserved. Stored only title, lead and a short excerpt (≤700 chars) with link, for citation; full text must be read at source.",
   "qualification": "Redakcja fact-checkingowa TVN24, sygnatariusz IFCN. Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Prawa zastrzeżone — przechowujemy tylko tytuł, lead i krótki fragment (≤ 700 znaków) z linkiem; bez wyszukiwania na żywo.",
+  "scope": "organiser_recommended",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (Konkret24 — sygnatariusz IFCN)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

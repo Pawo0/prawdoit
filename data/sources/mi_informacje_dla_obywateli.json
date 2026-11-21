@@ -26,6 +26,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Strony informacyjne MI (prawa pasażerów w transporcie drogowym/kolejowym/lotniczym/morskim, infolinia, kontakt). Pokrywa URL-e: gov.pl/web/infrastruktura/{prawa-pasazerow, infolinia-dla-obywatela, dane-kontaktowe}.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/infrastruktura/prawa-pasazerow, /infolinia-dla-obywatela, /dane-kontaktowe",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

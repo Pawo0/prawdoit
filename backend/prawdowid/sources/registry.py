@@ -31,7 +31,25 @@ TOPICS = ("podroze", "pogoda", "woda_powodz", "drogi", "kolej", "lotnictwo", "mo
           "zywnosc", "promieniowanie", "powietrze", "cyber", "oszustwa", "bezpieczenstwo", "obronnosc", "pozary",
           "prawo", "statystyka", "finanse", "wybory", "ue", "dezinformacja", "zagranica", "rzad")
 FIELD_ORDER = ("id", "name", "publisher", "url", "category", "tier", "method", "params", "enabled", "schedule_hours",
-               "web_search", "topics", "language", "license", "qualification", "added_by", "added_at")
+               "web_search", "topics", "language", "license", "qualification", "scope", "scope_basis", "added_by",
+               "added_at")
+# Where does the source stand against the organisers' expectations (research/10_organiser_sources.md)?
+#   organiser_listed      — a URL / database named in rules/resources.txt
+#   organiser_implied     — used in the organisers' reference scenarios or their EUvsDisinfo instructions, or the
+#                           same site / institution as a listed URL
+#   organiser_recommended — named only among the "recommended reference points" of the task text (section 7)
+#   outside               — added by the team; not named by the organisers (the default for anything unmarked)
+SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended", "outside")
+ORGANISER_SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended")
+STRICT_SCOPES = ("organiser_listed", "organiser_implied")  # the narrow reading: list + scenarios only
+# Scope of entries whose file does not carry the field yet. data/sources/demagog.json was reserved for a running
+# Demagog harvest when the field was introduced (2026-11-21); once that is merged, move the two keys into the file.
+DEFAULT_SCOPE = {
+    "demagog": ("organiser_implied",
+                "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: przykładowe odpowiedzi scenariuszy "
+                "A–C, E–G, I, J powołują się na Demagoga (linki demagog.org.pl/wypowiedzi/…); oceny Demagoga są też "
+                "w bazie Google Fact Check (rules/resources.txt)"),
+}
 DEFAULT_MAX_DOCS = 500
 
 # params per method: name -> (type, required, default). Unknown params are kept (custom handlers use them).
@@ -183,6 +201,20 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
     for k in ("license", "qualification"):
         if not isinstance(d.get(k), str) or not d[k].strip():
             e.append(f"{k}: pole wymagane — źródło bez opisu licencji i kwalifikacji nie może być dodane.")
+    if not d.get("scope") and sid in DEFAULT_SCOPE:
+        d["scope"], d["scope_basis"] = DEFAULT_SCOPE[sid]
+    scope = d.get("scope") or "outside"  # unmarked = not on the organisers' list (conservative default)
+    if scope not in SCOPES:
+        e.append(f"scope: jedna z {', '.join(SCOPES)}.")
+    d["scope"] = scope
+    basis = d.get("scope_basis") or ""
+    if not isinstance(basis, str):
+        e.append("scope_basis: tekst (gdzie organizator wskazuje to źródło).")
+        basis = ""
+    if scope in ORGANISER_SCOPES and not basis.strip():
+        e.append("scope_basis: wymagane dla źródła organizatora — podaj dokument i miejsce, w którym organizator je "
+                 "wskazuje (np. rules/resources.txt).")
+    d["scope_basis"] = basis.strip()
     d["added_by"] = str(d.get("added_by") or "administrator")
     d["added_at"] = str(d.get("added_at") or date.today().isoformat())
     if e:
@@ -257,6 +289,69 @@ def delete(source_id: str) -> bool:
         return False
     p.unlink()
     return True
+
+
+# ------------------------------------------------------------------ organiser scope
+def in_organiser_scope(source: dict, strict: bool = False) -> bool:
+    """strict=True is the narrow reading (resources.txt + scenarios), without the task text's recommendations."""
+    return source.get("scope") in (STRICT_SCOPES if strict else ORGANISER_SCOPES)
+
+
+def _live_records_by_source(corpus_dir: Path) -> dict[str, int]:
+    """Records persisted by the live search (live_web.jsonl), counted by the registry entry they came from."""
+    out: dict[str, int] = {}
+    f = corpus_dir / "live_web.jsonl"
+    if not f.exists():
+        return out
+    for line in f.read_text(encoding="utf-8").splitlines():
+        try:
+            tags = json.loads(line).get("tags") or []
+        except json.JSONDecodeError:
+            continue
+        sid = next((t.split(":", 1)[1] for t in tags if isinstance(t, str) and t.startswith("registry:")), "?")
+        out[sid] = out.get(sid, 0) + 1
+    return out
+
+
+def scope_report(corpus_dir: Path | None = None, strict: bool = False) -> dict:
+    """What the knowledge base contains relative to the organisers' list.
+
+    `violations` counts what would have to change for the knowledge base to hold organiser sources only: enabled
+    sources outside the scope (or unmarked), corpus files without a registry entry (the index loads those too) and
+    live-search records that came from a source which is now disabled or outside the scope.
+    """
+    corpus_dir = corpus_dir or settings.corpus_dir
+    sources, problems = load_all()
+    by_scope: dict[str, list[str]] = {s: [] for s in SCOPES}
+    enabled_outside: list[str] = []
+    for sid, s in sources.items():
+        scope = s.get("scope") if s.get("scope") in SCOPES else "outside"
+        by_scope[scope].append(sid)
+        if not in_organiser_scope({"scope": scope}, strict) and s.get("enabled") is True:
+            enabled_outside.append(sid)
+    orphans = sorted(f.stem for f in corpus_dir.glob("*.jsonl") if f.stem not in sources)
+    live_on = (sources.get("live_web") or {}).get("enabled") is True
+    stale_live = {sid: n for sid, n in _live_records_by_source(corpus_dir).items() if live_on and not (
+        sid in sources and sources[sid].get("enabled") is True and in_organiser_scope(sources[sid], strict))}
+    return {"by_scope": by_scope, "enabled_outside": sorted(enabled_outside), "orphan_corpus_files": orphans,
+            "live_records_from_excluded_sources": stale_live, "invalid": sorted(problems),
+            "violations": len(enabled_outside) + len(orphans) + len(stale_live)}
+
+
+def restrict_to_organiser_scope(note: str, strict: bool = False) -> list[str]:
+    """Disable (never delete) every enabled source outside the organisers' scope; the reason goes to `notes`.
+    Returns the ids that were switched off. Nothing is removed from data/corpus."""
+    sources, problems = load_all()
+    changed = []
+    for sid, s in sources.items():
+        if sid in problems or in_organiser_scope(s, strict) or s.get("enabled") is not True:
+            continue
+        s = dict(s)
+        s["enabled"] = False
+        s["notes"] = note
+        save(s, strict=False)
+        changed.append(sid)
+    return changed
 
 
 # ------------------------------------------------------------------ index filter

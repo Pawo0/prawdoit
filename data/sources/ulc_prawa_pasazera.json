@@ -18,6 +18,8 @@
   "language": "pl",
   "license": "ULC — informacja publiczna",
   "qualification": "Organ właściwy dla praw pasażerów lotniczych. Nie pobieramy: serwis chroniony Imperva/Incapsula (skrypt _Incapsula_Resource zamiast treści) — zabezpieczeń nie obchodzimy. Pokrywa URL-e: ulc.gov.pl, ulc.gov.pl/prawa-pasazera, ulc.gov.pl/prawa-pasazera/poradnik-dla-pasazerow.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: ulc.gov.pl, ulc.gov.pl/prawa-pasazera, /prawa-pasazera/poradnik-dla-pasazerow",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

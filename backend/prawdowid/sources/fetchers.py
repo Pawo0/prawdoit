@@ -25,7 +25,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
 
 import httpx
 
@@ -234,9 +234,12 @@ def html_to_text(fragment: str) -> str:
 
 
 def to_date(s: str | None) -> str | None:
-    """'16.11.2026' / '2026-11-16' / RFC 822 / Polish long date ('5 listopada 2026') -> 'YYYY-MM-DD'."""
+    """'16.11.2026' / '16-11-2026' / '2026-11-16' / RFC 822 / Polish long date ('5 listopada 2026') -> 'YYYY-MM-DD'."""
     if not s:
         return None
+    m = re.fullmatch(r"\s*(\d{1,2})-(\d{1,2})-(\d{4})\s*", str(s))  # day first, e.g. moje.cert.pl
+    if m and 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(1)) <= 31:
+        return f"{int(m.group(3)):04d}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
     try:
         d = ingest_module("official_common").pl_date(str(s))
     except Exception:  # noqa: BLE001
@@ -277,6 +280,13 @@ def canonical(url: str) -> str:
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path or "/", p.query, ""))
 
 
+def url_key(url: str) -> str:
+    """Comparison key for "the same page" across routes: canonical(), percent-escapes decoded and no trailing slash.
+    Measured 2026-11-21: the fakenews.pl and Demagog harvests store `co%e2%82%82`, the Google API `co%E2%82%82`."""
+    p = urlsplit(canonical(url))
+    return urlunsplit((p.scheme, p.netloc, unquote(p.path), p.query, "")).rstrip("/")
+
+
 def _domain(url: str) -> str:
     host = (urlsplit(url).hostname or "").lower()
     return host[4:] if host.startswith("www.") else host
@@ -286,6 +296,11 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
                 tags: list[str] | None = None) -> dict:
     url = canonical(url)
     max_chars = int(source.get("params", {}).get("max_chars") or MAX_TEXT)
+    retrieved = now_iso()
+    if published_at and str(published_at)[:10] > retrieved[:10]:
+        # a page cannot be published after it was fetched: the site shows a mistyped date (seen on gov.pl:
+        # "02.09.2029" on a text about 2.09.2026) — better no date than a wrong one that looks most recent
+        published_at = None
     return {
         "id": f"{source['id']}:{hashlib.sha1(url.encode()).hexdigest()[:12]}",
         "source_type": source.get("category", "official"),
@@ -294,7 +309,7 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
         "url": url,
         "title": re.sub(r"\s+", " ", title or "").strip()[:400] or url,
         "published_at": published_at,
-        "retrieved_at": now_iso(),
+        "retrieved_at": retrieved,
         "language": source.get("language", "pl"),
         "license": source.get("license", ""),
         "text": truncate(text or "", max_chars),
@@ -312,7 +327,11 @@ def normalize_record(rec: dict, source: dict) -> dict | None:
     base = make_record(source, url=rec["url"], title=rec.get("title") or "", text=rec.get("text") or "",
                        published_at=rec.get("published_at"), tags=list(rec.get("tags") or []))
     out = {k: (rec[k] if rec.get(k) not in (None, "") else base[k]) for k in SCHEMA_KEYS}
-    if not str(out["id"]).startswith(f"{source['id']}:"):
+    # params.id_prefix: a source that delivers the same documents as another one by a second route (Demagog reviews
+    # via the Google API next to the page harvest) may keep that source's id namespace — the index loads the first
+    # record with a given id, so the two corpus files never contribute the same document twice.
+    prefixes = {f"{source['id']}:", f"{(source.get('params') or {}).get('id_prefix') or source['id']}:"}
+    if not str(out["id"]).startswith(tuple(prefixes)):
         out["id"] = f"{source['id']}:{out['id']}"
     try:
         SourceDoc(**out)
@@ -674,17 +693,38 @@ def read_corpus(source_id: str) -> list[dict]:
     return out
 
 
+def urls_held_by(corpus_ids: list | None) -> set[str]:
+    """URL keys (url_key) of the records stored by these sources while the index loads them, i.e. the registry entry
+    is enabled or there is none (registry.corpus_files_for_index). A second route to the same documents — a Google
+    API feed next to a page harvest whose ids it cannot reproduce (fakenews.pl) — skips these at fetch time and drops
+    them at merge time (`params.dedupe_against`), so a review is indexed once in every registry configuration; when
+    the harvest is switched off, the feed keeps its own copy."""
+    out: set[str] = set()
+    for cid in corpus_ids or []:
+        if not isinstance(cid, str) or not registry.ID_RE.match(cid):
+            continue
+        entry = registry.get(cid)
+        if entry is not None and entry.get("enabled") is not True:
+            continue
+        for r in read_corpus(cid):
+            if r.get("url"):
+                out.add(url_key(r["url"]))
+    return out
+
+
 def merge_into_corpus(source: dict, records: list[dict]) -> tuple[int, int]:
-    """Merge new records into data/corpus/<id>.jsonl: dedupe by id and url, newest first, cap at max_docs.
+    """Merge new records into data/corpus/<id>.jsonl: dedupe by id and url, newest first, cap at max_docs; records
+    whose URL a source in `params.dedupe_against` holds are dropped (see urls_held_by).
     Atomic write (tmp + rename) so a concurrent index load sees either the old or the new file."""
     import os
 
     existing = read_corpus(source["id"])
     old_ids = {r.get("id") for r in existing}
+    held = urls_held_by((source.get("params") or {}).get("dedupe_against"))
     seen_ids, seen_urls, merged = set(), set(), []
     for r in records + existing:
         u = canonical(r.get("url") or "")
-        if r.get("id") in seen_ids or u in seen_urls:
+        if r.get("id") in seen_ids or u in seen_urls or (held and url_key(u) in held):
             continue
         seen_ids.add(r.get("id"))
         seen_urls.add(u)

@@ -24,6 +24,8 @@
   "language": "pl",
   "license": "Urząd Morski w Szczecinie — informacja publiczna; cytowanie z podaniem źródła",
   "qualification": "Administracja morska; strona zawiera wykaz obowiązujących komunikatów Kapitanów Portów (treść w PDF — zapisujemy tytuły/wykaz). robots.txt: Joomla, brak ograniczeń dla treści.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: ums.gov.pl/bezpieczenstwo-morskie/warunki-zeglugi",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

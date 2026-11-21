@@ -1,0 +1,37 @@
+{
+  "id": "fakenews_google_api",
+  "name": "FakeNews.pl — oceny przez Google Fact Check Tools API",
+  "publisher": "FakeNews.pl",
+  "url": "https://fakenews.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "custom",
+  "params": {
+    "handler": "google_factcheck_feed",
+    "site": "fakenews.pl",
+    "max_age_days": 200,
+    "page_size": 100,
+    "max_pages": 3,
+    "delay": 1.0,
+    "key_env": "PRAWDOWID_GOOGLE_FACTCHECK_KEY",
+    "dedupe_against": [
+      "fakenews_pl"
+    ],
+    "max_docs": 1000
+  },
+  "enabled": true,
+  "schedule_hours": 12,
+  "web_search": false,
+  "topics": [
+    "dezinformacja",
+    "zdrowie",
+    "oszustwa"
+  ],
+  "language": "pl",
+  "license": "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Pobieramy wyłącznie metadane ClaimReview udostępniane przez Google Fact Check Tools API (twierdzenie, ocena, tytuł, data, link) — warunki Google APIs; bez treści artykułu.",
+  "qualification": "Oceny FakeNews.pl (Fundacja „Przeciwdziałamy Dezinformacji”, sygnatariusz IFCN) z bazy weryfikatorów faktów Google wskazanej przez organizatora: claims:search z filtrem reviewPublisherSiteFilter=fakenews.pl, od najnowszych, z ostatnich 200 dni (19 ocen 2026-11-21). Rekord zawiera dosłowne pola ClaimReview wydawcy: tytuł oceny, sprawdzane twierdzenie i etykietę oceny, bez treści artykułu (tag claimreview-only). Pełne artykuły tego wydawcy zbiera źródło fakenews_pl (własne identyfikatory wpisów), więc adresy, które ono ma, są tu pomijane i usuwane przy każdym scaleniu, dopóki fakenews_pl jest włączone; gdy jest wyłączone (np. przy zawężeniu bazy do listy organizatora), ta droga dostarcza oceny sama. Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Wymaga zmiennej PRAWDOWID_GOOGLE_FACTCHECK_KEY.",
+  "scope": "organiser_recommended",
+  "scope_basis": "Nie wymienione z nazwy przez organizatora (0 wzmianek w rules/resources.txt, treści zadania, scenariuszach referencyjnych i instrukcji EUvsDisinfo). Podstawa pośrednia: rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (FakeNews.pl — sygnatariusz IFCN wg research/02). Droga: baza weryfikatorów faktów Google z rules/resources.txt, w której oceny tego wydawcy występują z languageCode=pl — organizator wskazał bazę, nie tego wydawcę.",
+  "added_by": "zespół Prawdowid (oceny wydawcy z bazy weryfikatorów faktów Google, rules/resources.txt)",
+  "added_at": "2026-11-21"
+}

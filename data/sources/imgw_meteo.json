@@ -16,6 +16,8 @@
   "language": "pl",
   "license": "IMGW-PIB — dane publiczne z podaniem źródła",
   "qualification": "Aplikacja JS (mapy, prognozy). Ostrzeżenia z tego serwisu pobieramy z API danych publicznych: imgw_ostrzezenia.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: meteo.imgw.pl",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

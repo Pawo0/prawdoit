@@ -33,6 +33,8 @@
   "language": "pl",
   "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
   "qualification": "Zarządca śródlądowych dróg wodnych; komunikaty o zamknięciach i ograniczeniach żeglugi (np. Odra, Wisła). Strona z resources.txt to indeks — pobieramy 10 stron 'obowiązujące komunikaty' regionalnych zarządów (odnalezione ręcznie 2026-11-21; zmiana adresów = pusta strona, sprawdzić). Pokrywa URL: gov.pl/web/wody-polskie/komunikaty-nawigacyjne.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: gov.pl/web/wody-polskie/komunikaty-nawigacyjne",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

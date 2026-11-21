@@ -6,7 +6,11 @@
   "category": "factcheck",
   "tier": 2,
   "method": "google_factcheck",
-  "params": {},
+  "params": {
+    "publisher_sites": [
+      "demagog.org.pl"
+    ]
+  },
   "enabled": true,
   "schedule_hours": 0,
   "web_search": false,
@@ -16,6 +20,8 @@
   "language": "pl",
   "license": "Fact Check Tools API — warunki Google APIs; treść oznaczeń należy do wydawców fact-checków (cytat + link)",
   "qualification": "Agregator oznaczeń ClaimReview publikowanych przez organizacje fact-checkingowe (w tym sygnatariuszy IFCN/EFCSN). Zapytania na żywo przez Fact Check Tools API (claims:search, developers.google.com/fact-check/tools/api); działa tylko, gdy ustawiona jest zmienna środowiskowa PRAWDOWID_GOOGLE_FACTCHECK_KEY. Werdykt pochodzi od wydawcy fact-checku, nie od Google. Pokrywa linie 'Baza weryfikatorów faktów' z resources.txt.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: „Baza weryfikatorów faktów” — toolbox.google.com/factcheck/explorer i developers.google.com/fact-check/tools/api/reference/rest",
   "added_by": "organizator (rules/resources.txt)",
   "added_at": "2026-11-21"
 }

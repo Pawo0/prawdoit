@@ -3,7 +3,9 @@
 Used by service.run_check. Two providers:
 
 1. **Google Fact Check Tools API** (`claims:search`, languageCode=pl, key in `PRAWDOWID_GOOGLE_FACTCHECK_KEY`).
-   Called for every factual claim when the key is set (short timeout, in-memory cache). Only reviews published on a
+   Called for every factual claim when the key is set (short timeout, in-memory cache): one general query plus one
+   per fact-checker site listed in `params.publisher_sites` of data/sources/google_factcheck.json (Demagog), sent
+   with `reviewPublisherSiteFilter` — this is the API route to Demagog's reviews. Only reviews published on a
    domain from the source registry become evidence (the Polish part of Google's ClaimReview index also contains SEO
    spam — see ingest/harvest_claimreview_feed.py); others are only counted. Missing key = silently inactive.
 
@@ -558,41 +560,80 @@ def _select(hits: list[Hit], claim: str, k: int = MAX_FETCH, whitelist: bool = T
 GFC_URL = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
 _GFC_CACHE: dict[str, tuple[float, list]] = {}
 _GFC_TTL = 6 * 3600
-_VERDICT_RULES = [  # same mapping as ingest/common.py (order matters: more specific first)
-    ("czesciowa prawda", "mixed"), ("czesciowo prawd", "mixed"), ("czesciowo falsz", "mixed"), ("polprawda", "mixed"),
-    ("mostly true", "mixed"), ("partly false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
-    ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("brak dowodow", "unverifiable"),
+# The SAME list as ingest/common.py::_VERDICT_RULES (order matters: more specific first), so a rating read live from
+# Google (`textualRating` = the publisher's ClaimReview label) lands in the same class as the same label harvested
+# into the corpus. backend/tests/test_google_factcheck.py fails when the two lists drift apart. Before 2026-11-21 this
+# copy was shorter: Demagog's "Częściowy fałsz" became `false` instead of `mixed` and "Przerobione zdjęcie/film" had
+# no class at all (measured on the 1,294 Demagog records: 104 labels mapped differently from the corpus).
+_VERDICT_RULES = [
+    ("czesciowa prawda", "mixed"), ("czesciowo prawda", "mixed"), ("czesciowy falsz", "mixed"),
+    ("czesciowo falsz", "mixed"), ("polprawda", "mixed"), ("mostly true", "mixed"),
+    ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
+    ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("niesprawdzal", "unverifiable"),
+    ("brak dowodow", "unverifiable"), ("sie zweryfikowac", "unverifiable"), ("insufficient evidence", "unverifiable"),
+    ("w wiekszosci", "mixed"),
     ("manipulac", "misleading"), ("wprowadza w blad", "misleading"), ("wprowadzajac", "misleading"),
-    ("kontekst", "misleading"), ("missing context", "misleading"), ("misleading", "misleading"), ("przesad", "misleading"),
-    ("zmanipulowan", "false"), ("nieprawdziw", "false"), ("falszyw", "false"), ("falsz", "false"), ("fake", "false"),
-    ("nieprawda", "false"), ("dezinformac", "false"), ("false", "false"), ("prawda", "true"), ("prawdziw", "true"),
-    ("true", "true"), ("correct", "true"),
+    ("brak kontekstu", "misleading"), ("brakujacy kontekst", "misleading"), ("brakuje kontekstu", "misleading"),
+    ("bez kontekstu", "misleading"), ("missing context", "misleading"),
+    ("misleading", "misleading"), ("przesad", "misleading"), ("wyrwan", "misleading"), ("mylac", "misleading"),
+    ("zmanipulowan", "false"), ("przerobion", "false"), ("wygenerowan", "false"), ("deepfake", "false"),
+    ("obraz ai", "false"),
+    ("przerobk", "false"), ("nieprawdziw", "false"), ("falszyw", "false"), ("falsz", "false"), ("fake", "false"),
+    ("nieprawda", "false"),
+    ("disinformation", "false"), ("dezinformac", "false"), ("false", "false"), ("oszustwo", "false"),
+    ("scam", "false"), ("altered", "false"),
+    ("prawda", "true"), ("prawdziw", "true"), ("true", "true"), ("correct", "true"),
 ]
+_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")  # labels that are not a rating of a claim
 
 
 def map_rating(raw: str | None) -> str | None:
+    """Publisher's rating label → true | false | misleading | mixed | unverifiable | None (same as ingest map_verdict)."""
     if not raw:
         return None
     import unicodedata
 
-    n = "".join(c for c in unicodedata.normalize("NFKD", raw.lower()) if not unicodedata.combining(c)).replace("ł", "l")
-    if any(x in n for x in ("satyr", "satire")):
+    n = "".join(c for c in unicodedata.normalize("NFKD", raw.lower()) if not unicodedata.combining(c))
+    n = n.replace("ł", "l").strip(" .!:- ")
+    if any(x in n for x in _NO_VERDICT):
         return None
     return next((v for k, v in _VERDICT_RULES if k in n), None)
 
 
-def google_factcheck(query: str, timeout: float = GOOGLE_TIMEOUT_S) -> list[dict]:
-    """Raw `claims` from claims:search (cached). Raises LiveError (message never contains the key)."""
+def google_publisher_sites() -> list[str]:
+    """Fact-checker sites asked for by name in an extra, site-filtered query (`reviewPublisherSiteFilter`), from
+    `params.publisher_sites` of data/sources/google_factcheck.json. Only sites of enabled registry sources are used —
+    a review from anywhere else could not become evidence anyway (see google_docs)."""
+    try:
+        e = json.loads((SOURCES_DIR / "google_factcheck.json").read_text(encoding="utf-8"))
+        sites = (e.get("params") or {}).get("publisher_sites") or []
+    except (OSError, ValueError, AttributeError):
+        return []
+    out = []
+    for s in sites if isinstance(sites, list) else []:
+        host = _host(s if "://" in str(s) else f"https://{s}")
+        if host and host not in out and match_source(f"https://{host}/", web_search_only=False):
+            out.append(host)
+    return out[:3]
+
+
+def google_factcheck(query: str, timeout: float = GOOGLE_TIMEOUT_S, site: str = "") -> list[dict]:
+    """Raw `claims` from claims:search (cached). `site` adds reviewPublisherSiteFilter (one publisher's reviews only).
+    Raises LiveError (message never contains the key)."""
     if forced_fail("google_factcheck"):
         raise LiveError("symulowana awaria (PRAWDOWID_FORCE_FAIL)")
-    ck = normalize_ws(query).lower()[:300]
+    ck = f"{site}|{normalize_ws(query).lower()[:300]}"
     hit = _GFC_CACHE.get(ck)
     if hit and time.time() - hit[0] < _GFC_TTL:
         return hit[1]
+    params = {"query": query[:300], "languageCode": "pl", "pageSize": 10}
+    if site:
+        params["reviewPublisherSiteFilter"] = site
     try:
-        r = httpx.get(GFC_URL, timeout=timeout, headers={"User-Agent": UA},
-                      params={"query": query[:300], "languageCode": "pl", "pageSize": 10,
-                              "key": _env("GOOGLE_FACTCHECK_KEY")})
+        # the key goes in the X-Goog-Api-Key header (accepted by the API, checked 2026-11-21), not in the URL:
+        # httpx logs request URLs at INFO level, and a key in the query string would end up in the server log
+        r = httpx.get(GFC_URL, timeout=timeout, params=params,
+                      headers={"User-Agent": UA, "X-Goog-Api-Key": _env("GOOGLE_FACTCHECK_KEY")})
     except httpx.HTTPError as e:
         raise LiveError(f"{type(e).__name__}") from None  # str(e) could include the URL with the key
     if r.status_code != 200:
@@ -607,6 +648,68 @@ def google_factcheck(query: str, timeout: float = GOOGLE_TIMEOUT_S) -> list[dict
     return claims
 
 
+def google_queries(text: str) -> list[list[str]]:
+    """Rounds of query forms for claims:search, most specific first.
+
+    Measured against the real API (2026-11-21): the engine stems Polish words ('65-latkowie' finds '65-latków') but
+    wants every query word in the review's claim or title, so a whole sentence or question returns nothing — 'Czy PAP
+    usunęła depeszę o wypowiedzi Donalda Tuska przed powodzią?' → 0 results, 'Donalda Tuska PAP wypowiedzi powodzią'
+    → the Demagog review. Rare proper names alone can fail ('Rzeszów IRINN' → 0) while the opening words of the
+    claim as the fact-checker wrote it succeed ('Stacja IRINN pokazała mapę' → the AFP review). Hence rounds: the 4
+    most distinctive words of the claim; its first words as written; the 3 most distinctive words; then pairs of the
+    most distinctive word with each of the next three (a user rarely uses the fact-checker's exact wording)."""
+    w = keywords(text, 4)
+    lead = re.sub(r"^\s*(czy\s+(to\s+prawda,?\s+że\s+)?|to\s+prawda,?\s+że\s+)", "", normalize_ws(text), flags=re.I)
+    lead = " ".join(lead.rstrip("?.! ").split()[:4])
+    rounds = [[" ".join(w[:4])] if len(w) >= 4 else [], [lead] if len(lead.split()) >= 3 else [],
+              [" ".join(w[:3])] if len(w) >= 3 else [], [f"{w[0]} {x}" for x in w[1:4]] if len(w) >= 2 else []]
+    rounds = [r for r in rounds if r] or [[" ".join(w) or text[:300]]]
+    seen: set[str] = set()
+    return [r2 for r2 in ([q for q in r if not (q in seen or seen.add(q))] for r in rounds) if r2]
+
+
+def _registry_reviews(claims: list[dict]) -> int:
+    return sum(1 for c in claims for rv in c.get("claimReview") or []
+               if match_source(str(rv.get("url") or ""), web_search_only=False))
+
+
+def google_search(text: str, timeout: float = GOOGLE_TIMEOUT_S) -> list[dict]:
+    """Raw claims for one user claim: keyword rounds, stopping at the first round that returns a review published on
+    a registry domain. A general query whose page comes back full of other publishers is repeated for each
+    configured fact-checker site (`reviewPublisherSiteFilter`), so Demagog is not crowded out of the 10 results.
+    One clock for all rounds; if at least one call answered, failures of the others are tolerated — if none did,
+    LiveError (an outage, never 'no such article')."""
+    t_end = time.monotonic() + timeout
+    out: list[dict] = []
+    answered, last_err = 0, None
+
+    def ask(q: str, site: str = "") -> list[dict]:
+        nonlocal answered, last_err
+        left = t_end - time.monotonic()
+        if left < 0.3:
+            return []
+        try:
+            got = google_factcheck(q, timeout=left, site=site)
+            answered += 1
+            return got
+        except LiveError as e:
+            last_err = e
+            return []
+
+    for rnd in google_queries(text):
+        for q in rnd:
+            got = ask(q)
+            if len(got) >= 10 and not _registry_reviews(got):
+                for site in google_publisher_sites():
+                    got += ask(q, site)
+            out += got
+        if _registry_reviews(out):
+            break
+    if not answered:
+        raise last_err or LiveError("przekroczony czas")
+    return out
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -617,10 +720,13 @@ def _doc_id(url: str) -> str:
 
 def google_docs(claims: list[dict]) -> tuple[list[SourceDoc], int]:
     """ClaimReviews on registry domains → factcheck SourceDocs; returns (docs, n_other_publishers)."""
-    docs, other = [], 0
+    docs, other, seen = [], 0, set()
     for c in claims:
         for rv in c.get("claimReview") or []:
             url = str(rv.get("url") or "")
+            if url in seen:  # the same review can come back from the general and the site-filtered query
+                continue
+            seen.add(url)
             src = match_source(url, web_search_only=False)
             if not src:
                 other += 1
@@ -799,9 +905,11 @@ class LiveStage:
         queries = [c.query for c in claims if c.kind == "fakt"]
         if not queries:
             return
-        self._g_pool = ThreadPoolExecutor(max_workers=3, thread_name_prefix="gfc")
-        self._g_queries = queries
-        self._g_futs = [self._g_pool.submit(google_factcheck, q) for q in queries]
+        # per claim: keyword rounds, each a general query + one per configured fact-checker site (Demagog), so the
+        # publisher the organisers' scenarios rely on is not crowded out of the 10 results (see google_search)
+        self._g_pool = ThreadPoolExecutor(max_workers=min(4, len(queries)), thread_name_prefix="gfc")
+        self._g_queries = [" ".join(keywords(q, 4)) or q for q in queries]  # what is actually sent, for the audit log
+        self._g_futs = [self._g_pool.submit(google_search, q) for q in queries]
 
     def _join_google(self) -> list[SourceDoc]:
         if self._g_pool is None:

@@ -7,6 +7,9 @@
   python -m prawdowid.sources test <id>          dry run: 3 sample records, nothing written
   python -m prawdowid.sources suggest <url>      auto-detect a config for a new page
   python -m prawdowid.sources validate           check every registry file
+  python -m prawdowid.sources scope              sources by organiser scope; exit 1 if the knowledge base holds
+                                                 anything outside it (--strict: resources.txt + scenarios only)
+  python -m prawdowid.sources scope --restrict   disable (not delete) every enabled source outside the scope
 
 A running API server notices the corpus change within a minute and reloads its index.
 """
@@ -35,6 +38,29 @@ def _list() -> int:
     return 0
 
 
+def _scope(strict: bool, restrict: bool) -> int:
+    if restrict:
+        note = ("Wyłączone: źródło spoza zakresu wskazanego przez organizatora (pole scope; "
+                "research/10_organiser_sources.md). Można je włączyć w panelu /admin.")
+        for sid in registry.restrict_to_organiser_scope(note, strict=strict):
+            print(f"wyłączono {sid}")
+    rep = registry.scope_report(strict=strict)
+    sources, _ = registry.load_all()
+    for scope, ids in rep["by_scope"].items():
+        on = [i for i in ids if sources[i].get("enabled")]
+        docs = sum(registry.count_docs(i) for i in on)
+        print(f"{scope:22} {len(ids):3} źródeł, {len(on):3} włączonych, {docs:6} dok. w korpusach włączonych")
+    for sid in rep["enabled_outside"]:
+        print(f"! włączone źródło spoza zakresu: {sid} ({registry.count_docs(sid)} dok.)")
+    for name in rep["orphan_corpus_files"]:
+        print(f"! plik korpusu bez wpisu w rejestrze (indeksowany): {name}.jsonl")
+    for sid, n in rep["live_records_from_excluded_sources"].items():
+        print(f"! live_web.jsonl: {n} rekordów z wyłączonego lub pozazakresowego źródła {sid}")
+    print("Baza wiedzy zawiera wyłącznie źródła z zakresu organizatora." if not rep["violations"]
+          else f"{rep['violations']} odstępstw od zakresu organizatora.")
+    return 1 if rep["violations"] else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     ap = argparse.ArgumentParser(prog="python -m prawdowid.sources", description=__doc__,
@@ -51,6 +77,10 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("suggest")
     s.add_argument("url")
     sub.add_parser("validate")
+    sc = sub.add_parser("scope")
+    sc.add_argument("--strict", action="store_true", help="narrow reading: resources.txt + scenarios, without the "
+                                                          "task text's recommended reference points")
+    sc.add_argument("--restrict", action="store_true", help="disable enabled sources outside the scope")
     a = ap.parse_args(argv)
 
     if a.cmd == "list":
@@ -61,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{sid}: {'; '.join(errs)}")
         print(f"{len(sources) - len(problems)} poprawnych, {len(problems)} z błędami")
         return 1 if problems else 0
+    if a.cmd == "scope":
+        return _scope(a.strict, a.restrict)
     if a.cmd == "test":
         src = registry.get(a.id)
         if not src:

@@ -22,6 +22,8 @@
   "language": "pl",
   "license": "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Stored claim, verdict, excerpt (≤2500 chars) + link for citation.",
   "qualification": "Serwis Fundacji „Przeciwdziałamy Dezinformacji”, sygnatariusz IFCN; artykuły z tezą, oceną i źródłami. Kategoria B: liczy się tylko po dopasowaniu twierdzenia; przechowujemy twierdzenie, ocenę i fragment z linkiem.",
+  "scope": "organiser_recommended",
+  "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (FakeNews.pl — sygnatariusz IFCN)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21"
 }

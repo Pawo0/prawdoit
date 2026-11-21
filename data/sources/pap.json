@@ -1,0 +1,21 @@
+{
+  "id": "pap",
+  "name": "Polska Agencja Prasowa — depesze (źródło pierwotne, tylko odnośnik)",
+  "publisher": "Polska Agencja Prasowa S.A.",
+  "url": "https://www.pap.pl/",
+  "category": "media",
+  "tier": 4,
+  "method": "reference_only",
+  "params": {},
+  "enabled": true,
+  "schedule_hours": 0,
+  "web_search": false,
+  "topics": [],
+  "language": "pl",
+  "license": "© Polska Agencja Prasowa S.A. — wszelkie prawa zastrzeżone; nie pobieramy ani nie przechowujemy treści, wyłącznie odnośnik do depeszy (tytuł i link)",
+  "qualification": "Agencja prasowa; w scenariuszach organizatora depesza PAP jest źródłem pierwotnym, do którego bot ma odesłać, gdy materiał Demagoga do niej linkuje. Nie pobieramy: robots.txt serwisu pap.pl blokuje roboty SI na całej witrynie poza /mediaroom (sprawdzone 2026-11-21), a serwis fact-checkingowy PAP zastrzega eksplorację tekstów i danych (research/02_factcheck_sources.md). Dlatego wpis jest tylko zaufanym odnośnikiem: bez korpusu, bez wyszukiwania na żywo. Sama domena pap.pl niczego nie przesądza — dopasowanie depeszy wymaga zgodności tytułu, tematu i daty.",
+  "scope": "organiser_implied",
+  "scope_basis": "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: scenariusze A, F, I — depesza PAP jako źródło pierwotne, do którego bot ma odesłać („jeśli jest w źródłach lub jeśli materiał Demagoga do niej linkuje”)",
+  "added_by": "organizator (scenariusze referencyjne)",
+  "added_at": "2026-11-21"
+}

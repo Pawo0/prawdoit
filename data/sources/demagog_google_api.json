@@ -1,0 +1,39 @@
+{
+  "id": "demagog_google_api",
+  "name": "Demagog — oceny przez Google Fact Check Tools API",
+  "publisher": "Demagog",
+  "url": "https://demagog.org.pl/",
+  "category": "factcheck",
+  "tier": 2,
+  "method": "custom",
+  "params": {
+    "handler": "google_factcheck_feed",
+    "site": "demagog.org.pl",
+    "max_age_days": 200,
+    "page_size": 100,
+    "max_pages": 10,
+    "delay": 1.0,
+    "key_env": "PRAWDOWID_GOOGLE_FACTCHECK_KEY",
+    "dedupe_against": [
+      "demagog"
+    ],
+    "id_prefix": "demagog",
+    "max_docs": 1000
+  },
+  "enabled": true,
+  "schedule_hours": 6,
+  "web_search": false,
+  "topics": [
+    "dezinformacja",
+    "rzad",
+    "wybory",
+    "zdrowie"
+  ],
+  "language": "pl",
+  "license": "© Stowarzyszenie Demagog (demagog.org.pl/zasady-udostepniania-tresci: niekomercyjne wykorzystanie z atrybucją i linkiem). Pobieramy wyłącznie metadane ClaimReview udostępniane przez Google Fact Check Tools API (twierdzenie, ocena, tytuł, data, link) — warunki Google APIs; bez treści artykułu.",
+  "qualification": "Droga „Demagog przez API”: oceny Demagoga (sygnatariusz IFCN, członek EFCSN) z bazy weryfikatorów faktów Google wskazanej przez organizatora — claims:search z filtrem reviewPublisherSiteFilter=demagog.org.pl, od najnowszych, z ostatnich 200 dni (własne API Demagoga odpowiada 401). Rekord zawiera dosłowne pola ClaimReview wydawcy: tytuł oceny i sprawdzane twierdzenie oraz etykietę oceny; nie zawiera treści artykułu (tag claimreview-only), więc cytat z takiego rekordu to tytuł lub sprawdzane twierdzenie obok oceny i linku. Adresy obecne już w korpusie demagog (pełne strony) są pomijane, a identyfikatory są wspólne (demagog:<sekcja>/<slug>), więc indeks nigdy nie ma dwóch kopii tej samej oceny. Wymaga zmiennej PRAWDOWID_GOOGLE_FACTCHECK_KEY.",
+  "scope": "organiser_listed",
+  "scope_basis": "rules/resources.txt: „Baza weryfikatorów faktów” — Fact Check Tools API (developers.google.com/fact-check/tools/api/reference/rest), oceny wydawcy demagog.org.pl; Demagog jest też źródłem w scenariuszach referencyjnych (rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx)",
+  "added_by": "organizator (rules/resources.txt — baza weryfikatorów faktów)",
+  "added_at": "2026-11-21"
+}
