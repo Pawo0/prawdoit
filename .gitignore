@@ -14,8 +14,9 @@ node_modules/
 extension/dist/
 eval/results*/ext_*.png
 ingest/__pycache__/
-# raw HTML cache of harvested pages (full third-party articles, often "all rights reserved") — local only;
-# the corpus keeps claim, verdict, short excerpt and link (docs/SOURCES.md). Already tracked files: git rm -r --cached data/raw
+# raw HTML cache of harvested pages (full third-party articles, often "all rights reserved") — local only, never
+# committed; only ingest/ reads it (re-runs do not re-hit servers). Untracked on 2026-11-21; older commits still
+# contain it (history rewrite = team decision, see docs/COMPLIANCE.md).
 data/raw/
 # local agent worktrees
 .claude/

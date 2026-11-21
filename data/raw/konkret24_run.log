@@ -1,3 +1,0 @@
-[konkret24] 133 seed article urls
-[done] wrote 120 records -> /home/pawel/dev/hackathon_2026/prawdowid/data/corpus/konkret24.jsonl
-[konkret24] stats {'fetched': 127, 'cached': 0, 'blocked_robots': 0, 'errors': 0}
