@@ -59,15 +59,68 @@ def _past(publisher: str, verb_m: str) -> str:
     return verb_m + {"m": "", "f": "a", "n": "o"}[_gender(publisher)]
 
 
+QUOTE_MAX = 300  # a quote in the answer: whole sentences up to this length, else cut at a word boundary
+
+# A period that does not end a sentence: legal numbering (Art. 5. / § 2. / ust. 3. / pkt 4.), common abbreviations
+# (r., ust., np., tys., mln …) and initials. Without this a quoted provision was cut to "Art. 5".
+_NOT_END = re.compile(r"(?:(?:\b(?:art|ust|pkt|lit|poz|nr|par|rozdz|dz)\.?|§)\s*\d+[a-z]?|\b(?:art|ust|pkt|lit|poz|par|"
+                      r"rozdz|dz|r|tj|np|ok|godz|tys|mln|mld|św|dr|prof|im|al|ul|in|m|zm|późn|nast|dot|wg|ww|tzw|tzn|ds|"
+                      r"sygn|gen|płk|ks|pt|ub|br|jw|pn|pon|wt|śr|czw|pt|sob|niedz)|\b[A-ZĄĆĘŁŃÓŚŹŻ]|(?:^|\s)\d{1,3}[a-z]?)$", re.I)
+# Marker the ELI ingest puts before each excerpt of an act's text ("[fragment: „Art. 90.”] …") — not publisher text.
+_MARKER = re.compile(r"\[fragment: „[^”\]]{0,80}”\]\s*")
+
+
+def _sentence_ends(s: str) -> list[int]:
+    """Offsets just after each sentence end of s (period / ! / ? / …, closing quotes included) that is not legal
+    numbering, an abbreviation or an initial."""
+    out = []
+    for m in re.finditer(r"([.!?…])[\"”»)]*(?=\s|$)", s):
+        if m.group(1) == "." and _NOT_END.search(s[max(0, m.start() - 24): m.start()]):
+            continue
+        out.append(m.end())
+    return out
+
+
+def _unmark(s: str) -> str:
+    """The quote without the ingest marker. A marker inside the quote separates two excerpts of the act: the longer
+    one is kept, so the quote stays one verbatim slice of the stored text."""
+    parts = [x.strip() for x in _MARKER.split(s or "")]
+    return max(parts, key=len) if len(parts) > 1 else (s or "")
+
+
 def _q(s: str | None, n: int = 150) -> str:
-    """Quote-safe shortening: no trailing period or quotes inside the Polish quotation marks."""
-    s = short(re.sub(r"\s+", " ", s or "").strip(), n)
+    """Quote-safe shortening: no trailing period or quotes inside the Polish quotation marks. For a long limit
+    (a quote, not a label) the cut falls after the last whole sentence that fits, so the quote does not stop
+    mid-sentence; when not even the first sentence fits, at a word boundary with an ellipsis."""
+    s = re.sub(r"\s+", " ", _unmark(s or "")).strip()
+    if len(s) > n and n >= 200:
+        ends = [e for e in _sentence_ends(s[: n + 1]) if e <= n]
+        if ends and ends[-1] >= n * 0.3:
+            s = s[: ends[-1]]
+    s = short(s, n)
     return s.strip(" „”\"'").rstrip(".;:,")
 
 
+def _date(e: Evidence) -> str:
+    """'12.03.2024' from the item's publication date (ISO), or ''."""
+    d = (e.published_at or "")[:10]
+    return f"{d[8:10]}.{d[5:7]}.{d[:4]}" if re.fullmatch(r"\d{4}-\d\d-\d\d", d) else ""
+
+
 def _clause(fragment: str) -> str:
-    """Verbatim leading clause of a quoted fragment (up to the first '; ' or sentence end) — keeps the quote exact."""
-    return re.split(r";\s|\.\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])", fragment or "", maxsplit=1)[0]
+    """Verbatim leading clause of a quoted fragment (up to the first '; ' or sentence end) — keeps the quote exact.
+    A period of legal numbering or of an abbreviation ('Art. 5.', '§ 2.', '2024 r.') is not a sentence end, and a
+    clause shorter than 40 characters takes the next one too (a bare 'Art. 5' says nothing)."""
+    f = _unmark(fragment or "")
+    ends = {e: "." for e in _sentence_ends(f)}
+    ends.update({m.start(): ";" for m in re.finditer(r";\s", f)})
+    for pos in sorted(ends):
+        head = f[:pos]
+        if ends[pos] == "." and not re.match(r"\s+[A-ZĄĆĘŁŃÓŚŹŻ„\"(\d§]", f[pos:]):
+            continue  # same test as before: the next sentence starts with a capital (or a number / § of a provision)
+        if len(head.strip()) >= 40:
+            return head.rstrip().rstrip(".")
+    return f
 
 
 def _plural(n: int, one: str, few: str, many: str) -> str:
@@ -109,11 +162,26 @@ def main_evidence(c: ClaimResult) -> int | None:
 def _who_checked(e: Evidence) -> str:
     """'Demagog ocenił twierdzenie „…” jako „Fałsz”.' — only from fields of the evidence item."""
     pub = e.publisher
-    checked = _q(e.factcheck_claim or e.title, 150)
+    checked = _q(e.factcheck_claim or e.title, QUOTE_MAX)
     opposite = "odwrotne " if e.same_claim is False else ""
+    d = _date(e)
     if e.source_type == "incident":
-        return f"{pub} {_past(pub, 'opisał')} {'odwrotny ' if e.same_claim is False else ''}przekaz „{checked}” jako dezinformację."
-    return f"{pub} {_past(pub, 'ocenił')} {opposite}twierdzenie „{checked}” jako „{_fc_label(e)}”."
+        return (f"{pub} {_past(pub, 'opisał')} {'odwrotny ' if e.same_claim is False else ''}przekaz „{checked}” jako "
+                f"dezinformację{f' (wpis z {d})' if d else ''}.")
+    return f"{pub} {_past(pub, 'ocenił')} {opposite}twierdzenie „{checked}” jako „{_fc_label(e)}”{f' (analiza z {d})' if d else ''}."
+
+
+def _finding(c: ClaimResult, e: Evidence) -> str:
+    """' Demagog pisze: „<the analysis' sentence that carries the finding>”.' — the verbatim fragment of a fact-check
+    the engine chose as its quote (engine._best_fragment), so the answer shows what the analysis found and not only
+    the claim it rated. Empty when the fragment merely repeats the checked claim or the user's words."""
+    if e.source_type not in ("factcheck", "incident") or not e.fragment:
+        return ""
+    words = lambda x: " ".join(re.findall(r"[^\W_]+", (x or "").lower()))  # noqa: E731
+    f = words(e.fragment)
+    if not f or f in words(e.factcheck_claim) or f in words(e.title) or f in words(c.claim):
+        return ""
+    return f" {e.publisher} pisze: „{_q(e.fragment, QUOTE_MAX)}”."
 
 
 def _checked_answer(c: ClaimResult, e: Evidence) -> str | None:
@@ -180,9 +248,9 @@ def _related_sentence(e: Evidence) -> str:
     d = (e.published_at or "")[:10]
     when = f" ({d[8:10]}.{d[5:7]}.{d[:4]})" if re.fullmatch(r"\d{4}-\d\d-\d\d", d) else ""
     if e.source_type in ("factcheck", "incident"):
-        return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, 140)}”. Nie rozstrzyga on "
+        return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, QUOTE_MAX)}”. Nie rozstrzyga on "
                 "samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy.")
-    return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), 170)}”. "
+    return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), QUOTE_MAX)}”. "
             "Nie rozstrzyga on samego twierdzenia.")
 
 
@@ -289,12 +357,14 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
 
     checked = _checked_answer(c, e)
     if checked:
-        return checked
+        return checked + _finding(c, e)
     if v == "wprowadzajace_w_blad":
         if c.context_type == "NIEAKTUALNE" and c.missing_context:
-            return f"Częściowo. {c.missing_context.rstrip('.')} (źródło: {e.publisher})."
+            year = (e.published_at or "")[:4]
+            dated = f"Materiał pochodzi z {year} r. " if re.fullmatch(r"(19|20)\d\d", year) else ""
+            return f"Częściowo. {dated}{c.missing_context.rstrip('.')} (źródło: {e.publisher})."
         opener = "Częściowo." if e.factcheck_verdict == "mixed" else "Częściowo, ale całość wprowadza w błąd."
-        return f"{opener} {_who_checked(e)}"
+        return f"{opener} {_who_checked(e)}{_finding(c, e)}"
 
     opener = "Nie." if v == "falszywe" else "Tak."
     if v == "falszywe" and c.context_type == "FALSZYWY_KONTEKST" and c.missing_context:
@@ -304,9 +374,11 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
         txt = f"{opener} {_who_checked(e)}"
         if e.same_claim is False:
             txt += " Twoje zdanie mówi coś przeciwnego."
+        txt += _finding(c, e)
     else:  # primary / official source: quote the verbatim fragment that decided it
         rel = "Przeczy temu" if v == "falszywe" else "Potwierdza to"
-        txt = f"{opener} {rel} {e.publisher}: „{_q(_clause(e.fragment), 170)}”."
+        d = _date(e)
+        txt = f"{opener} {rel} {e.publisher}{f' ({d})' if d else ''}: „{_q(_clause(e.fragment), QUOTE_MAX)}”."
         if v == "falszywe" and any(p.label.startswith("Porównanie liczb") for p in c.premises):
             txt += " Liczba w twierdzeniu nie zgadza się z danymi źródła za ten sam okres."
     if v == "potwierdzone" and c.missing_context:
