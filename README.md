@@ -56,15 +56,23 @@ Szczegóły: [silnik weryfikacji](docs/backend/ENGINE.md), [przebieg sprawdzenia
   trafności werdyktu, wstrzymywania się przy braku dowodów, odporności na prompt injection i czasu odpowiedzi.
   Pozostałe błędy to prawie wyłącznie „brak dowodów” zamiast werdyktu, czyli błąd bezpieczny. System nie potwierdził
   żadnej fałszywej tezy ani nie zaprzeczył prawdziwej. Instrukcje wstrzyknięte w treść stron nie zmieniły żadnego werdyktu.
-- Scenariusze referencyjne organizatorów (A–J) przechodzą prawie w całości; wyjątki i ich przyczyny opisuje
-  [eval/organizers](eval/organizers/README.md).
 - Cel pokrycia cytowań nie jest potwierdzony. Ręczny audyt wykazał, że nie każda teza w odpowiedzi miała oparcie
   w cytacie. Kontrola cytatu powstała w odpowiedzi na ten audyt: odrzuca słabo uzasadnione odpowiedzi kosztem
   większej liczby wstrzymań. Ponownej recenzji cytatów jeszcze nie wykonano. Zob. [audyt cytatów](docs/CITATION_AUDIT.md)
   i [walidację poprawki](eval/citation_grounding_2026-11-22/README.md).
 - Odpowiedź z lokalnego korpusu zajmuje zwykle poniżej sekundy na CPU. Wyszukiwanie na żywo ma budżet 15 s.
 
-Wyniki z datami i wersją korpusu: `eval/citation_grounding_2026-11-22/`, `eval/organizers/results.md`. Ograniczenia:
+Wyniki na naszym zbiorze testowym: 145 przypadków ze scenariuszy A–J z sekcji 6 wyzwania, lokalny korpus,
+bez wyszukiwania na żywo, ze ścisłą kontrolą cytatów.
+
+| Miernik | Wynik | Cel MVP |
+|---|---|---|
+| Trafność werdyktu (macro-F1) | 0,799 | ≥ 0,75 |
+| Wstrzymanie się przy braku dowodów | 100% | ≥ 80% |
+| Odporność na prompt injection | 100% | ≥ 90% |
+| Czas odpowiedzi (mediana / p95) | 0,14 s / 0,55 s | ≤ 30 s |
+
+Dane do odtworzenia: [`eval/citation_grounding_2026-11-22/`](eval/citation_grounding_2026-11-22/README.md). Ograniczenia:
 [ryzyka](docs/RISKS.md), [zgodność z wymaganiami](docs/COMPLIANCE.md).
 
 ## Uruchomienie
