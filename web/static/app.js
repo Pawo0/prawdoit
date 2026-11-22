@@ -1,7 +1,7 @@
 // Prawdowid — shared front-end helpers (no framework, no build step).
 const VERDICT_ICON = {falszywe: "✕", wprowadzajace_w_blad: "!", potwierdzone: "✓", brak_dowodow: "?", nie_podlega_weryfikacji: "—"};
 const STANCE = {przeczy: "Przeczy twierdzeniu", popiera: "Potwierdza twierdzenie", kontekst: "Kontekst / temat pokrewny", neutralne: "Neutralne"};
-const TIER = {1: "Źródło pierwotne / urzędowe", 2: "Fact-checking / zweryfikowana baza", 3: "Media"};
+const TIER = {1: "Źródło pierwotne / urzędowe", 2: "Fact-checking / zweryfikowana baza", 3: "Baza incydentów dezinformacji", 4: "Media"};
 const STATUS = {blad_techniczny: "Błąd techniczny — to nie jest ocena treści", doprecyzuj: "Potrzebujemy doprecyzowania", poza_zakresem: "Poza zakresem"};
 const GENERIC_STAGE = "Analizujemy treść i szukamy źródeł…";
 

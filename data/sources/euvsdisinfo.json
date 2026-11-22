@@ -18,7 +18,7 @@
     ],
     "timeout_s": 3600
   },
-  "enabled": true,
+  "enabled": false,
   "schedule_hours": 168,
   "web_search": false,
   "topics": [
@@ -32,5 +32,6 @@
   "scope": "organiser_implied",
   "scope_basis": "rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf (instrukcja organizatora pobierania bazy EUvsDisinfo); także rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): EUvsDisinfo",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
-  "added_at": "2026-11-21"
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-22, 300 rekordów usunięte z korpusu: wszystkie pochodziły z kopii na Hugging Face (NLP-UniBW/eu_vs_disinfo) bez licencji udzielonej przez EEAS, a nie z serwisu euvsdisinfo.eu. Do odbudowy wyłącznie przez oficjalny dostęp (lista przypadków na euvsdisinfo.eu lub serwer MCP EUvsDisinfo, wpis euvsdisinfo_mcp) z zapisaną zgodą lub podstawą ponownego wykorzystania. Wpis z katalogu nigdy sam nie rozstrzyga werdyktu (poziom 3)."
 }

@@ -5,7 +5,8 @@ transparent, versioned rules (R1–R6, see /metodologia) over retrieved, cited e
 *understand* text: embeddings for retrieval / claim matching, NLI for stance.
 
 Source tiers (by source type and process — never by political orientation or domain reputation):
-  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN, bazy incydentów   C (3) media
+  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN   B (3) baza incydentów   C (4) media
+Only tiers 1 and 2 settle a verdict alone; a catalogue entry is context unless a tier 1-2 source agrees.
 """
 from __future__ import annotations
 
@@ -778,6 +779,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
     time_sensitive = is_time_sensitive(claim.text)
     sup_ab = [c for c in support if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
     ref_ab = [c for c in refute if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
+    misleading = [c for c in misleading if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]  # a catalogue entry alone never decides
 
     verdict, main, decisive = "brak_dowodow", None, []
     # ---- R2: conflict guard

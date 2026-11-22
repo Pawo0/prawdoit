@@ -21,8 +21,11 @@ from .textutil import normalize_ws, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.index")
 
-TIER = {"official": 1, "factcheck": 2, "incident": 2, "media": 3}
-TIER_LABEL = {1: "źródło pierwotne / urzędowe", 2: "zweryfikowana baza fact-checkingowa", 3: "media"}
+# Same numbers as the source registry (sources/registry.DEFAULT_TIER, docs/SOURCE_REGISTRY.md). Only tiers 1 and 2 can
+# decide a verdict on their own (engine._decide): a disinformation catalogue lists what was spread, not what is true.
+TIER = {"official": 1, "factcheck": 2, "incident": 3, "media": 4}
+TIER_LABEL = {1: "źródło pierwotne / urzędowe", 2: "zweryfikowana baza fact-checkingowa", 3: "baza incydentów dezinformacji",
+              4: "media"}
 
 
 @dataclass
