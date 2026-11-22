@@ -1,0 +1,33 @@
+2026-11-22 04:35:04,919 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+2026-11-22 04:35:04,928 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+2026-11-22 04:35:04,936 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+2026-11-22 04:35:04,943 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+2026-11-22 04:35:04,951 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+2026-11-22 04:35:04,960 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 422 Unprocessable Content"
+.2026-11-22 04:35:04,978 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 200 OK"
+2026-11-22 04:35:04,987 INFO httpx2: HTTP Request: POST http://testserver/api/check "HTTP/1.1 200 OK"
+2026-11-22 04:35:04,993 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 429 Too Many Requests"
+.2026-11-22 04:35:05,066 INFO httpx2: HTTP Request: POST http://testserver/api/chat-reply "HTTP/1.1 200 OK"
+.2026-11-22 04:35:05,076 INFO httpx: HTTP Request: GET http://localhost:8000/api/cases "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,079 INFO httpx: HTTP Request: GET http://localhost:8000/api/cases "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,081 INFO httpx: HTTP Request: GET http://localhost:8000/api/cases "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,082 WARNING prawdowid.discord: Moderator notification not confirmed (HTTPException); will retry.
+2026-11-22 04:35:05,083 INFO httpx: HTTP Request: GET http://localhost:8000/api/cases "HTTP/1.1 200 OK"
+....2026-11-22 04:35:05,106 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 503 Service Unavailable"
+2026-11-22 04:35:05,107 WARNING prawdowid.discord: Verification API failed (HTTPStatusError).
+2026-11-22 04:35:05,109 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,109 WARNING prawdowid.discord: Verification API failed (KeyError).
+2026-11-22 04:35:05,111 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,111 WARNING prawdowid.discord: Verification API failed (ValueError).
+2026-11-22 04:35:05,113 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,114 WARNING prawdowid.discord: Verification API failed (JSONDecodeError).
+2026-11-22 04:35:05,115 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 429 Too Many Requests"
+2026-11-22 04:35:05,116 INFO httpx: HTTP Request: DELETE http://localhost:8000/api/session/63fd0cde03531ac14abb4bcddf3d23c0 "HTTP/1.1 500 Internal Server Error"
+2026-11-22 04:35:05,117 WARNING prawdowid.discord: Session deletion failed (HTTPStatusError).
+.2026-11-22 04:35:05,121 INFO httpx: HTTP Request: POST http://localhost:8000/api/chat-reply "HTTP/1.1 200 OK"
+2026-11-22 04:35:05,122 INFO httpx: HTTP Request: DELETE http://localhost:8000/api/session/739a454ca7a1282f77173fc2fbc55c90 "HTTP/1.1 200 OK"
+......
+----------------------------------------------------------------------
+Ran 14 tests in 0.287s
+
+OK

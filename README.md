@@ -6,6 +6,8 @@ Prototyp na wyzwanie MSZ „PRAWDOWID” (HackNation 2026). Obywatel wkleja teks
 udało się ustalić** — albo uczciwe **wstrzymanie się od rozstrzygnięcia**. Prawdowid nie jest „sędzią prawdy”:
 pokazuje, co mówią źródła.
 
+Dokumentacja dla programisty: [przewodnik backendu](docs/backend/README.md) · [mapa wszystkich modułów](docs/backend/MODULES.md) · [testowanie i rozwój](docs/backend/DEVELOPMENT.md).
+
 ## Co jest w repozytorium
 | Katalog | Zawartość |
 |---|---|

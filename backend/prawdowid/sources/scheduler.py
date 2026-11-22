@@ -1,10 +1,15 @@
-"""Running registry sources: one source at a time, run state in SQLite, index hot-reload afterwards.
+"""Schedule source runs, serialize fetches and reload the changed retrieval index.
+
+Running registry sources: one source at a time, run state in SQLite, index hot-reload afterwards.
 
 The scheduler is a daemon thread inside the API process (env PRAWDOWID_SCHEDULER=1, default). Every minute it:
   1. runs every enabled source whose `schedule_hours` has elapsed since its last attempt (oldest first),
   2. reloads the search index if the set of indexed corpus files changed (new documents, a source enabled or
      disabled, a CLI run in another process, a file edited by hand).
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import fcntl
@@ -20,11 +25,11 @@ from . import fetchers, registry, state
 log = logging.getLogger("prawdowid.sources")
 
 TICK_S = 60
-ERROR_RETRY_H = 2            # after a failed attempt retry sooner than schedule_hours
+ERROR_RETRY_H = 2  # after a failed attempt retry sooner than schedule_hours
 LOCK_FILE = settings.runtime_dir / "sources.lock"
 
-_run_lock = threading.Lock()          # one fetch at a time inside this process
-_current: dict = {}                    # what is running now (for the admin panel)
+_run_lock = threading.Lock()  # one fetch at a time inside this process
+_current: dict = {}  # what is running now (for the admin panel)
 _reload_lock = threading.Lock()
 _last_sig: tuple | None = None
 _stop = threading.Event()
@@ -76,7 +81,8 @@ def _corpus_mtime(source_id: str) -> datetime | None:
 
 def next_due(src: dict, problems: list[str] | None = None) -> datetime | None:
     """When the source should run next (None = never automatically). Before the first registry run the corpus
-    file's mtime counts as the last run, so migrated sources are not all re-harvested at server start."""
+    file's mtime counts as the last run, so migrated sources are not all re-harvested at server start.
+    """
     if problems or not src.get("enabled") or src.get("method") not in registry.FETCH_METHODS:
         return None
     hours = float(src.get("schedule_hours") or 0)
@@ -94,7 +100,9 @@ def next_due(src: dict, problems: list[str] | None = None) -> datetime | None:
     return ref + timedelta(hours=hours)
 
 
-def run_source(source_id: str, trigger: str = "cli", *, blocking: bool = False, source: dict | None = None) -> dict:
+def run_source(
+    source_id: str, trigger: str = "cli", *, blocking: bool = False, source: dict | None = None
+) -> dict:
     """Fetch one source and merge into data/corpus/<id>.jsonl. Never raises for fetch problems (they are stored)."""
     src = source or registry.get(source_id)
     if not src:
@@ -119,7 +127,11 @@ def _run_locked(src: dict, trigger: str) -> dict:
     sid = src["id"]
     t0 = time.time()
     rid = state.start_run(sid, trigger)
-    _current.update(source_id=sid, started=datetime.now(timezone.utc).isoformat(timespec="seconds"), trigger=trigger)
+    _current.update(
+        source_id=sid,
+        started=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        trigger=trigger,
+    )
     status, n_new, n_total, msg = "ok", 0, None, ""
     try:
         if src["method"] == "legacy_script":
@@ -127,11 +139,19 @@ def _run_locked(src: dict, trigger: str) -> dict:
             tail = fetchers.run_legacy_script(src)
             after = {r.get("id") for r in fetchers.read_corpus(sid)}
             n_new, n_total = len(after - before), len(after)
-            msg = f"skrypt {src['params']['script']}: {n_new} nowych" + (f" · {tail}" if tail else "")
+            msg = f"skrypt {src['params']['script']}: {n_new} nowych" + (
+                f" · {tail}" if tail else ""
+            )
         else:
-            ctx = fetchers.Ctx(known_urls={fetchers.canonical(r.get("url") or "") for r in fetchers.read_corpus(sid)})
+            ctx = fetchers.Ctx(
+                known_urls={
+                    fetchers.canonical(r.get("url") or "") for r in fetchers.read_corpus(sid)
+                }
+            )
             recs = fetchers.fetch_source(src, ctx)
-            if recs or (src.get("params") or {}).get("dedupe_against"):  # an empty run still prunes duplicates
+            if recs or (src.get("params") or {}).get(
+                "dedupe_against"
+            ):  # an empty run still prunes duplicates
                 n_new, n_total = fetchers.merge_into_corpus(src, recs)
             else:
                 n_total = registry.count_docs(sid)
@@ -148,15 +168,30 @@ def _run_locked(src: dict, trigger: str) -> dict:
     finally:
         _current.clear()
     state.finish_run(rid, status, n_new, n_total, msg)
-    log.info("source %s: %s (%s new, %s total) in %.1fs — %s", sid, status, n_new, n_total, time.time() - t0, msg[:200])
-    return {"source_id": sid, "status": status, "n_new": n_new, "n_total": n_total, "message": msg,
-            "seconds": round(time.time() - t0, 1)}
+    log.info(
+        "source %s: %s (%s new, %s total) in %.1fs — %s",
+        sid,
+        status,
+        n_new,
+        n_total,
+        time.time() - t0,
+        msg[:200],
+    )
+    return {
+        "source_id": sid,
+        "status": status,
+        "n_new": n_new,
+        "n_total": n_total,
+        "message": msg,
+        "seconds": round(time.time() - t0, 1),
+    }
 
 
 # ------------------------------------------------------------------ index hot reload
 def index_signature() -> tuple:
     """(name, mtime, size) of the corpus files the index loads. Files of `live_search` sources are left out: their
-    documents are already added in place by INDEX.add_docs(), so appending to them must not trigger a full reload."""
+    documents are already added in place by INDEX.add_docs(), so appending to them must not trigger a full reload.
+    """
     files, excluded = registry.corpus_files_for_index()
     sources, _ = registry.load_all()
     live = {sid for sid, s in sources.items() if s.get("method") == "live_search"}
@@ -169,7 +204,9 @@ def index_signature() -> tuple:
             sig.append((f.name, st.st_mtime_ns, st.st_size))
         except FileNotFoundError:
             continue
-    return tuple(sig), tuple(excluded)  # excluded: enabling/disabling any source changes the signature
+    return tuple(sig), tuple(
+        excluded
+    )  # excluded: enabling/disabling any source changes the signature
 
 
 def maybe_reload(force: bool = False) -> dict | None:
@@ -192,10 +229,12 @@ def maybe_reload(force: bool = False) -> dict | None:
 
 def run_now_async(source_id: str, who: str) -> threading.Thread:
     """Admin 'Uruchom teraz': fetch in the background, then reload the index."""
+
     def work():
         res = run_source(source_id, trigger=f"admin:{who}")
         if res.get("status") == "ok":
             maybe_reload()
+
     t = threading.Thread(target=work, name=f"source-run-{source_id}", daemon=True)
     t.start()
     return t
@@ -266,5 +305,9 @@ def stop() -> None:
 
 
 def status() -> dict:
-    return {"enabled": settings.scheduler, "alive": bool(_thread and _thread.is_alive()), "tick_s": TICK_S,
-            "running": current()}
+    return {
+        "enabled": settings.scheduler,
+        "alive": bool(_thread and _thread.is_alive()),
+        "tick_s": TICK_S,
+        "running": current(),
+    }

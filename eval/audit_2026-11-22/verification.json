@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-22",
+  "commit": "ffad79d",
+  "verification_scope": "Local repository and models; no real Discord messages or authenticated external APIs; no public deployment audit.",
+  "backend_tests": {
+    "total": 288,
+    "skipped": 4,
+    "passed": 284
+  },
+  "discord_tests": {
+    "passed": 14
+  },
+  "organizers": {
+    "variants": 16,
+    "passed": 15,
+    "failed": [
+      "F1-zrzut-ekranu"
+    ],
+    "report": "organizers/results.md"
+  },
+  "corpus": {
+    "documents": 8807,
+    "domains": 24,
+    "types": {
+      "official": 3970,
+      "factcheck": 4506,
+      "incident": 331
+    },
+    "registry_sources": 57,
+    "enabled_sources": 54,
+    "missing_publication_date": 50,
+    "missing_retrieval_date": 0
+  },
+  "artifacts": {
+    "presentation_pages": 11,
+    "video_duration_seconds": 104.433333
+  },
+  "metrics": {
+    "dev": {
+      "n_cases": 38,
+      "accuracy_all": 0.974,
+      "macro_f1": 1.0,
+      "citation_coverage": 1.0,
+      "abstention_on_no_evidence": 1.0,
+      "injection_resistance": 1.0,
+      "status_cases_ok": 1.0,
+      "latency_ms_median": 324,
+      "latency_ms_p95": 2100,
+      "channel_consistency": 1.0,
+      "information_loop_dedup": true
+    },
+    "heldout": {
+      "n_cases": 57,
+      "accuracy_all": 0.947,
+      "macro_f1": 0.96,
+      "citation_coverage": 1.0,
+      "abstention_on_no_evidence": 1.0,
+      "injection_resistance": 1.0,
+      "status_cases_ok": 1.0,
+      "latency_ms_median": 188,
+      "latency_ms_p95": 723,
+      "channel_consistency": 1.0,
+      "information_loop_dedup": true
+    },
+    "blind2": {
+      "n_cases": 50,
+      "accuracy_all": 0.92,
+      "macro_f1": 0.912,
+      "citation_coverage": 1.0,
+      "abstention_on_no_evidence": 1.0,
+      "injection_resistance": 1.0,
+      "status_cases_ok": 1.0,
+      "latency_ms_median": 202,
+      "latency_ms_p95": 816,
+      "channel_consistency": 1.0,
+      "information_loop_dedup": true
+    }
+  },
+  "commands": [
+    "HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PRAWDOWID_LIVE_SEARCH=0 PRAWDOWID_SKIP_ORGANIZERS=1 backend/.venv/bin/python -m unittest discover -s backend/tests -q",
+    "backend/.venv/bin/python eval/test_discord.py",
+    "HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 backend/.venv/bin/python eval/organizers/run_organizers.py --out eval/audit_2026-11-22/organizers",
+    "For each dataset: PRAWDOWID_RUNTIME_DIR=<temporary> PRAWDOWID_INDEX_DIR=<temporary copy of data/index> PRAWDOWID_LIVE_SEARCH=0 PRAWDOWID_SCHEDULER=0 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 backend/.venv/bin/python eval/run_eval.py --cases eval/<cases file> --out eval/audit_2026-11-22/<dataset>"
+  ],
+  "limitations": [
+    "Evaluation sets were used for tuning; not independent quality estimates.",
+    "Citation coverage is a proxy; semantic correctness >=85% not independently measured.",
+    "Dev I1 performs an actual URL fetch and failed technically in sandbox.",
+    "Local Tesseract has eng without pol; Docker installs pol but was not rerun in this audit.",
+    "Raw organiser report labels peak RSS as MB incorrectly on macOS; do not use that value as a memory measurement."
+  ]
+}

@@ -1,4 +1,6 @@
-"""Regionalny System Ostrzegania (RSO) — current warnings shown by https://www.gov.pl/web/gov/ostrzezenia.
+"""Collect Regional Warning System notices into official corpus records.
+
+Regionalny System Ostrzegania (RSO) — current warnings shown by https://www.gov.pl/web/gov/ostrzezenia.
 
 That page is a small Vue app (/static/rso/app.*.js); its data come from a public gov.pl JSON proxy:
 
@@ -16,7 +18,10 @@ params (optional):
   categories            default ["meteorologiczne", "hydrologiczne", "informacje-drogowe", "ogolne"]
   voivodeship           default "wszystkie" (e.g. "mazowieckie")
   include_water_levels  also store gauges above the warning level ("stany-wod"), default false
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,20 +45,32 @@ DEFAULT_CATEGORIES = ["meteorologiczne", "hydrologiczne", "informacje-drogowe", 
 def _provinces(n: dict) -> list[str]:
     prov = n.get("provinces") or {}
     vals = prov.values() if isinstance(prov, dict) else prov
-    return [str(p.get("name") or p.get("slug_name") or "").strip().lower() for p in vals if isinstance(p, dict)]
+    return [
+        str(p.get("name") or p.get("slug_name") or "").strip().lower()
+        for p in vals
+        if isinstance(p, dict)
+    ]
 
 
 def _water_level_text(n: dict) -> str | None:
     try:
-        val, warn, alarm = (float(n.get(k)) for k in ("water_level_value", "water_level_warning_status_value",
-                                                        "water_level_alarm_status_value"))
+        val, warn, alarm = (
+            float(n.get(k))
+            for k in (
+                "water_level_value",
+                "water_level_warning_status_value",
+                "water_level_alarm_status_value",
+            )
+        )
     except (TypeError, ValueError):
         return None
     if val < warn:
         return None
     state = "alarmowy" if val >= alarm else "ostrzegawczy"
-    return (f"Przekroczony stan {state}: rzeka {n.get('river_name') or '?'}, wodowskaz {n.get('location_name') or '?'} "
-            f"— {val:.0f} cm (stan ostrzegawczy {warn:.0f} cm, alarmowy {alarm:.0f} cm).")
+    return (
+        f"Przekroczony stan {state}: rzeka {n.get('river_name') or '?'}, wodowskaz {n.get('location_name') or '?'} "
+        f"— {val:.0f} cm (stan ostrzegawczy {warn:.0f} cm, alarmowy {alarm:.0f} cm)."
+    )
 
 
 def fetch(source: dict) -> list[dict]:
@@ -92,7 +109,9 @@ def fetch(source: dict) -> list[dict]:
                 title = (n.get("title") or label).strip()
                 sc, ct = md_to_text(n.get("shortcut") or ""), md_to_text(n.get("content") or "")
                 sc = "" if sc == "0" else sc
-                if sc and ct and (sc in ct or ct in sc):  # shortcut is often a copy/prefix of content
+                if (
+                    sc and ct and (sc in ct or ct in sc)
+                ):  # shortcut is often a copy/prefix of content
                     body = ct if len(ct) >= len(sc) else sc
                 else:
                     body = "\n".join(x for x in (sc, ct) if x)
@@ -101,17 +120,27 @@ def fetch(source: dict) -> list[dict]:
             if provs:
                 meta.append("województwa: " + ", ".join(provs))
             if n.get("valid_from"):
-                meta.append(f"obowiązuje od {n['valid_from'][:16]}" + (f" do {n['valid_to'][:16]}" if n.get("valid_to") else ""))
+                meta.append(
+                    f"obowiązuje od {n['valid_from'][:16]}"
+                    + (f" do {n['valid_to'][:16]}" if n.get("valid_to") else "")
+                )
             if alarm and alarm not in ("0", "None"):
                 meta.append(f"stopień alarmu RSO: {alarm}")
             text = "; ".join(meta) + ".\n" + f"{title}. {body}".strip()
             published = iso_date(n.get("created_at")) or iso_date(n.get("valid_from"))
             route = "stany-wod" if cat == "stany-wod" else "_"
             url = f"{PAGE}?komunikat={wid}#/{route}/szczgoly/{wid}"
-            out.append(record(source, sid=str(wid), url=url,
-                              title=f"{title} — {', '.join(provs)}" if provs else title,
-                              text=text, published_at=published,
-                              tags=["RSO", label.lower(), *provs]))
+            out.append(
+                record(
+                    source,
+                    sid=str(wid),
+                    url=url,
+                    title=f"{title} — {', '.join(provs)}" if provs else title,
+                    text=text,
+                    published_at=published,
+                    tags=["RSO", label.lower(), *provs],
+                )
+            )
             if limit is not None and len(out) >= limit:
                 return out
     return out

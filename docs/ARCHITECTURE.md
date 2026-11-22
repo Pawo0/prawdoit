@@ -1,5 +1,7 @@
 # Prawdowid — architektura
 
+Szczegóły implementacji, przepływ żądania i opis każdego modułu: [przewodnik backendu](backend/README.md).
+
 ```
  KANAŁY (cienkie adaptery, bez logiki weryfikacji)            RDZEŃ WERYFIKACJI (jeden dla wszystkich kanałów)
  ┌──────────────────────────┐

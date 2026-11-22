@@ -1,9 +1,14 @@
-"""Natural-language inference (claim vs. evidence) used for stance detection.
+"""Lazy-loaded textual entailment and contradiction model with a conservative fallback.
+
+Natural-language inference (claim vs. evidence) used for stance detection.
 
 The model is swappable via PRAWDOWID_NLI_MODEL. Default: a multilingual mDeBERTa-v3 NLI model (MIT) that handles
 Polish well. When disabled (PRAWDOWID_USE_NLI=0) a conservative lexical fallback is used — it never produces
 strong stances, so the verdict engine will rather abstain than guess.
+
+Reading guide: docs/backend/ENGINE.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import logging
@@ -41,7 +46,9 @@ class NLI:
 
             torch.set_num_threads(max(1, min(8, torch.get_num_threads())))
             self._tok = AutoTokenizer.from_pretrained(settings.nli_model)
-            self._model = AutoModelForSequenceClassification.from_pretrained(settings.nli_model, torch_dtype=torch.float32).eval()
+            self._model = AutoModelForSequenceClassification.from_pretrained(
+                settings.nli_model, torch_dtype=torch.float32
+            ).eval()
             id2label = {int(k): v.lower() for k, v in self._model.config.id2label.items()}
             self._idx = {v: k for k, v in id2label.items()}
             log.info("NLI model loaded: %s %s", settings.nli_model, id2label)
@@ -57,14 +64,25 @@ class NLI:
 
         out: list[NLIScore] = []
         for i in range(0, len(pairs), 16):
-            batch = pairs[i: i + 16]
-            enc = self._tok([p for p, _ in batch], [h for _, h in batch], truncation="only_first", max_length=320,
-                            padding=True, return_tensors="pt")
+            batch = pairs[i : i + 16]
+            enc = self._tok(
+                [p for p, _ in batch],
+                [h for _, h in batch],
+                truncation="only_first",
+                max_length=320,
+                padding=True,
+                return_tensors="pt",
+            )
             with torch.inference_mode():
                 probs = torch.softmax(self._model(**enc).logits, dim=-1).tolist()
             for pr in probs:
-                out.append(NLIScore(pr[self._idx["entailment"]], pr[self._idx["neutral"]],
-                                    pr[self._idx["contradiction"]]))
+                out.append(
+                    NLIScore(
+                        pr[self._idx["entailment"]],
+                        pr[self._idx["neutral"]],
+                        pr[self._idx["contradiction"]],
+                    )
+                )
         return out
 
     @staticmethod
@@ -73,7 +91,10 @@ class NLI:
 
         pt, ht = set(tokens(premise)), set(tokens(hyp))
         overlap = len(pt & ht) / max(1, len(ht))
-        neg = any(w in premise.lower() for w in (" nie ", "nieprawd", "fałsz", "mit ", "nie jest", "brak dowod"))
+        neg = any(
+            w in premise.lower()
+            for w in (" nie ", "nieprawd", "fałsz", "mit ", "nie jest", "brak dowod")
+        )
         if overlap > 0.6:
             return NLIScore(0.0, 0.6, 0.4) if neg else NLIScore(0.4, 0.6, 0.0)
         return NLIScore(0.0, 1.0, 0.0)

@@ -1,0 +1,13 @@
+2026-11-22 04:35:02,549 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: initialize (HTTP 502) — retry 1/2 in 2.0s
+2026-11-22 04:35:02,550 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: initialize (HTTP 502) — retry 2/2 in 4.2s
+2026-11-22 04:35:02,552 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: initialize (HTTP 503) — retry 1/4 in 2.2s
+2026-11-22 04:35:02,552 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: initialize (ConnectionResetError: reset) — retry 2/4 in 4.7s
+2026-11-22 04:35:02,553 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: initialize (HTTP 429) — retry 3/4 in 9.5s
+2026-11-22 04:35:02,590 WARNING prawdowid.source_handlers.euvsdisinfo_mcp: EUvsDisinfo MCP: sesja wygasła (Session not found) — ponowna inicjalizacja
+2026-11-22 04:35:03,399 WARNING prawdowid.service: OCR unavailable: brak programu tesseract
+/Users/pawelczajczyk/Documents/studia/hacknation/prawowid/backend/.venv/lib/python3.12/site-packages/urllib3/contrib/socks.py:50: DependencyWarning: SOCKS support in urllib3 requires the installation of optional dependencies: specifically, PySocks.  For more information, see https://urllib3.readthedocs.io/en/latest/advanced-usage.html#socks-proxies
+  warnings.warn(
+----------------------------------------------------------------------
+Ran 288 tests in 6.836s
+
+OK (skipped=4)

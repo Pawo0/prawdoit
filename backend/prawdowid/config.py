@@ -1,4 +1,10 @@
-"""Central configuration. Everything is overridable via environment variables (PRAWDOWID_*)."""
+"""Environment-backed settings, filesystem locations and model configuration.
+
+Central configuration. Everything is overridable via environment variables (PRAWDOWID_*).
+
+Reading guide: docs/backend/DEVELOPMENT.md. Module map: docs/backend/MODULES.md.
+"""
+
 from __future__ import annotations
 
 import os
@@ -12,7 +18,9 @@ def _env(name: str, default: str) -> str:
     return os.environ.get(f"PRAWDOWID_{name}", default)
 
 
-_DEV_MODE = _env("DEV_MODE", "0") == "1"  # explicit local development only (README); never set in the container
+_DEV_MODE = (
+    _env("DEV_MODE", "0") == "1"
+)  # explicit local development only (README); never set in the container
 
 
 @dataclass(frozen=True)
@@ -22,7 +30,9 @@ class Settings:
     index_dir: Path = Path(_env("INDEX_DIR", str(ROOT / "data" / "index")))
     runtime_dir: Path = Path(_env("RUNTIME_DIR", str(ROOT / "data" / "runtime")))
     web_dir: Path = ROOT / "web"
-    sources_dir: Path = Path(_env("SOURCES_DIR", str(ROOT / "data" / "sources")))  # source registry (one JSON per source)
+    sources_dir: Path = Path(
+        _env("SOURCES_DIR", str(ROOT / "data" / "sources"))
+    )  # source registry (one JSON per source)
     public_base_url: str = _env("PUBLIC_URL", "http://localhost:8000")
 
     # --- models (swappable; any sentence-transformers / HF NLI model works) ---
@@ -55,13 +65,23 @@ class Settings:
     fetch_timeout_s: float = 8.0
     # Per client address and minute. The address is the socket peer unless uvicorn runs behind a proxy it trusts
     # (FORWARDED_ALLOW_IPS / --forwarded-allow-ips): then it is taken from X-Forwarded-For (docs/DEPLOYMENT.md).
-    rate_limit_per_min: int = int(_env("RATE_LIMIT", "120"))            # POST /api/check* (a jury set has 30+ cases)
-    rate_limit_quick_per_min: int = int(_env("RATE_LIMIT_QUICK", "60"))  # POST /api/quick: batches of <= 40 items
-    rate_limit_auto_per_min: int = int(_env("RATE_LIMIT_AUTO", "20"))    # checks with mode="auto" (extension router)
-    quick_concurrency: int = max(1, int(_env("QUICK_CONCURRENCY", "1")))  # /api/quick batches inferring at once
-    quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))               # then 503 + Retry-After, never a queue
+    rate_limit_per_min: int = int(
+        _env("RATE_LIMIT", "120")
+    )  # POST /api/check* (a jury set has 30+ cases)
+    rate_limit_quick_per_min: int = int(
+        _env("RATE_LIMIT_QUICK", "60")
+    )  # POST /api/quick: batches of <= 40 items
+    rate_limit_auto_per_min: int = int(
+        _env("RATE_LIMIT_AUTO", "20")
+    )  # checks with mode="auto" (extension router)
+    quick_concurrency: int = max(
+        1, int(_env("QUICK_CONCURRENCY", "1"))
+    )  # /api/quick batches inferring at once
+    quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))  # then 503 + Retry-After, never a queue
     retention_days: int = int(_env("RETENTION_DAYS", "30"))
-    auto_retention_days: int = int(_env("AUTO_RETENTION_DAYS", "7"))     # audit rows of mode="auto" (no text stored)
+    auto_retention_days: int = int(
+        _env("AUTO_RETENTION_DAYS", "7")
+    )  # audit rows of mode="auto" (no text stored)
     # pages found by live search kept in data/corpus/live_web.jsonl: 0 = never stored (default); otherwise days,
     # capped at retention_days (websearch.persist_days)
     live_persist_days: int = int(_env("LIVE_PERSIST_DAYS", "0"))
@@ -77,13 +97,19 @@ class Settings:
     # demo values exist only in explicit local-dev mode (PRAWDOWID_DEV_MODE=1); the container refuses to start
     # without two private tokens (docker/start.py).
     dev_mode: bool = _DEV_MODE
-    moderator_token: str = _env("MODERATOR_TOKEN", "").strip() or ("demo-moderator" if _DEV_MODE else "")
-    admin_token: str = _env("ADMIN_TOKEN", "").strip() or ("demo-admin" if _DEV_MODE else "")  # source registry (/admin)
-    scheduler: bool = _env("SCHEDULER", "1") == "1"                 # background fetching of registry sources
+    moderator_token: str = _env("MODERATOR_TOKEN", "").strip() or (
+        "demo-moderator" if _DEV_MODE else ""
+    )
+    admin_token: str = _env("ADMIN_TOKEN", "").strip() or (
+        "demo-admin" if _DEV_MODE else ""
+    )  # source registry (/admin)
+    scheduler: bool = _env("SCHEDULER", "1") == "1"  # background fetching of registry sources
 
     # --- cost estimate per answer (observability; docs/COSTS.md). CPU: 4 vCPU VPS ~120 zł/mies. -> zł per vCPU-second
     cost_pln_per_cpu_s: float = float(_env("COST_PLN_PER_CPU_S", "0.0000116"))
-    cost_pln_per_1k_llm_tokens: float = float(_env("COST_PLN_PER_1K_LLM_TOKENS", "0"))  # 0 = local model / no LLM
+    cost_pln_per_1k_llm_tokens: float = float(
+        _env("COST_PLN_PER_1K_LLM_TOKENS", "0")
+    )  # 0 = local model / no LLM
 
 
 settings = Settings()

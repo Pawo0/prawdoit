@@ -1,4 +1,6 @@
-"""robots.txt parser with RFC 9309 semantics (stdlib only, so ingest/ scripts can load it by file path too).
+"""Parse robots.txt rules using longest-match and Allow-tie semantics.
+
+robots.txt parser with RFC 9309 semantics (stdlib only, so ingest/ scripts can load it by file path too).
 
 Why not urllib.robotparser: it applies the *first* matching rule and ends a group at a blank line, so e.g.
 moje.cert.pl (`Disallow: /`, blank line, `Allow: /komunikaty/`) is wrongly read as "everything blocked".
@@ -7,7 +9,10 @@ sequence of characters and a trailing `$` anchors the end of the path.
 
 Drop-in for the parts of RobotFileParser we use: parse(lines), can_fetch(ua, url), crawl_delay(ua),
 site_maps(), and the allow_all / disallow_all flags.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import re
@@ -22,9 +27,15 @@ def _norm(s: str) -> str:
     """Percent-encoding normalization for comparison (RFC 9309 §2.2.2): non-ASCII/space -> %XX, %XX of an
     unreserved char -> the char, other %xx -> upper-case."""
     s = quote(s, safe=_KEEP)
-    return re.sub(r"%([0-9A-Fa-f]{2})",
-                  lambda m: chr(int(m.group(1), 16)) if chr(int(m.group(1), 16)) in _UNRESERVED
-                  else "%" + m.group(1).upper(), s)
+    return re.sub(
+        r"%([0-9A-Fa-f]{2})",
+        lambda m: (
+            chr(int(m.group(1), 16))
+            if chr(int(m.group(1), 16)) in _UNRESERVED
+            else "%" + m.group(1).upper()
+        ),
+        s,
+    )
 
 
 @lru_cache(maxsize=4096)
@@ -73,7 +84,9 @@ class RobotsTxt:
             elif cur is None:  # rules before any user-agent line belong to no group
                 continue
             elif key in ("allow", "disallow"):
-                if val:  # empty Disallow = allow everything = no rule; empty Allow means nothing either
+                if (
+                    val
+                ):  # empty Disallow = allow everything = no rule; empty Allow means nothing either
                     cur[1].append((key == "allow", _norm(val)))
             elif key == "crawl-delay":
                 try:
@@ -84,7 +97,8 @@ class RobotsTxt:
 
     def _chosen(self, ua: str):
         """Groups for this crawler: every group naming our product token (merged, RFC 9309 §2.2.1), else every
-        `*` group. Substring match like urllib.robotparser (so `User-agent: PrawdowidBot` also applies)."""
+        `*` group. Substring match like urllib.robotparser (so `User-agent: PrawdowidBot` also applies).
+        """
         token = _product_token(ua)
         specific = [g for g in self._groups if any(a != "*" and a and a in token for a in g[0])]
         return specific or [g for g in self._groups if "*" in g[0]]

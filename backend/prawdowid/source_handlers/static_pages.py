@@ -1,4 +1,6 @@
-"""Snapshots of fixed official pages that are not article lists (so html_list/govpl_list cannot express them):
+"""Collect explicitly configured official pages without crawling unrelated content.
+
+Snapshots of fixed official pages that are not article lists (so html_list/govpl_list cannot express them):
 info pages (passenger rights, hotlines), and pages whose content is replaced in place (RCB daily report, the
 current navigation notices of Wody Polskie / Urząd Morski).
 
@@ -16,7 +18,10 @@ params:
 
 Text: trafilatura (precision mode, tables kept); if the page's main container (<article>/<main>/#main-content)
 holds clearly more text — e.g. collapsed accordions of notice titles — that text is used instead.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -24,7 +29,16 @@ import logging
 import re
 from urllib.parse import urlsplit
 
-from ._common import clean_ws, delay_of, get_html, known_urls, pl_text_date, record, short_hash, text_dates
+from ._common import (
+    clean_ws,
+    delay_of,
+    get_html,
+    known_urls,
+    pl_text_date,
+    record,
+    short_hash,
+    text_dates,
+)
 
 log = logging.getLogger("prawdowid.sources.static_pages")
 
@@ -50,11 +64,20 @@ def _extract(url: str, html: str) -> dict:
     import trafilatura
 
     meta = trafilatura.extract_metadata(html)
-    text = trafilatura.extract(html, url=url, include_comments=False, include_tables=True, favor_precision=True) or ""
+    text = (
+        trafilatura.extract(
+            html, url=url, include_comments=False, include_tables=True, favor_precision=True
+        )
+        or ""
+    )
     alt = _main_text(html)
     if len(alt) > 1.4 * len(text) + 200:
         text = alt
-    return {"title": (meta.title if meta else None) or "", "date": (meta.date if meta else None), "text": text}
+    return {
+        "title": (meta.title if meta else None) or "",
+        "date": (meta.date if meta else None),
+        "text": text,
+    }
 
 
 def _slug(url: str) -> str:
@@ -109,5 +132,15 @@ def fetch(source: dict) -> list[dict]:
             url, sid = page, _slug(page)
         if daily and url in known:
             continue  # today's version already stored
-        out.append(record(source, sid=sid, url=url, title=title, text=art["text"], published_at=date, tags=tags))
+        out.append(
+            record(
+                source,
+                sid=sid,
+                url=url,
+                title=title,
+                text=art["text"],
+                published_at=date,
+                tags=tags,
+            )
+        )
     return out

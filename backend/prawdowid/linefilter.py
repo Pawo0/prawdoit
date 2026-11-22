@@ -1,4 +1,6 @@
-"""Line-level metadata filter, applied to multi-line input before sentence splitting.
+"""Remove author/date/share metadata before claim extraction, including OCR debris.
+
+Line-level metadata filter, applied to multi-line input before sentence splitting.
 
 Text copied or OCR-read from a social-media post, a forum or a news page carries lines that are not part of the
 message: the author line and its timestamp, handles, the interface around the post (share / comment buttons,
@@ -6,19 +8,26 @@ reaction counters) and, from OCR, fragments with hardly any letters. Each of the
 "sentence" and could be checked as a claim of its own. A line is dropped only when it matches one of these shapes as
 a whole; anything with its own wording (a verb, a lower-case content word, a question) stays. The filter never
 removes every line, and a single-line input passes through unchanged.
+
+Reading guide: docs/backend/REQUEST_FLOW.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import re
 
 from .textutil import _FACTUAL_CUE, _PAST
 
-_MONTHS = (r"(?:stycze[ńn]|styczni[au]|luty|lutego|lutym|marzec|marca|marcu|kwiecie[ńn]|kwietni[au]|maj|maja|maju|"
-           r"czerwiec|czerwc[au]|lipiec|lipc[au]|sierpie[ńn]|sierpni[au]|wrzesie[ńn]|wrze[śs]ni[au]|pa[źz]dziernik[au]?|"
-           r"listopad[a]?|listopadzie|grudzie[ńn]|grudni[au]|sty|lut|mar|kwi|cze|lip|sie|wrz|pa[źz]|lis|gru|"
-           r"january|february|march|april|may|june|july|august|september|october|november|december|"
-           r"jan|feb|apr|jun|jul|aug|sep|sept|oct|nov|dec)\b")
-_WEEKDAYS = r"(?:poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela|pon|wt|śr|czw|pt|sob|niedz)\b"
+_MONTHS = (
+    r"(?:stycze[ńn]|styczni[au]|luty|lutego|lutym|marzec|marca|marcu|kwiecie[ńn]|kwietni[au]|maj|maja|maju|"
+    r"czerwiec|czerwc[au]|lipiec|lipc[au]|sierpie[ńn]|sierpni[au]|wrzesie[ńn]|wrze[śs]ni[au]|pa[źz]dziernik[au]?|"
+    r"listopad[a]?|listopadzie|grudzie[ńn]|grudni[au]|sty|lut|mar|kwi|cze|lip|sie|wrz|pa[źz]|lis|gru|"
+    r"january|february|march|april|may|june|july|august|september|october|november|december|"
+    r"jan|feb|apr|jun|jul|aug|sep|sept|oct|nov|dec)\b"
+)
+_WEEKDAYS = (
+    r"(?:poniedziałek|wtorek|środa|czwartek|piątek|sobota|niedziela|pon|wt|śr|czw|pt|sob|niedz)\b"
+)
 _UNITS = r"(?:s|sek|sekund\w*|min|minut\w*|h|godz|godzin\w*|g|d|dni|dzień|tydz|tyg|tygodni\w*|mies|miesi\w*|r|rok|lat|lata)\b"
 # one date / time expression; the line is tested against a sequence of these with separators only in between
 _DATE = re.compile(
@@ -30,22 +39,31 @@ _DATE = re.compile(
     rf"(?:{_WEEKDAYS})\.?|wczoraj|przedwczoraj|dzisiaj|dziś|teraz|przed chwilą|właśnie teraz|temu|"
     rf"(?:19|20)\d{{2}}\b(?:\s*r\.|\s+roku)?|r\.|roku|dnia|w dniu|"
     rf"edytowan\w*|zaktualizowan\w*|aktualizacja|opublikowan\w*|dodan\w*|data publikacji|publikacja)",
-    re.I)
+    re.I,
+)
 _SEP = r"[\s,;:·•|/\-–—()\[\].]*"
 _DATE_ONLY = re.compile(rf"^{_SEP}(?:(?:{_DATE.pattern}){_SEP})+$", re.I)
-_DATE_EDGE = re.compile(rf"(?:^{_SEP}(?:(?:{_DATE.pattern}){_SEP})+|{_SEP}(?:(?:{_DATE.pattern}){_SEP})+$)", re.I)
+_DATE_EDGE = re.compile(
+    rf"(?:^{_SEP}(?:(?:{_DATE.pattern}){_SEP})+|{_SEP}(?:(?:{_DATE.pattern}){_SEP})+$)", re.I
+)
 
 _HANDLE = re.compile(r"(?<!\w)(?:@[\w.]{2,}|u/[\w-]{2,}|r/[\w-]{2,})")
-_USERNAME = re.compile(r"^(?=[\w.]*[_\d])(?=[\w.]*[^\W\d_])[\w.]{3,30}$")  # one token mixing letters with digits/underscore
+_USERNAME = re.compile(
+    r"^(?=[\w.]*[_\d])(?=[\w.]*[^\W\d_])[\w.]{3,30}$"
+)  # one token mixing letters with digits/underscore
 
 # who posted it: a role or account word opening an author line ("<role> <date>", "<role> · <date>")
 _ROLE = re.compile(
     r"^(?:użytkowni\w*|autor\w*|redakcj\w*|redaktor\w*|administrator\w*|admin\w*|moderator\w*|reporter\w*|"
     r"dziennikar\w*|korespondent\w*|wpis\w*|post\w*|komentarz\w*|odpowied\w*|profil\w*|konto|kont[ao]|"
     r"stron[aey]|grup[aey]|kanał\w*|fanpage\w*|źródło|fot\.?|foto|zdjęcie|materiał\w* (?:prasow|partnersk|sponsorowan)\w*)$",
-    re.I)
-_BYLINE_VERB = re.compile(r"^(?:opublikował\w*|napisał\w*|dodał\w*|udostępnił\w*|skomentował\w*|odpowiedział\w*|"
-                          r"zamieścił\w*|wrzucił\w*|posted|shared|wrote)$", re.I)
+    re.I,
+)
+_BYLINE_VERB = re.compile(
+    r"^(?:opublikował\w*|napisał\w*|dodał\w*|udostępnił\w*|skomentował\w*|odpowiedział\w*|"
+    r"zamieścił\w*|wrzucił\w*|posted|shared|wrote)$",
+    re.I,
+)
 
 # interface text around a post: buttons, counters, labels
 _UI_WORD = re.compile(
@@ -54,12 +72,16 @@ _UI_WORD = re.compile(
     r"zapisan\w*|więcej|pokaż|ukryj|zobacz|tłumaczeni\w*|przetłumacz|przekaż|dalej|napisz|sponsorowan\w*|"
     r"promowan\w*|reklama|oznacz\w*|zgłoś|wiadomoś\w*|wyślij|kopiuj|link|tys|mln|k|m|tak|share\w*|like\w*|"
     r"comment\w*|repl\w*|retweet\w*|repost\w*|quote\w*|view\w*|follow\w*|subscribe\w*|send|save|more|translate|"
-    r"to|i|oraz|innych|inne|osób|osoby|osoba|użytkowników|razy)$", re.I)
+    r"to|i|oraz|innych|inne|osób|osoby|osoba|użytkowników|razy)$",
+    re.I,
+)
 _COUNTER = re.compile(r"^\d+(?:[.,]\d+)?[kKmM]?$")
 
 _MAX_META_LEN = 160
 _WORD = re.compile(r"[^\W\d_]+(?:[-'][^\W\d_]+)*")
-_VERB_CUE = re.compile(r"\b\w{2,}(?:ł|ła|ło|li|ły|łem|łam|łeś|łaś|liśmy|łyśmy|ują|uje|ają|eją)\b", re.I)
+_VERB_CUE = re.compile(
+    r"\b\w{2,}(?:ł|ła|ło|li|ły|łem|łam|łeś|łaś|liśmy|łyśmy|ują|uje|ają|eją)\b", re.I
+)
 
 
 def _words(s: str) -> list[str]:
@@ -73,7 +95,9 @@ def _is_date_line(line: str) -> bool:
 def _is_name_like(words: list[str]) -> bool:
     """1-4 words, every one capitalised (a person, a page, an outlet): an author line, not a statement. A word in
     capitals longer than an acronym is shouting, not a name ("RZĄD KŁAMIE")."""
-    return 1 <= len(words) <= 4 and all(w[:1].isupper() and (len(w) <= 4 or not w.isupper()) for w in words)
+    return 1 <= len(words) <= 4 and all(
+        w[:1].isupper() and (len(w) <= 4 or not w.isupper()) for w in words
+    )
 
 
 def _has_verb(s: str) -> bool:
@@ -81,14 +105,17 @@ def _has_verb(s: str) -> bool:
 
 
 def _is_byline(line: str) -> bool:
-    """"<role or user> <date>" / "<date> · <user>" / "<role>: <name>" / a bare "<Name Surname>": besides an optional
-    timestamp at one edge, only an author (a role word, a handle or a capitalised name), no statement of its own."""
+    """ "<role or user> <date>" / "<date> · <user>" / "<role>: <name>" / a bare "<Name Surname>": besides an optional
+    timestamp at one edge, only an author (a role word, a handle or a capitalised name), no statement of its own.
+    """
     if line.rstrip().endswith(("?", "!")):
         return False
     m = re.match(r"^\s*([^\W\d_]+)\s*:\s*(.+?)[\s.]*$", line)
     if m and _ROLE.match(m.group(1)):  # "Autor: Jan Nowak", "Źródło: Redakcja Serwisu"
         named = _words(_HANDLE.sub(" ", m.group(2)))
-        if not re.search(r"\d", _DATE_EDGE.sub(" ", m.group(2))) and (not named or _is_name_like(named)):
+        if not re.search(r"\d", _DATE_EDGE.sub(" ", m.group(2))) and (
+            not named or _is_name_like(named)
+        ):
             return True
     dated = bool(_DATE_EDGE.search(line))
     rest = _HANDLE.sub(" ", _DATE_EDGE.sub(" ", line) if dated else line)
@@ -150,7 +177,9 @@ def line_kind(line: str) -> str | None:
     s = line.strip()
     if not s:
         return "szum"
-    if len(s) > _MAX_META_LEN:  # metadata lines are short; a long line is content (and is not run through the regexes)
+    if (
+        len(s) > _MAX_META_LEN
+    ):  # metadata lines are short; a long line is content (and is not run through the regexes)
         return None
     if _is_date_line(s):
         return "data"

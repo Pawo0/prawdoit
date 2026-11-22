@@ -1,4 +1,6 @@
-"""Async job API for the waiting window: the UI starts a check and polls its stage.
+"""In-memory asynchronous checks, progress reporting and separate background capacity.
+
+Async job API for the waiting window: the UI starts a check and polls its stage.
 
   POST /api/check/async   (same body as /api/check)  -> {"job_id": "...", "mode": "manual|auto"}
   GET  /api/jobs/{job_id}                             -> {"state": "running|done|error", "stage", "stage_label",
@@ -11,7 +13,10 @@ window only shows what is really happening. Small thread pool, jobs expire 10 mi
 Background checks of the extension router (CheckRequest.mode="auto") run in their own single-thread pool, so they can
 never occupy the workers a person is waiting for; their queue is short and their own rate limit applies. Their result
 is removed from memory as soon as it has been delivered once (it contains the checked text).
+
+Reading guide: docs/backend/API.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,8 +39,12 @@ router = APIRouter()
 
 JOB_TTL_S = 600
 MAX_JOBS = 500
-MAX_AUTO_WAITING = 8  # background checks queued or running; beyond that the client is told to retry later
-_POOL = ThreadPoolExecutor(max_workers=int(os.environ.get("PRAWDOWID_JOB_WORKERS", "2")), thread_name_prefix="job")
+MAX_AUTO_WAITING = (
+    8  # background checks queued or running; beyond that the client is told to retry later
+)
+_POOL = ThreadPoolExecutor(
+    max_workers=int(os.environ.get("PRAWDOWID_JOB_WORKERS", "2")), thread_name_prefix="job"
+)
 _AUTO_POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="job-auto")
 _JOBS: dict[str, "Job"] = {}
 _LOCK = threading.Lock()
@@ -56,8 +65,13 @@ class Job:
 
     def view(self) -> dict:
         end = self.finished or time.monotonic()
-        out = {"job_id": self.id, "state": self.state, "stage": self.stage, "stage_label": self.stage_label,
-               "elapsed_s": round(end - self.created, 1)}
+        out = {
+            "job_id": self.id,
+            "state": self.state,
+            "stage": self.stage,
+            "stage_label": self.stage_label,
+            "elapsed_s": round(end - self.created, 1),
+        }
         if self.result is not None:
             out["result"] = self.result
         if self.error:
@@ -89,7 +103,9 @@ def _run(job: Job, req: CheckRequest) -> None:
         log.exception("async check failed")
         store.log_error(None, "jobs", repr(e)[:400])
         job.state, job.stage, job.stage_label = "error", "blad", "Wystąpił błąd techniczny."
-        job.error = "Wystąpił błąd techniczny podczas analizy. To nie jest ocena treści — spróbuj ponownie."
+        job.error = (
+            "Wystąpił błąd techniczny podczas analizy. To nie jest ocena treści — spróbuj ponownie."
+        )
     finally:
         job.finished = time.monotonic()
 
@@ -112,8 +128,14 @@ def api_check_async(req: CheckRequest, request: Request):
     _purge()
     with _LOCK:
         running = [j for j in _JOBS.values() if j.state == "running"]
-        if len(running) >= MAX_JOBS or (auto and sum(1 for j in running if j.auto) >= MAX_AUTO_WAITING):
-            raise HTTPException(429, "Za dużo trwających sprawdzeń — spróbuj za chwilę.", headers={"Retry-After": "5"})
+        if len(running) >= MAX_JOBS or (
+            auto and sum(1 for j in running if j.auto) >= MAX_AUTO_WAITING
+        ):
+            raise HTTPException(
+                429,
+                "Za dużo trwających sprawdzeń — spróbuj za chwilę.",
+                headers={"Retry-After": "5"},
+            )
         job = Job(id=uuid.uuid4().hex[:16], auto=auto)
         _JOBS[job.id] = job
     (_AUTO_POOL if auto else _POOL).submit(_run, job, req)

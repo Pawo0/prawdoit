@@ -1,19 +1,32 @@
-"""Render a CheckResult as a short chat message (WhatsApp / Messenger / Discord / SMS).
+"""Render the shared verification result for chat and SMS-like transports.
+
+Render a CheckResult as a short chat message (WhatsApp / Messenger / Discord / SMS).
 
 Channel consistency (challenge scenario G): the message is built from the SAME fields the website shows first —
 `short_answer`, the decisive source (`main_evidence`), `basis_line` / `limitation_line` — plus a link to the full
 analysis. web/czat.html mirrors this function for its async demo mode (chatReply in that page).
+
+Reading guide: docs/backend/API.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 from ..config import settings
 from ..schemas import CheckResult, ClaimResult
 from ..textutil import short
 
-ICON = {"falszywe": "❌", "wprowadzajace_w_blad": "⚠️", "potwierdzone": "✅", "brak_dowodow": "❔",
-        "nie_podlega_weryfikacji": "💬"}
-HEAD = {"blad_techniczny": "Błąd techniczny (to nie jest ocena treści)", "doprecyzuj": "Potrzebuję doprecyzowania",
-        "poza_zakresem": "Poza zakresem"}
+ICON = {
+    "falszywe": "❌",
+    "wprowadzajace_w_blad": "⚠️",
+    "potwierdzone": "✅",
+    "brak_dowodow": "❔",
+    "nie_podlega_weryfikacji": "💬",
+}
+HEAD = {
+    "blad_techniczny": "Błąd techniczny (to nie jest ocena treści)",
+    "doprecyzuj": "Potrzebuję doprecyzowania",
+    "poza_zakresem": "Poza zakresem",
+}
 
 
 def _date(s: str | None) -> str:
@@ -38,6 +51,7 @@ def _source(c: ClaimResult) -> str | None:
     e = c.evidence[i]
     return f"{label}: {e.publisher}, {_date(e.published_at)} — {short(e.title, 90)}\n{e.url}"
 
+
 def _sources_long(c: ClaimResult) -> list[str]:
     """Discord (markdown, split into several messages, no length cap): every decisive source with its verbatim
     quote, the decisive one (main_evidence) first. Empty when nothing is decisive — an abstention then keeps the
@@ -48,14 +62,17 @@ def _sources_long(c: ClaimResult) -> list[str]:
         decisive = [main] + [e for e in decisive if e is not main]
     out = []
     for j, e in enumerate(decisive[:3], 1):
-        out.append(f"{j}. {e.publisher}, {_date(e.published_at)} — {short(e.title, 80)}\n   {e.url}")
+        out.append(
+            f"{j}. {e.publisher}, {_date(e.published_at)} — {short(e.title, 80)}\n   {e.url}"
+        )
         if e.fragment:
             out.append(f"   Cytat: „{short(e.fragment, 220)}”")
     return ["Źródła:"] + out if out else []
 
 
-
-def chat_text(res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms: bool = False) -> str:
+def chat_text(
+    res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms: bool = False
+) -> str:
     b = lambda s: f"{bold}{s}{bold}" if bold else s  # noqa: E731
     link = f"{settings.public_base_url}/analiza/{res.id}"
     if res.status != "ok":
@@ -79,14 +96,20 @@ def chat_text(res: CheckResult, bold: str = "*", max_len: int | None = 3500, sms
             if c.limitation_line:
                 lines.append(c.limitation_line)
     if res.security_events:
-        lines.append("\nℹ️ W treści była instrukcja skierowana do systemu — zignorowałem ją i zapisałem zdarzenie. "
-                     "Nie wpływa na ocenę.")
-    live_notice = res.live_search.notice if getattr(res, "live_search", None) else ""  # already in limitation_line
+        lines.append(
+            "\nℹ️ W treści była instrukcja skierowana do systemu — zignorowałem ją i zapisałem zdarzenie. "
+            "Nie wpływa na ocenę."
+        )
+    live_notice = (
+        res.live_search.notice if getattr(res, "live_search", None) else ""
+    )  # already in limitation_line
     other = [w for w in res.warnings if not w.startswith("W treści wykryto") and w != live_notice]
     if other and not sms:
         lines.append(f"\nℹ️ {short(other[0], 200)}")
     off = res.engine.get("unavailable") or []
-    if off and not sms and any(c.verdict == "brak_dowodow" for c in res.claims):  # absence must not read as a result
+    if (
+        off and not sms and any(c.verdict == "brak_dowodow" for c in res.claims)
+    ):  # absence must not read as a result
         lines.append(f"\nℹ️ {short(off[0], 200)}")
     if res.case_id:
         lines.append(f"\n📨 Sprawa {res.case_id} trafiła do kolejki analityka.")

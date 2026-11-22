@@ -1,4 +1,6 @@
-"""EUvsDisinfo MCP client + ingest handler (registry: method "custom", params.handler "euvsdisinfo_mcp").
+"""Read organizer EUvsDisinfo MCP datasets with retries and corpus conversion.
+
+EUvsDisinfo MCP client + ingest handler (registry: method "custom", params.handler "euvsdisinfo_mcp").
 
 Server: https://euvsdisinfo-mcp-server.vercel.app/mcp — MCP over *streamable HTTP* (not legacy SSE), provided to
 HackNation 2026 participants by the organisers; spec: rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf.
@@ -26,7 +28,10 @@ Licence: EUvsDisinfo / EEAS East StratCom Task Force — reuse authorised provid
 CLI (run from backend/):
   .venv/bin/python -m prawdowid.source_handlers.euvsdisinfo_mcp --probe
   .venv/bin/python -m prawdowid.source_handlers.euvsdisinfo_mcp --dump 200 /tmp/euvsdisinfo_mcp.jsonl
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -52,14 +57,18 @@ log = logging.getLogger("prawdowid.source_handlers.euvsdisinfo_mcp")
 
 ENDPOINT = "https://euvsdisinfo-mcp-server.vercel.app/mcp"
 TOKEN_ENV = "PRAWDOWID_EUVSDISINFO_TOKEN"
-PROTOCOL_VERSION = "2024-11-05"  # version documented by the server; the negotiated one is taken from its answer
+PROTOCOL_VERSION = (
+    "2024-11-05"  # version documented by the server; the negotiated one is taken from its answer
+)
 CLIENT_INFO = {"name": "prawdowid-euvsdisinfo-ingest", "version": "0.1.0"}
 USER_AGENT = "PrawdowidIngest/0.1 (HackNation 2026 research prototype; EUvsDisinfo MCP client)"
 SOURCE_ID = "euvsdisinfo"  # id prefix shared with ingest/harvest_euvsdisinfo.py (dedupe!)
 PUBLISHER = "EUvsDisinfo (EEAS East StratCom Task Force)"
 DOMAIN = "euvsdisinfo.eu"
-LICENSE = ("EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is "
-           "acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded.")
+LICENSE = (
+    "EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is "
+    "acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded."
+)
 LICENSE_MCP = LICENSE + " Retrieved via the EUvsDisinfo MCP server (HackNation 2026 organisers)."
 VERDICT_RAW = "Disinformation (EUvsDisinfo)"
 KINDS = ("cases", "articles")
@@ -69,8 +78,20 @@ RETRY_STATUS = {408, 425, 429, 500, 502, 503, 504}
 ROOT = Path(__file__).resolve().parents[3]
 RAW_DIR = ROOT / "data" / "raw" / "euvsdisinfo_mcp"
 REGISTRY_FILE = ROOT / "data" / "sources" / "euvsdisinfo_mcp.json"
-DEFAULT_PARAMS = {"kinds": list(KINDS), "since": "2023-01-01", "max_records": None, "article_languages": ["pl", "en"]}
-ARCHIVE_HOSTS = {"web.archive.org", "archive.ph", "archive.today", "archive.is", "archive.org", "archive.euvsd.info"}
+DEFAULT_PARAMS = {
+    "kinds": list(KINDS),
+    "since": "2023-01-01",
+    "max_records": None,
+    "article_languages": ["pl", "en"],
+}
+ARCHIVE_HOSTS = {
+    "web.archive.org",
+    "archive.ph",
+    "archive.today",
+    "archive.is",
+    "archive.org",
+    "archive.euvsd.info",
+}
 
 
 # --------------------------------------------------------------------------- errors
@@ -102,10 +123,14 @@ class HttpResponse:
     body: bytes
 
 
-Transport = Callable[[str, str, dict, Optional[bytes], float], HttpResponse]  # (method, url, headers, body, timeout)
+Transport = Callable[
+    [str, str, dict, Optional[bytes], float], HttpResponse
+]  # (method, url, headers, body, timeout)
 
 
-def urllib_transport(method: str, url: str, headers: dict, body: Optional[bytes], timeout: float) -> HttpResponse:
+def urllib_transport(
+    method: str, url: str, headers: dict, body: Optional[bytes], timeout: float
+) -> HttpResponse:
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -123,7 +148,9 @@ def parse_messages(content_type: str, body: bytes) -> list[dict]:
     text = body.decode("utf-8", "replace").lstrip("﻿")
     if not text.strip():
         return []
-    if "text/event-stream" in (content_type or "").lower() or re.match(r"\s*(event|data|id|retry)\s*:|:", text):
+    if "text/event-stream" in (content_type or "").lower() or re.match(
+        r"\s*(event|data|id|retry)\s*:|:", text
+    ):
         return _parse_sse(text)
     obj = json.loads(text)
     return [m for m in (obj if isinstance(obj, list) else [obj]) if isinstance(m, dict)]
@@ -136,7 +163,10 @@ def _parse_sse(text: str) -> list[dict]:
         if not data:
             continue
         obj = None
-        for joined in ("\n".join(data), "".join(data)):  # spec: newline-joined; tolerate JSON split mid-string
+        for joined in (
+            "\n".join(data),
+            "".join(data),
+        ):  # spec: newline-joined; tolerate JSON split mid-string
             try:
                 obj = json.loads(joined)
                 break
@@ -151,13 +181,28 @@ def _parse_sse(text: str) -> list[dict]:
 
 # --------------------------------------------------------------------------- MCP client
 class McpClient:
-    def __init__(self, token: Optional[str], url: str = ENDPOINT, *, transport: Optional[Transport] = None,
-                 timeout: float = 60.0, retries: int = 4, backoff: float = 2.0, delay: float = 1.0,
-                 sleep: Callable[[float], None] = time.sleep):
+    def __init__(
+        self,
+        token: Optional[str],
+        url: str = ENDPOINT,
+        *,
+        transport: Optional[Transport] = None,
+        timeout: float = 60.0,
+        retries: int = 4,
+        backoff: float = 2.0,
+        delay: float = 1.0,
+        sleep: Callable[[float], None] = time.sleep,
+    ):
         self.token = token or None
         self.url = url
         self.transport = transport or urllib_transport
-        self.timeout, self.retries, self.backoff, self.delay, self.sleep = timeout, retries, backoff, delay, sleep
+        self.timeout, self.retries, self.backoff, self.delay, self.sleep = (
+            timeout,
+            retries,
+            backoff,
+            delay,
+            sleep,
+        )
         self.session_id: Optional[str] = None
         self.protocol_version: Optional[str] = None
         self.server_info: dict = {}
@@ -171,8 +216,11 @@ class McpClient:
 
     # ---- low level
     def _headers(self, with_session: bool) -> dict:
-        h = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream",
-             "User-Agent": USER_AGENT}
+        h = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+            "User-Agent": USER_AGENT,
+        }
         if self.token:
             h["Authorization"] = f"Bearer {self.token}"
         if with_session and self.session_id:
@@ -188,22 +236,35 @@ class McpClient:
             self.stats["requests"] += 1
             resp = None
             try:
-                resp = self.transport("POST", self.url, self._headers(with_session), body, self.timeout)
-            except (OSError, http.client.HTTPException) as e:  # URLError, timeouts, resets, bad status lines
+                resp = self.transport(
+                    "POST", self.url, self._headers(with_session), body, self.timeout
+                )
+            except (
+                OSError,
+                http.client.HTTPException,
+            ) as e:  # URLError, timeouts, resets, bad status lines
                 err = f"{type(e).__name__}: {e}"
             else:
                 if resp.status not in RETRY_STATUS:
                     return resp
                 err = f"HTTP {resp.status}"
             if attempt >= self.retries:
-                raise McpError(f"EUvsDisinfo MCP: brak poprawnej odpowiedzi po {attempt + 1} próbach "
-                               f"({payload.get('method')}: {err})")
-            wait = self.backoff * (2 ** attempt) * (1 + 0.25 * random.random())
+                raise McpError(
+                    f"EUvsDisinfo MCP: brak poprawnej odpowiedzi po {attempt + 1} próbach "
+                    f"({payload.get('method')}: {err})"
+                )
+            wait = self.backoff * (2**attempt) * (1 + 0.25 * random.random())
             ra = (resp.headers.get("retry-after", "") if resp is not None else "").strip()
             if ra.isdigit():
                 wait = max(wait, min(float(ra), 120.0))
-            log.warning("EUvsDisinfo MCP: %s (%s) — retry %d/%d in %.1fs",
-                        payload.get("method"), err, attempt + 1, self.retries, wait)
+            log.warning(
+                "EUvsDisinfo MCP: %s (%s) — retry %d/%d in %.1fs",
+                payload.get("method"),
+                err,
+                attempt + 1,
+                self.retries,
+                wait,
+            )
             self.stats["retries"] += 1
             self.sleep(wait)
             attempt += 1
@@ -220,12 +281,17 @@ class McpClient:
 
     def _check_http(self, resp: HttpResponse, method: str) -> None:
         if resp.status in (401, 403):
-            raise AuthError(f"EUvsDisinfo MCP odrzucił dostęp (HTTP {resp.status}): {self._server_message(resp)} "
-                            f"— sprawdź token w {TOKEN_ENV}")
+            raise AuthError(
+                f"EUvsDisinfo MCP odrzucił dostęp (HTTP {resp.status}): {self._server_message(resp)} "
+                f"— sprawdź token w {TOKEN_ENV}"
+            )
         if resp.status >= 400:
             msg = self._server_message(resp)
-            if method != "initialize" and self.session_id and (
-                    resp.status == 404 or (resp.status == 400 and "session" in msg.lower())):
+            if (
+                method != "initialize"
+                and self.session_id
+                and (resp.status == 404 or (resp.status == 400 and "session" in msg.lower()))
+            ):
                 raise SessionExpired(msg or f"HTTP {resp.status}")
             raise McpError(f"EUvsDisinfo MCP: HTTP {resp.status} dla {method}: {msg}")
 
@@ -241,13 +307,17 @@ class McpClient:
         replies = [m for m in msgs if "result" in m or "error" in m]
         msg = next((m for m in replies if m.get("id") == rid), replies[0] if replies else None)
         if msg is None:
-            raise McpError(f"EUvsDisinfo MCP: brak odpowiedzi JSON-RPC na {method} "
-                           f"(HTTP {resp.status}, {len(resp.body)} B)")
+            raise McpError(
+                f"EUvsDisinfo MCP: brak odpowiedzi JSON-RPC na {method} "
+                f"(HTTP {resp.status}, {len(resp.body)} B)"
+            )
         if "error" in msg:
             e = msg["error"] if isinstance(msg["error"], dict) else {"message": str(msg["error"])}
             code, text = e.get("code"), str(e.get("message", ""))[:300]
             if code == -32001 or "unauthori" in text.lower():
-                raise AuthError(f"EUvsDisinfo MCP odrzucił dostęp ({code}): {text} — sprawdź token w {TOKEN_ENV}")
+                raise AuthError(
+                    f"EUvsDisinfo MCP odrzucił dostęp ({code}): {text} — sprawdź token w {TOKEN_ENV}"
+                )
             if method != "initialize" and "session" in text.lower():
                 raise SessionExpired(text)
             raise McpError(f"EUvsDisinfo MCP: błąd {code} dla {method}: {text}")
@@ -275,8 +345,10 @@ class McpClient:
 
     # ---- MCP operations
     def initialize(self) -> dict:
-        res = self._request("initialize", {"protocolVersion": PROTOCOL_VERSION, "capabilities": {},
-                                           "clientInfo": CLIENT_INFO})
+        res = self._request(
+            "initialize",
+            {"protocolVersion": PROTOCOL_VERSION, "capabilities": {}, "clientInfo": CLIENT_INFO},
+        )
         self.protocol_version = res.get("protocolVersion") or PROTOCOL_VERSION
         self.server_info = res.get("serverInfo") or {}
         self.notify("notifications/initialized")
@@ -292,9 +364,15 @@ class McpClient:
             self.sleep(wait)
         self._last_call = time.monotonic()
         res = self.request("tools/call", {"name": name, "arguments": arguments})
-        texts = [c.get("text", "") for c in res.get("content") or [] if isinstance(c, dict) and c.get("type") == "text"]
+        texts = [
+            c.get("text", "")
+            for c in res.get("content") or []
+            if isinstance(c, dict) and c.get("type") == "text"
+        ]
         if res.get("isError"):
-            raise McpError(f"EUvsDisinfo MCP: narzędzie {name} zwróciło błąd: {' '.join(texts)[:300]}")
+            raise McpError(
+                f"EUvsDisinfo MCP: narzędzie {name} zwróciło błąd: {' '.join(texts)[:300]}"
+            )
         sc = res.get("structuredContent")
         if isinstance(sc, dict):
             return sc
@@ -305,9 +383,13 @@ class McpClient:
                 continue
             if isinstance(obj, dict):
                 return obj
-        raise McpError(f"EUvsDisinfo MCP: {name} — odpowiedź bez structuredContent ({' '.join(texts)[:120]})")
+        raise McpError(
+            f"EUvsDisinfo MCP: {name} — odpowiedź bez structuredContent ({' '.join(texts)[:120]})"
+        )
 
-    def iter_items(self, kind: str, *, page_size: int = MAX_PAGE, offset: int = 0) -> Iterator[dict]:
+    def iter_items(
+        self, kind: str, *, page_size: int = MAX_PAGE, offset: int = 0
+    ) -> Iterator[dict]:
         """All items of `cases` / `articles`, page by page (offset += len(page)) until hasNextPage is false."""
         if kind not in KINDS:
             raise ValueError(f"unknown kind {kind!r} (expected one of {KINDS})")
@@ -321,12 +403,18 @@ class McpClient:
                 self.totals[kind] = total
             first = items[0].get("id") if items else None
             if first is not None and first == prev_first:
-                raise McpError(f"EUvsDisinfo MCP: {kind} offset {offset} zwrócił tę samą stronę — przerwano")
+                raise McpError(
+                    f"EUvsDisinfo MCP: {kind} offset {offset} zwrócił tę samą stronę — przerwano"
+                )
             prev_first = first
             yield from items
             offset += len(items)
             log.info("EUvsDisinfo MCP: %s %d/%s", kind, offset, total if total is not None else "?")
-            if not items or sc.get("hasNextPage") is False or (isinstance(total, int) and offset >= total):
+            if (
+                not items
+                or sc.get("hasNextPage") is False
+                or (isinstance(total, int) and offset >= total)
+            ):
                 return
 
     def close(self) -> None:
@@ -341,12 +429,43 @@ class McpClient:
 
 
 # --------------------------------------------------------------------------- text helpers
-_BLOCK_TAGS = {"p", "div", "br", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "tr", "table",
-               "section", "article", "figure", "figcaption", "hr", "pre", "dd", "dt"}
+_BLOCK_TAGS = {
+    "p",
+    "div",
+    "br",
+    "li",
+    "ul",
+    "ol",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "tr",
+    "table",
+    "section",
+    "article",
+    "figure",
+    "figcaption",
+    "hr",
+    "pre",
+    "dd",
+    "dt",
+}
 _SKIP_TAGS = {"script", "style", "noscript", "iframe", "svg"}
-_SHORTCODE = re.compile(r"\[/?(?:caption|embed|video|audio|gallery|vc_[a-z_]+|et_pb_[a-z_]+)[^\]]*\]", re.I)
-_SKIP_LINES = ("Read similar", "See other examples", "Przeczytaj podobne", "Zobacz podobne", "Przeczytaj inne",
-               "Przeczytaj też")
+_SHORTCODE = re.compile(
+    r"\[/?(?:caption|embed|video|audio|gallery|vc_[a-z_]+|et_pb_[a-z_]+)[^\]]*\]", re.I
+)
+_SKIP_LINES = (
+    "Read similar",
+    "See other examples",
+    "Przeczytaj podobne",
+    "Zobacz podobne",
+    "Przeczytaj inne",
+    "Przeczytaj też",
+)
 
 
 class _TextExtractor(HTMLParser):
@@ -409,7 +528,11 @@ def to_date(v) -> Optional[str]:
 def _titles(items) -> list[str]:
     out: list[str] = []
     for it in items or []:
-        t = it if isinstance(it, str) else (it.get("title") or it.get("name") or "") if isinstance(it, dict) else ""
+        t = (
+            it
+            if isinstance(it, str)
+            else (it.get("title") or it.get("name") or "") if isinstance(it, dict) else ""
+        )
         t = " ".join(strip_html(t).split())
         if t and t not in out:
             out.append(t)
@@ -436,17 +559,28 @@ _REPORT_SLUG = re.compile(r"/report/([^/?#]+)")
 def case_to_record(c: dict, retrieved_at: Optional[str] = None) -> Optional[dict]:
     m = _REPORT_SLUG.search(str(c.get("url") or ""))
     fact = strip_html(c.get("fact"))
-    if not m or not fact:  # no citeable report page / no disproof -> useless (or harmful) as evidence
+    if (
+        not m or not fact
+    ):  # no citeable report page / no disproof -> useless (or harmful) as evidence
         return None
     slug = m.group(1)
     claim = strip_html(c.get("claim"))
     if len(claim) > 1200:
         claim = claim[:1200].rsplit(" ", 1)[0] + " […]"
     title = re.sub(r"^\s*DISINFO:\s*", "", " ".join(strip_html(c.get("title")).split()))
-    outlets = _uniq([_host(link.get("url")) for link in c.get("linksToDisinformation") or []
-                     if isinstance(link, dict)])
-    tags = (["euvsdisinfo", "pro-kremlin-disinformation"] + _titles(c.get("keywords"))
-            + ["kraj:" + x for x in _titles(c.get("countries"))] + ["via:mcp"])
+    outlets = _uniq(
+        [
+            _host(link.get("url"))
+            for link in c.get("linksToDisinformation") or []
+            if isinstance(link, dict)
+        ]
+    )
+    tags = (
+        ["euvsdisinfo", "pro-kremlin-disinformation"]
+        + _titles(c.get("keywords"))
+        + ["kraj:" + x for x in _titles(c.get("countries"))]
+        + ["via:mcp"]
+    )
     url = str(c["url"]).strip().replace("http://", "https://", 1)
     return {
         "id": f"{SOURCE_ID}:{slug}",
@@ -469,11 +603,15 @@ def case_to_record(c: dict, retrieved_at: Optional[str] = None) -> Optional[dict
 
 
 def _article_language(a: dict, path: str) -> str:
-    langs = _titles([{"title": x.get("slug")} for x in a.get("articleLanguage") or [] if isinstance(x, dict)])
+    langs = _titles(
+        [{"title": x.get("slug")} for x in a.get("articleLanguage") or [] if isinstance(x, dict)]
+    )
     if langs:
         return langs[0].lower()
     first = path.split("/", 1)[0]
-    return first if re.fullmatch(r"[a-z]{2}", first) else "en"  # untranslated pages live at the root (English)
+    return (
+        first if re.fullmatch(r"[a-z]{2}", first) else "en"
+    )  # untranslated pages live at the root (English)
 
 
 def article_to_record(a: dict, retrieved_at: Optional[str] = None) -> Optional[dict]:
@@ -483,8 +621,12 @@ def article_to_record(a: dict, retrieved_at: Optional[str] = None) -> Optional[d
     if not path or not text:
         return None
     title = " ".join(strip_html(a.get("title")).split())
-    tags = (["euvsdisinfo", "euvsdisinfo-analysis"] + _titles(a.get("keywords"))
-            + ["kategoria:" + x for x in _titles(a.get("categories"))] + ["via:mcp"])
+    tags = (
+        ["euvsdisinfo", "euvsdisinfo-analysis"]
+        + _titles(a.get("keywords"))
+        + ["kategoria:" + x for x in _titles(a.get("categories"))]
+        + ["via:mcp"]
+    )
     return {
         "id": f"{SOURCE_ID}:article/{path}",
         "source_type": "factcheck",
@@ -508,7 +650,8 @@ def article_to_record(a: dict, retrieved_at: Optional[str] = None) -> Optional[d
 # --------------------------------------------------------------------------- raw dump
 class _RawDump:
     """data/raw/euvsdisinfo_mcp/<kind>.jsonl.gz, written atomically; the previous dump survives failed runs.
-    A run cut short by max_records writes <kind>.sample.jsonl.gz instead of replacing the full dump."""
+    A run cut short by max_records writes <kind>.sample.jsonl.gz instead of replacing the full dump.
+    """
 
     def __init__(self, raw_dir: Optional[Path], kind: str):
         self.raw_dir, self.kind, self.n, self._fh = raw_dir, kind, 0, None
@@ -529,7 +672,9 @@ class _RawDump:
         if not ok:
             self._tmp.unlink(missing_ok=True)
             return None
-        dest = self.raw_dir / (f"{self.kind}.jsonl.gz" if complete else f"{self.kind}.sample.jsonl.gz")
+        dest = self.raw_dir / (
+            f"{self.kind}.jsonl.gz" if complete else f"{self.kind}.sample.jsonl.gz"
+        )
         os.replace(self._tmp, dest)
         return dest
 
@@ -543,8 +688,12 @@ def _as_list(v, default: list) -> list:
     return list(v)
 
 
-def fetch(source: dict, *, transport: Optional[Transport] = None,
-          sleep: Callable[[float], None] = time.sleep) -> list[dict]:
+def fetch(
+    source: dict,
+    *,
+    transport: Optional[Transport] = None,
+    sleep: Callable[[float], None] = time.sleep,
+) -> list[dict]:
     """Registry contract: fetch(source) -> corpus records (SourceDoc dicts).
 
     source["params"]: kinds (["cases","articles"]), since ("2023-01-01"; null = no date filter), max_records
@@ -556,8 +705,10 @@ def fetch(source: dict, *, transport: Optional[Transport] = None,
     token_env = p.get("token_env") or TOKEN_ENV
     token = os.environ.get(token_env, "").strip()
     if not token:
-        raise MissingToken(f"brak tokenu: ustaw zmienną środowiskową {token_env} (EUvsDisinfo MCP) "
-                           "— źródło pominięte")
+        raise MissingToken(
+            f"brak tokenu: ustaw zmienną środowiskową {token_env} (EUvsDisinfo MCP) "
+            "— źródło pominięte"
+        )
     kinds = _as_list(p.get("kinds"), list(KINDS))
     bad = [k for k in kinds if k not in KINDS]
     if bad:
@@ -568,9 +719,15 @@ def fetch(source: dict, *, transport: Optional[Transport] = None,
     countries = {x.lower() for x in _as_list(p.get("countries"), [])}
     raw_dir = None if p.get("raw_dump") is False else Path(p.get("raw_dir") or RAW_DIR)
 
-    client = McpClient(token, p.get("endpoint") or ENDPOINT, transport=transport, sleep=sleep,
-                       delay=float(p.get("delay", 1.0)), timeout=float(p.get("timeout", 60)),
-                       retries=int(p.get("retries", 4)))
+    client = McpClient(
+        token,
+        p.get("endpoint") or ENDPOINT,
+        transport=transport,
+        sleep=sleep,
+        delay=float(p.get("delay", 1.0)),
+        timeout=float(p.get("timeout", 60)),
+        retries=int(p.get("retries", 4)),
+    )
     retrieved_at = now_iso()
     out: list[dict] = []
     seen: set[str] = set()
@@ -578,8 +735,15 @@ def fetch(source: dict, *, transport: Optional[Transport] = None,
     try:
         client.initialize()
         for kind in kinds:
-            st = stats[kind] = {"fetched": 0, "kept": 0, "invalid": 0, "too_old": 0, "language": 0, "country": 0,
-                                "duplicate": 0}
+            st = stats[kind] = {
+                "fetched": 0,
+                "kept": 0,
+                "invalid": 0,
+                "too_old": 0,
+                "language": 0,
+                "country": 0,
+                "duplicate": 0,
+            }
             if max_records and len(out) >= max_records:
                 break
             dump, ok, capped = _RawDump(raw_dir, kind), False, False
@@ -587,15 +751,23 @@ def fetch(source: dict, *, transport: Optional[Transport] = None,
                 for item in client.iter_items(kind, page_size=int(p.get("page_size", MAX_PAGE))):
                     st["fetched"] += 1
                     dump.write(item)
-                    rec = case_to_record(item, retrieved_at) if kind == "cases" else article_to_record(item, retrieved_at)
+                    rec = (
+                        case_to_record(item, retrieved_at)
+                        if kind == "cases"
+                        else article_to_record(item, retrieved_at)
+                    )
                     if rec is None:
                         st["invalid"] += 1
                     elif since and (rec["published_at"] or "") < since:
                         st["too_old"] += 1
                     elif kind == "articles" and langs and rec["language"] not in langs:
                         st["language"] += 1
-                    elif kind == "cases" and countries and not countries & {
-                            t[5:].lower() for t in rec["tags"] if t.startswith("kraj:")}:
+                    elif (
+                        kind == "cases"
+                        and countries
+                        and not countries
+                        & {t[5:].lower() for t in rec["tags"] if t.startswith("kraj:")}
+                    ):
                         st["country"] += 1
                     elif rec["id"] in seen:
                         st["duplicate"] += 1
@@ -614,12 +786,28 @@ def fetch(source: dict, *, transport: Optional[Transport] = None,
         client.close()
     if raw_dir:
         try:
-            (raw_dir / "last_run.json").write_text(json.dumps({
-                "finished_at": now_iso(), "endpoint": client.url, "server": client.server_info,
-                "protocol_version": client.protocol_version, "totals": client.totals, "stats": stats,
-                "http": client.stats, "records": len(out),
-                "params": {k: v for k, v in p.items() if k in DEFAULT_PARAMS or k in ("countries", "page_size")},
-            }, ensure_ascii=False, indent=2), encoding="utf-8")
+            (raw_dir / "last_run.json").write_text(
+                json.dumps(
+                    {
+                        "finished_at": now_iso(),
+                        "endpoint": client.url,
+                        "server": client.server_info,
+                        "protocol_version": client.protocol_version,
+                        "totals": client.totals,
+                        "stats": stats,
+                        "http": client.stats,
+                        "records": len(out),
+                        "params": {
+                            k: v
+                            for k, v in p.items()
+                            if k in DEFAULT_PARAMS or k in ("countries", "page_size")
+                        },
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
         except OSError as e:
             log.warning("EUvsDisinfo MCP: last_run.json not written: %s", e)
     return out
@@ -637,7 +825,9 @@ def probe(url: str = ENDPOINT) -> int:
     """initialize + tools/list + 1 case + 1 article (+ the last item, to show the ordering). Exit code 0/1/2/3."""
     token = os.environ.get(TOKEN_ENV, "").strip()
     if not token:
-        print(f"brak tokenu: {TOKEN_ENV} nie jest ustawiony — sprawdzam tylko osiągalność serwera {url}")
+        print(
+            f"brak tokenu: {TOKEN_ENV} nie jest ustawiony — sprawdzam tylko osiągalność serwera {url}"
+        )
         try:
             McpClient(None, url, retries=1, backoff=1.0).initialize()
         except AuthError as e:
@@ -651,24 +841,34 @@ def probe(url: str = ENDPOINT) -> int:
     c = McpClient(token, url)
     try:
         init = c.initialize()
-        print(f"serwer: {c.server_info.get('name')} {c.server_info.get('version')} | protokół "
-              f"{init.get('protocolVersion')} | sesja {(c.session_id or 'brak (bezstanowy)')[:8]}…")
+        print(
+            f"serwer: {c.server_info.get('name')} {c.server_info.get('version')} | protokół "
+            f"{init.get('protocolVersion')} | sesja {(c.session_id or 'brak (bezstanowy)')[:8]}…"
+        )
         for t in c.list_tools():
             props = (t.get("inputSchema") or {}).get("properties") or {}
-            print(f"narzędzie {t.get('name')}: {t.get('description')} | argumenty: "
-                  + ", ".join(f"{k}({v.get('type')}{', max ' + str(v['maximum']) if 'maximum' in v else ''})"
-                              for k, v in props.items()))
+            print(
+                f"narzędzie {t.get('name')}: {t.get('description')} | argumenty: "
+                + ", ".join(
+                    f"{k}({v.get('type')}{', max ' + str(v['maximum']) if 'maximum' in v else ''})"
+                    for k, v in props.items()
+                )
+            )
         for kind in KINDS:
             sc = c.call_tool(kind, {"offset": 0, "limit": 1})
             items, total = sc.get(kind) or [], sc.get("total")
-            print(f"\n{kind}: total={total} hasNextPage={sc.get('hasNextPage')} totalPages={sc.get('totalPages')}")
+            print(
+                f"\n{kind}: total={total} hasNextPage={sc.get('hasNextPage')} totalPages={sc.get('totalPages')}"
+            )
             if not items:
                 continue
             print(f"  pola: {sorted(items[0])}")
             rec = (case_to_record if kind == "cases" else article_to_record)(items[0])
             if rec:
-                print(f"  -> {rec['id']} | {rec['published_at']} | {rec['language']} | {rec['title'][:80]!r} | "
-                      f"text {len(rec['text'])} zn. | tags {rec['tags'][:6]}")
+                print(
+                    f"  -> {rec['id']} | {rec['published_at']} | {rec['language']} | {rec['title'][:80]!r} | "
+                    f"text {len(rec['text'])} zn. | tags {rec['tags'][:6]}"
+                )
             else:
                 print("  -> rekord pominięty (brak url /report/ lub treści)")
             if isinstance(total, int) and total > 1:
@@ -689,28 +889,43 @@ def probe(url: str = ENDPOINT) -> int:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m prawdowid.source_handlers.euvsdisinfo_mcp",
-                                 description=f"EUvsDisinfo MCP client (token from env {TOKEN_ENV}).")
+    ap = argparse.ArgumentParser(
+        prog="python -m prawdowid.source_handlers.euvsdisinfo_mcp",
+        description=f"EUvsDisinfo MCP client (token from env {TOKEN_ENV}).",
+    )
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--probe", action="store_true", help="initialize + tools/list + 1 case + 1 article")
-    g.add_argument("--dump", nargs=2, metavar=("N", "OUT"), help="fetch up to N records (0 = all) to OUT.jsonl")
+    g.add_argument(
+        "--probe", action="store_true", help="initialize + tools/list + 1 case + 1 article"
+    )
+    g.add_argument(
+        "--dump", nargs=2, metavar=("N", "OUT"), help="fetch up to N records (0 = all) to OUT.jsonl"
+    )
     ap.add_argument("--kinds", help="cases,articles")
     ap.add_argument("--since", help="YYYY-MM-DD; empty string = no date filter")
     ap.add_argument("--languages", help="article languages, e.g. pl,en")
     ap.add_argument("--countries", help="keep only cases tagged with these countries, e.g. Poland")
     ap.add_argument("--no-raw", action="store_true", help=f"do not write the raw dump to {RAW_DIR}")
     ap.add_argument("--endpoint", default=ENDPOINT)
-    ap.add_argument("--registry", default=str(REGISTRY_FILE), help="registry file whose params are the defaults")
+    ap.add_argument(
+        "--registry", default=str(REGISTRY_FILE), help="registry file whose params are the defaults"
+    )
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args(argv)
-    logging.basicConfig(level=logging.INFO if a.verbose or a.dump else logging.WARNING,
-                        format="%(asctime)s %(levelname)s %(message)s", stream=sys.stderr)
+    logging.basicConfig(
+        level=logging.INFO if a.verbose or a.dump else logging.WARNING,
+        format="%(asctime)s %(levelname)s %(message)s",
+        stream=sys.stderr,
+    )
     if a.probe:
         return probe(a.endpoint)
 
     params = _registry_params(Path(a.registry))
     params.update({"max_records": int(a.dump[0]) or None, "endpoint": a.endpoint})
-    for key, val in (("kinds", a.kinds), ("article_languages", a.languages), ("countries", a.countries)):
+    for key, val in (
+        ("kinds", a.kinds),
+        ("article_languages", a.languages),
+        ("countries", a.countries),
+    ):
         if val:
             params[key] = val
     if a.since is not None:

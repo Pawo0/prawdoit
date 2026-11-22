@@ -1,4 +1,6 @@
-"""Fetch methods for registry sources (see docs/SOURCE_REGISTRY.md) + the "auto-detect" helper for admins.
+"""Shared fetch methods, polite HTTP access, deduplication and source auto-detection.
+
+Fetch methods for registry sources (see docs/SOURCE_REGISTRY.md) + the "auto-detect" helper for admins.
 
 Politeness (same rules as ingest/official_common.py, a challenge requirement):
   * fixed User-Agent "PrawdowidHackathonBot/0.1 (research prototype)"
@@ -7,7 +9,10 @@ Politeness (same rules as ingest/official_common.py, a challenge requirement):
   * back-off on 429/5xx; a CAPTCHA / bot-challenge page aborts the source — protections are never circumvented
   * already-stored URLs are not re-downloaded
 Every URL is also SSRF-checked (public IPs only), because admins may enter arbitrary addresses.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import gzip
@@ -21,7 +26,7 @@ import subprocess
 import sys
 import threading
 import time
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,12 +46,28 @@ UA = "PrawdowidHackathonBot/0.1 (research prototype)"
 INGEST_DIR = settings.root / "ingest"
 DEFAULT_DELAY = 1.5
 ROBOTS_TTL = 6 * 3600
-MAX_ITEMS_CAP = 200          # hard cap per run, whatever params say
-MAX_TEXT = 4000              # same as ingest/
+MAX_ITEMS_CAP = 200  # hard cap per run, whatever params say
+MAX_TEXT = 4000  # same as ingest/
 HTML_MAX_BYTES = 3_000_000
 XML_MAX_BYTES = 15_000_000
-SCHEMA_KEYS = ("id", "source_type", "publisher", "domain", "url", "title", "published_at", "retrieved_at",
-               "language", "license", "text", "claim", "claim_author", "verdict_raw", "verdict", "tags")
+SCHEMA_KEYS = (
+    "id",
+    "source_type",
+    "publisher",
+    "domain",
+    "url",
+    "title",
+    "published_at",
+    "retrieved_at",
+    "language",
+    "license",
+    "text",
+    "claim",
+    "claim_author",
+    "verdict_raw",
+    "verdict",
+    "tags",
+)
 
 
 class FetchError(RuntimeError):
@@ -67,8 +88,11 @@ _host_delay: dict[str, float] = {}
 _last_hit: dict[str, float] = {}
 _host_locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
 _state_lock = threading.Lock()
-_CHALLENGE = re.compile(r"cf-chl|challenge-platform|Just a moment\.\.\.|Attention Required! \| Cloudflare|"
-                        r"Request unsuccessful\. Incapsula|ddos-guard", re.I)
+_CHALLENGE = re.compile(
+    r"cf-chl|challenge-platform|Just a moment\.\.\.|Attention Required! \| Cloudflare|"
+    r"Request unsuccessful\. Incapsula|ddos-guard",
+    re.I,
+)
 
 
 def now_iso() -> str:
@@ -82,7 +106,8 @@ def _origin(url: str) -> str:
 
 def _robots_for(url: str) -> tuple[RobotsTxt | None, bool]:
     """(parser, reachable). Unreachable/5xx/401/403 robots.txt => treat as 'disallow' (conservative).
-    Rules are matched per RFC 9309 (longest match wins, Allow wins ties) — see prawdowid/robots.py."""
+    Rules are matched per RFC 9309 (longest match wins, Allow wins ties) — see prawdowid/robots.py.
+    """
     origin = _origin(url)
     with _state_lock:
         hit = _robots.get(origin)
@@ -138,8 +163,14 @@ def _wait(netloc: str, min_delay: float) -> None:
         _last_hit[netloc] = time.time()
 
 
-def http_get(url: str, *, delay: float = DEFAULT_DELAY, max_bytes: int = HTML_MAX_BYTES, retries: int = 3,
-             accept: str = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.5") -> tuple[str, bytes, str]:
+def http_get(
+    url: str,
+    *,
+    delay: float = DEFAULT_DELAY,
+    max_bytes: int = HTML_MAX_BYTES,
+    retries: int = 3,
+    accept: str = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.5",
+) -> tuple[str, bytes, str]:
     """Polite GET. Returns (final_url, body, content_type). Raises FetchError subclasses."""
     delay = max(1.0, delay)
     for _hop in range(5):  # manual redirects: every hop is SSRF- and robots-checked
@@ -148,23 +179,37 @@ def http_get(url: str, *, delay: float = DEFAULT_DELAY, max_bytes: int = HTML_MA
         except (UnsafeURL, ResolveError) as e:
             raise FetchError(str(e)) from e
         if not robots_allowed(url):
-            raise RobotsDisallowed(f"robots.txt nie pozwala pobrać {url} (albo jest niedostępny) — pomijamy.")
+            raise RobotsDisallowed(
+                f"robots.txt nie pozwala pobrać {url} (albo jest niedostępny) — pomijamy."
+            )
         netloc = urlsplit(url).netloc
         err: Exception | None = None
         for attempt in range(retries):
             _wait(netloc, delay)
             try:
-                with httpx.Client(timeout=20, follow_redirects=False,
-                                  headers={"User-Agent": UA, "Accept": accept, "Accept-Language": "pl,en;q=0.5"}) as c:
+                with httpx.Client(
+                    timeout=20,
+                    follow_redirects=False,
+                    headers={"User-Agent": UA, "Accept": accept, "Accept-Language": "pl,en;q=0.5"},
+                ) as c:
                     with c.stream("GET", url) as r:
                         if r.is_redirect:
                             nxt = urljoin(url, r.headers.get("location", ""))
                             break
                         if r.status_code in (429, 500, 502, 503, 504):
                             ra = r.headers.get("retry-after", "")
-                            back = min(60, int(ra)) if ra.isdigit() else 5 * (attempt + 1) * (3 if r.status_code == 429 else 1)
-                            err = (Protected(f"{netloc} ogranicza liczbę zapytań (HTTP 429) — przerywamy, spróbujemy później.")
-                                   if r.status_code == 429 else FetchError(f"HTTP {r.status_code} dla {url}"))
+                            back = (
+                                min(60, int(ra))
+                                if ra.isdigit()
+                                else 5 * (attempt + 1) * (3 if r.status_code == 429 else 1)
+                            )
+                            err = (
+                                Protected(
+                                    f"{netloc} ogranicza liczbę zapytań (HTTP 429) — przerywamy, spróbujemy później."
+                                )
+                                if r.status_code == 429
+                                else FetchError(f"HTTP {r.status_code} dla {url}")
+                            )
                             log.info("HTTP %s %s -> retry in %ss", r.status_code, url, back)
                             if attempt < retries - 1:
                                 time.sleep(back)
@@ -177,13 +222,19 @@ def http_get(url: str, *, delay: float = DEFAULT_DELAY, max_bytes: int = HTML_MA
                         body = bytes(buf)
                         ctype = r.headers.get("content-type", "")
                         head = body[:4000].decode("utf-8", "replace")
-                        if r.status_code in (401, 403) or (r.status_code >= 400 and _CHALLENGE.search(head)):
-                            raise Protected(f"Strona {netloc} blokuje automatyczny dostęp (HTTP {r.status_code}) — "
-                                            "nie obchodzimy zabezpieczeń, źródło pominięte.")
+                        if r.status_code in (401, 403) or (
+                            r.status_code >= 400 and _CHALLENGE.search(head)
+                        ):
+                            raise Protected(
+                                f"Strona {netloc} blokuje automatyczny dostęp (HTTP {r.status_code}) — "
+                                "nie obchodzimy zabezpieczeń, źródło pominięte."
+                            )
                         if r.status_code >= 400:
                             raise FetchError(f"HTTP {r.status_code} dla {url}")
                         if "html" in ctype and _CHALLENGE.search(head) and len(body) < 30000:
-                            raise Protected(f"Strona {netloc} pokazuje test antybotowy (CAPTCHA) — nie obchodzimy go.")
+                            raise Protected(
+                                f"Strona {netloc} pokazuje test antybotowy (CAPTCHA) — nie obchodzimy go."
+                            )
                         if body[:2] == b"\x1f\x8b":
                             body = gzip.decompress(body)[:max_bytes]
                         return url, body, ctype
@@ -198,7 +249,9 @@ def http_get(url: str, *, delay: float = DEFAULT_DELAY, max_bytes: int = HTML_MA
 
 
 def _decode(body: bytes, ctype: str = "") -> str:
-    m = re.search(r"charset=([\w\-]+)", ctype or "") or re.search(rb"<meta[^>]+charset=[\"']?([\w\-]+)", body[:3000], re.I)
+    m = re.search(r"charset=([\w\-]+)", ctype or "") or re.search(
+        rb"<meta[^>]+charset=[\"']?([\w\-]+)", body[:3000], re.I
+    )
     enc = m.group(1) if m else "utf-8"
     enc = enc.decode("ascii", "ignore") if isinstance(enc, bytes) else enc
     try:
@@ -271,9 +324,18 @@ def extract_article(url: str, html: str) -> dict:
     import trafilatura
 
     meta = trafilatura.extract_metadata(html)
-    text = trafilatura.extract(html, url=url, include_comments=False, include_tables=False, favor_precision=True) or ""
-    return {"title": (meta.title if meta else None) or "", "date": to_date(meta.date) if meta and meta.date else None,
-            "sitename": (meta.sitename if meta else None) or "", "text": text}
+    text = (
+        trafilatura.extract(
+            html, url=url, include_comments=False, include_tables=False, favor_precision=True
+        )
+        or ""
+    )
+    return {
+        "title": (meta.title if meta else None) or "",
+        "date": to_date(meta.date) if meta and meta.date else None,
+        "sitename": (meta.sitename if meta else None) or "",
+        "text": text,
+    }
 
 
 def canonical(url: str) -> str:
@@ -283,7 +345,8 @@ def canonical(url: str) -> str:
 
 def url_key(url: str) -> str:
     """Comparison key for "the same page" across routes: canonical(), percent-escapes decoded and no trailing slash.
-    Measured 2026-11-21: the fakenews.pl and Demagog harvests store `co%e2%82%82`, the Google API `co%E2%82%82`."""
+    Measured 2026-11-21: the fakenews.pl and Demagog harvests store `co%e2%82%82`, the Google API `co%E2%82%82`.
+    """
     p = urlsplit(canonical(url))
     return urlunsplit((p.scheme, p.netloc, unquote(p.path), p.query, "")).rstrip("/")
 
@@ -293,11 +356,20 @@ def _domain(url: str) -> str:
     return host[4:] if host.startswith("www.") else host
 
 
-def make_record(source: dict, *, url: str, title: str, text: str, published_at: str | None,
-                tags: list[str] | None = None) -> dict:
+def make_record(
+    source: dict,
+    *,
+    url: str,
+    title: str,
+    text: str,
+    published_at: str | None,
+    tags: list[str] | None = None,
+) -> dict:
     url = canonical(url)
     max_chars = int(source.get("params", {}).get("max_chars") or MAX_TEXT)
-    excerpt_chars = int(source.get("params", {}).get("excerpt_chars") or 0)  # no open licence: one short quote
+    excerpt_chars = int(
+        source.get("params", {}).get("excerpt_chars") or 0
+    )  # no open licence: one short quote
     retrieved = now_iso()
     if published_at and str(published_at)[:10] > retrieved[:10]:
         # a page cannot be published after it was fetched: the site shows a mistyped date (seen on gov.pl:
@@ -314,8 +386,15 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
         "retrieved_at": retrieved,
         "language": source.get("language", "pl"),
         "license": source.get("license", ""),
-        "text": opening_excerpt(text, title, excerpt_chars) if excerpt_chars else truncate(text or "", max_chars),
-        "claim": None, "claim_author": None, "verdict_raw": None, "verdict": None,
+        "text": (
+            opening_excerpt(text, title, excerpt_chars)
+            if excerpt_chars
+            else truncate(text or "", max_chars)
+        ),
+        "claim": None,
+        "claim_author": None,
+        "verdict_raw": None,
+        "verdict": None,
         "tags": sorted(set([source["id"], *source.get("topics", []), *(tags or [])])),
     }
 
@@ -326,13 +405,22 @@ def normalize_record(rec: dict, source: dict) -> dict | None:
 
     if not isinstance(rec, dict) or not rec.get("url") or not (rec.get("text") or rec.get("claim")):
         return None
-    base = make_record(source, url=rec["url"], title=rec.get("title") or "", text=rec.get("text") or "",
-                       published_at=rec.get("published_at"), tags=list(rec.get("tags") or []))
+    base = make_record(
+        source,
+        url=rec["url"],
+        title=rec.get("title") or "",
+        text=rec.get("text") or "",
+        published_at=rec.get("published_at"),
+        tags=list(rec.get("tags") or []),
+    )
     out = {k: (rec[k] if rec.get(k) not in (None, "") else base[k]) for k in SCHEMA_KEYS}
     # params.id_prefix: a source that delivers the same documents as another one by a second route (Demagog reviews
     # via the Google API next to the page harvest) may keep that source's id namespace — the index loads the first
     # record with a given id, so the two corpus files never contribute the same document twice.
-    prefixes = {f"{source['id']}:", f"{(source.get('params') or {}).get('id_prefix') or source['id']}:"}
+    prefixes = {
+        f"{source['id']}:",
+        f"{(source.get('params') or {}).get('id_prefix') or source['id']}:",
+    }
     if not str(out["id"]).startswith(tuple(prefixes)):
         out["id"] = f"{source['id']}:{out['id']}"
     try:
@@ -345,7 +433,7 @@ def normalize_record(rec: dict, source: dict) -> dict | None:
 # ------------------------------------------------------------------ fetch context
 @dataclass
 class Ctx:
-    limit: int | None = None              # dry run: stop after this many records
+    limit: int | None = None  # dry run: stop after this many records
     known_urls: set[str] = field(default_factory=set)
     notes: list[str] = field(default_factory=list)
     pages: int = 0
@@ -367,8 +455,17 @@ def _get(ctx: Ctx, source: dict, url: str, **kw) -> tuple[str, bytes, str]:
     return http_get(url, delay=ctx.delay(source), **kw)
 
 
-def _fetch_article(ctx: Ctx, source: dict, url: str, *, title: str = "", date: str | None = None,
-                   fallback_text: str = "", min_chars: int = 0, tags: list[str] | None = None) -> dict | None:
+def _fetch_article(
+    ctx: Ctx,
+    source: dict,
+    url: str,
+    *,
+    title: str = "",
+    date: str | None = None,
+    fallback_text: str = "",
+    min_chars: int = 0,
+    tags: list[str] | None = None,
+) -> dict | None:
     try:
         final, body, ctype = _get(ctx, source, url)
     except Protected:
@@ -376,7 +473,9 @@ def _fetch_article(ctx: Ctx, source: dict, url: str, *, title: str = "", date: s
     except FetchError as e:
         ctx.notes.append(f"pominięto {url}: {e}")
         if fallback_text and len(fallback_text) >= max(min_chars, 80):
-            return make_record(source, url=url, title=title, text=fallback_text, published_at=date, tags=tags)
+            return make_record(
+                source, url=url, title=title, text=fallback_text, published_at=date, tags=tags
+            )
         return None
     if "html" not in ctype and "xml" not in ctype and ctype:
         ctx.notes.append(f"pominięto {url}: typ treści {ctype}")
@@ -387,8 +486,14 @@ def _fetch_article(ctx: Ctx, source: dict, url: str, *, title: str = "", date: s
     if len(text or "") < max(min_chars, 80):
         ctx.notes.append(f"pominięto {url}: za mało tekstu ({len(text or '')} znaków)")
         return None
-    return make_record(source, url=url, title=title or art["title"], text=text,
-                       published_at=date or date_from_html(source, html) or art["date"], tags=tags)
+    return make_record(
+        source,
+        url=url,
+        title=title or art["title"],
+        text=text,
+        published_at=date or date_from_html(source, html) or art["date"],
+        tags=tags,
+    )
 
 
 # ------------------------------------------------------------------ XML (RSS/Atom/sitemap) — XXE-safe
@@ -430,10 +535,19 @@ def parse_feed(body: bytes) -> list[dict]:
             link = g if g.startswith("http") else ""
         if not link:
             continue
-        desc = _child_text(el, "encoded") or _child_text(el, "content") or _child_text(el, "description", "summary")
-        items.append({"url": link.strip(), "title": html_to_text(_child_text(el, "title")),
-                      "date": to_date(_child_text(el, "pubdate", "published", "updated", "date")),
-                      "summary": html_to_text(desc)})
+        desc = (
+            _child_text(el, "encoded")
+            or _child_text(el, "content")
+            or _child_text(el, "description", "summary")
+        )
+        items.append(
+            {
+                "url": link.strip(),
+                "title": html_to_text(_child_text(el, "title")),
+                "date": to_date(_child_text(el, "pubdate", "published", "updated", "date")),
+                "summary": html_to_text(desc),
+            }
+        )
     return items
 
 
@@ -453,8 +567,13 @@ def parse_sitemap(body: bytes) -> tuple[str, list[tuple[str, str]]]:
 # ------------------------------------------------------------------ methods
 def fetch_rss(source: dict, ctx: Ctx) -> list[dict]:
     p = source["params"]
-    _, body, _ = _get(ctx, source, p["feed_url"], max_bytes=XML_MAX_BYTES,
-                      accept="application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.5")
+    _, body, _ = _get(
+        ctx,
+        source,
+        p["feed_url"],
+        max_bytes=XML_MAX_BYTES,
+        accept="application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.5",
+    )
     items = parse_feed(body)
     if not items:
         raise FetchError("Kanał RSS/Atom nie zawiera pozycji (albo to nie jest kanał).")
@@ -465,9 +584,22 @@ def fetch_rss(source: dict, ctx: Ctx) -> list[dict]:
         if canonical(it["url"]) in ctx.known_urls:
             continue
         if p.get("fetch_full_text", True):
-            rec = _fetch_article(ctx, source, it["url"], title=it["title"], date=it["date"], fallback_text=it["summary"])
+            rec = _fetch_article(
+                ctx,
+                source,
+                it["url"],
+                title=it["title"],
+                date=it["date"],
+                fallback_text=it["summary"],
+            )
         elif len(it["summary"]) >= 40:
-            rec = make_record(source, url=it["url"], title=it["title"], text=it["summary"], published_at=it["date"])
+            rec = make_record(
+                source,
+                url=it["url"],
+                title=it["title"],
+                text=it["summary"],
+                published_at=it["date"],
+            )
         else:
             rec = None
         if rec:
@@ -475,8 +607,16 @@ def fetch_rss(source: dict, ctx: Ctx) -> list[dict]:
     return out
 
 
-def _sitemap_urls(ctx: Ctx, source: dict, sitemap_url: str, depth: int = 0) -> list[tuple[str, str]]:
-    _, body, _ = _get(ctx, source, sitemap_url, max_bytes=XML_MAX_BYTES, accept="application/xml,text/xml;q=0.9,*/*;q=0.5")
+def _sitemap_urls(
+    ctx: Ctx, source: dict, sitemap_url: str, depth: int = 0
+) -> list[tuple[str, str]]:
+    _, body, _ = _get(
+        ctx,
+        source,
+        sitemap_url,
+        max_bytes=XML_MAX_BYTES,
+        accept="application/xml,text/xml;q=0.9,*/*;q=0.5",
+    )
     kind, entries = parse_sitemap(body)
     if kind == "urlset" or depth >= 1:
         return entries
@@ -494,7 +634,9 @@ def _sitemap_urls(ctx: Ctx, source: dict, sitemap_url: str, depth: int = 0) -> l
 def fetch_sitemap(source: dict, ctx: Ctx) -> list[dict]:
     p = source["params"]
     rx = re.compile(p["url_regex"]) if p.get("url_regex") else None
-    entries = [(u, m) for u, m in _sitemap_urls(ctx, source, p["sitemap_url"]) if not rx or rx.search(u)]
+    entries = [
+        (u, m) for u, m in _sitemap_urls(ctx, source, p["sitemap_url"]) if not rx or rx.search(u)
+    ]
     if not entries:
         raise FetchError("Mapa strony nie zawiera adresów pasujących do url_regex.")
     # newest first when lastmod is present (stable sort keeps document order otherwise)
@@ -589,7 +731,9 @@ def fetch_govpl_list(source: dict, ctx: Ctx) -> list[dict]:
         if len(items) >= want:
             break
     if not items:
-        raise FetchError("Nie rozpoznano listy aktualności gov.pl na tej stronie (zmieniony układ?).")
+        raise FetchError(
+            "Nie rozpoznano listy aktualności gov.pl na tej stronie (zmieniony układ?)."
+        )
     out = []
     for it in items[:want]:
         if ctx.done(out):
@@ -615,8 +759,16 @@ def fetch_govpl_list(source: dict, ctx: Ctx) -> list[dict]:
         if len(text) < 80:
             ctx.notes.append(f"pominięto {url}: za mało tekstu")
             continue
-        out.append(make_record(source, url=url, title=a.get("title") or it["title"], text=text,
-                               published_at=a.get("date") or it.get("date"), tags=["gov.pl"]))
+        out.append(
+            make_record(
+                source,
+                url=url,
+                title=a.get("title") or it["title"],
+                text=text,
+                published_at=a.get("date") or it.get("date"),
+                tags=["gov.pl"],
+            )
+        )
     return out
 
 
@@ -628,9 +780,13 @@ def fetch_custom(source: dict, ctx: Ctx) -> list[dict]:
         raise FetchError(f"Brak modułu obsługi prawdowid.source_handlers.{handler} ({e}).") from e
     if not hasattr(mod, "fetch"):
         raise FetchError(f"Moduł prawdowid.source_handlers.{handler} nie ma funkcji fetch(source).")
-    if not ctx.limit and getattr(mod, "PERSIST", True) is False:  # e.g. Google Fact Check Tools API results
-        raise FetchError(f"Wyniki modułu {handler} nie są zapisywane w korpusie (warunki serwisu nie pozwalają na "
-                         "trwałe kopie) — źródło służy tylko do zapytań na żywo i podglądu w panelu.")
+    if (
+        not ctx.limit and getattr(mod, "PERSIST", True) is False
+    ):  # e.g. Google Fact Check Tools API results
+        raise FetchError(
+            f"Wyniki modułu {handler} nie są zapisywane w korpusie (warunki serwisu nie pozwalają na "
+            "trwałe kopie) — źródło służy tylko do zapytań na żywo i podglądu w panelu."
+        )
     src = json.loads(json.dumps(source))
     if ctx.limit:
         src["params"]["max_items"] = ctx.limit
@@ -651,7 +807,9 @@ def fetch_custom(source: dict, ctx: Ctx) -> list[dict]:
         else:
             bad += 1
     if bad:
-        ctx.notes.append(f"{bad} rekordów z modułu obsługi odrzucono (brak url/tekstu lub zły schemat)")
+        ctx.notes.append(
+            f"{bad} rekordów z modułu obsługi odrzucono (brak url/tekstu lub zły schemat)"
+        )
     return out[: ctx.limit] if ctx.limit else out
 
 
@@ -668,19 +826,39 @@ def run_legacy_script(source: dict) -> str:
     """Run the existing ingest script (it rewrites data/corpus/<id>.jsonl itself). Returns the log tail."""
     p = source["params"]
     script = settings.root / p["script"]
-    cmd = [legacy_python(p["script"]), "-W", "ignore", script.name, *[str(a) for a in p.get("args") or []]]
+    cmd = [
+        legacy_python(p["script"]),
+        "-W",
+        "ignore",
+        script.name,
+        *[str(a) for a in p.get("args") or []],
+    ]
     try:
-        r = subprocess.run(cmd, cwd=INGEST_DIR, capture_output=True, text=True, timeout=int(p.get("timeout_s") or 3600))
+        r = subprocess.run(
+            cmd,
+            cwd=INGEST_DIR,
+            capture_output=True,
+            text=True,
+            timeout=int(p.get("timeout_s") or 3600),
+        )
     except subprocess.TimeoutExpired as e:
         raise FetchError(f"Skrypt {p['script']} przekroczył limit czasu ({e.timeout} s).") from e
     tail = (r.stderr or r.stdout or "").strip().splitlines()[-3:]
     if r.returncode != 0:
-        raise FetchError(f"Skrypt {p['script']} zakończył się błędem (kod {r.returncode}): " + " | ".join(tail)[-400:])
+        raise FetchError(
+            f"Skrypt {p['script']} zakończył się błędem (kod {r.returncode}): "
+            + " | ".join(tail)[-400:]
+        )
     return " | ".join(tail)[-400:]
 
 
-METHOD_FN = {"rss": fetch_rss, "sitemap": fetch_sitemap, "html_list": fetch_html_list,
-             "govpl_list": fetch_govpl_list, "custom": fetch_custom}
+METHOD_FN = {
+    "rss": fetch_rss,
+    "sitemap": fetch_sitemap,
+    "html_list": fetch_html_list,
+    "govpl_list": fetch_govpl_list,
+    "custom": fetch_custom,
+}
 
 
 # ------------------------------------------------------------------ corpus file
@@ -734,7 +912,9 @@ def merge_into_corpus(source: dict, records: list[dict]) -> tuple[int, int]:
         seen_ids.add(r.get("id"))
         seen_urls.add(u)
         merged.append(r)
-    merged.sort(key=lambda r: (r.get("published_at") or "", r.get("retrieved_at") or ""), reverse=True)
+    merged.sort(
+        key=lambda r: (r.get("published_at") or "", r.get("retrieved_at") or ""), reverse=True
+    )
     cap = int(source.get("params", {}).get("max_docs") or registry.DEFAULT_MAX_DOCS)
     merged = merged[:cap]
     n_new = sum(1 for r in merged if r.get("id") not in old_ids)
@@ -764,12 +944,16 @@ def test_source(source: dict, n: int = 3) -> dict:
     res: dict = {"ok": True, "method": method, "records": [], "notes": ctx.notes}
     try:
         if method in registry.NOOP_METHODS:
-            res["notes"].append("Ta metoda nie pobiera dokumentów według harmonogramu (źródło służy jako zaufany link "
-                                "lub do wyszukiwania na żywo) — nie ma czego testować.")
+            res["notes"].append(
+                "Ta metoda nie pobiera dokumentów według harmonogramu (źródło służy jako zaufany link "
+                "lub do wyszukiwania na żywo) — nie ma czego testować."
+            )
         elif method == "legacy_script":
             res["records"] = read_corpus(source["id"])[:n]
-            res["notes"].append("Metoda legacy_script: test nie uruchamia skryptu (trwa kilka minut i nadpisuje plik); "
-                                "pokazujemy ostatnie rekordy z pliku korpusu.")
+            res["notes"].append(
+                "Metoda legacy_script: test nie uruchamia skryptu (trwa kilka minut i nadpisuje plik); "
+                "pokazujemy ostatnie rekordy z pliku korpusu."
+            )
         else:
             res["records"] = fetch_source(source, ctx)[:n]
             if not res["records"]:
@@ -791,11 +975,15 @@ def test_source(source: dict, n: int = 3) -> dict:
 # ------------------------------------------------------------------ auto-detect for admins
 GOV_LICENSE = registry.GOV_LICENSE
 EU_LICENSE = "© Unia Europejska, CC BY 4.0 (informacja prawna Komisji Europejskiej); podać źródło"
-_SKIP_EXT = re.compile(r"\.(pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp[34]|avi|rss|xml|css|js)$", re.I)
+_SKIP_EXT = re.compile(
+    r"\.(pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp[34]|avi|rss|xml|css|js)$", re.I
+)
 
 
 def _slugish(seg: str) -> bool:
-    return (seg.count("-") >= 2 and len(seg) >= 20) or bool(re.search(r"\d{3,}", seg) and re.search(r"[a-z]", seg, re.I))
+    return (seg.count("-") >= 2 and len(seg) >= 20) or bool(
+        re.search(r"\d{3,}", seg) and re.search(r"[a-z]", seg, re.I)
+    )
 
 
 def guess_link_regex(page_url: str, links: list[str]) -> tuple[str | None, list[str]]:
@@ -854,25 +1042,51 @@ def suggest_config(url: str) -> dict:
         doc = lxml.html.fromstring(html)
     except Exception:  # noqa: BLE001
         doc = None
-    meta = lambda prop: (doc.xpath(f'string(//meta[@property="{prop}" or @name="{prop}"]/@content)') if doc is not None else "")  # noqa: E731
-    title = (meta("og:title") or (doc.findtext(".//title") if doc is not None else "") or "").strip()
+    meta = lambda prop: (
+        doc.xpath(f'string(//meta[@property="{prop}" or @name="{prop}"]/@content)')
+        if doc is not None
+        else ""
+    )  # noqa: E731
+    title = (
+        meta("og:title") or (doc.findtext(".//title") if doc is not None else "") or ""
+    ).strip()
     site = (meta("og:site_name") or "").strip()
     host = (urlsplit(final).hostname or "").lower()
     is_gov = host == "gov.pl" or host.endswith(".gov.pl")
     is_eu = host.endswith("europa.eu")
     lang = ((doc.get("lang") if doc is not None else "") or "pl")[:2].lower()
-    parts = [x.strip() for x in re.split(r"\s+[-|–—]\s+", title) if x.strip() and "portal gov.pl" not in x.lower()]
+    parts = [
+        x.strip()
+        for x in re.split(r"\s+[-|–—]\s+", title)
+        if x.strip() and "portal gov.pl" not in x.lower()
+    ]
     if site and parts and parts[0].lower() != site.lower() and site.lower() not in parts[0].lower():
         name = f"{site} — {parts[0]}"
     else:
         name = parts[0] if parts else (site or host)
     cfg: dict = {
-        "id": _suggest_id(final), "name": name[:120], "publisher": site or host, "url": final,
-        "category": "official" if (is_gov or is_eu) else "media", "method": "reference_only", "params": {},
-        "enabled": True, "schedule_hours": 6, "web_search": True, "topics": [], "language": lang if re.match(r"^[a-z]{2}$", lang) else "pl",
-        "license": GOV_LICENSE if host.endswith("gov.pl") and host in ("www.gov.pl", "gov.pl") else (EU_LICENSE if is_eu else ""),
-        "qualification": ("Organ administracji publicznej — komunikaty urzędowe w zakresie swoich kompetencji (kategoria A)."
-                          if is_gov else ""),
+        "id": _suggest_id(final),
+        "name": name[:120],
+        "publisher": site or host,
+        "url": final,
+        "category": "official" if (is_gov or is_eu) else "media",
+        "method": "reference_only",
+        "params": {},
+        "enabled": True,
+        "schedule_hours": 6,
+        "web_search": True,
+        "topics": [],
+        "language": lang if re.match(r"^[a-z]{2}$", lang) else "pl",
+        "license": (
+            GOV_LICENSE
+            if host.endswith("gov.pl") and host in ("www.gov.pl", "gov.pl")
+            else (EU_LICENSE if is_eu else "")
+        ),
+        "qualification": (
+            "Organ administracji publicznej — komunikaty urzędowe w zakresie swoich kompetencji (kategoria A)."
+            if is_gov
+            else ""
+        ),
     }
     cfg["tier"] = registry.DEFAULT_TIER[cfg["category"]]
     sample: list[str] = []
@@ -882,9 +1096,13 @@ def suggest_config(url: str) -> dict:
         items = ingest_module("official_govpl").parse_listing(html)
         checked.append({"method": "govpl_list", "found": len(items)})
         if len(items) >= 3:
-            cfg.update(method="govpl_list", params={"list_url": final.split("?")[0], "max_items": 30})
+            cfg.update(
+                method="govpl_list", params={"list_url": final.split("?")[0], "max_items": 30}
+            )
             sample = [urljoin("https://www.gov.pl/", it["href"]) for it in items[:5]]
-            return _suggestion(cfg, "Rozpoznano listę aktualności w serwisie gov.pl.", checked, sample)
+            return _suggestion(
+                cfg, "Rozpoznano listę aktualności w serwisie gov.pl.", checked, sample
+            )
 
     # 2. RSS / Atom advertised by <link rel="alternate">
     feeds = []
@@ -901,9 +1119,15 @@ def suggest_config(url: str) -> dict:
             continue
         checked.append({"method": "rss", "url": f, "found": len(items)})
         if items:
-            cfg.update(method="rss", params={"feed_url": f, "max_items": 30, "fetch_full_text": True})
-            return _suggestion(cfg, f"Strona wskazuje kanał RSS/Atom ({len(items)} pozycji).", checked,
-                               [it["url"] for it in items[:5]])
+            cfg.update(
+                method="rss", params={"feed_url": f, "max_items": 30, "fetch_full_text": True}
+            )
+            return _suggestion(
+                cfg,
+                f"Strona wskazuje kanał RSS/Atom ({len(items)} pozycji).",
+                checked,
+                [it["url"] for it in items[:5]],
+            )
     if not feeds:
         checked.append({"method": "rss", "found": 0, "note": "brak <link rel=alternate> z kanałem"})
 
@@ -920,35 +1144,71 @@ def suggest_config(url: str) -> dict:
             continue
         urls = [canonical(u) for u, _ in entries]
         under = [u for u in urls if re.search(page_rx, u)]
-        if len(under) >= 3:                       # articles live under the page the admin entered
+        if len(under) >= 3:  # articles live under the page the admin entered
             rx, members = page_rx, under
-        elif link_rx:                             # the page's own article-link pattern, found in the sitemap
+        elif link_rx:  # the page's own article-link pattern, found in the sitemap
             rx, members = link_rx, [u for u in urls if re.search(link_rx, u)]
         elif urlsplit(final).path.strip("/") == "":  # site root: largest group of article-like URLs
             rx, members = guess_link_regex(final, urls)
         else:
             rx, members = None, []
-        checked.append({"method": "sitemap", "url": sm, "found": len(urls), "matching": len(members)})
+        checked.append(
+            {"method": "sitemap", "url": sm, "found": len(urls), "matching": len(members)}
+        )
         if rx and len(members) >= 3:
-            cfg.update(method="sitemap", params={"sitemap_url": sm, "url_regex": rx, "max_items": 30})
-            return _suggestion(cfg, f"Znaleziono mapę strony ({len(urls)} adresów, {len(members)} pasuje do wzorca).",
-                               checked, members[:5])
+            cfg.update(
+                method="sitemap", params={"sitemap_url": sm, "url_regex": rx, "max_items": 30}
+            )
+            return _suggestion(
+                cfg,
+                f"Znaleziono mapę strony ({len(urls)} adresów, {len(members)} pasuje do wzorca).",
+                checked,
+                members[:5],
+            )
 
     # 4. html_list: links on the page that look like articles
     rx, members = link_rx, link_members
     checked.append({"method": "html_list", "found": len(members)})
     if rx:
-        cfg.update(method="html_list", params={"list_urls": [final], "link_regex": rx, "max_items": 30,
-                                                "min_text_chars": 300})
-        return _suggestion(cfg, f"Na stronie jest {len(members)} linków wyglądających na artykuły.", checked, members[:5])
+        cfg.update(
+            method="html_list",
+            params={"list_urls": [final], "link_regex": rx, "max_items": 30, "min_text_chars": 300},
+        )
+        return _suggestion(
+            cfg,
+            f"Na stronie jest {len(members)} linków wyglądających na artykuły.",
+            checked,
+            members[:5],
+        )
     cfg["schedule_hours"] = 0
-    return _suggestion(cfg, "Nie wykryto listy artykułów — proponujemy reference_only (zaufany link, bez pobierania). "
-                            "Można też wpisać parametry ręcznie albo użyć metody custom.", checked, sample)
+    return _suggestion(
+        cfg,
+        "Nie wykryto listy artykułów — proponujemy reference_only (zaufany link, bez pobierania). "
+        "Można też wpisać parametry ręcznie albo użyć metody custom.",
+        checked,
+        sample,
+    )
 
 
 def _suggestion(cfg: dict, why: str, checked: list[dict], sample: list[str]) -> dict:
     missing = [k for k in ("license", "qualification") if not cfg.get(k)]
-    hint = (" Uzupełnij: " + ", ".join({"license": "licencję / warunki", "qualification": "uzasadnienie kwalifikacji"}[k]
-                                       for k in missing) + ".") if missing else ""
-    return {"ok": True, "config": cfg, "explanation": why + hint, "checked": checked, "sample_urls": sample,
-            "exists": registry.exists(cfg["id"])}
+    hint = (
+        (
+            " Uzupełnij: "
+            + ", ".join(
+                {"license": "licencję / warunki", "qualification": "uzasadnienie kwalifikacji"}[k]
+                for k in missing
+            )
+            + "."
+        )
+        if missing
+        else ""
+    )
+    return {
+        "ok": True,
+        "config": cfg,
+        "explanation": why + hint,
+        "checked": checked,
+        "sample_urls": sample,
+        "exists": registry.exists(cfg["id"]),
+    }

@@ -1,8 +1,13 @@
-"""Source registry: one human-readable JSON file per source in data/sources/<id>.json.
+"""Validate source configurations and determine which corpus files are eligible.
+
+Source registry: one human-readable JSON file per source in data/sources/<id>.json.
 
 The data contract is docs/SOURCE_REGISTRY.md. This module loads, validates and saves those files and answers
 the question "which corpus files should the index load?" (enabled sources + files without a registry entry).
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import json
@@ -26,21 +31,72 @@ CATEGORIES = ("official", "factcheck", "incident", "media")
 # Licence of texts on www.gov.pl: the portal's own words, quoted (not our reading of them); checked on the page
 # gov.pl/web/gov/prawa-autorskie (the same text is on /warunki-korzystania). Subdomains such as odyseusz.gov.pl are
 # separate services and do not get this string.
-GOV_LICENSE = ("Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez "
-               "użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra "
-               "Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są "
-               "udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 "
-               "(CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.")
+GOV_LICENSE = (
+    "Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez "
+    "użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra "
+    "Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są "
+    "udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 "
+    "(CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link."
+)
 DEFAULT_TIER = {"official": 1, "factcheck": 2, "incident": 3, "media": 4}
-FETCH_METHODS = ("rss", "sitemap", "html_list", "govpl_list", "custom", "legacy_script")  # run by the scheduler
-NOOP_METHODS = ("live_search", "google_factcheck", "reference_only")                    # never fetched on schedule
+FETCH_METHODS = (
+    "rss",
+    "sitemap",
+    "html_list",
+    "govpl_list",
+    "custom",
+    "legacy_script",
+)  # run by the scheduler
+NOOP_METHODS = ("live_search", "google_factcheck", "reference_only")  # never fetched on schedule
 METHODS = FETCH_METHODS + NOOP_METHODS
-TOPICS = ("podroze", "pogoda", "woda_powodz", "drogi", "kolej", "lotnictwo", "morze", "transport", "zdrowie",
-          "zywnosc", "promieniowanie", "powietrze", "cyber", "oszustwa", "bezpieczenstwo", "obronnosc", "pozary",
-          "prawo", "statystyka", "finanse", "wybory", "ue", "dezinformacja", "zagranica", "rzad")
-FIELD_ORDER = ("id", "name", "publisher", "url", "category", "tier", "method", "params", "enabled", "schedule_hours",
-               "web_search", "topics", "language", "license", "qualification", "scope", "scope_basis", "added_by",
-               "added_at")
+TOPICS = (
+    "podroze",
+    "pogoda",
+    "woda_powodz",
+    "drogi",
+    "kolej",
+    "lotnictwo",
+    "morze",
+    "transport",
+    "zdrowie",
+    "zywnosc",
+    "promieniowanie",
+    "powietrze",
+    "cyber",
+    "oszustwa",
+    "bezpieczenstwo",
+    "obronnosc",
+    "pozary",
+    "prawo",
+    "statystyka",
+    "finanse",
+    "wybory",
+    "ue",
+    "dezinformacja",
+    "zagranica",
+    "rzad",
+)
+FIELD_ORDER = (
+    "id",
+    "name",
+    "publisher",
+    "url",
+    "category",
+    "tier",
+    "method",
+    "params",
+    "enabled",
+    "schedule_hours",
+    "web_search",
+    "topics",
+    "language",
+    "license",
+    "qualification",
+    "scope",
+    "scope_basis",
+    "added_by",
+    "added_at",
+)
 # Where does the source stand against the organisers' expectations (research/10_organiser_sources.md)?
 #   organiser_listed      — a URL / database named in rules/resources.txt
 #   organiser_implied     — used in the organisers' reference scenarios or their EUvsDisinfo instructions, or the
@@ -49,33 +105,57 @@ FIELD_ORDER = ("id", "name", "publisher", "url", "category", "tier", "method", "
 #   outside               — added by the team; not named by the organisers (the default for anything unmarked)
 SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended", "outside")
 ORGANISER_SCOPES = ("organiser_listed", "organiser_implied", "organiser_recommended")
-STRICT_SCOPES = ("organiser_listed", "organiser_implied")  # the narrow reading: list + scenarios only
+STRICT_SCOPES = (
+    "organiser_listed",
+    "organiser_implied",
+)  # the narrow reading: list + scenarios only
 # Scope of entries whose file does not carry the field. data/sources/demagog.json was reserved for a running Demagog
 # harvest when the field was introduced (2026-11-21); the file now carries the keys, this stays as the fallback.
 DEFAULT_SCOPE = {
-    "demagog": ("organiser_implied",
-                "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: przykładowe odpowiedzi scenariuszy "
-                "A–C, E–G, I, J powołują się na Demagoga (linki demagog.org.pl/wypowiedzi/…); oceny Demagoga są też "
-                "w bazie Google Fact Check (rules/resources.txt)"),
+    "demagog": (
+        "organiser_implied",
+        "rules/Czy we Włoszech ostatnio odbywał się strajk generalny.docx: przykładowe odpowiedzi scenariuszy "
+        "A–C, E–G, I, J powołują się na Demagoga (linki demagog.org.pl/wypowiedzi/…); oceny Demagoga są też "
+        "w bazie Google Fact Check (rules/resources.txt)",
+    ),
 }
 DEFAULT_MAX_DOCS = 500
 
 # params per method: name -> (type, required, default). Unknown params are kept (custom handlers use them).
 PARAM_SPEC: dict[str, dict[str, tuple[type | tuple, bool, object]]] = {
-    "rss": {"feed_url": (str, True, None), "max_items": (int, False, 30), "fetch_full_text": (bool, False, True)},
-    "sitemap": {"sitemap_url": (str, True, None), "url_regex": (str, False, ""), "max_items": (int, False, 30),
-                "date_regex": (str, False, None)},
-    "html_list": {"list_urls": (list, True, None), "link_regex": (str, True, None), "max_items": (int, False, 30),
-                  "min_text_chars": (int, False, 300), "date_regex": (str, False, None)},
+    "rss": {
+        "feed_url": (str, True, None),
+        "max_items": (int, False, 30),
+        "fetch_full_text": (bool, False, True),
+    },
+    "sitemap": {
+        "sitemap_url": (str, True, None),
+        "url_regex": (str, False, ""),
+        "max_items": (int, False, 30),
+        "date_regex": (str, False, None),
+    },
+    "html_list": {
+        "list_urls": (list, True, None),
+        "link_regex": (str, True, None),
+        "max_items": (int, False, 30),
+        "min_text_chars": (int, False, 300),
+        "date_regex": (str, False, None),
+    },
     "govpl_list": {"list_url": (str, True, None), "max_items": (int, False, 30)},
     "custom": {"handler": (str, True, None)},
-    "legacy_script": {"script": (str, True, None), "args": (list, False, []), "timeout_s": (int, False, 3600)},
+    "legacy_script": {
+        "script": (str, True, None),
+        "args": (list, False, []),
+        "timeout_s": (int, False, 3600),
+    },
 }
-COMMON_PARAMS = {"max_docs": (int, False, DEFAULT_MAX_DOCS),   # cap on records kept in data/corpus/<id>.jsonl
-                 "max_chars": (int, False, None),               # cap on stored text per record (default 4000)
-                 # sources without an open licence: store only the opening passage, verbatim, up to this many chars
-                 "excerpt_chars": (int, False, None),
-                 "delay_s": ((int, float), False, None)}        # min. seconds between requests to one host (≥ 1)
+COMMON_PARAMS = {
+    "max_docs": (int, False, DEFAULT_MAX_DOCS),  # cap on records kept in data/corpus/<id>.jsonl
+    "max_chars": (int, False, None),  # cap on stored text per record (default 4000)
+    # sources without an open licence: store only the opening passage, verbatim, up to this many chars
+    "excerpt_chars": (int, False, None),
+    "delay_s": ((int, float), False, None),
+}  # min. seconds between requests to one host (≥ 1)
 
 
 class SourceError(ValueError):
@@ -92,7 +172,9 @@ def sources_dir() -> Path:
 
 def path_for(source_id: str) -> Path:
     if not ID_RE.match(source_id or ""):
-        raise SourceError([f"Niepoprawny identyfikator źródła: {source_id!r} (dozwolone: a-z, 0-9, _)."])
+        raise SourceError(
+            [f"Niepoprawny identyfikator źródła: {source_id!r} (dozwolone: a-z, 0-9, _)."]
+        )
     return sources_dir() / f"{source_id}.json"
 
 
@@ -125,7 +207,9 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
     d = dict(raw)
     sid = d.get("id")
     if not isinstance(sid, str) or not ID_RE.match(sid):
-        e.append("id: wymagany, 2–64 znaki: małe litery, cyfry, podkreślnik (np. kgpsp_aktualnosci).")
+        e.append(
+            "id: wymagany, 2–64 znaki: małe litery, cyfry, podkreślnik (np. kgpsp_aktualnosci)."
+        )
     for k in ("name", "publisher"):
         if not isinstance(d.get(k), str) or not d[k].strip():
             e.append(f"{k}: pole wymagane.")
@@ -155,7 +239,9 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
                 params[name] = default
             continue
         v = params[name]
-        if (typ is int and (isinstance(v, bool) or not isinstance(v, int))) or not isinstance(v, typ):
+        if (typ is int and (isinstance(v, bool) or not isinstance(v, int))) or not isinstance(
+            v, typ
+        ):
             e.append(f"params.{name}: zły typ (oczekiwano {getattr(typ, '__name__', 'liczby')}).")
         elif typ is int and v < 0:
             e.append(f"params.{name}: wartość nie może być ujemna.")
@@ -172,13 +258,23 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
             e.append("params.list_urls: niepusta lista adresów http(s).")
         if isinstance(params.get("link_regex"), str):
             _check_regex(e, "link_regex", params["link_regex"])
-    if method in ("sitemap", "html_list") and isinstance(params.get("date_regex"), str) and params["date_regex"]:
+    if (
+        method in ("sitemap", "html_list")
+        and isinstance(params.get("date_regex"), str)
+        and params["date_regex"]
+    ):
         _check_regex(e, "date_regex", params["date_regex"])
     if method == "govpl_list" and params.get("list_url"):
         p = urlparse(params["list_url"])
         if p.scheme != "https" or p.hostname not in ("www.gov.pl", "gov.pl"):
-            e.append("params.list_url: metoda govpl_list działa tylko dla stron https://www.gov.pl/web/…")
-    if method == "custom" and isinstance(params.get("handler"), str) and not HANDLER_RE.match(params["handler"]):
+            e.append(
+                "params.list_url: metoda govpl_list działa tylko dla stron https://www.gov.pl/web/…"
+            )
+    if (
+        method == "custom"
+        and isinstance(params.get("handler"), str)
+        and not HANDLER_RE.match(params["handler"])
+    ):
         e.append("params.handler: nazwa modułu (a-z, 0-9, _).")
     if method == "legacy_script" and isinstance(params.get("script"), str):
         if not SCRIPT_RE.match(params["script"]):
@@ -203,17 +299,23 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
         topics = []
     unknown = [t for t in topics if t not in TOPICS]
     if unknown and strict:
-        e.append(f"topics: nieznane tematy {', '.join(unknown)} (słownik w docs/SOURCE_REGISTRY.md).")
+        e.append(
+            f"topics: nieznane tematy {', '.join(unknown)} (słownik w docs/SOURCE_REGISTRY.md)."
+        )
     d["topics"] = list(dict.fromkeys(topics))
     d["language"] = d.get("language") or "pl"
     if not isinstance(d["language"], str) or not re.match(r"^[a-z]{2}$", d["language"]):
         e.append("language: kod języka ISO 639-1, np. pl.")
     for k in ("license", "qualification"):
         if not isinstance(d.get(k), str) or not d[k].strip():
-            e.append(f"{k}: pole wymagane — źródło bez opisu licencji i kwalifikacji nie może być dodane.")
+            e.append(
+                f"{k}: pole wymagane — źródło bez opisu licencji i kwalifikacji nie może być dodane."
+            )
     if not d.get("scope") and sid in DEFAULT_SCOPE:
         d["scope"], d["scope_basis"] = DEFAULT_SCOPE[sid]
-    scope = d.get("scope") or "outside"  # unmarked = not on the organisers' list (conservative default)
+    scope = (
+        d.get("scope") or "outside"
+    )  # unmarked = not on the organisers' list (conservative default)
     if scope not in SCOPES:
         e.append(f"scope: jedna z {', '.join(SCOPES)}.")
     d["scope"] = scope
@@ -222,15 +324,19 @@ def validate(raw: dict, *, strict: bool = True) -> dict:
         e.append("scope_basis: tekst (gdzie organizator wskazuje to źródło).")
         basis = ""
     if scope in ORGANISER_SCOPES and not basis.strip():
-        e.append("scope_basis: wymagane dla źródła organizatora — podaj dokument i miejsce, w którym organizator je "
-                 "wskazuje (np. rules/resources.txt).")
+        e.append(
+            "scope_basis: wymagane dla źródła organizatora — podaj dokument i miejsce, w którym organizator je "
+            "wskazuje (np. rules/resources.txt)."
+        )
     d["scope_basis"] = basis.strip()
     d["added_by"] = str(d.get("added_by") or "administrator")
     d["added_at"] = str(d.get("added_at") or date.today().isoformat())
     if e:
         raise SourceError(e)
     ordered = {k: d[k] for k in FIELD_ORDER if k in d}
-    ordered.update({k: v for k, v in d.items() if k not in ordered and not k.startswith("_")})  # keep extra keys
+    ordered.update(
+        {k: v for k, v in d.items() if k not in ordered and not k.startswith("_")}
+    )  # keep extra keys
     return ordered
 
 
@@ -318,7 +424,10 @@ def _live_records_by_source(corpus_dir: Path) -> dict[str, int]:
             tags = json.loads(line).get("tags") or []
         except json.JSONDecodeError:
             continue
-        sid = next((t.split(":", 1)[1] for t in tags if isinstance(t, str) and t.startswith("registry:")), "?")
+        sid = next(
+            (t.split(":", 1)[1] for t in tags if isinstance(t, str) and t.startswith("registry:")),
+            "?",
+        )
         out[sid] = out.get(sid, 0) + 1
     return out
 
@@ -341,11 +450,24 @@ def scope_report(corpus_dir: Path | None = None, strict: bool = False) -> dict:
             enabled_outside.append(sid)
     orphans = sorted(f.stem for f in corpus_dir.glob("*.jsonl") if f.stem not in sources)
     live_on = (sources.get("live_web") or {}).get("enabled") is True
-    stale_live = {sid: n for sid, n in _live_records_by_source(corpus_dir).items() if live_on and not (
-        sid in sources and sources[sid].get("enabled") is True and in_organiser_scope(sources[sid], strict))}
-    return {"by_scope": by_scope, "enabled_outside": sorted(enabled_outside), "orphan_corpus_files": orphans,
-            "live_records_from_excluded_sources": stale_live, "invalid": sorted(problems),
-            "violations": len(enabled_outside) + len(orphans) + len(stale_live)}
+    stale_live = {
+        sid: n
+        for sid, n in _live_records_by_source(corpus_dir).items()
+        if live_on
+        and not (
+            sid in sources
+            and sources[sid].get("enabled") is True
+            and in_organiser_scope(sources[sid], strict)
+        )
+    }
+    return {
+        "by_scope": by_scope,
+        "enabled_outside": sorted(enabled_outside),
+        "orphan_corpus_files": orphans,
+        "live_records_from_excluded_sources": stale_live,
+        "invalid": sorted(problems),
+        "violations": len(enabled_outside) + len(orphans) + len(stale_live),
+    }
 
 
 def restrict_to_organiser_scope(note: str, strict: bool = False) -> list[str]:

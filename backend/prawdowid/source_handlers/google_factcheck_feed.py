@@ -1,4 +1,6 @@
-"""Reviews of one fact-checker from the Google Fact Check Tools API — "Demagog through the API".
+"""Harvest publisher ClaimReview metadata from Google Fact Check Tools.
+
+Reviews of one fact-checker from the Google Fact Check Tools API — "Demagog through the API".
 
   GET https://factchecktools.googleapis.com/v1alpha1/claims:search
       ?reviewPublisherSiteFilter=<site>&languageCode=pl&maxAgeDays=<n>&pageSize=<≤100>[&pageToken=…]
@@ -29,7 +31,10 @@ never in a log line or an error message. Without it the run ends with a plain "b
 
 params: site (required, e.g. "demagog.org.pl"), max_age_days (200), page_size (100), max_pages (10), delay (1.0 s
 between calls), key_env, dedupe_against (corpus ids whose URLs are skipped), id_prefix (see fetchers.normalize_record).
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import logging
@@ -73,15 +78,24 @@ def _ws(s: object) -> str:
 def restates_title(claim: str, title: str) -> bool:
     """The 'claim' is (nearly) the review's declarative headline: at least 60% of the words of both are shared.
     A headline that asks a question ("…tylko dla Ukraińców? Przepisy są inne") repeats the claim in order to
-    answer it and is not a restated conclusion. Measured 2026-11-21: 2 of 74 AFP reviews, 0 of 408 Demagog."""
+    answer it and is not a restated conclusion. Measured 2026-11-21: 2 of 74 AFP reviews, 0 of 408 Demagog.
+    """
     if "?" in title:
         return False
     a, b = (set(re.findall(r"\w{3,}", s.lower())) for s in (claim, title))
     return bool(a and b) and len(a & b) / len(a | b) >= 0.6
 
 
-def call(site: str, key: str, *, max_age_days: int, page_size: int, page_token: str = "", timeout: float = 20.0,
-         get=httpx.get) -> dict:
+def call(
+    site: str,
+    key: str,
+    *,
+    max_age_days: int,
+    page_size: int,
+    page_token: str = "",
+    timeout: float = 20.0,
+    get=httpx.get,
+) -> dict:
     """One page. Raises ApiError with a message that cannot contain the key."""
     params = {"reviewPublisherSiteFilter": site, "languageCode": "pl", "pageSize": page_size}
     if max_age_days:
@@ -90,14 +104,22 @@ def call(site: str, key: str, *, max_age_days: int, page_size: int, page_token: 
         params["pageToken"] = page_token
     try:
         # the key travels in a header, not in the URL: httpx logs every request URL at INFO level
-        r = get(API, params=params, timeout=timeout, headers={"User-Agent": UA, "X-Goog-Api-Key": key})
+        r = get(
+            API, params=params, timeout=timeout, headers={"User-Agent": UA, "X-Goog-Api-Key": key}
+        )
     except httpx.HTTPError as e:
-        raise ApiError(f"Google Fact Check Tools API: błąd połączenia ({type(e).__name__}).") from None
+        raise ApiError(
+            f"Google Fact Check Tools API: błąd połączenia ({type(e).__name__})."
+        ) from None
     if r.status_code in (400, 401, 403):
-        raise ApiError(f"Google Fact Check Tools API odrzuciło zapytanie (HTTP {r.status_code}) — sprawdź klucz i czy "
-                       "w projekcie Google Cloud włączono „Fact Check Tools API”.")
+        raise ApiError(
+            f"Google Fact Check Tools API odrzuciło zapytanie (HTTP {r.status_code}) — sprawdź klucz i czy "
+            "w projekcie Google Cloud włączono „Fact Check Tools API”."
+        )
     if r.status_code == 429:
-        raise ApiError("Google Fact Check Tools API: przekroczony limit zapytań (HTTP 429) — spróbujemy później.")
+        raise ApiError(
+            "Google Fact Check Tools API: przekroczony limit zapytań (HTTP 429) — spróbujemy później."
+        )
     if r.status_code != 200:
         raise ApiError(f"Google Fact Check Tools API: HTTP {r.status_code}.")
     try:
@@ -120,13 +142,16 @@ def to_record(claim: dict, review: dict, site: str) -> dict | None:
         return None
     title = _ws(review.get("title")) or claim_text
     rec = {
-        "url": url, "title": title,
+        "url": url,
+        "title": title,
         # verbatim ClaimReview fields of the publisher: review title + the claim it reviewed (no article text)
         "text": title if title == claim_text else f"{title}\n{claim_text}",
         "published_at": (_ws(review.get("reviewDate")) or _ws(claim.get("claimDate")))[:10] or None,
         "language": _ws(review.get("languageCode"))[:2] or "pl",
-        "claim": claim_text, "claim_author": _ws(claim.get("claimant")) or None,
-        "verdict_raw": rating[:1].upper() + rating[1:], "verdict": map_rating(rating),
+        "claim": claim_text,
+        "claim_author": _ws(claim.get("claimant")) or None,
+        "verdict_raw": rating[:1].upper() + rating[1:],
+        "verdict": map_rating(rating),
         "tags": ["google_factcheck", "via:api", "claimreview-only"],
     }
     if restates_title(claim_text, title):
@@ -135,9 +160,13 @@ def to_record(claim: dict, review: dict, site: str) -> dict | None:
         # record stays as context (title, label, link) without a claim or a verdict class.
         rec["claim"], rec["verdict"] = None, None
         rec["tags"].append("claim-restates-title")
-    if site == "demagog.org.pl":  # same id as ingest/harvest_demagog.py, so the index never holds both copies
+    if (
+        site == "demagog.org.pl"
+    ):  # same id as ingest/harvest_demagog.py, so the index never holds both copies
         m = re.match(r"^/(wypowiedzi|fake_news)/([^/]+)/?$", urlsplit(url).path)
-        if m:  # the harvest keeps the site's lower-case escapes (co%e2%82%82); the API sends upper case
+        if (
+            m
+        ):  # the harvest keeps the site's lower-case escapes (co%e2%82%82); the API sends upper case
             slug = re.sub(r"%[0-9A-F]{2}", lambda e: e.group(0).lower(), m.group(2))
             rec["id"] = f"demagog:{m.group(1)}/{slug}"
     return rec
@@ -151,15 +180,23 @@ def fetch(source: dict, get=httpx.get) -> list[dict]:
     key_env = str(p.get("key_env") or "PRAWDOWID_GOOGLE_FACTCHECK_KEY")
     key = os.environ.get(key_env, "").strip()
     if not key:
-        raise ApiError(f"brak klucza: zmienna środowiskowa {key_env} nie jest ustawiona — nic nie wysłano.")
+        raise ApiError(
+            f"brak klucza: zmienna środowiskowa {key_env} nie jest ustawiona — nic nie wysłano."
+        )
     limit = int(p.get("max_items") or 0)  # dry run ("Testuj") asks for a few records only
-    page_size = max(1, min(int(p.get("page_size") or 100), 100)) if not limit else min(20, max(5, 2 * limit))
+    page_size = (
+        max(1, min(int(p.get("page_size") or 100), 100))
+        if not limit
+        else min(20, max(5, 2 * limit))
+    )
     max_pages = 1 if limit else max(1, min(int(p.get("max_pages") or 10), MAX_PAGES_CAP))
     delay = max(0.5, float(p.get("delay") or 1.0))
     from ..sources.fetchers import url_key, urls_held_by
 
     # already stored here, or held by a source the index loads that reaches the same publisher another way
-    skip = {url_key(u) for u in source.get("_known_urls") or []} | urls_held_by(p.get("dedupe_against"))
+    skip = {url_key(u) for u in source.get("_known_urls") or []} | urls_held_by(
+        p.get("dedupe_against")
+    )
     max_age = int(p.get("max_age_days") or 200)
     # maxAgeDays counts from the newer of claim date and review date, so the API also returns old reviews of claims
     # that resurfaced; the knowledge base wants recent reviews, hence the same limit on the review date here
@@ -179,10 +216,22 @@ def fetch(source: dict, get=httpx.get) -> list[dict]:
                 if u in skip or u in seen or (rec["published_at"] or "9999") < oldest:
                     continue
                 seen.add(u)
-                rec["tags"] = sorted({source.get("id", "google_factcheck"), *(source.get("topics") or []), *rec["tags"]})
+                rec["tags"] = sorted(
+                    {
+                        source.get("id", "google_factcheck"),
+                        *(source.get("topics") or []),
+                        *rec["tags"],
+                    }
+                )
                 out.append(rec)
         token = data.get("nextPageToken") or ""
         if not token or (limit and len(out) >= limit):
             break
-    log.info("google_factcheck_feed %s: %d reviews seen, %d new records, %d call(s)", site, n_reviews, len(out), page + 1)
+    log.info(
+        "google_factcheck_feed %s: %d reviews seen, %d new records, %d call(s)",
+        site,
+        n_reviews,
+        len(out),
+        page + 1,
+    )
     return out[:limit] if limit else out

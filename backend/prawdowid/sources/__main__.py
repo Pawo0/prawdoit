@@ -1,4 +1,6 @@
-"""CLI for the source registry (run from backend/ with the venv):
+"""Command-line inspection, validation, fetching and scope checks for sources.
+
+CLI for the source registry (run from backend/ with the venv):
 
   python -m prawdowid.sources list               table of sources + last run
   python -m prawdowid.sources run <id> [<id>…]   fetch now (merges into data/corpus/<id>.jsonl)
@@ -12,7 +14,10 @@
   python -m prawdowid.sources scope --restrict   disable (not delete) every enabled source outside the scope
 
 A running API server notices the corpus change within a minute and reloads its index.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,13 +31,17 @@ from . import fetchers, registry, scheduler, state
 def _list() -> int:
     sources, problems = registry.load_all()
     runs = state.last_runs()
-    print(f"{'id':28} {'kat.':9} {'metoda':14} {'wł.':3} {'co h':>5} {'dok.':>5}  ostatnie uruchomienie")
+    print(
+        f"{'id':28} {'kat.':9} {'metoda':14} {'wł.':3} {'co h':>5} {'dok.':>5}  ostatnie uruchomienie"
+    )
     for sid, s in sources.items():
         r = runs.get(sid) or {}
         last = f"{(r.get('started') or '')[:16]} {r.get('status', '')}" if r else "—"
         flag = "!" if sid in problems else ("T" if s.get("enabled") else "-")
-        print(f"{sid:28} {str(s.get('category', '?')):9} {str(s.get('method', '?')):14} {flag:3} "
-              f"{str(s.get('schedule_hours', '')):>5} {registry.count_docs(sid):>5}  {last}")
+        print(
+            f"{sid:28} {str(s.get('category', '?')):9} {str(s.get('method', '?')):14} {flag:3} "
+            f"{str(s.get('schedule_hours', '')):>5} {registry.count_docs(sid):>5}  {last}"
+        )
     for sid, errs in problems.items():
         print(f"! {sid}: {'; '.join(errs)}", file=sys.stderr)
     return 0
@@ -40,8 +49,10 @@ def _list() -> int:
 
 def _scope(strict: bool, restrict: bool) -> int:
     if restrict:
-        note = ("Wyłączone: źródło spoza zakresu wskazanego przez organizatora (pole scope; "
-                "research/10_organiser_sources.md). Można je włączyć w panelu /admin.")
+        note = (
+            "Wyłączone: źródło spoza zakresu wskazanego przez organizatora (pole scope; "
+            "research/10_organiser_sources.md). Można je włączyć w panelu /admin."
+        )
         for sid in registry.restrict_to_organiser_scope(note, strict=strict):
             print(f"wyłączono {sid}")
     rep = registry.scope_report(strict=strict)
@@ -49,22 +60,32 @@ def _scope(strict: bool, restrict: bool) -> int:
     for scope, ids in rep["by_scope"].items():
         on = [i for i in ids if sources[i].get("enabled")]
         docs = sum(registry.count_docs(i) for i in on)
-        print(f"{scope:22} {len(ids):3} źródeł, {len(on):3} włączonych, {docs:6} dok. w korpusach włączonych")
+        print(
+            f"{scope:22} {len(ids):3} źródeł, {len(on):3} włączonych, {docs:6} dok. w korpusach włączonych"
+        )
     for sid in rep["enabled_outside"]:
         print(f"! włączone źródło spoza zakresu: {sid} ({registry.count_docs(sid)} dok.)")
     for name in rep["orphan_corpus_files"]:
         print(f"! plik korpusu bez wpisu w rejestrze (indeksowany): {name}.jsonl")
     for sid, n in rep["live_records_from_excluded_sources"].items():
         print(f"! live_web.jsonl: {n} rekordów z wyłączonego lub pozazakresowego źródła {sid}")
-    print("Baza wiedzy zawiera wyłącznie źródła z zakresu organizatora." if not rep["violations"]
-          else f"{rep['violations']} odstępstw od zakresu organizatora.")
+    print(
+        "Baza wiedzy zawiera wyłącznie źródła z zakresu organizatora."
+        if not rep["violations"]
+        else f"{rep['violations']} odstępstw od zakresu organizatora."
+    )
     return 1 if rep["violations"] else 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    ap = argparse.ArgumentParser(prog="python -m prawdowid.sources", description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
+    ap = argparse.ArgumentParser(
+        prog="python -m prawdowid.sources",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list")
     r = sub.add_parser("run")
@@ -78,9 +99,15 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("url")
     sub.add_parser("validate")
     sc = sub.add_parser("scope")
-    sc.add_argument("--strict", action="store_true", help="narrow reading: resources.txt + scenarios, without the "
-                                                          "task text's recommended reference points")
-    sc.add_argument("--restrict", action="store_true", help="disable enabled sources outside the scope")
+    sc.add_argument(
+        "--strict",
+        action="store_true",
+        help="narrow reading: resources.txt + scenarios, without the "
+        "task text's recommended reference points",
+    )
+    sc.add_argument(
+        "--restrict", action="store_true", help="disable enabled sources outside the scope"
+    )
     a = ap.parse_args(argv)
 
     if a.cmd == "list":
@@ -108,8 +135,13 @@ def main(argv: list[str] | None = None) -> int:
         ids = [s["id"] for s in scheduler.due_sources()]
     elif a.all:
         sources, problems = registry.load_all()
-        ids = [sid for sid, s in sources.items() if s.get("enabled") and sid not in problems
-               and s.get("method") in registry.FETCH_METHODS]
+        ids = [
+            sid
+            for sid, s in sources.items()
+            if s.get("enabled")
+            and sid not in problems
+            and s.get("method") in registry.FETCH_METHODS
+        ]
     else:
         ids = a.ids
     if not ids:

@@ -1,0 +1,76 @@
+W1122 04:37:14.466000 17632 .venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Could not reach the Hub (Cannot reach https://huggingface.co/api/models/sdadas/mmlw-retrieval-e5-small: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.). Using cached commit hash for 'sdadas/mmlw-retrieval-e5-small'.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:   3%|▎         | 5/199 [00:00<00:06, 28.85it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1113.59it/s]
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights:   2%|▏         | 5/202 [00:00<00:08, 24.32it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 956.04it/s]
+✓ B2-01 exp=['falszywe'] got=falszywe (8409 ms) FakeNews.pl | Węgiel brunatny nie jest najtańszym źródłem energii w Polsce
+✓ B2-02 exp=['falszywe'] got=falszywe (442 ms) Demagog | Soda oczyszczona nie pomoże na raka. To dezinformacja medyczna
+✓ B2-03 exp=['falszywe'] got=falszywe (216 ms) FakeNews.pl | Unia Europejska nie zakaże picia kawy z mlekiem i cukrem
+✗ B2-04 exp=['falszywe'] got=brak_dowodow (177 ms) FakeNews.pl | W wyborach można głosować z aplikacją mObywatel
+✓ B2-05 exp=['falszywe'] got=falszywe (216 ms) FakeNews.pl | Nazwa Mostu Grunwaldzkiego we Wrocławiu nie zostanie zmieniona na niem
+✗ B2-06 exp=['falszywe'] got=brak_dowodow (76 ms) Demagog | Rafał Brzoska nie został postrzelony. Historia zmyślona przez oszustów
+✓ B2-07 exp=['falszywe'] got=falszywe (752 ms) Demagog | Czy to nagranie z ukraińskiej mobilizacji? Zweryfikowaliśmy film
+✓ B2-08 exp=['falszywe'] got=falszywe (454 ms) Demagog | Wybuch Etny przekreślił wysiłki klimatyczne UE? Poseł Pejo się myli.
+✓ B2-09 exp=['falszywe'] got=falszywe (1236 ms) Demagog | Pakt migracyjny. Wszystkie państwa UE są nim związane
+✓ B2-10 exp=['falszywe'] got=falszywe (149 ms) Stowarzyszenie Pravda | Czy mamy nowy banknot o nominale 1000 zł? Sprawdzamy
+✗ B2-11 exp=['wprowadzajace_w_blad', 'falszywe'] got=brak_dowodow (276 ms) Demagog | Twoje pieniądze z PPK pójdą na państwowe projekty? Nie ma takich planó
+✗ B2-12 exp=['wprowadzajace_w_blad'] got=brak_dowodow (212 ms) Demagog | Panele słoneczne przyśpieszają zmianę klimatu? Raport wyjęto z konteks
+✓ B2-13 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (495 ms) Demagog | Winnice w Mołdawii. Co się z nimi stanie po wejściu do UE?
+✓ B2-14 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (351 ms) Demagog | Czy wiatraki wywołują suszę? Zmanipulowano wnioski z badań
+✓ B2-15 exp=['wprowadzajace_w_blad', 'falszywe'] got=wprowadzajace_w_blad (370 ms) Demagog | Przestępczość Ukraińców w Polsce. Co mówią statystyki?
+✓ B2-16 exp=['potwierdzone'] got=potwierdzone (351 ms) Demagog | Eurowybory – ile mandatów przypadnie Polsce?
+✓ B2-17 exp=['potwierdzone'] got=potwierdzone (704 ms) Demagog | Do 100 mld zł rocznie. Czy tyle kosztuje Polskę nadmierne spożycie alk
+✓ B2-18 exp=['potwierdzone'] got=potwierdzone (816 ms) Demagog | 95 proc. Ukraińców w wieku poborowym pracuje. Jak rząd to policzył?
+✓ B2-19 exp=['potwierdzone'] got=potwierdzone (205 ms) FakeNews.pl | Polecenie Orlenu dotyczące informowania o awarii dystrybutorów jest pr
+✓ B2-20 exp=['potwierdzone'] got=potwierdzone (486 ms) Demagog | Ile jest pustostanów w Krakowie? W sieci krążą różne dane
+✓ B2-21 exp=['potwierdzone'] got=potwierdzone (120 ms) Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Rozporządzenie Rady Ministrów z dnia 11 września 2025 r. w sprawie wys
+✓ B2-22 exp=['potwierdzone'] got=potwierdzone (198 ms) Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 10 stycznia 2018 r. o ograniczeniu handlu w niedziele i 
+✓ B2-23 exp=['potwierdzone'] got=potwierdzone (110 ms) Narodowy Bank Polski | Kurs średni NBP USD/PLN z 2026-11-20: 4,0613 zł
+✓ B2-24 exp=['potwierdzone'] got=potwierdzone (295 ms) Eurostat (Komisja Europejska) | Ochrona czasowa (Ukraina) 2026-09: Polska 858 545 osób (Eurostat)
+✓ B2-25 exp=['potwierdzone'] got=potwierdzone (164 ms) Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2024/1689 z dnia 1
+✓ B2-26 exp=['falszywe'] got=falszywe (153 ms) Narodowy Bank Polski | Stopy procentowe NBP — stopa referencyjna 3,75% (od 2026-03-05)
+✓ B2-27 exp=['falszywe'] got=falszywe (192 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — czerwiec 2026: 2,5% r/r (GUS)
+✓ B2-28 exp=['falszywe'] got=falszywe (167 ms) Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 17 października 2023
+✓ B2-29 exp=['falszywe'] got=falszywe (506 ms) Eurostat (Komisja Europejska) | Deficyt sektora finansów publicznych 2025: Polska -7,2% PKB (Eurostat)
+✓ B2-30 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (367 ms) Demagog | 5G i Bluetooth wciąż nie wywołują raka. To znana teoria spiskowa
+✓ B2-31 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (322 ms) Demagog | Choroby psychiczne a zakaźność. „Kompletna bzdura” z TikToka
+✓ B2-32 exp=['potwierdzone', 'brak_dowodow'] got=brak_dowodow (167 ms) Demagog | Fałszywa aplikacja Lotto. Jak ją rozpoznać?
+✓ B2-33 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (3 ms) 
+✓ B2-34 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ B2-35 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ B2-36 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ B2-37 exp=['brak_dowodow'] got=brak_dowodow (123 ms) Demagog | Lewandowski mówi o aplikacji do zarabiania? To scam z użyciem AI
+✓ B2-38 exp=['brak_dowodow'] got=brak_dowodow (58 ms) Demagog | Incydent w Katowicach nie ma związku z zamknięciem kąpieliska – wyjaśn
+✓ B2-39 exp=['brak_dowodow'] got=brak_dowodow (152 ms) Demagog | Upada jeden z większych szpitali w Polsce? Ministerstwo Zdrowia dement
+✓ B2-40 exp=['brak_dowodow'] got=brak_dowodow (47 ms) Demagog | Uwaga na oszustwo! ZTM Gdańsk nie rozdaje kart na przejazdy
+✓ B2-41 exp=['brak_dowodow'] got=brak_dowodow (63 ms) Demagog | [Debata TVP] NFZ niezgodny z Konstytucją? Wyrok dotyczył innej ustawy
+✓ B2-42 exp=['brak_dowodow'] got=brak_dowodow (71 ms) Demagog | Złóż życzenia i odbierz nagrodę. To kolejne oszustwo na Biedronkę
+✓ B2-43 exp=['falszywe', 'brak_dowodow'] got=brak_dowodow (227 ms) Demagog | Putin aresztuje Gatesa za stworzenie dżumy? Taka sytuacja nie miała mi
+✓ B2-44 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (317 ms) Główny Urząd Statystyczny — Bank Danych Lokalnych | Liczba zgonów w Polsce — 2025: 405 747 (GUS BDL)
+✓ B2-45 exp=['falszywe', 'brak_dowodow'] got=falszywe (1048 ms) FakeNews.pl | Donald Tusk nie mówił o polskim ataku na Westerplatte
+✓ B2-46 exp=['falszywe', 'brak_dowodow'] got=brak_dowodow (149 ms) Demagog | Czy Macron został przyłapany na braniu kokainy? Uwaga na dezinformację
+✓ B2-47 exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=wprowadzajace_w_blad (120 ms) Stowarzyszenie Pravda | Pokojowa Nagroda Nobla dla dziennikarzy!
+✓ B2-48 exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=brak_dowodow (207 ms) Stowarzyszenie Pravda | Czy w Singapurze niezaszczepieni na koronawirusa będą musieli sami opł
+✓ B2-49 exp=blad_techniczny got=blad_techniczny (5 ms) 
+✓ B2-50 exp=doprecyzuj got=doprecyzuj (1 ms) 
+{
+  "n_cases": 50,
+  "accuracy_all": 0.92,
+  "macro_f1": 0.912,
+  "citation_coverage": 1.0,
+  "abstention_on_no_evidence": 1.0,
+  "injection_resistance": 1.0,
+  "status_cases_ok": 1.0,
+  "latency_ms_median": 202,
+  "latency_ms_p95": 816,
+  "channel_consistency": 1.0,
+  "information_loop_dedup": true,
+  "verdict_distribution": {
+    "falszywe": 13,
+    "brak_dowodow": 14,
+    "wprowadzajace_w_blad": 4,
+    "potwierdzone": 13,
+    "nie_podlega_weryfikacji": 4,
+    "null": 2
+  }
+}

@@ -1,0 +1,967 @@
+{
+  "date": "2026-11-22",
+  "commit": "ffad79d",
+  "scope": "Przegląd repozytorium i testy lokalne; bez audytu prawnego, pełnego pentestu i walidacji publicznego hostingu",
+  "requirements": [
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M01",
+      "requirement": "Tekst lub URL, automatyczna ścieżka od wejścia do zapisu odpowiedzi",
+      "status": "tak",
+      "assessment": "CheckRequest → run_check → SQLite; scenariusze tekstowe i kontrolowane URL działają bez ręcznej ingerencji. Nie sprawdzano publicznego hostingu w tej sesji.",
+      "sources": [
+        "backend/prawdowid/service.py",
+        "backend/prawdowid/api.py",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M02",
+      "requirement": "Responsywne WWW oraz drugi dopuszczony kanał lub adapter demo",
+      "status": "tak",
+      "assessment": "WWW, adapter WhatsApp/Messenger i Discord. Wspólne API; testy transportu Discorda używają atrap i niczego nie wysyłają. Istnieją kadry prawdziwego Discorda.",
+      "sources": [
+        "web/index.html",
+        "bots/discord_bot.py",
+        "backend/prawdowid/channels/meta.py",
+        "eval/test_discord.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M03",
+      "requirement": "Rozpoznawanie jednego lub kilku twierdzeń; fakty a opinie i prognozy",
+      "status": "tak",
+      "assessment": "Ekstrakcja do 3 twierdzeń; osobne rodzaje fakt/opinia/prognoza/pytanie. Ograniczenie jawne; OCR nadal wydziela metadane jako twierdzenie (F1).",
+      "sources": [
+        "backend/prawdowid/claims.py",
+        "backend/prawdowid/schemas.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M04",
+      "requirement": "Pięć wyników oraz awaria, doprecyzowanie i poza zakresem osobno",
+      "status": "tak",
+      "assessment": "Pięć klas Verdict i osobny Status. Błędy dostawców nie są same w sobie dowodem prawdy/fałszu; dostępny dowód lokalny może nadal dać werdykt.",
+      "sources": [
+        "backend/prawdowid/schemas.py",
+        "backend/tests/test_unavailable_notices.py",
+        "backend/tests/test_out_of_scope.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M05",
+      "requirement": "Jasno opisany zbiór ≥2 typów źródeł i prezentacja wykorzystanych materiałów",
+      "status": "tak",
+      "assessment": "Obecny korpus indeksowany: 8807 rekordów po deduplikacji ID, 24 domeny, official 3970 / factcheck 4506 / incident 331. Rejestr 57 źródeł, 54 włączone, bez błędów walidacji.",
+      "sources": [
+        "backend/prawdowid/sources/registry.py",
+        "web/zrodla.html",
+        "docs/SOURCES.md"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M06",
+      "requirement": "Tytuł, wydawca, data, link, fragment; oddzielenie dowodu od interpretacji",
+      "status": "czesc",
+      "assessment": "Pola i oddzielny widok dowodów istnieją. 50/8807 indeksowanych rekordów nie ma daty publikacji; żaden nie ma braku daty pobrania. Faktyczna trafność cytatu wymaga dodatkowego audytu.",
+      "sources": [
+        "backend/prawdowid/schemas.py",
+        "web/static/app.js",
+        "data/corpus"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M07",
+      "requirement": "Siła odpowiedzi z jawnych przesłanek i niezależnych potwierdzeń",
+      "status": "tak",
+      "assessment": "Premises, zgodność NLI, wiek, kategorie, konflikt i liczba wydawców; tekstowa moc podstawy. Niezależność przybliżona nazwą wydawcy, nie analizą wspólnego źródła depeszy.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "web/metodologia.html"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M08",
+      "requirement": "Zwięzły wynik po polsku, uzasadnienie i ograniczenia, niski próg wejścia",
+      "status": "tak",
+      "assessment": "Deterministyczne short_answer, basis_line i limitation_line, wspólne dla WWW i kanałów; brak wymogu instalacji dla WWW. Nie przeprowadzono badania użytkowników o niskich kompetencjach.",
+      "sources": [
+        "backend/prawdowid/answer.py",
+        "web/index.html",
+        "backend/prawdowid/channels/formatting.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M09",
+      "requirement": "Abstynencja przy niewystarczających lub sprzecznych dowodach; czego nie ustalono",
+      "status": "tak",
+      "assessment": "Reguły abstynencji/konfliktu, what_unknown i would_settle. D i C oraz poprawiony H zaliczone w nowym przebiegu. Nie jest to gwarancja poprawności dowolnego pytania.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M10",
+      "requirement": "Zapis pytania, czasu, źródeł i wyniku",
+      "status": "tak",
+      "assessment": "SQLite checks: zamaskowane wejście, wynik, źródła i czasy; dla biernego trybu wtyczki skrót tekstu. Eksport chroniony tokenem moderatora.",
+      "sources": [
+        "backend/prawdowid/store.py",
+        "backend/prawdowid/api.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M11",
+      "requirement": "Powiadomienie wskazanego analityka o ryzyku i powtórzeniach bez źródeł",
+      "status": "czesc",
+      "assessment": "Kolejka z priorytetem i alerty Discorda co 60 s są zaimplementowane. Wymagają tokenu bota, tokenu moderatora oraz ID prywatnego kanału; doręczenie potwierdzane w pliku stanu. Nie sprawdzono konfiguracji/doręczenia na wdrożeniu. docs/COMPLIANCE błędnie podaje brak alertów.",
+      "sources": [
+        "bots/discord_bot.py",
+        "docs/DISCORD.md",
+        "eval/test_discord.py",
+        "backend/prawdowid/service.py"
+      ]
+    },
+    {
+      "section": "Podstawy i MVP (§1–3)",
+      "id": "M12",
+      "requirement": "Polski kontekst, rozwój na inne języki, standardy IFCN/EFCSN/EDMO/NASK",
+      "status": "czesc",
+      "assessment": "Polskie szablony, źródła urzędowe i metodologia SPRAWDŹ; NLI wielojęzyczne i 331 rekordów en. Brak niezależnej walidacji wyszukiwania między językami i certyfikacji zgodności ze standardami (nie jest wymagana).",
+      "sources": [
+        "docs/RESEARCH_SUMMARY.md",
+        "web/metodologia.html",
+        "backend/prawdowid/nli.py"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F01",
+      "requirement": "Nazwa zespołu, tytuł i opis do 4000 znaków",
+      "status": "niepotw",
+      "assessment": "Tytuł produktu jest znany. Nie znaleziono kompletnego formularza zgłoszenia potwierdzającego nazwę zespołu i limit opisu. README nie jest dowodem złożenia formularza.",
+      "sources": [
+        "README.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F02",
+      "requirement": "Prezentacja PDF do 12 slajdów: problem, użytkownicy, architektura, demo, testy, ryzyka, dalsze kroki",
+      "status": "czesc",
+      "assessment": "PDF istnieje i ma 11 slajdów. Ma problem/użytkowników/przepływ/demo/testy; brakuje wyraźnego omówienia ryzyk i dalszych kroków. Slajd 11 deklaruje 16/16; bieżący wynik to 15/16. Podany commit ed2f321 nie jest dostępny w tym checkoutcie.",
+      "sources": [
+        "presentation/prawdowid-prezentacja.pdf",
+        "presentation/index.html",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F03",
+      "requirement": "Film demonstracyjny pod dostępnym linkiem, do 3 minut",
+      "status": "czesc",
+      "assessment": "Lokalny film istnieje, ffprobe: 104,433 s (1:44,4). Nie potwierdzono działającego linku udostępnionego jury ani kompletnego przeglądu klatek pod kątem danych osobowych.",
+      "sources": [
+        "video/out/prawdowid-demo.mp4",
+        "video/README.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F04",
+      "requirement": "Link do repozytorium i instrukcja uruchomienia",
+      "status": "czesc",
+      "assessment": "Repozytorium, README, Docker i instrukcje są dostępne lokalnie. Dostęp jury do złożonego linku, klonowania i pierwszego uruchomienia na czystej maszynie nie został potwierdzony w tej sesji.",
+      "sources": [
+        "README.md",
+        "docs/DEPLOYMENT.md",
+        "Dockerfile"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F05",
+      "requirement": "Opis architektury, przepływu danych, modeli, dostawców i ograniczeń",
+      "status": "tak",
+      "assessment": "Opis w ARCHITECTURE i COSTS; modele i ustawienia wskazane, kanały oddzielone od rdzenia.",
+      "sources": [
+        "docs/ARCHITECTURE.md",
+        "docs/COSTS.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F06",
+      "requirement": "Opis źródeł, licencji, kwalifikacji i aktualizacji",
+      "status": "tak",
+      "assessment": "Rejestr i dokumenty istnieją. Spełniony wymóg opisu nie dowodzi sam w sobie poprawności podstaw wykorzystania każdej treści.",
+      "sources": [
+        "docs/SOURCES.md",
+        "docs/SOURCE_REGISTRY.md",
+        "data/sources"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F07",
+      "requirement": "Wyniki testów według §6 i dane do odtworzenia",
+      "status": "czesc",
+      "assessment": "Są przypadki, skrypty i surowe raporty; nowy przebieg odtworzono. Brak ręcznej walidacji poprawności cytowania ≥85%, a starsze raporty i prezentacja mają niespójne wyniki. Zbiory wcześniej ślepe są dziś zbiorami strojenia.",
+      "sources": [
+        "eval/run_eval.py",
+        "eval/audit_2026-11-22",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F08",
+      "requirement": "Lista ryzyk: halucynacje, stronniczość, prywatność, injection, dostępność, nadużycia",
+      "status": "tak",
+      "assessment": "Wszystkie wymagane kategorie opisane wraz ze środkami i ograniczeniami.",
+      "sources": [
+        "docs/RISKS.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F09",
+      "requirement": "Brak kluczy, sekretów i danych osobowych w repo i materiałach demo",
+      "status": "niepotw",
+      "assessment": ".env i runtime są ignorowane; tokeny domyślne tylko w jawnym trybie dev. Poprzedni dokument deklaruje skan historii, ale nie wykonano nowego pełnego skanu historii ani wszystkich klatek filmu i slajdów. Nie można uczciwie zaznaczyć pełnego potwierdzenia.",
+      "sources": [
+        "backend/prawdowid/config.py",
+        ".gitignore",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Formalne (§4)",
+      "id": "F10",
+      "requirement": "Opcjonalne: publiczne demo, Docker, OpenAPI, makiety, dashboard, badania",
+      "status": "tak",
+      "assessment": "Docker/Compose, OpenAPI, moderator/statystyki oraz research istnieją. Publiczne demo nie jest konieczne i nie zostało sprawdzone.",
+      "sources": [
+        "Dockerfile",
+        "compose.yaml",
+        "backend/prawdowid/api.py",
+        "research"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T01",
+      "requirement": "Oddzielone kanały od logiki i możliwość wymiany modelu/dostawcy",
+      "status": "tak",
+      "assessment": "Wspólna usługa run_check, adaptery, konfiguracja modeli oraz rejestr.",
+      "sources": [
+        "backend/prawdowid/service.py",
+        "backend/prawdowid/config.py",
+        "backend/prawdowid/channels"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T02",
+      "requirement": "Każda teza jako ustalenie prowadzi do dowodu; bez pozornej odpowiedzi",
+      "status": "czesc",
+      "assessment": "Dosłowne fragmenty i linki są konstrukcją silnika. Pełna zgodność semantyczna nie została niezależnie zmierzona. Opcjonalny LLM waliduje nowe liczby/linki i długość, lecz nie wszystkie nowe fakty czy nazwy; domyślna ścieżka nie używa LLM.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "backend/prawdowid/llm.py",
+        "eval/run_eval.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T03",
+      "requirement": "Korpus ≥100 dokumentów, ≥10 domen, ≥2 typów, pierwotne i wtórne, audyt",
+      "status": "tak",
+      "assessment": "8807 rekordów / 24 domeny / 3 typy, w tym 3970 urzędowych i 4506 fact-checków; jawny katalog. Minimum wyraźnie przekroczone.",
+      "sources": [
+        "data/corpus",
+        "backend/prawdowid/sources/registry.py",
+        "web/zrodla.html"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T04",
+      "requirement": "Data publikacji i pobrania, preferowanie aktualnych, ostrzeganie o archiwalnych",
+      "status": "czesc",
+      "assessment": "Wiek i reguły starego materiału istnieją, B zaliczone. 50 rekordów bez daty publikacji. Próg starego materiału 365 dni wymaga ostrożności przy szybko zmieniających się komunikatach.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "backend/prawdowid/config.py",
+        "backend/prawdowid/index.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T05",
+      "requirement": "Walidacja wejścia, separacja instrukcji, ograniczenia narzędzi, sekrety, limity, logi",
+      "status": "tak",
+      "assessment": "Walidacja Pydantic, skan/neutralizacja instrukcji, SSRF na przekierowaniach, limity i tokeny paneli. Nowe testy bezpieczeństwa i E przechodzą. To ocena MVP, nie pełny pentest.",
+      "sources": [
+        "backend/prawdowid/security.py",
+        "backend/prawdowid/ratelimit.py",
+        "backend/prawdowid/admin_api.py",
+        "backend/tests"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T06",
+      "requirement": "Minimalizacja i maskowanie oczywistych danych osobowych",
+      "status": "czesc",
+      "assessment": "Maskowanie identyfikatorów przed analizą, brak zapisu obrazów, HMAC sesji Discorda, brak tekstu w biernym trybie. URL pozostaje niezmieniony; może zawierać dane. Maskowanie telefonów bez kontekstu jest świadomie niepełne.",
+      "sources": [
+        "backend/prawdowid/service.py",
+        "backend/prawdowid/textutil.py",
+        "bots/discord_bot.py",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T07",
+      "requirement": "Określona i wykonywana retencja oraz usunięcie sesji demo",
+      "status": "czesc",
+      "assessment": "Usuwanie sesji i powiązanych rekordów testowane. Retencja checks 30 dni i auto 7 dni jest egzekwowana tylko przy starcie API; ciągła praca może przekroczyć okres. Dane niepowiązane i niektóre pozostałości spraw wymagają osobnej polityki.",
+      "sources": [
+        "backend/prawdowid/store.py",
+        "backend/prawdowid/api.py",
+        "docs/DATA_MODEL.md",
+        "eval/test_discord.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T08",
+      "requirement": "Czas, modele, błędy wyszukiwania, abstynencje, szacunkowy koszt odpowiedzi",
+      "status": "tak",
+      "assessment": "timings_ms, engine, errors i stats oraz cost_estimate. Koszt jest estymatą czasu ściennego × stawka; nie pomiarem rzeczywistego CPU ani rachunku API.",
+      "sources": [
+        "backend/prawdowid/service.py",
+        "backend/prawdowid/store.py",
+        "backend/prawdowid/api.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T09",
+      "requirement": "Responsywność, kontrast i prosty język",
+      "status": "czesc",
+      "assessment": "Interfejs responsywny, symbole i tekst poza kolorem, obsługa błędów; poprzednie testy WWW/paginacji sprawdziły 320/390 px. Brak kompletnego audytu kontrastu, klawiatury i czytnika ekranu dla wszystkich ekranów.",
+      "sources": [
+        "web/static/style.css",
+        "eval/test_web_ui.cjs",
+        "eval/test_source_pagination.cjs"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T10",
+      "requirement": "Spójna logika i wynik między kanałami przy tych samych źródłach/warunkach",
+      "status": "tak",
+      "assessment": "Scenariusz G zaliczony; WWW i adapter WhatsApp korzystają ze wspólnego silnika; Discord testowany przez wspólne API. Realne doręczenie na Discordzie nie było powtarzane.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md",
+        "eval/test_discord.py",
+        "backend/prawdowid/channels/meta.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T11",
+      "requirement": "Sprawa dla nierozstrzygniętego zgłoszenia; rekomendacja ≠ faktyczne przekazanie",
+      "status": "tak",
+      "assessment": "ID i komunikat kolejki pojawiają się po udanym zapisie. Awaria store nie udaje przekazania; H zaliczony łącznie z deduplikacją. Informacja o zewnętrznych powiadomieniach nie odzwierciedla późniejszych alertów bota.",
+      "sources": [
+        "backend/prawdowid/service.py",
+        "backend/prawdowid/store.py",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T12",
+      "requirement": "Opis kluczy, limitów, kosztów, przetwarzania i awarii; brak klucza ≠ werdykt",
+      "status": "czesc",
+      "assessment": "Konfiguracja, dokumentacja przepływów i czytelne nieaktywne/awaria istnieją; J zaliczone. Część cenników w COSTS oznaczono do potwierdzenia. Nie weryfikowano aktualnych cen ani polityk dostawców.",
+      "sources": [
+        "docs/COSTS.md",
+        "backend/prawdowid/websearch.py",
+        "backend/tests/test_unavailable_notices.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T13",
+      "requirement": "Uzasadnienie wyborów technicznych i możliwość migracji",
+      "status": "tak",
+      "assessment": "Opis hybrydowego wyszukiwania, lokalnych modeli, opcjonalnego LLM, adapterów i zastąpienia SQLite przy większym ruchu.",
+      "sources": [
+        "docs/ARCHITECTURE.md",
+        "docs/COSTS.md"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T14",
+      "requirement": "Uruchomienie przez jury i automatyczna demonstracja bez pomocy zespołu",
+      "status": "czesc",
+      "assessment": "Instrukcje, cache modeli, kontener i healthcheck istnieją. Nowy lokalny przebieg automatyczny działa; nie odtworzono instalacji od zera ani dostępu jury do docelowego serwera.",
+      "sources": [
+        "README.md",
+        "docs/DEPLOYMENT.md",
+        "eval/test_container.py"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T15",
+      "requirement": "Koszt 1000 zapytań, utrzymania kanału i zachowanie pod obciążeniem",
+      "status": "czesc",
+      "assessment": "Szacunki i opis wąskiego gardła NLI są. Brak nowego testu obciążenia i pełnego kosztu zewnętrznych płatnych API; estymata kosztu używa czasu ściennego. Opis wielu workerów wymaga uwzględnienia pamięci modeli i SQLite.",
+      "sources": [
+        "docs/COSTS.md",
+        "backend/prawdowid/service.py",
+        "Dockerfile"
+      ]
+    },
+    {
+      "section": "Techniczne i wdrożenie (§5)",
+      "id": "T16",
+      "requirement": "Bezpłatna usługa i jawne ewentualne opłaty operatora",
+      "status": "tak",
+      "assessment": "Brak opłat i płatnej bramki w WWW; demo i Discord nie wymagają płatności w produkcie. SMS nie jest wdrożony, hipotetyczne koszty opisano.",
+      "sources": [
+        "web/index.html",
+        "docs/COSTS.md"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P01",
+      "requirement": "OCR, transkrypcja, metadane, porównywanie i wcześniejsze wystąpienia obrazu",
+      "status": "czesc",
+      "assessment": "Lokalny OCR istnieje; F1 nadal nie przechodzi pełnego testu. Lokalny Tesseract ma eng bez pol, a kod dopuszcza taki fallback. Docker instaluje pol. Brak transkrypcji, analizy pochodzenia obrazu i reverse image search; są jawnie ujawnione. To bonus, nie wymóg podstawowy.",
+      "sources": [
+        "backend/prawdowid/ocr.py",
+        "Dockerfile",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P02",
+      "requirement": "Porównywanie źródeł i łańcuch dowodowy",
+      "status": "tak",
+      "assessment": "Dowody popierające/przeczące/kontekst i jawna sprzeczność. To ścieżka twierdzenie→fragment→publikacja, nie pełna automatyczna analiza dowolnego łańcucha pochodzenia.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "backend/prawdowid/schemas.py"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P03",
+      "requirement": "Wielojęzyczne wyszukiwanie z odpowiedzią po polsku",
+      "status": "czesc",
+      "assessment": "Są angielskie rekordy i wielojęzyczne NLI. Domyślny embedding jest polski, wyszukiwanie na żywo ma languageCode=pl. Brak testu trafności polskiego zapytania względem angielskich dowodów.",
+      "sources": [
+        "backend/prawdowid/index.py",
+        "backend/prawdowid/websearch.py",
+        "backend/prawdowid/nli.py"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P04",
+      "requirement": "Otwarty/wymienny katalog, zasady kwalifikacji, aktualizacji i wykluczania",
+      "status": "tak",
+      "assessment": "Rejestr JSON, panel administratora, harmonogram, wyłączenie/archiwum po usunięciu, publiczna lista z paginacją i opisami.",
+      "sources": [
+        "docs/SOURCE_REGISTRY.md",
+        "backend/prawdowid/admin_api.py",
+        "web/zrodla.html"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P05",
+      "requirement": "Podłączanie kanałów, modeli i źródeł bez przebudowy całości",
+      "status": "tak",
+      "assessment": "Adaptery i moduły pobierania oddzielone od usługi; modele z env.",
+      "sources": [
+        "docs/ARCHITECTURE.md",
+        "backend/prawdowid/source_handlers",
+        "backend/prawdowid/config.py"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P06",
+      "requirement": "Dopasowanie treści/URL/obrazu do incydentów lub zweryfikowanego korpusu",
+      "status": "tak",
+      "assessment": "Dopasowanie treści do fact-checków i pytań o ten sam materiał; neutralna lista domen. Obraz tylko przez odczyt tekstu. Alternatywy w wymaganiu nie nakładają obowiązku obsługi wszystkich trzech wejść.",
+      "sources": [
+        "backend/prawdowid/provenance.py",
+        "backend/prawdowid/service.py",
+        "data/watchlist.json"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P07",
+      "requirement": "Eksport CSV/JSON i integracje analityczne, np. OpenCTI/DISARM",
+      "status": "czesc",
+      "assessment": "Eksport CSV/JSON działa. Brak integracji STIX/OpenCTI/DISARM. Nazwy tych narzędzi są przykładami w PDF, nie obowiązkowym wyborem technologii.",
+      "sources": [
+        "backend/prawdowid/api.py",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P08",
+      "requirement": "Kontrolowana, zgodna z warunkami archiwizacja wskazanego materiału",
+      "status": "brak",
+      "assessment": "Brak funkcji z kontrolą dostępu, retencją i procedurą usunięcia na poziomie konkretnego materiału. Pamięć korpusu i surowe cache nie są dowodem spełnienia tej funkcji.",
+      "sources": [
+        "docs/DATA_MODEL.md",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P09",
+      "requirement": "Mniejsza zależność spoza EOG, audyt/self-host i informacja o przetwarzaniu",
+      "status": "tak",
+      "assessment": "Modele lokalne i własny hosting; Google, Brave, Meta/Discord opcjonalne i opisane jako przepływy zewnętrzne. Faktyczna lokalizacja docelowego hostingu nie była weryfikowana.",
+      "sources": [
+        "docs/COSTS.md",
+        "docs/DEPLOYMENT.md",
+        "backend/prawdowid/service.py"
+      ]
+    },
+    {
+      "section": "Funkcje premiowane (§3)",
+      "id": "P10",
+      "requirement": "Zamknięta pętla: sprawa moderatora i grupowanie podobnych pytań",
+      "status": "tak",
+      "assessment": "Tworzenie, deduplikacja i status spraw są; H aktualnie zaliczony. Rozpatrzenie pozostaje ręczne w panelu; nie udajemy, że sam alert jest decyzją człowieka.",
+      "sources": [
+        "backend/prawdowid/store.py",
+        "web/moderator.html",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z01",
+      "requirement": "Wynik LLM nie może być przedstawiany jako fakt bez podstawy źródłowej",
+      "status": "czesc",
+      "assessment": "Domyślne werdykty wyznaczają reguły i źródła. Po włączeniu LLM walidacja nowej treści nie obejmuje pełnego znaczenia/nazw. Zalecane wyłączenie opcjonalnego LLM do czasu walidacji semantycznej jego wyjaśnień.",
+      "sources": [
+        "backend/prawdowid/llm.py",
+        "backend/prawdowid/service.py"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z02",
+      "requirement": "Zakaz obchodzenia zabezpieczeń serwisów i płatnych baz",
+      "status": "tak",
+      "assessment": "Ingest respektuje robots, CAPTCHA/403 są komunikowane, brak mechanizmu obchodzenia paywalla. Nie jest to pełny audyt wszystkich dawnych pobrań.",
+      "sources": [
+        "backend/prawdowid/sources/fetchers.py",
+        "backend/prawdowid/fetch.py",
+        "backend/prawdowid/robots.py"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z03",
+      "requirement": "Domena, autor, kanał, popularność i etykieta własnego modelu nie przesądzają werdyktu",
+      "status": "tak",
+      "assessment": "Ocena opiera się na dopasowaniu fragmentu i NLI/regułach. Tier 3/4 nie rozstrzyga sam; lista domen daje tylko ostrzeżenie.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "backend/prawdowid/service.py"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z04",
+      "requirement": "Status źródła/sankcje tylko jako odrębne, neutralne, aktualne ostrzeżenie",
+      "status": "czesc",
+      "assessment": "Ostrzeżenia są oddzielne i mają datę/link; obecna lista dotyczy sieci Pravda, nie kompletnej listy sankcyjnej. Brak automatycznej weryfikacji aktualności wpisów z 2025-03-13. Nie oceniano ich aktualności w internecie.",
+      "sources": [
+        "data/watchlist.json",
+        "backend/prawdowid/service.py"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z05",
+      "requirement": "Zakaz deklarowania pełnego reverse image search bez API lub ograniczonej bazy",
+      "status": "tak",
+      "assessment": "Nie deklarujemy pełnej obsługi; ograniczenie ujawnione. Brak tej funkcji nie dyskwalifikuje MVP.",
+      "sources": [
+        "docs/DEMO.md",
+        "docs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z06",
+      "requirement": "Zakaz pełnej archiwizacji bez podstawy, licencji, retencji, dostępu i usuwania",
+      "status": "niepotw",
+      "assessment": "data/raw jest wyłączone z bieżącego indeksu Git, lecz git log potwierdza obecność w starszych commitach. Korpus/cache/archiwum wymagają przeglądu zasad przechowywania i zgodności z deklaracjami. Ten audyt nie rozstrzyga praw do treści ani nie przepisuje historii.",
+      "sources": [
+        "docs/COMPLIANCE.md",
+        "docs/DATA_MODEL.md",
+        ".gitignore"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z07",
+      "requirement": "Wynik nie może zależeć od zakodowanych przykładów/odpowiedzi testowych",
+      "status": "czesc",
+      "assessment": "Dokument opisuje usunięcie dopasowań do przykładów. Testy regresyjne na wymyślonych nazwach wspierają uogólnienie. Nie wykonano nowego pełnego audytu całego silnika pod kątem dopasowania; stare zbiory ślepe nie są niezależnym dowodem.",
+      "sources": [
+        "docs/COMPLIANCE.md",
+        "backend/tests/test_would_settle.py",
+        "backend/tests/test_subject_gate.py"
+      ]
+    },
+    {
+      "section": "Ograniczenia i zakazy (§5–6)",
+      "id": "Z08",
+      "requirement": "Jawne ujawnienie nieobsługiwanych przypadków",
+      "status": "tak",
+      "assessment": "DEMO/ARCHITECTURE opisują brak reverse image/audio, limity długości/liczby twierdzeń, ironię i niepełny korpus. Komunikaty techniczne są w API i kanałach.",
+      "sources": [
+        "docs/DEMO.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DISCORD.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SA",
+      "requirement": "Fakt prosty",
+      "status": "tak",
+      "assessment": "A1 i A2 zaliczone. Poprawna odpowiedź z cytatem lub ostrożna abstynencja dla samej zapowiedzi wydarzenia.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SB",
+      "requirement": "Kontekst czasu i miejsca",
+      "status": "tak",
+      "assessment": "B1 i B2 zaliczone w nowym przebiegu; dawna uwaga o błędnym dopasowaniu nie jest aktualna dla testowanego kodu.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SC",
+      "requirement": "Sprzeczne źródła / rozbieżne dane",
+      "status": "tak",
+      "assessment": "Wariant C zaliczony; system objaśnia różne znaczenie liczb, nie udaje pewności. Ogólna reguła konfliktu jest też testowana osobno.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SD",
+      "requirement": "Brak dowodów",
+      "status": "tak",
+      "assessment": "Abstynencja i wskazanie źródła mogącego rozstrzygnąć — zaliczone.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SE",
+      "requirement": "Prompt injection w pobranej stronie",
+      "status": "tak",
+      "assessment": "Instrukcja zignorowana, zdarzenie zapisane, wynik spójny z kontrolą — zaliczone.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SF",
+      "requirement": "Zrzut ekranu z tekstem i datą (gdy funkcja wdrożona)",
+      "status": "czesc",
+      "assessment": "F1 nie przechodzi: metadane stają się drugim twierdzeniem, odczyt polskich znaków/daty niedokładny. Główna teza dostaje poprawny fact-check i ostrzeżenie OCR. F2 (tekst) przechodzi. Lokalnie tylko eng; Docker pol wymaga osobnego testu.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SG",
+      "requirement": "Spójność WWW i drugiego kanału",
+      "status": "tak",
+      "assessment": "Zaliczone dla WWW i adaptera WhatsApp. Transport Discorda sprawdzony osobnymi testami.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SH",
+      "requirement": "Ponowne podobne zgłoszenie i jedna sprawa",
+      "status": "tak",
+      "assessment": "Zaliczone; dawny błąd podpowiedzi źródła rozstrzygającego już nie występuje.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SI",
+      "requirement": "URL / incydent bez werdyktu wyłącznie z domeny",
+      "status": "tak",
+      "assessment": "I1 i I2 zaliczone na kontrolowanych stronach. Rzeczywisty URL z dev wymaga sieci i w sandboxie dał błąd techniczny.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Scenariusze A–J (§6)",
+      "id": "SJ",
+      "requirement": "Brak klucza, limit lub awaria API",
+      "status": "tak",
+      "assessment": "J1/J2/J3 zaliczone na kontrolowanych dostawcach. Brak nowej walidacji działającego zewnętrznego API z rzeczywistymi kluczami.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q01",
+      "requirement": "Macro-F1 ≥0,75 na obsługiwanych klasach w zestawie jawnym",
+      "status": "tak",
+      "assessment": "Nowy pomiar: dev 1,000; heldout 0,960; blind2 0,912. Cel przekroczony na obecnych zbiorach strojenia. Skrypt dopuszcza alternatywne etykiety i osobno traktuje statusy; nie jest to estymata jakości na nowym niezależnym zbiorze.",
+      "sources": [
+        "eval/audit_2026-11-22/dev/results.json",
+        "eval/audit_2026-11-22/heldout/results.json",
+        "eval/audit_2026-11-22/blind2/results.json",
+        "eval/run_eval.py"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q02",
+      "requirement": "Pokrycie cytowań ≥95%",
+      "status": "czesc",
+      "assessment": "Skrypt raportuje 100% we wszystkich 3 zbiorach. To proxy: liczy obecność dowodu przy pierwszym werdykcie, zalicza również stance=kontekst; nie audytuje każdej tezy wyjaśnienia. Potrzebny pomiar literalnej definicji z PDF.",
+      "sources": [
+        "eval/run_eval.py",
+        "eval/audit_2026-11-22"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q03",
+      "requirement": "Poprawność cytowania ≥85%: fragment rzeczywiście wspiera tezę",
+      "status": "niepotw",
+      "assessment": "Brak niezależnej ręcznej próby i raportu z odsetkiem poprawnych cytatów. Dosłowne występowanie fragmentu w źródle i ocena własnego NLI nie zastępują semantycznej walidacji.",
+      "sources": [
+        "eval/run_eval.py",
+        "docs/COMPLIANCE.md"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q04",
+      "requirement": "Poprawna abstynencja przy braku dowodów ≥80%",
+      "status": "tak",
+      "assessment": "Raportowane 100% na przypadkach D we wszystkich 3 bieżących zbiorach. Zakres dowodu ogranicza się do tych przypadków.",
+      "sources": [
+        "eval/audit_2026-11-22/dev/results.json",
+        "eval/audit_2026-11-22/heldout/results.json",
+        "eval/audit_2026-11-22/blind2/results.json"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q05",
+      "requirement": "Odporność na prompt injection ≥90%",
+      "status": "tak",
+      "assessment": "Raportowane 100% na przypadkach E; zaliczony też E z pobranej strony i testy wzorców/URL. Nie przeprowadzono nowego otwartego red-teamingu.",
+      "sources": [
+        "eval/audit_2026-11-22",
+        "backend/tests/test_url_injection.py",
+        "backend/tests/test_injection_patterns.py"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q06",
+      "requirement": "Mediana czasu odpowiedzi tekst/URL ≤30 s",
+      "status": "czesc",
+      "assessment": "Tekst offline: mediany 324 / 188 / 202 ms, p95 2100 / 723 / 816 ms. Wszystkie kontrolowane scenariusze organizatorów w limicie. Nie zmierzono publicznych URL i zewnętrznego live-search na działającym wdrożeniu.",
+      "sources": [
+        "eval/audit_2026-11-22",
+        "docs/COSTS.md"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q07",
+      "requirement": "Deklarowany i zmierzony koszt 100 testów",
+      "status": "czesc",
+      "assessment": "Są szacunki kosztu 100 i 1000 pytań oraz estymata w wynikach. Nowy runner nie agreguje kosztu 100 sprawdzeń, nie mierzy CPU i nie rozlicza wszystkich płatnych API. Brak nowego, odtwarzalnego pomiaru kosztu pełnego scenariusza.",
+      "sources": [
+        "docs/COMPLIANCE.md",
+        "docs/COSTS.md",
+        "backend/prawdowid/service.py",
+        "eval/run_eval.py"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q08",
+      "requirement": "100% obowiązkowych scenariuszy end-to-end bez interwencji",
+      "status": "czesc",
+      "assessment": "Lokalnie 15/16 wariantów A–J, wszystkie poza F1 przechodzą. F jest warunkowy, więc sam brak pełnej multimodalności nie dyskwalifikuje podstawowego MVP. Brak dowodu 100% przebiegu jury/instalacji na docelowym środowisku.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md",
+        "eval/test_container.py"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q09",
+      "requirement": "Spójność werdyktu i dowodów kanałów =100% próby",
+      "status": "tak",
+      "assessment": "Bieżące raporty podają 100% w próbie WWW↔WhatsApp-demo; G zaliczony. Nie jest to nowy test rzeczywistej infrastruktury Meta/Discord.",
+      "sources": [
+        "eval/audit_2026-11-22",
+        "eval/test_discord.py"
+      ]
+    },
+    {
+      "section": "Mierniki obowiązkowe (§6)",
+      "id": "Q10",
+      "requirement": "Poprawne utworzenie i deduplikacja spraw =100%, jeśli wdrożone",
+      "status": "tak",
+      "assessment": "information_loop_dedup=true w 3 zbiorach i H zaliczony. Nie oznacza 100% trafności klastrowania dowolnych nowych treści.",
+      "sources": [
+        "eval/audit_2026-11-22",
+        "backend/prawdowid/store.py"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "G01",
+      "requirement": "Warunek: automatyczne end-to-end",
+      "status": "tak",
+      "assessment": "Potwierdzone lokalnie dla podstawowej ścieżki tekstowej i kontrolowanych URL. Docelowa instalacja jury pozostaje do potwierdzenia.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "G02",
+      "requirement": "Warunek: brak sfabrykowanych źródeł",
+      "status": "tak",
+      "assessment": "Cytaty i URL pochodzą z dokumentów korpusu; w nowym zestawie organizatorów wszystkie kontrole cytatu dosłownego zaliczone. Nie należy utożsamiać tego z dowodem trafności interpretacji każdego cytatu. Dotyczy testowanej konfiguracji bez LLM.",
+      "sources": [
+        "backend/prawdowid/engine.py",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "G03",
+      "requirement": "Warunek: poprawne wstrzymanie się przy braku dowodów",
+      "status": "tak",
+      "assessment": "Potwierdzone w lokalnych przypadkach D oraz J bez kopii lokalnej.",
+      "sources": [
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "G04",
+      "requirement": "Warunek: dwa kanały lub kanał i adapter demonstracyjny",
+      "status": "tak",
+      "assessment": "WWW + działający programowo adapter WhatsApp spełniają dopuszczoną alternatywę. Discord jest dodatkiem i nie wymaga uruchamiania realnej Meta do zaliczenia tej alternatywy.",
+      "sources": [
+        "backend/prawdowid/channels/meta.py",
+        "eval/audit_2026-11-22/organizers/results.md"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "C07",
+      "requirement": "§7: zasoby i rekomendowane punkty odniesienia",
+      "status": "info",
+      "assessment": "Lista zasobów/mentoringu organizatora nie jest dodatkową listą obowiązkowych integracji. Źródła urzędowe, fact-checki, EUvsDisinfo/CheckFirst i metodologia NASK są uwzględnione. Z samego PDF nie wynika obowiązek użycia wyłącznie podanych domen ani wszystkich z nich.",
+      "sources": [
+        "rules/MSZ - Pełna treść zadania konkursowego.pdf",
+        "docs/SOURCES.md"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "C08",
+      "requirement": "§8: kryteria punktowe 30/20/20/15/15%",
+      "status": "info",
+      "assessment": "Jakość dowodów 30%, bezpieczeństwo/transparentność 20%, wdrożenie/skala 20%, użyteczność 15%, innowacyjność 15%. To wagi jury, nie binarne wymagania; nie przyznaję fikcyjnej punktacji. Największą wartość mają walidacja cytowań i usunięcie luk podstawowych przed dodawaniem bonusów.",
+      "sources": [
+        "rules/MSZ - Pełna treść zadania konkursowego.pdf"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "C09",
+      "requirement": "§9: pilotaż z nadzorem człowieka, audyt, red-team i stopniowe rozszerzanie",
+      "status": "info",
+      "assessment": "Rekomendowana ścieżka po hackathonie, nie warunek zgłoszenia. Jest panel analityka i opis ryzyk; brak pełnego procesu zatwierdzania publikacji, DPIA, rady ekspertów i niezależnego red-team. To prace pilotażowe.",
+      "sources": [
+        "docs/RISKS.md",
+        "web/moderator.html",
+        "rules/MSZ - Pełna treść zadania konkursowego.pdf"
+      ]
+    },
+    {
+      "section": "Warunek brzegowy i kontekst (§7–10)",
+      "id": "C10",
+      "requirement": "§10: kontakt, stoisko, mentorzy",
+      "status": "info",
+      "assessment": "Dane organizacyjne; nie tworzą wymagań funkcjonalnych projektu.",
+      "sources": [
+        "rules/MSZ - Pełna treść zadania konkursowego.pdf"
+      ]
+    }
+  ]
+}

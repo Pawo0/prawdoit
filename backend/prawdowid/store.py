@@ -1,8 +1,13 @@
-"""Audit log (przebieg sprawdzenia), security events, moderator cases (pętla informacji), retention.
+"""SQLite persistence for check audits, cases, feedback, errors and session removal.
+
+Audit log (przebieg sprawdzenia), security events, moderator cases (pętla informacji), retention.
 
 SQLite keeps the prototype dependency-free; the interface is small enough to swap for Postgres.
 Only PII-masked input is stored; sessions can be deleted on request; records expire after retention_days.
+
+Reading guide: docs/backend/../DATA_MODEL.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import json
@@ -60,57 +65,132 @@ def save_check(result: dict, masked_input: str, session: str | None) -> None:
     with _lock:
         _db.execute(
             "INSERT OR REPLACE INTO checks VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (result["id"], result["created_at"], result["channel"], session, masked_input, result["status"],
-             json.dumps(verdicts), json.dumps(sources), json.dumps(result, ensure_ascii=False),
-             result.get("timings_ms", {}).get("total_ms"), result.get("case_id")),
+            (
+                result["id"],
+                result["created_at"],
+                result["channel"],
+                session,
+                masked_input,
+                result["status"],
+                json.dumps(verdicts),
+                json.dumps(sources),
+                json.dumps(result, ensure_ascii=False),
+                result.get("timings_ms", {}).get("total_ms"),
+                result.get("case_id"),
+            ),
         )
         for ev in result.get("security_events", []):
-            _db.execute("INSERT INTO security_events (created_at, check_id, kind, location, detail) VALUES (?,?,?,?,?)",
-                        (result["created_at"], result["id"], ev["kind"], ev["where"], ev["detail"]))
+            _db.execute(
+                "INSERT INTO security_events (created_at, check_id, kind, location, detail) VALUES (?,?,?,?,?)",
+                (result["created_at"], result["id"], ev["kind"], ev["where"], ev["detail"]),
+            )
         _db.commit()
 
 
 def save_auto_check(result: dict, text_sha256: str) -> None:
     """Audit row for a background check (CheckRequest.mode="auto"): what was decided and on which sources, without
     the text. No input excerpt, no claim wording, no explanation or short answer (both quote the claim), no session;
-    security events keep their kind and place but not the matched passage. Expires after auto_retention_days."""
+    security events keep their kind and place but not the matched passage. Expires after auto_retention_days.
+    """
     claims = result.get("claims", [])
     sources = sorted({e["url"] for c in claims for e in c.get("evidence", [])})
     slim = {
-        "id": result["id"], "created_at": result["created_at"], "channel": result["channel"], "mode": "auto",
-        "status": result["status"], "input_sha256": text_sha256, "input_kind": result.get("input_kind"),
-        "claims": [{"verdict": c["verdict"], "kind": c.get("kind"), "rules_fired": c.get("rules_fired", []),
-                    "reason_codes": c.get("reason_codes", []), "strength_label": c.get("strength_label"),
-                    "evidence": [{k: e.get(k) for k in ("doc_id", "publisher", "url", "title", "published_at",
-                                                        "source_type", "tier", "stance", "factcheck_verdict_raw")}
-                                 for e in c.get("evidence", [])]} for c in claims],
-        "security_events": [{"kind": ev["kind"], "where": ev["where"]} for ev in result.get("security_events", [])],
-        "timings_ms": result.get("timings_ms", {}), "engine": result.get("engine", {}),
+        "id": result["id"],
+        "created_at": result["created_at"],
+        "channel": result["channel"],
+        "mode": "auto",
+        "status": result["status"],
+        "input_sha256": text_sha256,
+        "input_kind": result.get("input_kind"),
+        "claims": [
+            {
+                "verdict": c["verdict"],
+                "kind": c.get("kind"),
+                "rules_fired": c.get("rules_fired", []),
+                "reason_codes": c.get("reason_codes", []),
+                "strength_label": c.get("strength_label"),
+                "evidence": [
+                    {
+                        k: e.get(k)
+                        for k in (
+                            "doc_id",
+                            "publisher",
+                            "url",
+                            "title",
+                            "published_at",
+                            "source_type",
+                            "tier",
+                            "stance",
+                            "factcheck_verdict_raw",
+                        )
+                    }
+                    for e in c.get("evidence", [])
+                ],
+            }
+            for c in claims
+        ],
+        "security_events": [
+            {"kind": ev["kind"], "where": ev["where"]} for ev in result.get("security_events", [])
+        ],
+        "timings_ms": result.get("timings_ms", {}),
+        "engine": result.get("engine", {}),
     }
     with _lock:
         _db.execute(
             "INSERT OR REPLACE INTO checks VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (result["id"], result["created_at"], result["channel"], None, f"sha256:{text_sha256}", result["status"],
-             json.dumps([c["verdict"] for c in claims]), json.dumps(sources), json.dumps(slim, ensure_ascii=False),
-             result.get("timings_ms", {}).get("total_ms"), None),
+            (
+                result["id"],
+                result["created_at"],
+                result["channel"],
+                None,
+                f"sha256:{text_sha256}",
+                result["status"],
+                json.dumps([c["verdict"] for c in claims]),
+                json.dumps(sources),
+                json.dumps(slim, ensure_ascii=False),
+                result.get("timings_ms", {}).get("total_ms"),
+                None,
+            ),
         )
         for ev in result.get("security_events", []):
-            _db.execute("INSERT INTO security_events (created_at, check_id, kind, location, detail) VALUES (?,?,?,?,?)",
-                        (result["created_at"], result["id"], ev["kind"], ev["where"],
-                         "(tryb automatyczny: treść nie jest zapisywana)"))
+            _db.execute(
+                "INSERT INTO security_events (created_at, check_id, kind, location, detail) VALUES (?,?,?,?,?)",
+                (
+                    result["created_at"],
+                    result["id"],
+                    ev["kind"],
+                    ev["where"],
+                    "(tryb automatyczny: treść nie jest zapisywana)",
+                ),
+            )
         _db.commit()
 
 
 def log_error(check_id: str | None, component: str, detail: str) -> None:
     with _lock:
-        _db.execute("INSERT INTO errors (created_at, check_id, component, detail) VALUES (?,?,?,?)",
-                    (now(), check_id, component, detail[:500]))
+        _db.execute(
+            "INSERT INTO errors (created_at, check_id, component, detail) VALUES (?,?,?,?)",
+            (now(), check_id, component, detail[:500]),
+        )
         _db.commit()
 
 
 def get_check(check_id: str) -> dict | None:
     row = _db.execute("SELECT result_json FROM checks WHERE id=?", (check_id,)).fetchone()
     return json.loads(row["result_json"]) if row else None
+
+
+def export_checks() -> list[dict]:
+    """Return the existing public audit export columns, newest checks first.
+
+    Keep SQL and the database connection inside the persistence layer. Channel
+    adapters must authenticate before exposing this data to a caller.
+    """
+    rows = _db.execute(
+        "SELECT id, created_at, channel, input_masked, status, verdicts, sources, total_ms, case_id "
+        "FROM checks ORDER BY created_at DESC"
+    ).fetchall()
+    return [dict(row) for row in rows]
 
 
 def delete_session(session: str) -> int:
@@ -121,35 +201,56 @@ def delete_session(session: str) -> int:
 def _delete_checks(where: str, params: tuple) -> int:
     """Called under _lock. Remove audit children and repair shared moderator cases atomically."""
     with _db:
-        cases = _db.execute(f"SELECT DISTINCT case_id FROM checks WHERE {where} AND case_id IS NOT NULL",
-                            params).fetchall()
+        cases = _db.execute(
+            f"SELECT DISTINCT case_id FROM checks WHERE {where} AND case_id IS NOT NULL", params
+        ).fetchall()
         for table in ("security_events", "errors", "feedback"):
-            _db.execute(f"DELETE FROM {table} WHERE check_id IN (SELECT id FROM checks WHERE {where})", params)
+            _db.execute(
+                f"DELETE FROM {table} WHERE check_id IN (SELECT id FROM checks WHERE {where})",
+                params,
+            )
         n = _db.execute(f"DELETE FROM checks WHERE {where}", params).rowcount
         for case in cases:
             case_id = case["case_id"]
-            remaining = _db.execute("SELECT id, channel, input_masked, result_json FROM checks WHERE case_id=? "
-                                    "ORDER BY created_at DESC", (case_id,)).fetchall()
+            remaining = _db.execute(
+                "SELECT id, channel, input_masked, result_json FROM checks WHERE case_id=? "
+                "ORDER BY created_at DESC",
+                (case_id,),
+            ).fetchall()
             if not remaining:
                 _db.execute("DELETE FROM cases WHERE id=?", (case_id,))
                 continue
-            high_risk = any(c.get("high_risk") for row in remaining
-                            for c in json.loads(row["result_json"]).get("claims", []))
-            _db.execute("UPDATE cases SET count=?, channels=?, sample_check_ids=?, title=?, priority=? WHERE id=?",
-                        (len(remaining), json.dumps(sorted({r["channel"] for r in remaining})),
-                         json.dumps([r["id"] for r in remaining[:20]]), remaining[0]["input_masked"][:300],
-                         "wysoki" if high_risk or len(remaining) >= 3 else "normalny", case_id))
+            high_risk = any(
+                c.get("high_risk")
+                for row in remaining
+                for c in json.loads(row["result_json"]).get("claims", [])
+            )
+            _db.execute(
+                "UPDATE cases SET count=?, channels=?, sample_check_ids=?, title=?, priority=? WHERE id=?",
+                (
+                    len(remaining),
+                    json.dumps(sorted({r["channel"] for r in remaining})),
+                    json.dumps([r["id"] for r in remaining[:20]]),
+                    remaining[0]["input_masked"][:300],
+                    "wysoki" if high_risk or len(remaining) >= 3 else "normalny",
+                    case_id,
+                ),
+            )
         return n
 
 
 def purge_expired() -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.retention_days)).isoformat()
-    auto_cutoff = (datetime.now(timezone.utc) - timedelta(days=settings.auto_retention_days)).isoformat()
+    auto_cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=settings.auto_retention_days)
+    ).isoformat()
     with _lock:
         n = _delete_checks("created_at < ?", (cutoff,))
         # background (mode="auto") rows carry no text and are kept for a shorter time
-        n += _delete_checks("created_at < ? AND input_masked LIKE 'sha256:%' AND channel LIKE '%-auto'",
-                            (auto_cutoff,))
+        n += _delete_checks(
+            "created_at < ? AND input_masked LIKE 'sha256:%' AND channel LIKE '%-auto'",
+            (auto_cutoff,),
+        )
     return n
 
 
@@ -157,91 +258,160 @@ def purge_expired() -> int:
 CASE_SIM = 0.86  # cosine above which two unresolved questions are considered "the same case"
 
 
-def upsert_case(check_id: str, claim_text: str, emb: np.ndarray, channel: str, high_risk: bool) -> tuple[str, int]:
+def upsert_case(
+    check_id: str, claim_text: str, emb: np.ndarray, channel: str, high_risk: bool
+) -> tuple[str, int]:
     """Group similar unresolved submissions into one case. Returns (case_id, count)."""
     emb = emb.astype(np.float32)
     with _lock:
-        rows = _db.execute("SELECT id, centroid, count, channels, sample_check_ids FROM cases WHERE status != 'zamknięta'"
-                           ).fetchall()
-        best, best_sim = None, 0.0
-        for r in rows:
-            c = np.frombuffer(r["centroid"], dtype=np.float32)
+        rows = _db.execute(
+            "SELECT id, centroid, count, channels, sample_check_ids FROM cases WHERE status != 'zamknięta'"
+        ).fetchall()
+        best, best_similarity = None, 0.0
+        for row in rows:
+            c = np.frombuffer(row["centroid"], dtype=np.float32)
             sim = float(c @ emb / (np.linalg.norm(c) * np.linalg.norm(emb) + 1e-9))
-            if sim > best_sim:
-                best, best_sim = r, sim
-        ts = now()
-        if best is not None and best_sim >= CASE_SIM:
+            if sim > best_similarity:
+                best, best_similarity = row, sim
+        timestamp = now()
+        if best is not None and best_similarity >= CASE_SIM:
             count = best["count"] + 1
-            centroid = (np.frombuffer(best["centroid"], dtype=np.float32) * best["count"] + emb) / count
-            chans = sorted(set(json.loads(best["channels"])) | {channel})
+            centroid = (
+                np.frombuffer(best["centroid"], dtype=np.float32) * best["count"] + emb
+            ) / count
+            channels = sorted(set(json.loads(best["channels"])) | {channel})
             samples = (json.loads(best["sample_check_ids"]) + [check_id])[-20:]
             priority = "wysoki" if (high_risk or count >= 3) else "normalny"
-            _db.execute("UPDATE cases SET updated_at=?, count=?, centroid=?, channels=?, sample_check_ids=?, priority=? "
-                        "WHERE id=?", (ts, count, centroid.astype(np.float32).tobytes(), json.dumps(chans),
-                                       json.dumps(samples), priority, best["id"]))
+            _db.execute(
+                "UPDATE cases SET updated_at=?, count=?, centroid=?, channels=?, sample_check_ids=?, priority=? "
+                "WHERE id=?",
+                (
+                    timestamp,
+                    count,
+                    centroid.astype(np.float32).tobytes(),
+                    json.dumps(channels),
+                    json.dumps(samples),
+                    priority,
+                    best["id"],
+                ),
+            )
             _db.commit()
             return best["id"], count
         cid = "SPR-" + new_id()[:6].upper()
-        _db.execute("INSERT INTO cases VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                    (cid, ts, ts, "nowa", claim_text[:300], 1, json.dumps([channel]), json.dumps([check_id]),
-                     emb.tobytes(), "wysoki" if high_risk else "normalny", ""))
+        _db.execute(
+            "INSERT INTO cases VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                cid,
+                timestamp,
+                timestamp,
+                "nowa",
+                claim_text[:300],
+                1,
+                json.dumps([channel]),
+                json.dumps([check_id]),
+                emb.tobytes(),
+                "wysoki" if high_risk else "normalny",
+                "",
+            ),
+        )
         _db.commit()
         return cid, 1
 
 
 def list_cases() -> list[dict]:
-    rows = _db.execute("SELECT id, created_at, updated_at, status, title, count, channels, sample_check_ids, priority, "
-                       "note FROM cases ORDER BY (priority='wysoki') DESC, count DESC, updated_at DESC").fetchall()
-    return [{**dict(r), "channels": json.loads(r["channels"]), "sample_check_ids": json.loads(r["sample_check_ids"])}
-            for r in rows]
+    rows = _db.execute(
+        "SELECT id, created_at, updated_at, status, title, count, channels, sample_check_ids, priority, "
+        "note FROM cases ORDER BY (priority='wysoki') DESC, count DESC, updated_at DESC"
+    ).fetchall()
+    return [
+        {
+            **dict(row),
+            "channels": json.loads(row["channels"]),
+            "sample_check_ids": json.loads(row["sample_check_ids"]),
+        }
+        for row in rows
+    ]
 
 
 def update_case(case_id: str, status: str, note: str) -> bool:
     with _lock:
-        n = _db.execute("UPDATE cases SET status=?, note=?, updated_at=? WHERE id=?",
-                        (status, note[:1000], now(), case_id)).rowcount
+        n = _db.execute(
+            "UPDATE cases SET status=?, note=?, updated_at=? WHERE id=?",
+            (status, note[:1000], now(), case_id),
+        ).rowcount
         _db.commit()
     return n > 0
 
 
 def stats() -> dict:
-    q = lambda sql: _db.execute(sql).fetchall()  # noqa: E731
-    total = q("SELECT COUNT(*) n FROM checks")[0]["n"]
-    by_status = {r["status"]: r["n"] for r in q("SELECT status, COUNT(*) n FROM checks GROUP BY status")}
-    by_channel = {r["channel"]: r["n"] for r in q("SELECT channel, COUNT(*) n FROM checks GROUP BY channel")}
+    def query(sql: str) -> list[sqlite3.Row]:
+        return _db.execute(sql).fetchall()
+
+    total = query("SELECT COUNT(*) n FROM checks")[0]["n"]
+    by_status = {
+        row["status"]: row["n"]
+        for row in query("SELECT status, COUNT(*) n FROM checks GROUP BY status")
+    }
+    by_channel = {
+        row["channel"]: row["n"]
+        for row in query("SELECT channel, COUNT(*) n FROM checks GROUP BY channel")
+    }
     verdicts: dict[str, int] = {}
-    for r in q("SELECT verdicts FROM checks"):
-        for v in json.loads(r["verdicts"] or "[]"):
+    for row in query("SELECT verdicts FROM checks"):
+        for v in json.loads(row["verdicts"] or "[]"):
             verdicts[v] = verdicts.get(v, 0) + 1
-    lat = [r["total_ms"] for r in q("SELECT total_ms FROM checks WHERE total_ms IS NOT NULL")]
-    sec = q("SELECT kind, COUNT(*) n FROM security_events GROUP BY kind")
-    errs = q("SELECT component, COUNT(*) n FROM errors GROUP BY component")
+    latencies = [
+        row["total_ms"] for row in query("SELECT total_ms FROM checks WHERE total_ms IS NOT NULL")
+    ]
+    security_counts = query("SELECT kind, COUNT(*) n FROM security_events GROUP BY kind")
+    error_counts = query("SELECT component, COUNT(*) n FROM errors GROUP BY component")
     return {
-        "checks": total, "by_status": by_status, "by_channel": by_channel, "verdicts": verdicts,
+        "checks": total,
+        "by_status": by_status,
+        "by_channel": by_channel,
+        "verdicts": verdicts,
         "abstentions": verdicts.get("brak_dowodow", 0),
-        "latency_ms_median": float(np.median(lat)) if lat else None,
-        "latency_ms_p95": float(np.percentile(lat, 95)) if lat else None,
-        "security_events": {r["kind"]: r["n"] for r in sec},
-        "errors": {r["component"]: r["n"] for r in errs},
-        "open_cases": q("SELECT COUNT(*) n FROM cases WHERE status != 'zamknięta'")[0]["n"],
+        "latency_ms_median": float(np.median(latencies)) if latencies else None,
+        "latency_ms_p95": float(np.percentile(latencies, 95)) if latencies else None,
+        "security_events": {row["kind"]: row["n"] for row in security_counts},
+        "errors": {row["component"]: row["n"] for row in error_counts},
+        "open_cases": query("SELECT COUNT(*) n FROM cases WHERE status != 'zamknięta'")[0]["n"],
         # estimated marginal cost (CPU time × rate, docs/COSTS.md); LLM tokens are priced per check in result.engine
-        "cost_estimate_pln": {"per_check_median": round(float(np.median(lat)) / 1000 * settings.cost_pln_per_cpu_s, 6) if lat else None,
-                              "total": round(sum(lat) / 1000 * settings.cost_pln_per_cpu_s, 4)},
+        "cost_estimate_pln": {
+            "per_check_median": (
+                round(float(np.median(latencies)) / 1000 * settings.cost_pln_per_cpu_s, 6)
+                if latencies
+                else None
+            ),
+            "total": round(sum(latencies) / 1000 * settings.cost_pln_per_cpu_s, 4),
+        },
     }
 
 
 def recent_security_events(limit: int = 50) -> list[dict]:
-    return [dict(r) for r in _db.execute("SELECT * FROM security_events ORDER BY id DESC LIMIT ?", (limit,)).fetchall()]
+    return [
+        dict(row)
+        for row in _db.execute(
+            "SELECT * FROM security_events ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+    ]
 
 
 def add_feedback(check_id: str, message: str) -> None:
     from .textutil import mask_pii
 
     with _lock:
-        _db.execute("INSERT INTO feedback (created_at, check_id, message, status) VALUES (?,?,?,?)",
-                    (now(), check_id[:32], mask_pii(message)[:1000], "nowe"))
+        _db.execute(
+            "INSERT INTO feedback (created_at, check_id, message, status) VALUES (?,?,?,?)",
+            (now(), check_id[:32], mask_pii(message)[:1000], "nowe"),
+        )
         _db.commit()
 
 
 def list_feedback(limit: int = 50) -> list[dict]:
-    return [dict(r) for r in _db.execute("SELECT * FROM feedback ORDER BY id DESC LIMIT ?", (limit,)).fetchall()]
+    return [
+        dict(row)
+        for row in _db.execute(
+            "SELECT * FROM feedback ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+    ]

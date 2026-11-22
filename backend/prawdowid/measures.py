@@ -1,4 +1,6 @@
-"""Indicators whose value depends on the definition used — general statistical knowledge, not case text.
+"""Recognize statistical measures and distinguish different definitions of similar numbers.
+
+Indicators whose value depends on the definition used — general statistical knowledge, not case text.
 
 A number that differs from an official statistical card is a contradiction only if the claim and the card measure
 the same thing. Several common indicators have more than one official definition, and those give different numbers
@@ -23,7 +25,10 @@ claim means the usual variant (headline inflation, mean wage) and only a claim n
 Used by engine.verify_claim: a numeric mismatch with a card counts only if the claim names the card's variant on
 every ambiguous dimension, or cards for every alternative definition of the same period are indexed and none of
 them gives the claimed number.
+
+Reading guide: docs/backend/ENGINE.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import re
@@ -35,22 +40,24 @@ _I = re.IGNORECASE
 
 @dataclass(frozen=True)
 class Variant:
-    name: str                    # shown in notes, e.g. "CPI (GUS)"
-    card: re.Pattern | None      # how a card says it uses this variant; None = the card's default when nothing else matches
-    claim: re.Pattern            # words by which a claim names this variant
+    name: str  # shown in notes, e.g. "CPI (GUS)"
+    card: (
+        re.Pattern | None
+    )  # how a card says it uses this variant; None = the card's default when nothing else matches
+    claim: re.Pattern  # words by which a claim names this variant
 
 
 @dataclass(frozen=True)
 class Dimension:
     key: str
     variants: tuple[Variant, ...]
-    ambiguous: bool = True       # an unqualified claim could mean any variant
+    ambiguous: bool = True  # an unqualified claim could mean any variant
 
 
 @dataclass(frozen=True)
 class Measure:
     key: str
-    card: re.Pattern             # the card (title + first sentence) reports this indicator
+    card: re.Pattern  # the card (title + first sentence) reports this indicator
     dims: tuple[Dimension, ...]
 
 
@@ -58,91 +65,232 @@ def _rx(p: str) -> re.Pattern:
     return re.compile(p, _I)
 
 
-_GROSS_NET = Dimension("brutto_netto", (
-    Variant("brutto", _rx(r"\bbrutto\b"), _rx(r"\bbrutto\b")),
-    Variant("netto", _rx(r"\bnetto\b|na rękę"), _rx(r"\bnetto\b|na rękę|do ręki|na czysto|po odliczeniu (podatk|składek)")),
-))
+_GROSS_NET = Dimension(
+    "brutto_netto",
+    (
+        Variant("brutto", _rx(r"\bbrutto\b"), _rx(r"\bbrutto\b")),
+        Variant(
+            "netto",
+            _rx(r"\bnetto\b|na rękę"),
+            _rx(r"\bnetto\b|na rękę|do ręki|na czysto|po odliczeniu (podatk|składek)"),
+        ),
+    ),
+)
 
 MEASURES: tuple[Measure, ...] = (
-    Measure("dług publiczny", _rx(r"\bdług\w*\b.{0,40}\bpubliczn|\bzadłużeni\w* (państwa|publiczn|sektora)"), (
-        Dimension("definicja", (
-            Variant("definicja unijna (EDP)",
-                    _rx(r"\bEDP\b|definicj\w* (UE|unijn)|instytucji rządowych i samorządowych|Maastricht"),
-                    _rx(r"\bedp\b|instytucji rządowych|definicj\w* (ue|unijn|eurostat)|metodologi\w* (ue|unijn|eurostat)"
-                        r"|maastricht|eurostat")),
-            Variant("definicja krajowa (konstytucyjna)",
-                    _rx(r"\bPDP\b|państwow\w* dług|definicj\w* krajow|konstytucyjn"),
-                    _rx(r"\bpdp\b|państwow\w* dług|dług\w* państwow|definicj\w* krajow|metodologi\w* krajow|konstytucyjn"
-                        r"|ustaw\w* o finansach publicznych|ministerstw\w* finansów|\bmf\b")),
-        )),
-    )),
-    Measure("deficyt", _rx(r"\bdeficyt"), (
-        Dimension("zakres", (
-            Variant("sektor finansów publicznych (EDP)",
-                    _rx(r"sektor\w* finansów publicznych|instytucji rządowych|\bEDP\b"),
-                    _rx(r"sektor\w* finansów publicznych|instytucji rządowych|\bedp\b|eurostat|całego sektora")),
-            Variant("budżet państwa", _rx(r"budżet\w* państwa"), _rx(r"budżet\w* państwa|budżetow\w*")),
-        )),
-    )),
-    Measure("PKB per capita", _rx(r"\bPKB\b.{0,15}(per capita|na (jednego )?mieszkańca|na osobę)"), (
-        Dimension("jednostka", (
-            Variant("parytet siły nabywczej (PPS)", _rx(r"\bPPS\b|siły nabywczej"),
-                    _rx(r"\bpps\b|siły nabywczej|parytet")),
-            Variant("kurs rynkowy", _rx(r"kurs\w* rynkow|\bEUR\b(?!/kWh)|\bUSD\b|cen\w* bieżąc"),
-                    _rx(r"kurs\w* rynkow|nominaln|\beur\b|\beuro\b|dolar|\busd\b")),
-        )),
-    )),
-    Measure("wzrost PKB", _rx(r"(wzrost|dynamik\w*|spad\w*)\s+(realn\w+\s+|nominaln\w+\s+)?PKB|\bPKB\b.{0,30}\b(wzrósł|wzrost|spadł)"), (
-        Dimension("ceny", (
-            Variant("realnie (ceny stałe)", _rx(r"\brealn|cen\w* stał|wolumen"), _rx(r"\brealn|cen\w* stał")),
-            Variant("nominalnie (ceny bieżące)", _rx(r"\bnominaln|cen\w* bieżąc"), _rx(r"\bnominaln|cen\w* bieżąc")),
-        )),
-    )),
-    Measure("inflacja", _rx(r"\binflacj|\bHICP\b|\bCPI\b|wskaźnik\w* cen towarów i usług konsumpcyjnych"
-                            r"|zharmonizowan\w* wskaźnik\w* cen"), (
-        Dimension("wskaźnik", (
-            Variant("CPI (GUS)", _rx(r"\bCPI\b|towarów i usług konsumpcyjnych"),
-                    _rx(r"\bcpi\b|\bgus\w*|główn\w* urzęd\w* statystyczn|towarów i usług konsumpcyjnych")),
-            Variant("HICP (Eurostat)", _rx(r"\bHICP\b|zharmonizowan"), _rx(r"\bhicp\b|zharmonizowan|eurostat")),
-        )),
-        Dimension("zakres", (
-            Variant("inflacja ogółem", None, _rx(r"\bogółem\b|\bogóln\w*")),
-            Variant("inflacja bazowa", _rx(r"\bbazow"), _rx(r"\bbazow")),
-        ), ambiguous=False),
-    )),
-    Measure("bezrobocie", _rx(r"\bbezroboci"), (
-        Dimension("metoda", (
-            Variant("bezrobocie rejestrowane (GUS, urzędy pracy)", _rx(r"rejestrowan"),
-                    _rx(r"rejestrowan|zarejestrowan|urzęd\w* pracy|urzęd\w* zatrudnieni|\bpup\b|\bgus\w*")),
-            Variant("bezrobocie wg BAEL/LFS (Eurostat)",
-                    _rx(r"\bBAEL\b|\bLFS\b|\bILO\b|\bMOP\b|aktywności ekonomicznej|\(Eurostat\)"),
-                    _rx(r"\bbael\b|\blfs\b|\bilo\b|\bmop\b|aktywności ekonomicznej|eurostat")),
-        )),
-    )),
-    Measure("emerytura", _rx(r"\bemerytur|\brent[aęy]\b"), (
-        _GROSS_NET,
-        Dimension("system", (
-            Variant("ZUS (system pozarolniczy)", _rx(r"\bZUS\b|pozarolnicz"), _rx(r"\bzus\b|pozarolnicz")),
-            Variant("KRUS (rolnicy)", _rx(r"\bKRUS\b|rolnik"), _rx(r"\bkrus\b|rolni")),
-        )),
-    )),
-    Measure("wynagrodzenie", _rx(r"\bwynagrodzeni|\bpensj|\bzarobk"), (
-        _GROSS_NET,
-        Dimension("zakres", (
-            Variant("sektor przedsiębiorstw", _rx(r"sektor\w* przedsiębiorstw"),
-                    _rx(r"sektor\w* przedsiębiorstw|w przedsiębiorstwach|w firmach")),
-            Variant("gospodarka narodowa", _rx(r"gospodar\w* narodow|cał\w* gospodar"),
-                    _rx(r"gospodar\w* narodow|cał\w* gospodar")),
-        )),
-        Dimension("statystyka", (
-            Variant("średnia", _rx(r"przeciętn|średni"), _rx(r"przeciętn|średni")),
-            Variant("mediana", _rx(r"\bmedian|dominant"), _rx(r"\bmedian|dominant|połowa .{0,30}zarabia")),
-        ), ambiguous=False),
-    )),
+    Measure(
+        "dług publiczny",
+        _rx(r"\bdług\w*\b.{0,40}\bpubliczn|\bzadłużeni\w* (państwa|publiczn|sektora)"),
+        (
+            Dimension(
+                "definicja",
+                (
+                    Variant(
+                        "definicja unijna (EDP)",
+                        _rx(
+                            r"\bEDP\b|definicj\w* (UE|unijn)|instytucji rządowych i samorządowych|Maastricht"
+                        ),
+                        _rx(
+                            r"\bedp\b|instytucji rządowych|definicj\w* (ue|unijn|eurostat)|metodologi\w* (ue|unijn|eurostat)"
+                            r"|maastricht|eurostat"
+                        ),
+                    ),
+                    Variant(
+                        "definicja krajowa (konstytucyjna)",
+                        _rx(r"\bPDP\b|państwow\w* dług|definicj\w* krajow|konstytucyjn"),
+                        _rx(
+                            r"\bpdp\b|państwow\w* dług|dług\w* państwow|definicj\w* krajow|metodologi\w* krajow|konstytucyjn"
+                            r"|ustaw\w* o finansach publicznych|ministerstw\w* finansów|\bmf\b"
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "deficyt",
+        _rx(r"\bdeficyt"),
+        (
+            Dimension(
+                "zakres",
+                (
+                    Variant(
+                        "sektor finansów publicznych (EDP)",
+                        _rx(r"sektor\w* finansów publicznych|instytucji rządowych|\bEDP\b"),
+                        _rx(
+                            r"sektor\w* finansów publicznych|instytucji rządowych|\bedp\b|eurostat|całego sektora"
+                        ),
+                    ),
+                    Variant(
+                        "budżet państwa",
+                        _rx(r"budżet\w* państwa"),
+                        _rx(r"budżet\w* państwa|budżetow\w*"),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "PKB per capita",
+        _rx(r"\bPKB\b.{0,15}(per capita|na (jednego )?mieszkańca|na osobę)"),
+        (
+            Dimension(
+                "jednostka",
+                (
+                    Variant(
+                        "parytet siły nabywczej (PPS)",
+                        _rx(r"\bPPS\b|siły nabywczej"),
+                        _rx(r"\bpps\b|siły nabywczej|parytet"),
+                    ),
+                    Variant(
+                        "kurs rynkowy",
+                        _rx(r"kurs\w* rynkow|\bEUR\b(?!/kWh)|\bUSD\b|cen\w* bieżąc"),
+                        _rx(r"kurs\w* rynkow|nominaln|\beur\b|\beuro\b|dolar|\busd\b"),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "wzrost PKB",
+        _rx(
+            r"(wzrost|dynamik\w*|spad\w*)\s+(realn\w+\s+|nominaln\w+\s+)?PKB|\bPKB\b.{0,30}\b(wzrósł|wzrost|spadł)"
+        ),
+        (
+            Dimension(
+                "ceny",
+                (
+                    Variant(
+                        "realnie (ceny stałe)",
+                        _rx(r"\brealn|cen\w* stał|wolumen"),
+                        _rx(r"\brealn|cen\w* stał"),
+                    ),
+                    Variant(
+                        "nominalnie (ceny bieżące)",
+                        _rx(r"\bnominaln|cen\w* bieżąc"),
+                        _rx(r"\bnominaln|cen\w* bieżąc"),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "inflacja",
+        _rx(
+            r"\binflacj|\bHICP\b|\bCPI\b|wskaźnik\w* cen towarów i usług konsumpcyjnych"
+            r"|zharmonizowan\w* wskaźnik\w* cen"
+        ),
+        (
+            Dimension(
+                "wskaźnik",
+                (
+                    Variant(
+                        "CPI (GUS)",
+                        _rx(r"\bCPI\b|towarów i usług konsumpcyjnych"),
+                        _rx(
+                            r"\bcpi\b|\bgus\w*|główn\w* urzęd\w* statystyczn|towarów i usług konsumpcyjnych"
+                        ),
+                    ),
+                    Variant(
+                        "HICP (Eurostat)",
+                        _rx(r"\bHICP\b|zharmonizowan"),
+                        _rx(r"\bhicp\b|zharmonizowan|eurostat"),
+                    ),
+                ),
+            ),
+            Dimension(
+                "zakres",
+                (
+                    Variant("inflacja ogółem", None, _rx(r"\bogółem\b|\bogóln\w*")),
+                    Variant("inflacja bazowa", _rx(r"\bbazow"), _rx(r"\bbazow")),
+                ),
+                ambiguous=False,
+            ),
+        ),
+    ),
+    Measure(
+        "bezrobocie",
+        _rx(r"\bbezroboci"),
+        (
+            Dimension(
+                "metoda",
+                (
+                    Variant(
+                        "bezrobocie rejestrowane (GUS, urzędy pracy)",
+                        _rx(r"rejestrowan"),
+                        _rx(
+                            r"rejestrowan|zarejestrowan|urzęd\w* pracy|urzęd\w* zatrudnieni|\bpup\b|\bgus\w*"
+                        ),
+                    ),
+                    Variant(
+                        "bezrobocie wg BAEL/LFS (Eurostat)",
+                        _rx(
+                            r"\bBAEL\b|\bLFS\b|\bILO\b|\bMOP\b|aktywności ekonomicznej|\(Eurostat\)"
+                        ),
+                        _rx(r"\bbael\b|\blfs\b|\bilo\b|\bmop\b|aktywności ekonomicznej|eurostat"),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "emerytura",
+        _rx(r"\bemerytur|\brent[aęy]\b"),
+        (
+            _GROSS_NET,
+            Dimension(
+                "system",
+                (
+                    Variant(
+                        "ZUS (system pozarolniczy)",
+                        _rx(r"\bZUS\b|pozarolnicz"),
+                        _rx(r"\bzus\b|pozarolnicz"),
+                    ),
+                    Variant("KRUS (rolnicy)", _rx(r"\bKRUS\b|rolnik"), _rx(r"\bkrus\b|rolni")),
+                ),
+            ),
+        ),
+    ),
+    Measure(
+        "wynagrodzenie",
+        _rx(r"\bwynagrodzeni|\bpensj|\bzarobk"),
+        (
+            _GROSS_NET,
+            Dimension(
+                "zakres",
+                (
+                    Variant(
+                        "sektor przedsiębiorstw",
+                        _rx(r"sektor\w* przedsiębiorstw"),
+                        _rx(r"sektor\w* przedsiębiorstw|w przedsiębiorstwach|w firmach"),
+                    ),
+                    Variant(
+                        "gospodarka narodowa",
+                        _rx(r"gospodar\w* narodow|cał\w* gospodar"),
+                        _rx(r"gospodar\w* narodow|cał\w* gospodar"),
+                    ),
+                ),
+            ),
+            Dimension(
+                "statystyka",
+                (
+                    Variant("średnia", _rx(r"przeciętn|średni"), _rx(r"przeciętn|średni")),
+                    Variant(
+                        "mediana",
+                        _rx(r"\bmedian|dominant"),
+                        _rx(r"\bmedian|dominant|połowa .{0,30}zarabia"),
+                    ),
+                ),
+                ambiguous=False,
+            ),
+        ),
+    ),
 )
 
 # legal acts state amounts (minimum wage, benefit levels) by law, not a statistical measure with competing definitions
-_ACT = re.compile(r"^(Ustawa|Rozporządzenie|Dyrektywa|Decyzja|Konstytucja|Uchwała|Obwieszczenie)\b", _I)
+_ACT = re.compile(
+    r"^(Ustawa|Rozporządzenie|Dyrektywa|Decyzja|Konstytucja|Uchwała|Obwieszczenie)\b", _I
+)
 _FIRST_SENT = re.compile(r"(?<=[.!?])\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
 
 
@@ -153,9 +301,12 @@ def _head(title: str, text: str) -> str:
 
 
 @lru_cache(maxsize=8192)
-def profile(title: str, text_head: str) -> tuple[Measure, tuple[tuple[Dimension, Variant], ...]] | None:
+def profile(
+    title: str, text_head: str
+) -> tuple[Measure, tuple[tuple[Dimension, Variant], ...]] | None:
     """(indicator, ((dimension, variant the card uses), …)) for a statistical card; None if it reports no indicator
-    in the table. A dimension is left out when the card does not say which variant it uses, or says two."""
+    in the table. A dimension is left out when the card does not say which variant it uses, or says two.
+    """
     if _ACT.search(title or ""):
         return None
     head = _head(title, text_head)

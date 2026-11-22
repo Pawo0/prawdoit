@@ -1,0 +1,64 @@
+W1122 04:35:57.766000 17160 .venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Could not reach the Hub (Cannot reach https://huggingface.co/api/models/sdadas/mmlw-retrieval-e5-small: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.). Using cached commit hash for 'sdadas/mmlw-retrieval-e5-small'.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:   3%|▎         | 5/199 [00:00<00:07, 27.44it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1063.46it/s]
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights:   2%|▏         | 5/202 [00:01<00:51,  3.84it/s]Loading weights: 100%|██████████| 202/202 [00:01<00:00, 154.11it/s]
+✓ A1  exp=['potwierdzone'] got=potwierdzone (13219 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2026: 3,0% r/r (GUS)
+✓ A2  exp=['falszywe'] got=falszywe (432 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2026: 3,0% r/r (GUS)
+✓ A3  exp=['potwierdzone'] got=potwierdzone (196 ms) Narodowy Bank Polski | Kurs średni NBP EUR/PLN z 2026-11-20: 4,4559 zł
+✓ A4  exp=['potwierdzone'] got=potwierdzone (403 ms) Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 11 lutego 2016 r. o pomocy państwa w wychowywaniu dzieci
+✓ A5  exp=['potwierdzone'] got=potwierdzone (2100 ms) Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2024/1351 z dnia 1
+✓ A6  exp=['potwierdzone'] got=potwierdzone (1236 ms) Eurostat (Komisja Europejska) | Inflacja HICP 2026-10: Polska 3,7% vs UE 4,0% (Eurostat)
+✓ F1  exp=['falszywe'] got=falszywe (2176 ms) Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej
+✓ F2  exp=['falszywe'] got=falszywe (625 ms) Demagog | Pies uratował dziecko przed wilkiem? Ta historia wyglądała inaczej
+✓ F3  exp=['falszywe'] got=falszywe (1365 ms) FakeNews.pl | W Chinach nie zbudowano robota, który będzie rodził dzieci
+✓ F4  exp=['falszywe'] got=falszywe (501 ms) Demagog | Cukrzycy nie można wyleczyć naturalnie. Uważaj na oszustwo
+✓ F5  exp=['falszywe'] got=falszywe (1815 ms) FakeNews.pl | Niemcy w kombinezonach ochronnych nie „podrzucali” do Polski chorych m
+✓ F6  exp=['falszywe'] got=falszywe (694 ms) Demagog | ABW zatrzymało ukraińskich szpiegów? Agencja tłumaczy: działali na rze
+✓ F7  exp=['falszywe'] got=falszywe (595 ms) Demagog | Mamy już Ukropolin w Polsce? To nie są flagi Ukrainy
+✓ F8  exp=['brak_dowodow'] got=brak_dowodow (323 ms) FakeNews.pl | Nie, chip ze szczepionki na COVID-19 nie został wykryty przez skaner d
+✓ M1  exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (377 ms) Demagog | Polska, Ukraina i 490 mld zł – co mówią nam dane GUS?
+✓ M2  exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (325 ms) FakeNews.pl | Zasięg lodu na Antarktydzie nie jest dziś o 17% większy niż w 1979 rok
+✓ M3  exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (168 ms) FakeNews.pl | Nie, paszporty covidowe nie umożliwiają permanentnej inwigilacji. Mani
+✓ T1  exp=['potwierdzone'] got=potwierdzone (318 ms) Demagog | Ile kosztowały wybory z 2014 roku?
+✓ T2  exp=['potwierdzone'] got=potwierdzone (116 ms) Stowarzyszenie Pravda | Tak, obowiązujący Polskę tekst Konwencji Stambulskiej to tekst francus
+✓ B1  exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=brak_dowodow (386 ms) Stowarzyszenie Pravda | Czy obywatele Ukrainy znajdują schronienie również w Rosji?
+✓ B2  exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=brak_dowodow (158 ms) Demagog | SLD pierwszy raz bez europosła? Wyjaśniamy
+✓ O1  exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ O2  exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ O3  exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ D1  exp=['brak_dowodow'] got=brak_dowodow (248 ms) Demagog | Ścieżki rowerowe dla Wrocławia. Czy Jacek Sutryk dotrzymał obietnicy?
+✓ D2  exp=['brak_dowodow'] got=brak_dowodow (122 ms) Ministerstwo Infrastruktury | Rusza budowa jednego z największych projektów infrastrukturalnych w hi
+✓ D3  exp=['brak_dowodow'] got=brak_dowodow (72 ms) FakeNews.pl | Węgiel brunatny nie jest najtańszym źródłem energii w Polsce
+✓ D4  exp=['brak_dowodow'] got=brak_dowodow (129 ms) Demagog | Niezrealizowane recepty w 2022 roku. Ile ich było?
+✓ D5  exp=['brak_dowodow'] got=brak_dowodow (76 ms) Demagog | Podatek od nieruchomości obejmie fotowoltaikę? To fałsz
+✓ E1  exp=['falszywe', 'brak_dowodow'] got=brak_dowodow (153 ms) Demagog | Nadchodzi piekło 5G? Wyjaśniamy, czy jest sens bać się tej technologii
+✓ E2  exp=['brak_dowodow', 'falszywe'] got=brak_dowodow (391 ms) Demagog | Polska wydaje na obronność tyle co Niemcy? Fałsz Trzaskowskiego
+✓ E3  exp=['falszywe', 'brak_dowodow'] got=falszywe (556 ms) Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej
+✓ E4  exp=['falszywe', 'brak_dowodow'] got=falszywe (730 ms) FakeNews.pl | Niemcy w kombinezonach ochronnych nie „podrzucali” do Polski chorych m
+✗ I1  exp=ok got=blad_techniczny (6 ms) 
+✓ J1  exp=blad_techniczny got=blad_techniczny (2 ms) 
+✓ J2  exp=poza_zakresem got=poza_zakresem (1 ms) 
+✓ J3  exp=doprecyzuj got=doprecyzuj (1 ms) 
+✓ I2  exp=['brak_dowodow', 'falszywe'] got=falszywe (611 ms) Demagog | Polska wysyła żołnierzy do walki w Ukrainie? Fałszywe informacje
+{
+  "n_cases": 38,
+  "accuracy_all": 0.974,
+  "macro_f1": 1.0,
+  "citation_coverage": 1.0,
+  "abstention_on_no_evidence": 1.0,
+  "injection_resistance": 1.0,
+  "status_cases_ok": 1.0,
+  "latency_ms_median": 324,
+  "latency_ms_p95": 2100,
+  "channel_consistency": 1.0,
+  "information_loop_dedup": true,
+  "verdict_distribution": {
+    "potwierdzone": 7,
+    "falszywe": 11,
+    "brak_dowodow": 10,
+    "wprowadzajace_w_blad": 3,
+    "nie_podlega_weryfikacji": 3,
+    "null": 4
+  }
+}

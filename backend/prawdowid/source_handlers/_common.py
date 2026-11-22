@@ -1,4 +1,6 @@
-"""Small helpers shared by the custom source handlers (msz_odyseusz, rso_ostrzezenia, imgw_ostrzezenia,
+"""Shared connector HTTP helpers, corpus records and refresh utilities.
+
+Small helpers shared by the custom source handlers (msz_odyseusz, rso_ostrzezenia, imgw_ostrzezenia,
 static_pages).
 
 All HTTP goes through prawdowid.sources.fetchers.http_get, so handlers get the same politeness rules as the
@@ -9,7 +11,10 @@ bot-challenge pages (protections are never circumvented). Every URL is SSRF-chec
 Record URLs: the scheduler de-duplicates corpus records by canonical URL, and canonical() drops the #fragment.
 Handlers that emit several records for one page therefore keep them apart with a harmless query parameter
 (e.g. https://odyseusz.gov.pl/IT?sekcja=bezpieczenstwo); the link still opens the right page.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -22,21 +27,46 @@ MAX_TEXT = 4000
 JSON_ACCEPT = "application/json,text/plain;q=0.8,*/*;q=0.5"
 
 PL_MONTHS = {
-    "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4, "maja": 5, "czerwca": 6, "lipca": 7,
-    "sierpnia": 8, "września": 9, "wrzesnia": 9, "października": 10, "pazdziernika": 10,
-    "listopada": 11, "grudnia": 12,
+    "stycznia": 1,
+    "lutego": 2,
+    "marca": 3,
+    "kwietnia": 4,
+    "maja": 5,
+    "czerwca": 6,
+    "lipca": 7,
+    "sierpnia": 8,
+    "września": 9,
+    "wrzesnia": 9,
+    "października": 10,
+    "pazdziernika": 10,
+    "listopada": 11,
+    "grudnia": 12,
 }
 
 # TERYT voivodeship codes (first two digits of a powiat/gmina code)
 TERYT_WOJ = {
-    "02": "dolnośląskie", "04": "kujawsko-pomorskie", "06": "lubelskie", "08": "lubuskie", "10": "łódzkie",
-    "12": "małopolskie", "14": "mazowieckie", "16": "opolskie", "18": "podkarpackie", "20": "podlaskie",
-    "22": "pomorskie", "24": "śląskie", "26": "świętokrzyskie", "28": "warmińsko-mazurskie",
-    "30": "wielkopolskie", "32": "zachodniopomorskie",
+    "02": "dolnośląskie",
+    "04": "kujawsko-pomorskie",
+    "06": "lubelskie",
+    "08": "lubuskie",
+    "10": "łódzkie",
+    "12": "małopolskie",
+    "14": "mazowieckie",
+    "16": "opolskie",
+    "18": "podkarpackie",
+    "20": "podlaskie",
+    "22": "pomorskie",
+    "24": "śląskie",
+    "26": "świętokrzyskie",
+    "28": "warmińsko-mazurskie",
+    "30": "wielkopolskie",
+    "32": "zachodniopomorskie",
 }
 
 
-def http_get(url: str, *, max_bytes: int = 3_000_000, accept: str | None = None, delay: float = 1.5):
+def http_get(
+    url: str, *, max_bytes: int = 3_000_000, accept: str | None = None, delay: float = 1.5
+):
     """(final_url, body bytes, content-type) via the framework's polite client."""
     from ..sources.fetchers import http_get as _get
 
@@ -77,7 +107,9 @@ def canonical(url: str) -> str:
 
 
 def now_iso() -> str:
-    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    )
 
 
 def clean_ws(s: str) -> str:
@@ -127,9 +159,13 @@ def pl_text_date(text: str) -> str | None:
 def text_dates(text: str) -> list[str]:
     """Every date written in the text — Polish long dates ('3 listopada 2026') and dd.mm.yyyy — as ISO strings."""
     out = []
-    for m in re.finditer(r"\b(\d{1,2})\s+(" + "|".join(PL_MONTHS) + r")\s+(\d{4})", text or "", re.I):
+    for m in re.finditer(
+        r"\b(\d{1,2})\s+(" + "|".join(PL_MONTHS) + r")\s+(\d{4})", text or "", re.I
+    ):
         try:
-            out.append(dt.date(int(m.group(3)), PL_MONTHS[m.group(2).lower()], int(m.group(1))).isoformat())
+            out.append(
+                dt.date(int(m.group(3)), PL_MONTHS[m.group(2).lower()], int(m.group(1))).isoformat()
+            )
         except ValueError:
             pass
     for m in re.finditer(r"\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b", text or ""):
@@ -149,8 +185,17 @@ def short_hash(*parts: object) -> str:
     return hashlib.sha1("|".join(str(p) for p in parts).encode("utf-8")).hexdigest()[:12]
 
 
-def record(source: dict, *, sid: str, url: str, title: str, text: str, published_at: str | None,
-           tags: list[str] | None = None, domain: str | None = None) -> dict:
+def record(
+    source: dict,
+    *,
+    sid: str,
+    url: str,
+    title: str,
+    text: str,
+    published_at: str | None,
+    tags: list[str] | None = None,
+    domain: str | None = None,
+) -> dict:
     """A corpus record with exactly the SourceDoc schema (docs/SOURCE_REGISTRY.md)."""
     from urllib.parse import urlsplit
 
@@ -171,5 +216,7 @@ def record(source: dict, *, sid: str, url: str, title: str, text: str, published
         "claim_author": None,
         "verdict_raw": None,
         "verdict": None,
-        "tags": sorted({t for t in [source["id"], *(source.get("topics") or []), *(tags or [])] if t}),
+        "tags": sorted(
+            {t for t in [source["id"], *(source.get("topics") or []), *(tags or [])] if t}
+        ),
     }

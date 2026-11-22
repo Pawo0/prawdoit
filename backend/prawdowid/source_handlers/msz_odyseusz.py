@@ -1,4 +1,6 @@
-"""MSZ "Informacje dla podróżujących" — country profiles and travel warnings for every country.
+"""Collect MSZ Odyseusz travel notices into the shared corpus format.
+
+MSZ "Informacje dla podróżujących" — country profiles and travel warnings for every country.
 
 gov.pl/web/dyplomacja/informacje-dla-podrozujacych (and the old per-country pages such as
 gov.pl/web/dyplomacja/wlochy) now redirect to https://odyseusz.gov.pl/, an Angular app. Its content comes from a
@@ -29,7 +31,10 @@ params (all optional):
   max_items     max countries downloaded per run (default: all); most recently updated first
   refresh_all   re-download unchanged countries too (default false)
   sections      include section records (default true)
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,9 +45,17 @@ log = logging.getLogger("prawdowid.sources.msz_odyseusz")
 
 BASE = "https://odyseusz.gov.pl"
 API = BASE + "/api/v1/informacje"
-TRIVIAL_NOTICES = {"opublikowano profil kraju.", "profil kraju aktualny.", "profil kraju zaktualizowany."}
-SECTION_SLUG = {"BEZPIECZENSTWO": "bezpieczenstwo", "PODROZOWANIE": "podrozowanie", "ZDROWIE": "zdrowie",
-                "PRAWO": "prawo"}
+TRIVIAL_NOTICES = {
+    "opublikowano profil kraju.",
+    "profil kraju aktualny.",
+    "profil kraju zaktualizowany.",
+}
+SECTION_SLUG = {
+    "BEZPIECZENSTWO": "bezpieczenstwo",
+    "PODROZOWANIE": "podrozowanie",
+    "ZDROWIE": "zdrowie",
+    "PRAWO": "prawo",
+}
 
 
 def _pl_date(iso: str | None) -> str:
@@ -53,12 +66,23 @@ def _country_list(delay: float) -> list[dict]:
     try:
         rows = get_json(f"{API}/profile-panstw", max_bytes=25_000_000, delay=delay)
         if isinstance(rows, list) and rows:
-            return [{"iso": r.get("kodIso"), "name": r.get("nazwa"), "date": iso_date(r.get("dataZatwierdzenia"))}
-                    for r in rows if r.get("kodIso")]
+            return [
+                {
+                    "iso": r.get("kodIso"),
+                    "name": r.get("nazwa"),
+                    "date": iso_date(r.get("dataZatwierdzenia")),
+                }
+                for r in rows
+                if r.get("kodIso")
+            ]
     except Exception as e:  # noqa: BLE001 — fall back to the small list
         log.info("full profile list failed (%s), using /mini", e)
     rows = get_json(f"{API}/profile-panstw/mini", delay=delay)
-    return [{"iso": r.get("kodIso"), "name": r.get("nazwa"), "date": None} for r in rows if r.get("kodIso")]
+    return [
+        {"iso": r.get("kodIso"), "name": r.get("nazwa"), "date": None}
+        for r in rows
+        if r.get("kodIso")
+    ]
 
 
 def _warnings_text(prof: dict, page: str) -> list[str]:
@@ -79,19 +103,29 @@ def _notice_record(source: dict, prof: dict, iso: str, name: str, date: str | No
     page = f"{BASE}/{iso}"
     notice = md_to_text(prof.get("trescPowiadomieniaDluga") or "", page)
     title_n = md_to_text(prof.get("tytulPowiadomieniaDluga") or "")
-    parts = [f"{name} — informacje MSZ dla podróżujących (odyseusz.gov.pl), aktualizacja z {_pl_date(date)}."]
+    parts = [
+        f"{name} — informacje MSZ dla podróżujących (odyseusz.gov.pl), aktualizacja z {_pl_date(date)}."
+    ]
     if notice and notice.lower() not in TRIVIAL_NOTICES:
         parts.append(f"Komunikat MSZ{': ' + title_n if title_n else ''}: {notice}")
     parts += _warnings_text(prof, page)
-    nums = [f"{n.get('nazwa')}: {n.get('wartosc')}" for n in prof.get("miejscoweNumeryAlarmowe") or []
-            if n.get("nazwa") and n.get("wartosc")]
+    nums = [
+        f"{n.get('nazwa')}: {n.get('wartosc')}"
+        for n in prof.get("miejscoweNumeryAlarmowe") or []
+        if n.get("nazwa") and n.get("wartosc")
+    ]
     if nums:
         parts.append("Miejscowe numery alarmowe — " + "; ".join(nums) + ".")
     url = f"{page}?aktualizacja={date}" if date else page
-    return record(source, sid=f"{iso}:{date or 'aktualny'}", url=url,
-                  title=f"{name}: komunikat i ostrzeżenia MSZ dla podróżujących ({_pl_date(date)})",
-                  text="\n".join(parts), published_at=date,
-                  tags=["MSZ", "ostrzeżenia dla podróżujących", name, iso])
+    return record(
+        source,
+        sid=f"{iso}:{date or 'aktualny'}",
+        url=url,
+        title=f"{name}: komunikat i ostrzeżenia MSZ dla podróżujących ({_pl_date(date)})",
+        text="\n".join(parts),
+        published_at=date,
+        tags=["MSZ", "ostrzeżenia dla podróżujących", name, iso],
+    )
 
 
 def _section_records(source: dict, prof: dict, iso: str, name: str, date: str | None) -> list[dict]:
@@ -102,7 +136,9 @@ def _section_records(source: dict, prof: dict, iso: str, name: str, date: str | 
         label = ((sec.get("zakresInformacyjny") or {}).get("opis") or code.title()).strip()
         if not code:
             continue
-        parts = [f"{name} — {label.lower()} (MSZ, informacje dla podróżujących, aktualizacja z {_pl_date(date)})."]
+        parts = [
+            f"{name} — {label.lower()} (MSZ, informacje dla podróżujących, aktualizacja z {_pl_date(date)})."
+        ]
         summary = md_to_text(sec.get("podsumowanie") or "", page)
         body = md_to_text(sec.get("tresc") or "", page)
         if summary:
@@ -116,10 +152,17 @@ def _section_records(source: dict, prof: dict, iso: str, name: str, date: str | 
         if len(parts) == 1:
             continue
         slug = SECTION_SLUG.get(code, code.lower())
-        out.append(record(source, sid=f"{iso}:{code}", url=f"{page}?sekcja={slug}",
-                          title=f"{name}: {label} — MSZ, informacje dla podróżujących",
-                          text="\n".join(parts), published_at=date,
-                          tags=["MSZ", "informacje dla podróżujących", name, iso, label.lower()]))
+        out.append(
+            record(
+                source,
+                sid=f"{iso}:{code}",
+                url=f"{page}?sekcja={slug}",
+                title=f"{name}: {label} — MSZ, informacje dla podróżujących",
+                text="\n".join(parts),
+                published_at=date,
+                tags=["MSZ", "informacje dla podróżujących", name, iso, label.lower()],
+            )
+        )
     return out
 
 
@@ -139,8 +182,11 @@ def fetch(source: dict) -> list[dict]:
         if limit is not None and done >= limit:
             break
         iso = r["iso"].upper()
-        if r["date"] and not p.get("refresh_all") and \
-                canonical(f"{BASE}/{iso}?aktualizacja={r['date']}") in known:
+        if (
+            r["date"]
+            and not p.get("refresh_all")
+            and canonical(f"{BASE}/{iso}?aktualizacja={r['date']}") in known
+        ):
             continue  # unchanged since the last run
         try:
             prof = get_json(f"{API}/profile-panstw/{iso}", delay=delay)

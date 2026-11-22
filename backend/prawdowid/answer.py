@@ -1,4 +1,6 @@
-"""Short answers in the style of the organizers' examples — deterministic, no LLM.
+"""Deterministic Polish answers, evidence selection and explicit limitations.
+
+Short answers in the style of the organizers' examples — deterministic, no LLM.
 
 Pattern (rules/Czy we Włoszech…docx): the first words give the answer ("Nie." / "Tak." / "Częściowo…" /
 "Nie udało mi się tego potwierdzić."), then 1–2 sentences on WHO checked WHAT, then one link (the decisive source,
@@ -7,48 +9,86 @@ Pattern (rules/Czy we Włoszech…docx): the first words give the answer ("Nie."
 Every sentence is assembled from fields that already exist in the result (verdict, the decisive evidence item, its
 `factcheck_verdict_raw` / `factcheck_claim` / verbatim `fragment`, `missing_context`, the abstain reason). Nothing is
 added that is not in the evidence; the web page, the chat channels and the extension all show this same text.
+
+Reading guide: docs/backend/ENGINE.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import re
 
 from .schemas import CheckResult, ClaimResult, Evidence
-from .textutil import (amounts, asks_who_checked, rule_scope, same_amount, short, split_sentences, tokens,
-                       unmark_excerpt)
+from .textutil import (
+    amounts,
+    asks_who_checked,
+    rule_scope,
+    same_amount,
+    short,
+    split_sentences,
+    tokens,
+    unmark_excerpt,
+)
 
-FC_LABEL = {"false": "fałsz", "true": "prawda", "misleading": "wprowadzające w błąd", "mixed": "częściowa prawda",
-            "unverifiable": "nieweryfikowalne"}
-REASON = {"BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źródeł",
-          "TYLKO_MATERIALY_POKREWNE": "są tylko materiały na pokrewny temat",
-          "ZRODLA_SPRZECZNE": "źródła są ze sobą sprzeczne",
-          "FACTCHECK_NIEWERYFIKOWALNE": "fact-checkerzy uznali to za nieweryfikowalne",
-          "NIEAKTUALNE_DOWODY": "dowody są nieaktualne",
-          "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika",
-          "BRAK_DOPASOWANIA_MATERIALU": "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł"}
+FC_LABEL = {
+    "false": "fałsz",
+    "true": "prawda",
+    "misleading": "wprowadzające w błąd",
+    "mixed": "częściowa prawda",
+    "unverifiable": "nieweryfikowalne",
+}
+REASON = {
+    "BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źródeł",
+    "TYLKO_MATERIALY_POKREWNE": "są tylko materiały na pokrewny temat",
+    "ZRODLA_SPRZECZNE": "źródła są ze sobą sprzeczne",
+    "FACTCHECK_NIEWERYFIKOWALNE": "fact-checkerzy uznali to za nieweryfikowalne",
+    "NIEAKTUALNE_DOWODY": "dowody są nieaktualne",
+    "ROZNE_DEFINICJE": "wynik zależy od przyjętej miary wskaźnika",
+    "BRAK_DOPASOWANIA_MATERIALU": "nagłówek lub data strony nie zgadzają się z żadną analizą w katalogu źródeł",
+}
 
 # Per-topic "what would settle it" hints, more specific than the engine's generic one (engine._would_settle). Each
 # entry is a broad TOPIC with the kind of primary source that decides claims about it, worded for the topic — not
 # taken from a test case or an organiser example answer (an entry for diesel bans that repeated scenario H's example
 # answer, and "strajk" in the travel cue for scenario A2, were removed on 2026-11-22).
 SETTLE = [
-    (re.compile(r"\b(bilet\w*|autobus\w*|tramwaj\w*|komunikacj\w*|mpk|ztm|metr[oa]\b|przejazd\w*|jeźdz\w*|jeździ\w*)", re.I),
-     "komunikat przewoźnika lub miejskiego zarządu transportu albo obowiązujący cennik i regulamin przewozu"),
-    (re.compile(r"\b(pogod\w*|burz\w*|upał\w*|ulew\w*|powód\w*|powodz\w*|wichur\w*|ostrzeżeni\w* meteo\w*)", re.I),
-     "aktualne ostrzeżenie IMGW lub komunikat Rządowego Centrum Bezpieczeństwa"),
-    (re.compile(r"\b(sms\w*|oszust\w*|wyłudz\w*|phishing\w*|hak\w*|cyber\w*|wyciek\w*)", re.I),
-     "komunikat CERT Polska, banku lub instytucji, pod którą ktoś się podszywa"),
-    (re.compile(r"\b(podróż\w*|wyjazd\w*|wiz[aąy]\b|paszport\w*|ambasad\w*|konsulat\w*)", re.I),
-     "komunikat MSZ dla podróżujących (Odyseusz) lub oficjalne źródło danego kraju"),
-    (re.compile(r"\b(gmin\w*|burmistrz\w*|wójt\w*|starost\w*|ratusz\w*|rad\w* miasta|urząd miasta|urzęd\w* gminy|"
-                r"uchwał\w*|stref\w*|zakaz\w* wjazd\w*|parking\w*)", re.I),
-     "komunikat lub uchwała właściwego urzędu gminy albo miasta"),
+    (
+        re.compile(
+            r"\b(bilet\w*|autobus\w*|tramwaj\w*|komunikacj\w*|mpk|ztm|metr[oa]\b|przejazd\w*|jeźdz\w*|jeździ\w*)",
+            re.I,
+        ),
+        "komunikat przewoźnika lub miejskiego zarządu transportu albo obowiązujący cennik i regulamin przewozu",
+    ),
+    (
+        re.compile(
+            r"\b(pogod\w*|burz\w*|upał\w*|ulew\w*|powód\w*|powodz\w*|wichur\w*|ostrzeżeni\w* meteo\w*)",
+            re.I,
+        ),
+        "aktualne ostrzeżenie IMGW lub komunikat Rządowego Centrum Bezpieczeństwa",
+    ),
+    (
+        re.compile(r"\b(sms\w*|oszust\w*|wyłudz\w*|phishing\w*|hak\w*|cyber\w*|wyciek\w*)", re.I),
+        "komunikat CERT Polska, banku lub instytucji, pod którą ktoś się podszywa",
+    ),
+    (
+        re.compile(r"\b(podróż\w*|wyjazd\w*|wiz[aąy]\b|paszport\w*|ambasad\w*|konsulat\w*)", re.I),
+        "komunikat MSZ dla podróżujących (Odyseusz) lub oficjalne źródło danego kraju",
+    ),
+    (
+        re.compile(
+            r"\b(gmin\w*|burmistrz\w*|wójt\w*|starost\w*|ratusz\w*|rad\w* miasta|urząd miasta|urzęd\w* gminy|"
+            r"uchwał\w*|stref\w*|zakaz\w* wjazd\w*|parking\w*)",
+            re.I,
+        ),
+        "komunikat lub uchwała właściwego urzędu gminy albo miasta",
+    ),
 ]
 
 
 # ------------------------------------------------------------------ Polish agreement without a dictionary
 def _gender(publisher: str) -> str:
     """Grammatical gender of a publisher name from its first word (Demagog → m, Stowarzyszenie Pravda → n,
-    Państwowa Komisja Wyborcza → f). Good enough for institution names; used only to agree a past-tense verb."""
+    Państwowa Komisja Wyborcza → f). Good enough for institution names; used only to agree a past-tense verb.
+    """
     w = re.sub(r"[^\wąćęłńóśźż]", "", (publisher.split() or [""])[0].lower())
     if w.endswith("a"):
         return "f"
@@ -61,13 +101,18 @@ def _past(publisher: str, verb_m: str) -> str:
     return verb_m + {"m": "", "f": "a", "n": "o"}[_gender(publisher)]
 
 
-QUOTE_MAX = 300  # a quote in the answer: whole sentences up to this length, else cut at a word boundary
+QUOTE_MAX = (
+    300  # a quote in the answer: whole sentences up to this length, else cut at a word boundary
+)
 
 # A period that does not end a sentence: legal numbering (Art. 5. / § 2. / ust. 3. / pkt 4.), common abbreviations
 # (r., ust., np., tys., mln …) and initials. Without this a quoted provision was cut to "Art. 5".
-_NOT_END = re.compile(r"(?:(?:\b(?:art|ust|pkt|lit|poz|nr|par|rozdz|dz)\.?|§)\s*\d+[a-z]?|\b(?:art|ust|pkt|lit|poz|par|"
-                      r"rozdz|dz|r|tj|np|ok|godz|tys|mln|mld|św|dr|prof|im|al|ul|in|m|zm|późn|nast|dot|wg|ww|tzw|tzn|ds|"
-                      r"sygn|gen|płk|ks|pt|ub|br|jw|pn|pon|wt|śr|czw|pt|sob|niedz)|\b[A-ZĄĆĘŁŃÓŚŹŻ]|(?:^|\s)\d{1,3}[a-z]?)$", re.I)
+_NOT_END = re.compile(
+    r"(?:(?:\b(?:art|ust|pkt|lit|poz|nr|par|rozdz|dz)\.?|§)\s*\d+[a-z]?|\b(?:art|ust|pkt|lit|poz|par|"
+    r"rozdz|dz|r|tj|np|ok|godz|tys|mln|mld|św|dr|prof|im|al|ul|in|m|zm|późn|nast|dot|wg|ww|tzw|tzn|ds|"
+    r"sygn|gen|płk|ks|pt|ub|br|jw|pn|pon|wt|śr|czw|pt|sob|niedz)|\b[A-ZĄĆĘŁŃÓŚŹŻ]|(?:^|\s)\d{1,3}[a-z]?)$",
+    re.I,
+)
 
 
 def _sentence_ends(s: str) -> list[int]:
@@ -75,7 +120,7 @@ def _sentence_ends(s: str) -> list[int]:
     numbering, an abbreviation or an initial."""
     out = []
     for m in re.finditer(r"([.!?…])[\"”»)]*(?=\s|$)", s):
-        if m.group(1) == "." and _NOT_END.search(s[max(0, m.start() - 24): m.start()]):
+        if m.group(1) == "." and _NOT_END.search(s[max(0, m.start() - 24) : m.start()]):
             continue
         out.append(m.end())
     return out
@@ -143,8 +188,14 @@ def _decisive(c: ClaimResult) -> list[int]:
     if c.verdict == "potwierdzone":
         return [i for i, e in enumerate(ev) if e.stance == "popiera"]
     if c.verdict == "wprowadzajace_w_blad":
-        fc = [i for i, e in enumerate(ev) if e.factcheck_verdict in ("misleading", "mixed") and e.same_claim is True]
-        return fc or [i for i, e in enumerate(ev) if e.stance == "popiera"]  # archival-context case (R4 NIEAKTUALNE)
+        fc = [
+            i
+            for i, e in enumerate(ev)
+            if e.factcheck_verdict in ("misleading", "mixed") and e.same_claim is True
+        ]
+        return fc or [
+            i for i, e in enumerate(ev) if e.stance == "popiera"
+        ]  # archival-context case (R4 NIEAKTUALNE)
     return []
 
 
@@ -165,15 +216,18 @@ def _who_checked(e: Evidence) -> str:
     opposite = "odwrotne " if e.same_claim is False else ""
     d = _date(e)
     if e.source_type == "incident":
-        return (f"{pub} {_past(pub, 'opisał')} {'odwrotny ' if e.same_claim is False else ''}przekaz „{checked}” jako "
-                f"dezinformację{f' (wpis z {d})' if d else ''}.")
+        return (
+            f"{pub} {_past(pub, 'opisał')} {'odwrotny ' if e.same_claim is False else ''}przekaz „{checked}” jako "
+            f"dezinformację{f' (wpis z {d})' if d else ''}."
+        )
     return f"{pub} {_past(pub, 'ocenił')} {opposite}twierdzenie „{checked}” jako „{_fc_label(e)}”{f' (analiza z {d})' if d else ''}."
 
 
 def _finding(c: ClaimResult, e: Evidence) -> str:
     """' Demagog pisze: „<the analysis' sentence that carries the finding>”.' — the verbatim fragment of a fact-check
     the engine chose as its quote (engine._best_fragment), so the answer shows what the analysis found and not only
-    the claim it rated. Empty when the fragment merely repeats the checked claim or the user's words."""
+    the claim it rated. Empty when the fragment merely repeats the checked claim or the user's words.
+    """
     if e.source_type not in ("factcheck", "incident") or not e.fragment:
         return ""
     words = lambda x: " ".join(re.findall(r"[^\W_]+", (x or "").lower()))  # noqa: E731
@@ -193,12 +247,20 @@ def _checked_answer(c: ClaimResult, e: Evidence) -> str | None:
     pub = e.publisher
     rated = _who_checked(e).split(" ", len(pub.split()))[-1]  # "ocenił twierdzenie „…” jako „…”."
     named = {t for t in tokens(who) if len(t) >= 4}
-    if not named or named & set(tokens(pub)) or re.search(r"\b(ktoś|ktos|fact|weryfik|sprawdz)", who, re.I):
+    if (
+        not named
+        or named & set(tokens(pub))
+        or re.search(r"\b(ktoś|ktos|fact|weryfik|sprawdz)", who, re.I)
+    ):
         return f"Tak, {pub} to {_past(pub, 'sprawdził')} i {rated}"
     return f"Sprawdził{'a' if _gender(pub) == 'f' else 'o' if _gender(pub) == 'n' else ''} to {pub}: {rated}"
 
 
-_ALTERNATIONS = (("sz", "ch"), ("cz", "c"), ("rz", "r"))  # Włochy / we Włoszech (same idea as engine._alt_stems)
+_ALTERNATIONS = (
+    ("sz", "ch"),
+    ("cz", "c"),
+    ("rz", "r"),
+)  # Włochy / we Włoszech (same idea as engine._alt_stems)
 
 
 def _topic_stems(s: str, drop: set[str], min_len: int = 4) -> set[str]:
@@ -213,7 +275,9 @@ def _topic_stems(s: str, drop: set[str], min_len: int = 4) -> set[str]:
     return out
 
 
-_NAME = re.compile(r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}")  # capitalised, not sentence-initial
+_NAME = re.compile(
+    r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}"
+)  # capitalised, not sentence-initial
 
 
 def _related(c: ClaimResult) -> Evidence | None:
@@ -230,7 +294,10 @@ def _related(c: ClaimResult) -> Evidence | None:
         text = f"{e.title} {e.factcheck_claim or ''} {e.fragment}"
         shared = _topic_stems(c.claim, drop) & _topic_stems(text, drop)
         if names:
-            if not names & _topic_stems(text, drop, 3) or len(shared | (names & _topic_stems(text, drop, 3))) < 2:
+            if (
+                not names & _topic_stems(text, drop, 3)
+                or len(shared | (names & _topic_stems(text, drop, 3))) < 2
+            ):
                 continue
         elif len(shared) < 3:
             continue
@@ -243,17 +310,24 @@ def _related(c: ClaimResult) -> Evidence | None:
 def _related_sentence(e: Evidence) -> str:
     """Related material for an abstention. A fact-check (or incident record) that the engine did NOT match to the
     claim is named by its headline only: its rating belongs to the claim IT checked, and repeating that rating next to
-    an abstention reads as an answer to the user's question. Other sources are quoted by their verbatim fragment."""
+    an abstention reads as an answer to the user's question. Other sources are quoted by their verbatim fragment.
+    """
     d = (e.published_at or "")[:10]
     when = f" ({d[8:10]}.{d[5:7]}.{d[:4]})" if re.fullmatch(r"\d{4}-\d\d-\d\d", d) else ""
     if e.source_type in ("factcheck", "incident"):
-        return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, QUOTE_MAX)}”. Nie rozstrzyga on "
-                "samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy.")
-    return (f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), QUOTE_MAX)}”. "
-            "Nie rozstrzyga on samego twierdzenia.")
+        return (
+            f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(e.title, QUOTE_MAX)}”. Nie rozstrzyga on "
+            "samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy."
+        )
+    return (
+        f"Znalazłem tylko materiał pokrewny — {e.publisher}{when}: „{_q(_clause(e.fragment), QUOTE_MAX)}”. "
+        "Nie rozstrzyga on samego twierdzenia."
+    )
 
 
-_HEDGE = re.compile(r"\b(ok\.|około|bodajże|blisko|prawie|mniej więcej|rzędu|niecał\w*|szacunkowo)\s*$", re.I)
+_HEDGE = re.compile(
+    r"\b(ok\.|około|bodajże|blisko|prawie|mniej więcej|rzędu|niecał\w*|szacunkowo)\s*$", re.I
+)
 _YEAR = re.compile(r"\b((?:19|20)\d\d)\b")
 
 
@@ -261,7 +335,8 @@ def _number_discrepancy(c: ClaimResult) -> tuple[str, int] | None:
     """'Czy X kosztuje około 40 mln zł? Skąd w raporcie 36 mln zł?' — two figures that are not two
     measurements of one thing: the user's number comes from the checked STATEMENT (its fact-checked claim states it)
     and the asked number from the analysis, in the verbatim passage the engine quoted (engine.asked_number_fragment).
-    Built only from the evidence item: its checked claim, its fragment, its rating. (text, evidence index) or None."""
+    Built only from the evidence item: its checked claim, its fragment, its rating. (text, evidence index) or None.
+    """
     meta = c.meta_question or ""
     claim_part = c.claim.replace(meta, " ") if meta else c.claim
     stated, asked = amounts(claim_part), amounts(meta)
@@ -271,25 +346,36 @@ def _number_discrepancy(c: ClaimResult) -> tuple[str, int] | None:
     for i, e in enumerate(c.evidence):
         if e.source_type != "factcheck" or not e.factcheck_claim or not e.factcheck_verdict_raw:
             continue
-        n1 = next((s for s in stated if any(same_amount(s, x) for x in amounts(e.factcheck_claim))), None)
+        n1 = next(
+            (s for s in stated if any(same_amount(s, x) for x in amounts(e.factcheck_claim))), None
+        )
         n2 = next((a for a in asked if any(same_amount(a, x) for x in amounts(e.fragment))), None)
         if n1 is None or n2 is None:
             continue
         # the sentence of the checked statement that gives the user's number, verbatim from the record
-        said = next((s for s in split_sentences(e.factcheck_claim) if any(same_amount(n1, x) for x in amounts(s))),
-                    e.factcheck_claim)
+        said = next(
+            (
+                s
+                for s in split_sentences(e.factcheck_claim)
+                if any(same_amount(n1, x) for x in amounts(s))
+            ),
+            e.factcheck_claim,
+        )
         lit = next(x[2] for x in amounts(said) if same_amount(n1, x))
-        hedged = bool(_HEDGE.search(said[: said.find(lit.split()[0])] if lit.split()[0] in said else "")) or bool(
-            _HEDGE.search(claim_part[: claim_part.find(n1[2].split()[0])]))
+        hedged = bool(
+            _HEDGE.search(said[: said.find(lit.split()[0])] if lit.split()[0] in said else "")
+        ) or bool(_HEDGE.search(claim_part[: claim_part.find(n1[2].split()[0])]))
         noun = "kwota" if "zł" in n1[2] or n1[1] == "zł" else "liczba"
         year = _YEAR.search(e.fragment)
         pub = e.publisher
         first = "przybliżeniem podanym w wypowiedzi" if hedged else "liczbą podaną w wypowiedzi"
-        txt = (f"{n1[2]} to {'przybliżona ' if hedged else ''}{noun} z ocenianej wypowiedzi („{_q(said, 200)}”), "
-               f"a {n2[2]} to {noun}, którą podaje {pub} w swojej analizie: „{_q(e.fragment, 260)}”. "
-               f"Te liczby sobie nie przeczą — mierzą co innego: {n1[2]} jest {first}, a {n2[2]} to wartość "
-               f"jednej pozycji{f' za rok {year.group(1)}' if year else ''} w danych, na które powołuje się analiza. "
-               f"Całą wypowiedź {pub} {_past(pub, 'ocenił')} jako „{_fc_label(e)}”.")
+        txt = (
+            f"{n1[2]} to {'przybliżona ' if hedged else ''}{noun} z ocenianej wypowiedzi („{_q(said, 200)}”), "
+            f"a {n2[2]} to {noun}, którą podaje {pub} w swojej analizie: „{_q(e.fragment, 260)}”. "
+            f"Te liczby sobie nie przeczą — mierzą co innego: {n1[2]} jest {first}, a {n2[2]} to wartość "
+            f"jednej pozycji{f' za rok {year.group(1)}' if year else ''} w danych, na które powołuje się analiza. "
+            f"Całą wypowiedź {pub} {_past(pub, 'ocenił')} jako „{_fc_label(e)}”."
+        )
         return txt, i
     return None
 
@@ -301,7 +387,9 @@ def _live(res: CheckResult | None) -> str:
 
 
 def short_answer(c: ClaimResult, live: str = "") -> str:
-    if any(r.startswith("M2:") for r in c.rules_fired):  # "is the linked item the analysed one?" (provenance.py)
+    if any(
+        r.startswith("M2:") for r in c.rules_fired
+    ):  # "is the linked item the analysed one?" (provenance.py)
         return c.explanation
     disc = _number_discrepancy(c) if c.verdict != "nie_podlega_weryfikacji" else None
     if disc is None:
@@ -309,10 +397,16 @@ def short_answer(c: ClaimResult, live: str = "") -> str:
     # scenario C: the user asks why the analysis gives another number than the one they know
     txt, i = disc
     if c.main_evidence is None:
-        c.related_evidence = i  # linked as the source of the explanation (it does not decide the claim)
+        c.related_evidence = (
+            i  # linked as the source of the explanation (it does not decide the claim)
+        )
         return txt
     if c.main_evidence == i:
-        opener = {"falszywe": "Nie.", "potwierdzone": "Tak.", "wprowadzajace_w_blad": "Częściowo."}.get(c.verdict, "")
+        opener = {
+            "falszywe": "Nie.",
+            "potwierdzone": "Tak.",
+            "wprowadzajace_w_blad": "Częściowo.",
+        }.get(c.verdict, "")
         return f"{opener} {txt}".strip()
     return f"{_short_answer(c, live)} {txt}"
 
@@ -320,29 +414,49 @@ def short_answer(c: ClaimResult, live: str = "") -> str:
 def _short_answer(c: ClaimResult, live: str = "") -> str:
     v = c.verdict
     if v == "nie_podlega_weryfikacji":
-        what = ("To przewidywanie dotyczące przyszłości — nie da się go dziś potwierdzić ani obalić."
-                if c.kind == "prognoza" else "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić.")
-        return what + " Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno."
+        what = (
+            "To przewidywanie dotyczące przyszłości — nie da się go dziś potwierdzić ani obalić."
+            if c.kind == "prognoza"
+            else "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić."
+        )
+        return (
+            what
+            + " Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno."
+        )
 
     if v == "brak_dowodow":
         if c.conflicting:
-            pubs = list(dict.fromkeys(e.publisher for e in c.evidence if e.stance in ("popiera", "przeczy")))[:2]
+            pubs = list(
+                dict.fromkeys(e.publisher for e in c.evidence if e.stance in ("popiera", "przeczy"))
+            )[:2]
             who = f" ({' i '.join(pubs)})" if pubs else ""
-            return (f"Nie udało mi się tego rozstrzygnąć. Wiarygodne źródła{who} podają w tej sprawie różne informacje — "
-                    "porównaj ich daty i zakres.")
+            return (
+                f"Nie udało mi się tego rozstrzygnąć. Wiarygodne źródła{who} podają w tej sprawie różne informacje — "
+                "porównaj ich daty i zakres."
+            )
         unv = next((e for e in c.evidence if e.factcheck_verdict == "unverifiable"), None)
         if unv is not None and "FACTCHECK_NIEWERYFIKOWALNE" in c.reason_codes:
-            return (f"Nie udało mi się tego potwierdzić. {unv.publisher} {_past(unv.publisher, 'uznał')} podobne "
-                    f"twierdzenie „{_q(unv.factcheck_claim or unv.title, 140)}” za niemożliwe do zweryfikowania.")
+            return (
+                f"Nie udało mi się tego potwierdzić. {unv.publisher} {_past(unv.publisher, 'uznał')} podobne "
+                f"twierdzenie „{_q(unv.factcheck_claim or unv.title, 140)}” za niemożliwe do zweryfikowania."
+            )
         if "ROZNE_DEFINICJE" in c.reason_codes:
-            return ("Nie udało mi się tego jednoznacznie potwierdzić. Wynik zależy od przyjętej miary wskaźnika, "
-                    "a twierdzenie nie mówi, o którą chodzi.")
+            return (
+                "Nie udało mi się tego jednoznacznie potwierdzić. Wynik zależy od przyjętej miary wskaźnika, "
+                "a twierdzenie nie mówi, o którą chodzi."
+            )
         txt = "Nie udało mi się tego potwierdzić."
-        if live == "blad":  # scenario J: a failed search is reported as such, never as "there is no such article"
-            txt = ("Nie udało mi się tego potwierdzić w lokalnej bazie, a wyszukiwanie na zaufanych stronach jest teraz "
-                   "niedostępne (błąd techniczny), więc nie wiem, czy coś tam jest.")
+        if (
+            live == "blad"
+        ):  # scenario J: a failed search is reported as such, never as "there is no such article"
+            txt = (
+                "Nie udało mi się tego potwierdzić w lokalnej bazie, a wyszukiwanie na zaufanych stronach jest teraz "
+                "niedostępne (błąd techniczny), więc nie wiem, czy coś tam jest."
+            )
         rel = _related(c)
-        if rel is not None:  # say what the closest material does say, without turning it into a verdict
+        if (
+            rel is not None
+        ):  # say what the closest material does say, without turning it into a verdict
             txt += " " + _related_sentence(rel)
             c.related_evidence = next(i for i, e in enumerate(c.evidence) if e is rel)
         elif c.would_settle:
@@ -351,7 +465,9 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
 
     i = c.main_evidence if c.main_evidence is not None else main_evidence(c)
     e = c.evidence[i] if i is not None and i < len(c.evidence) else None
-    if e is None:  # defensive: verdict without a decisive item should not happen — fall back to the explanation
+    if (
+        e is None
+    ):  # defensive: verdict without a decisive item should not happen — fall back to the explanation
         return short(c.explanation, 300)
 
     checked = _checked_answer(c, e)
@@ -362,7 +478,11 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
             year = (e.published_at or "")[:4]
             dated = f"Materiał pochodzi z {year} r. " if re.fullmatch(r"(19|20)\d\d", year) else ""
             return f"Częściowo. {dated}{c.missing_context.rstrip('.')} (źródło: {e.publisher})."
-        opener = "Częściowo." if e.factcheck_verdict == "mixed" else "Częściowo, ale całość wprowadza w błąd."
+        opener = (
+            "Częściowo."
+            if e.factcheck_verdict == "mixed"
+            else "Częściowo, ale całość wprowadza w błąd."
+        )
         return f"{opener} {_who_checked(e)}{_finding(c, e)}"
 
     opener = "Nie." if v == "falszywe" else "Tak."
@@ -400,14 +520,23 @@ def basis_line(c: ClaimResult) -> str:
     count = f"{n} {'niezależne ' if n > 1 else ''}{_plural(n, 'źródło', 'źródła', 'źródeł')}"
     if n > 1 and "official" in kinds:
         count += ", w tym urzędowe"
-    kind = {"official": "urzędowe", "factcheck": "fact-checking", "incident": "baza incydentów"}.get(
-        next(iter(kinds)), "") if len(kinds) == 1 else ""
-    return f"Podstawa: {c.strength_label} — {count} ({kind + ': ' if kind and n == 1 else ''}{names})."
+    kind = (
+        {"official": "urzędowe", "factcheck": "fact-checking", "incident": "baza incydentów"}.get(
+            next(iter(kinds)), ""
+        )
+        if len(kinds) == 1
+        else ""
+    )
+    return (
+        f"Podstawa: {c.strength_label} — {count} ({kind + ': ' if kind and n == 1 else ''}{names})."
+    )
 
 
 def limitation_line(c: ClaimResult, live: str = "") -> str:
     if c.verdict == "nie_podlega_weryfikacji":
-        return "Ograniczenie: rozpoznanie opinii opiera się na sygnałach językowych i może się mylić."
+        return (
+            "Ograniczenie: rozpoznanie opinii opiera się na sygnałach językowych i może się mylić."
+        )
     if c.verdict == "brak_dowodow":
         if c.conflicting:
             return "Ograniczenie: źródła mogą dotyczyć różnych okresów lub definicji — porównaj je w pełnej analizie."
@@ -417,9 +546,13 @@ def limitation_line(c: ClaimResult, live: str = "") -> str:
             return "Ograniczenie: przeszukano katalog źródeł i wybrane zaufane strony w internecie — mogło w nich zabraknąć tej sprawy."
         return "Ograniczenie: przeszukano tylko katalog zaufanych źródeł — mogło w nim zabraknąć tej sprawy."
     why = _verdict_limitation(c)
-    if live == "blad":  # scenario J: an outage of the live stage is reported with every answer, not only abstentions
-        return ("Ograniczenie: wyszukiwanie na żywo (indeks Google lub zaufane strony) było niedostępne (błąd "
-                f"techniczny), więc wynik opiera się tylko na lokalnej bazie; poza tym {why}.")
+    if (
+        live == "blad"
+    ):  # scenario J: an outage of the live stage is reported with every answer, not only abstentions
+        return (
+            "Ograniczenie: wyszukiwanie na żywo (indeks Google lub zaufane strony) było niedostępne (błąd "
+            f"techniczny), więc wynik opiera się tylko na lokalnej bazie; poza tym {why}."
+        )
     return f"Ograniczenie: {why}."
 
 
@@ -435,7 +568,9 @@ def _verdict_limitation(c: ClaimResult) -> str:
         return "źródło sprawdzało bardzo podobne, a nie identyczne twierdzenie"
     if c.context_type == "NIEAKTUALNE":
         return "dowód pochodzi sprzed ponad roku — sytuacja mogła się od tego czasu zmienić"
-    if c.missing_context:  # definitional note (CPI vs HICP …) — the answer already says it depends on the measure
+    if (
+        c.missing_context
+    ):  # definitional note (CPI vs HICP …) — the answer already says it depends on the measure
         return "twierdzenie nie mówi, o którą miarę wskaźnika chodzi — szczegóły w pełnej analizie"
     if len(pubs) <= 1:
         return "ocena opiera się na jednym źródle"
@@ -454,7 +589,10 @@ def _gist(s: str) -> str:
 def result_short_answer(res: CheckResult) -> str:
     if res.status != "ok":
         if res.status == "blad_techniczny":
-            return res.status_message or "Tego nie dało się teraz sprawdzić: wystąpił błąd techniczny. To nie jest ocena treści."
+            return (
+                res.status_message
+                or "Tego nie dało się teraz sprawdzić: wystąpił błąd techniczny. To nie jest ocena treści."
+            )
         return res.status_message or ""
     if not res.claims:
         return ""
@@ -463,7 +601,8 @@ def result_short_answer(res: CheckResult) -> str:
     n = len(res.claims)
     parts = [f"„{_q(c.claim, 70)}” — {_gist(c.short_answer)}" for c in res.claims]
     return f"Sprawdziłem {n} {_plural(n, 'twierdzenie', 'twierdzenia', 'twierdzeń')}: " + " ".join(
-        f"{k}) {p}" for k, p in enumerate(parts, 1))
+        f"{k}) {p}" for k, p in enumerate(parts, 1)
+    )
 
 
 def finalize(res: CheckResult) -> None:

@@ -1,0 +1,83 @@
+W1122 04:36:38.639000 17452 .venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Could not reach the Hub (Cannot reach https://huggingface.co/api/models/sdadas/mmlw-retrieval-e5-small: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.). Using cached commit hash for 'sdadas/mmlw-retrieval-e5-small'.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:   3%|▎         | 5/199 [00:00<00:07, 27.70it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1070.66it/s]
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights:   2%|▏         | 5/202 [00:00<00:35,  5.62it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 225.73it/s]
+✓ H01 exp=['falszywe'] got=falszywe (9445 ms) Demagog | Nikt w Polsce nie może ubiegać się o azyl? To fałsz
+✓ H02 exp=['falszywe'] got=falszywe (283 ms) FakeNews.pl | Kanada nie wprowadziła prawa karającego za cytowanie Biblii
+✓ H03 exp=['falszywe'] got=falszywe (205 ms) FakeNews.pl | 3I/ATLAS to kometa międzygwiezdna, a nie statek obcych
+✓ H04 exp=['falszywe'] got=falszywe (166 ms) Stowarzyszenie Pravda | Czy 1 sierpnia Taylor Swift hajlowała na stadionie Narodowym?
+✓ H05 exp=['falszywe'] got=falszywe (339 ms) Demagog | W Buczy nie ginęli cywile? Uwaga na fałszywy przekaz
+✓ H06 exp=['falszywe'] got=falszywe (138 ms) Stowarzyszenie Pravda | Sto wozów strażackich. Czy taką pomoc dla Polski wysłała Szwecja?
+✓ H07 exp=['falszywe'] got=falszywe (364 ms) Demagog | Najwyższy stopień alarmowy w Warszawie? Policja dementuje
+✓ H08 exp=['falszywe'] got=falszywe (357 ms) Demagog | ABW zatrzymało ukraińskich szpiegów? Agencja tłumaczy: działali na rze
+✓ H09 exp=['potwierdzone'] got=potwierdzone (399 ms) Demagog | Dług publiczny Polski niższy niż średnia UE? To prawda
+✓ H10 exp=['potwierdzone'] got=potwierdzone (729 ms) Demagog | Polska z największym spadkiem ludności w UE?
+✓ H11 exp=['potwierdzone'] got=potwierdzone (487 ms) Stowarzyszenie Pravda | Czy w wyniku śmierci samobójczej ginie dwa razy więcej Polaków niż w w
+✗ H12 exp=['potwierdzone'] got=brak_dowodow (401 ms) Demagog | Kolej w Krakowie. Czy mieszkańcy z niej korzystają?
+✓ H13 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (723 ms) Demagog | Eksport paliwa do Ukrainy. Orlen nie sprzedaje go taniej niż w Polsce
+✓ H14 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (207 ms) Demagog | 4400 górników bez pracy przez ukraińską spółkę? Przyczyna zwolnień jes
+✓ H15 exp=['wprowadzajace_w_blad', 'falszywe'] got=wprowadzajace_w_blad (335 ms) FakeNews.pl | Zasięg lodu na Antarktydzie nie jest dziś o 17% większy niż w 1979 rok
+✓ H16 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (237 ms) Demagog | Co trzecie dziecko rodzi się poza małżeństwem? Trend jest wzrostowy
+✓ H17 exp=['potwierdzone'] got=potwierdzone (130 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — lipiec 2026: 3,0% r/r (GUS)
+✗ H18 exp=['falszywe'] got=brak_dowodow (343 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — marzec 2025: 4,9% r/r (GUS, COICOP 1999)
+✓ H19 exp=['potwierdzone'] got=potwierdzone (102 ms) Narodowy Bank Polski | Kurs średni NBP EUR/PLN z 2026-11-20: 4,4559 zł
+✓ H20 exp=['potwierdzone'] got=potwierdzone (838 ms) Demagog | Karol Nawrocki jest prezydentem. Wybory 2025 nie były sfałszowane
+✓ H21 exp=['falszywe'] got=falszywe (129 ms) Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 17 października 2023
+✓ H22 exp=['potwierdzone'] got=potwierdzone (41 ms) Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Ustawa z dnia 6 grudnia 2024 r. o zmianie ustawy o dniach wolnych od p
+✓ H23 exp=['falszywe'] got=falszywe (148 ms) Sejm RP — ISAP / Dziennik Ustaw (ELI API) | Rozporządzenie Rady Ministrów z dnia 14 września 2026 r. w sprawie wys
+✓ H24 exp=['falszywe'] got=falszywe (182 ms) Unia Europejska — EUR-Lex (Urząd Publikacji UE) | Rozporządzenie Parlamentu Europejskiego i Rady (UE) 2022/2065 z dnia 1
+✓ H25 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (603 ms) Demagog | Szczepionki powodują autyzm? Kolejny fałsz Wilka o szczepionkach
+✓ H26 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (371 ms) Stowarzyszenie Pravda | Czy UE wprowadza zakaz naprawy starych samochodów?
+✓ H27 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (459 ms) Kancelaria Prezesa Rady Ministrów | Premier: W obliczu tragedii w Krakowie zobaczyliśmy to, co w ludziach 
+✓ H28 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (611 ms) Demagog | Ukraina płaci Polsce za benzynę. Powrót dezinformacji paliwowej
+✗ H29 exp=['falszywe'] got=brak_dowodow (166 ms) Demagog | Auschwitz pod kontrolą Izraela? Nie zapadła taka decyzja
+✓ H30 exp=['potwierdzone'] got=potwierdzone (407 ms) Demagog | Godzina za 8 zł. Które miasto ma najdroższe bilety komunikacji miejski
+✓ H31 exp=['wprowadzajace_w_blad', 'falszywe'] got=wprowadzajace_w_blad (354 ms) FakeNews.pl | Niemcy nie rozbierają wiatraków z powodu ich nieopłacalności
+✓ H32 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ H33 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ H34 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ H35 exp=['nie_podlega_weryfikacji'] got=nie_podlega_weryfikacji (2 ms) 
+✓ H36 exp=['brak_dowodow'] got=brak_dowodow (185 ms) Demagog | Ile miasta dopłacają do komunikacji miejskiej dla mieszkańców?
+✓ H37 exp=['brak_dowodow'] got=brak_dowodow (126 ms) Demagog | Biedronka „narzuca” 1 proc. na WOŚP przy zakupach? To fałszywe informa
+✓ H38 exp=['brak_dowodow'] got=brak_dowodow (78 ms) Demagog | Kolejne internetowe oszustwo. Tym razem „ucierpiała” Anna Mucha
+✓ H39 exp=['brak_dowodow'] got=brak_dowodow (124 ms) Demagog | Czy Klaus Schwab powiedział, że ludzie nie będą mieć aut? Wyjaśniamy
+✓ H40 exp=['brak_dowodow'] got=brak_dowodow (130 ms) Demagog | Kto decyduje o sprowadzaniu zagranicznych studentów? Nie jest to jedna
+✓ H41 exp=['brak_dowodow'] got=brak_dowodow (46 ms) Demagog | Pociągi znacznie punktualniejsze? Rzecznik rządu manipuluje danymi
+✓ H42 exp=['falszywe', 'brak_dowodow'] got=falszywe (136 ms) FakeNews.pl | UE nie wprowadza obowiązkowej weryfikacji wieku w Internecie
+✓ H43 exp=['falszywe', 'brak_dowodow'] got=brak_dowodow (188 ms) FakeNews.pl | Nie ma dowodów na związek między paracetamolem a autyzmem
+✓ H44 exp=['potwierdzone', 'brak_dowodow'] got=potwierdzone (108 ms) Główny Urząd Statystyczny — Bank Danych Lokalnych | Liczba urodzeń żywych w Polsce — 2025: 238 264 (GUS BDL)
+✓ H45 exp=['falszywe', 'brak_dowodow'] got=falszywe (446 ms) Demagog | Pfizer i nowa lista 49 efektów ubocznych szczepionek? Uwaga – to fałsz
+✓ H46 exp=['falszywe', 'brak_dowodow'] got=falszywe (416 ms) Demagog | Polskie drony nie zaatakowały Rosji. Fałszywe narracje po incydencie n
+✓ H47 exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=brak_dowodow (114 ms) Stowarzyszenie Pravda | Czy w Austrii zapowiedziano wprowadzenie lockdownu dla niezaszczepiony
+✓ H48 exp=['wprowadzajace_w_blad', 'brak_dowodow'] got=brak_dowodow (345 ms) Demagog | Blisko 3/4 importu ropy pochodzi z Rosji. Jak Polska wypada na tle UE?
+✓ H49 exp=['wprowadzajace_w_blad', 'brak_dowodow', 'falszywe'] got=brak_dowodow (145 ms) Państwowa Komisja Wyborcza | Obwieszczenie Państwowej Komisji Wyborczej z dnia 13 lipca 2020 r. o w
+✓ H50 exp=['falszywe'] got=falszywe (385 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — wrzesień 2026: 4,1% r/r (GUS)
+✓ H51 exp=['wprowadzajace_w_blad'] got=wprowadzajace_w_blad (263 ms) Demagog | Po co szczepienia na grypę, skoro ludzie dalej chorują? Wyjaśniamy
+✓ H52 exp=['brak_dowodow', 'potwierdzone', 'wprowadzajace_w_blad'] got=brak_dowodow (110 ms) Główny Urząd Statystyczny | Stopa bezrobocia rejestrowanego w Polsce — wrzesień 2026: 5,8% (GUS)
+✓ H53 exp=['brak_dowodow', 'potwierdzone', 'wprowadzajace_w_blad'] got=brak_dowodow (173 ms) Główny Urząd Statystyczny | Inflacja CPI w Polsce — wrzesień 2026: 4,1% r/r (GUS)
+✓ H54 exp=['brak_dowodow', 'potwierdzone', 'wprowadzajace_w_blad'] got=brak_dowodow (190 ms) Demagog | Polska z największym spadkiem ludności w UE?
+✓ H55 exp=blad_techniczny got=blad_techniczny (5 ms) 
+✓ H56 exp=doprecyzuj got=doprecyzuj (1 ms) 
+✓ H57 exp=doprecyzuj got=doprecyzuj (1 ms) 
+{
+  "n_cases": 57,
+  "accuracy_all": 0.947,
+  "macro_f1": 0.96,
+  "citation_coverage": 1.0,
+  "abstention_on_no_evidence": 1.0,
+  "injection_resistance": 1.0,
+  "status_cases_ok": 1.0,
+  "latency_ms_median": 188,
+  "latency_ms_p95": 723,
+  "channel_consistency": 1.0,
+  "information_loop_dedup": true,
+  "verdict_distribution": {
+    "falszywe": 15,
+    "potwierdzone": 13,
+    "brak_dowodow": 16,
+    "wprowadzajace_w_blad": 6,
+    "nie_podlega_weryfikacji": 4,
+    "null": 3
+  }
+}

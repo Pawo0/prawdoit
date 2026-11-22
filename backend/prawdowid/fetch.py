@@ -1,4 +1,10 @@
-"""Safe URL fetching + main-content extraction. Fetched content is untrusted data."""
+"""Fetch one user-supplied URL safely and extract its article text and ClaimReview metadata.
+
+Safe URL fetching + main-content extraction. Fetched content is untrusted data.
+
+Reading guide: docs/backend/REQUEST_FLOW.md. Module map: docs/backend/MODULES.md.
+"""
+
 from __future__ import annotations
 
 import json
@@ -20,8 +26,11 @@ class FetchError(RuntimeError):
 def fetch_url(url: str) -> dict:
     url = check_public_url(url)
     try:
-        with httpx.Client(timeout=settings.fetch_timeout_s, follow_redirects=False,
-                          headers={"User-Agent": UA, "Accept-Language": "pl,en;q=0.5"}) as client:
+        with httpx.Client(
+            timeout=settings.fetch_timeout_s,
+            follow_redirects=False,
+            headers={"User-Agent": UA, "Accept-Language": "pl,en;q=0.5"},
+        ) as client:
             for _ in range(4):  # manual redirects so every hop is SSRF-checked
                 with client.stream("GET", url) as r:
                     if r.is_redirect:
@@ -50,7 +59,12 @@ def fetch_url(url: str) -> dict:
 
     cr = claim_review(html)
     meta = trafilatura.extract_metadata(html)
-    text = trafilatura.extract(html, include_comments=False, include_tables=False, favor_precision=True) or ""
+    text = (
+        trafilatura.extract(
+            html, include_comments=False, include_tables=False, favor_precision=True
+        )
+        or ""
+    )
     return {
         "url": url,
         "domain": urlparse(url).hostname or "",
@@ -68,7 +82,8 @@ _LD_RX = re.compile(r"<script[^>]*application/ld\+json[^>]*>(.*?)</script>", re.
 
 def claim_review(html: str) -> dict | None:
     """First schema.org ClaimReview in the page's JSON-LD — the machine-readable record fact-checkers (IFCN/EFCSN,
-    Google Fact Check markup) publish with every review: the reviewed claim, its author and the rating label."""
+    Google Fact Check markup) publish with every review: the reviewed claim, its author and the rating label.
+    """
     for m in _LD_RX.finditer(html or ""):
         try:
             stack = [json.loads(m.group(1).strip())]
@@ -88,11 +103,18 @@ def claim_review(html: str) -> dict | None:
                 item = x.get("itemReviewed") or {}
                 author = item.get("author") if isinstance(item, dict) else None
                 author = author[0] if isinstance(author, list) and author else author
-                out = {"claim": str(x.get("claimReviewed") or "").strip(),
-                       "rating": str((rating.get("alternateName") or rating.get("name") or "")
-                                     if isinstance(rating, dict) else "").strip(),
-                       "author": str(author.get("name") or "").strip() if isinstance(author, dict) else "",
-                       "date": str(x.get("datePublished") or "")[:10]}
+                out = {
+                    "claim": str(x.get("claimReviewed") or "").strip(),
+                    "rating": str(
+                        (rating.get("alternateName") or rating.get("name") or "")
+                        if isinstance(rating, dict)
+                        else ""
+                    ).strip(),
+                    "author": (
+                        str(author.get("name") or "").strip() if isinstance(author, dict) else ""
+                    ),
+                    "date": str(x.get("datePublished") or "")[:10],
+                }
                 if out["claim"] and out["rating"]:
                     return out
             if "@graph" in x:

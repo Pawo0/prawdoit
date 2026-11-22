@@ -1,4 +1,6 @@
-"""Text from a screenshot (scenario F): local Tesseract OCR, no cloud service.
+"""Local screenshot-to-text conversion with image limits and explicit OCR failures.
+
+Text from a screenshot (scenario F): local Tesseract OCR, no cloud service.
 
 The image is decoded with Pillow (format allow-list, pixel cap, EXIF and other metadata dropped), converted to
 grayscale and upscaled when small, then piped to the `tesseract` binary on stdin. Nothing is written to disk and
@@ -6,7 +8,10 @@ the image is never stored: only the recognised text continues through the normal
 prompt-injection scan, claim extraction). In the container the binary and the Polish data come from the Debian
 packages `tesseract-ocr` and `tesseract-ocr-pol` (Dockerfile). Without the binary the service answers with a
 technical notice, never with a verdict.
+
+Reading guide: docs/backend/REQUEST_FLOW.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import base64
@@ -83,7 +88,9 @@ def prepare(data: bytes) -> bytes:
     try:
         with Image.open(io.BytesIO(data)) as im:
             if im.format not in FORMATS:
-                raise OcrError(f"nieobsługiwany format obrazu ({im.format}); obsługiwane: PNG, JPEG, WebP")
+                raise OcrError(
+                    f"nieobsługiwany format obrazu ({im.format}); obsługiwane: PNG, JPEG, WebP"
+                )
             w, h = im.size
             if w * h > MAX_PIXELS:
                 raise OcrError("obraz ma zbyt wiele pikseli")
@@ -103,8 +110,12 @@ def read_text(data: bytes) -> str:
     langs = _languages()
     png = prepare(data)
     try:
-        proc = subprocess.run([_exe() or CMD, "stdin", "stdout", "-l", langs], input=png, capture_output=True,
-                              timeout=TIMEOUT_S)
+        proc = subprocess.run(
+            [_exe() or CMD, "stdin", "stdout", "-l", langs],
+            input=png,
+            capture_output=True,
+            timeout=TIMEOUT_S,
+        )
     except subprocess.TimeoutExpired as e:
         raise OcrError("odczyt obrazu trwał zbyt długo") from e
     except OSError as e:

@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-22",
+  "baseline_commit": "ffad79d",
+  "working_tree_refactor": true,
+  "production_modules": 45,
+  "original_modules_ast_unchanged_except_docstrings": 38,
+  "intentional_ast_changes": [
+    "store.py",
+    "service.py",
+    "api.py",
+    "engine.py",
+    "websearch.py",
+    "sources/fetchers.py"
+  ],
+  "new_module": "catalog.py",
+  "backend_tests": {
+    "total": 291,
+    "passed": 287,
+    "skipped": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  "discord_tests": {
+    "total": 14,
+    "passed": 14
+  },
+  "organizer_scenarios": {
+    "total": 16,
+    "passed": 15,
+    "failed": [
+      "F1-zrzut-ekranu"
+    ],
+    "matches_baseline": true,
+    "individual_checks_match": true,
+    "identical_run_fields": [
+      "status",
+      "status_message",
+      "verdicts",
+      "rules",
+      "reason_codes",
+      "short_answer",
+      "main_evidence"
+    ]
+  },
+  "openapi_unchanged": true,
+  "baseline_openapi_sha256": "9fc4d59a16c3219a37d5b78c301cdabd49f7a243d16c9e2778218cbce49f4eea",
+  "format": "Black 25.1.0, line length 100, check passed",
+  "static_analysis": "Pyflakes 3.4.0: no warnings in production modules",
+  "documentation": "All 45 production modules covered; all relative links in docs/backend and backend/README resolve",
+  "limitations": [
+    "Known OCR F1 failure was preserved, not fixed.",
+    "External providers and live Discord delivery were not exercised.",
+    "Runtime data, thresholds, public HTTP contracts and persistent schemas were not intentionally changed."
+  ]
+}

@@ -1,5 +1,11 @@
-"""Corpus loading, chunking and hybrid (BM25 + dense) index, plus a claim index for matching previously
-fact-checked claims (PFCR — previously fact-checked claim retrieval)."""
+"""Load the corpus and provide hybrid retrieval, claim matching and embedding caches.
+
+Corpus loading, chunking and hybrid (BM25 + dense) index, plus a claim index for matching previously
+fact-checked claims (PFCR — previously fact-checked claim retrieval).
+
+Reading guide: docs/backend/ENGINE.md. Module map: docs/backend/MODULES.md.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -25,8 +31,12 @@ log = logging.getLogger("prawdowid.index")
 # Same numbers as the source registry (sources/registry.DEFAULT_TIER, docs/SOURCE_REGISTRY.md). Only tiers 1 and 2 can
 # decide a verdict on their own (engine._decide): a disinformation catalogue lists what was spread, not what is true.
 TIER = {"official": 1, "factcheck": 2, "incident": 3, "media": 4}
-TIER_LABEL = {1: "źródło pierwotne / urzędowe", 2: "zweryfikowana baza fact-checkingowa", 3: "baza incydentów dezinformacji",
-              4: "media"}
+TIER_LABEL = {
+    1: "źródło pierwotne / urzędowe",
+    2: "zweryfikowana baza fact-checkingowa",
+    3: "baza incydentów dezinformacji",
+    4: "media",
+}
 
 
 @dataclass
@@ -56,7 +66,10 @@ class BM25:
         for i, toks in enumerate(docs_tokens):
             for t, c in Counter(toks).items():
                 self.postings[t].append((i, c))
-        self.idf = {t: math.log(1 + (self.N - len(p) + 0.5) / (len(p) + 0.5)) for t, p in self.postings.items()}
+        self.idf = {
+            t: math.log(1 + (self.N - len(p) + 0.5) / (len(p) + 0.5))
+            for t, p in self.postings.items()
+        }
 
     def search(self, q_tokens: list[str], k: int = 40) -> list[tuple[int, float]]:
         scores: dict[int, float] = defaultdict(float)
@@ -79,14 +92,21 @@ class Embedder:
 
         self.name = name
         # fp32 matters: several Polish checkpoints ship fp16 weights, which are ~15x slower on CPU
-        self.model = SentenceTransformer(name, device="cpu", model_kwargs={"torch_dtype": torch.float32})
+        self.model = SentenceTransformer(
+            name, device="cpu", model_kwargs={"torch_dtype": torch.float32}
+        )
         self.model.max_seq_length = 192
 
     def encode(self, texts: list[str], prefix: str, batch_size: int = 32) -> np.ndarray:
         if not texts:
             return np.zeros((0, self.model.get_sentence_embedding_dimension()), dtype=np.float32)
-        emb = self.model.encode([prefix + t for t in texts], batch_size=batch_size, normalize_embeddings=True,
-                                show_progress_bar=False, convert_to_numpy=True)
+        emb = self.model.encode(
+            [prefix + t for t in texts],
+            batch_size=batch_size,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+            convert_to_numpy=True,
+        )
         return emb.astype(np.float32)
 
 
@@ -110,9 +130,13 @@ class CorpusIndex:
         self.chunks: list[Chunk] = []
         self.bm25: BM25 | None = None
         self.chunk_emb: np.ndarray | None = None
-        self.claim_doc_idx: list[int] = []  # per row of the claim index: the doc (a checked claim or its headline)
+        self.claim_doc_idx: list[int] = (
+            []
+        )  # per row of the claim index: the doc (a checked claim or its headline)
         self.claim_texts: list[str] = []
-        self.claim_row: dict[int, int] = {}  # doc -> its checked-claim row (headline rows are only for finding it)
+        self.claim_row: dict[int, int] = (
+            {}
+        )  # doc -> its checked-claim row (headline rows are only for finding it)
         self.claim_emb: np.ndarray | None = None
         self.claim_bm25: BM25 | None = None
         self.embedder: Embedder | None = None
@@ -128,7 +152,9 @@ class CorpusIndex:
         seen: set[str] = set()
         per_file: dict[str, int] = {}
         errors = 0
-        files, excluded = _index_files(corpus_dir)  # registry: only enabled sources (+ files with no entry)
+        files, excluded = _index_files(
+            corpus_dir
+        )  # registry: only enabled sources (+ files with no entry)
         for f in files:
             n = 0
             for line in f.read_text(encoding="utf-8").splitlines():
@@ -170,7 +196,8 @@ class CorpusIndex:
     def reload(self) -> dict:
         """Hot reload (source scheduler / admin panel). Builds a fresh index off to the side, then swaps its state
         into *this* object under a lock — other modules hold `INDEX` via `from .index import INDEX`, so the name
-        must never be rebound. Embeddings come from the incremental cache, so only new texts are embedded."""
+        must never be rebound. Embeddings come from the incremental cache, so only new texts are embedded.
+        """
         with _RELOAD_LOCK:
             fresh = CorpusIndex()
             fresh.embedder = self.embedder  # reuse the loaded model
@@ -184,7 +211,9 @@ class CorpusIndex:
 
     def _build_chunks(self) -> None:
         chunks: list[Chunk] = []
-        self.synthetic: set[int] = set()  # "Twierdzenie: … Ocena: …" chunks are not verbatim source text
+        self.synthetic: set[int] = (
+            set()
+        )  # "Twierdzenie: … Ocena: …" chunks are not verbatim source text
         for di, d in enumerate(self.docs):
             head = d.title.strip()
             body_parts: list[str] = []
@@ -250,7 +279,9 @@ class CorpusIndex:
 
     def _build_indexes(self) -> None:
         self.bm25 = BM25([tokens(c.text) for c in self.chunks])
-        self.chunk_emb = self._embed_cached([c.text for c in self.chunks], settings.embed_passage_prefix, "chunks")
+        self.chunk_emb = self._embed_cached(
+            [c.text for c in self.chunks], settings.embed_passage_prefix, "chunks"
+        )
         self.claim_doc_idx, self.claim_texts, self.claim_row = [], [], {}
         for di, d in enumerate(self.docs):
             for k, t in enumerate(claim_rows(d)):
@@ -265,10 +296,16 @@ class CorpusIndex:
     def encode_query(self, texts: list[str]) -> np.ndarray:
         return self.get_embedder().encode(texts, settings.embed_query_prefix)
 
-    def search_chunks(self, query: str, q_emb: np.ndarray, k: int = 40) -> list[tuple[int, float, float]]:
+    def search_chunks(
+        self, query: str, q_emb: np.ndarray, k: int = 40
+    ) -> list[tuple[int, float, float]]:
         """Hybrid retrieval with reciprocal-rank fusion. Returns (chunk_idx, fused_score, cosine)."""
         bm = self.bm25.search(tokens(query), k=k) if self.bm25 else []
-        cos = self.chunk_emb @ q_emb if self.chunk_emb is not None and len(self.chunk_emb) else np.zeros(0)
+        cos = (
+            self.chunk_emb @ q_emb
+            if self.chunk_emb is not None and len(self.chunk_emb)
+            else np.zeros(0)
+        )
         dense_top = np.argsort(-cos)[:k] if len(cos) else []
         fused: dict[int, float] = defaultdict(float)
         for r, (i, _) in enumerate(bm):
@@ -286,8 +323,12 @@ class CorpusIndex:
         if self.claim_emb is None or not len(self.claim_emb):
             return []
         cos = self.claim_emb @ q_emb
-        dense = np.argsort(-cos)[:2 * k].tolist()  # a doc may have two rows (claim, headline)
-        lexical = [i for i, _ in self.claim_bm25.search(tokens(query), k=2 * k)] if self.claim_bm25 else []
+        dense = np.argsort(-cos)[: 2 * k].tolist()  # a doc may have two rows (claim, headline)
+        lexical = (
+            [i for i, _ in self.claim_bm25.search(tokens(query), k=2 * k)]
+            if self.claim_bm25
+            else []
+        )
         best: dict[int, float] = {}
         fused: dict[int, float] = defaultdict(float)
         for rows in (dense, lexical):
@@ -309,19 +350,30 @@ class CorpusIndex:
     def checked_claim_cos(self, doc_idx: int, q_emb: np.ndarray) -> float:
         """Cosine to the doc's checked claim itself (not its headline): what claim matching rules on."""
         row = self.claim_row.get(doc_idx)
-        return float(self.claim_emb[row] @ q_emb) if row is not None and self.claim_emb is not None else 0.0
+        return (
+            float(self.claim_emb[row] @ q_emb)
+            if row is not None and self.claim_emb is not None
+            else 0.0
+        )
 
-    def match_claims_batch(self, q_embs: np.ndarray, verdicts: tuple = ("false", "misleading", "mixed")
-                           ) -> tuple[np.ndarray, np.ndarray]:
+    def match_claims_batch(
+        self, q_embs: np.ndarray, verdicts: tuple = ("false", "misleading", "mixed")
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Extension fast path: best fact-checked claim (restricted to the given verdicts) per query row."""
         # checked claims only: a debunk's headline often states the correction, so it must not flag a sentence
-        rows = [i for i, di in enumerate(self.claim_doc_idx)
-                if self.claim_row.get(di) == i and self.docs[di].verdict in verdicts]
+        rows = [
+            i
+            for i, di in enumerate(self.claim_doc_idx)
+            if self.claim_row.get(di) == i and self.docs[di].verdict in verdicts
+        ]
         if not rows or not len(q_embs):
             return np.zeros(len(q_embs), dtype=int), np.zeros(len(q_embs))
         sims = q_embs @ self.claim_emb[rows].T
         best = sims.argmax(axis=1)
-        return np.array([self.claim_doc_idx[rows[i]] for i in best]), sims[np.arange(len(best)), best]
+        return (
+            np.array([self.claim_doc_idx[rows[i]] for i in best]),
+            sims[np.arange(len(best)), best],
+        )
 
     def doc_age(self, doc: SourceDoc) -> int | None:
         return _age_days(doc.published_at)
@@ -330,7 +382,8 @@ class CorpusIndex:
     def add_docs(self, records: list) -> int:
         """Append documents at runtime (live search) without a full rebuild: only the new chunks/claims are embedded,
         BM25 postings are extended. Records already indexed (same id or URL) are skipped. Returns how many were added.
-        Arrays are published after the lists they index, so concurrent readers never see out-of-range positions."""
+        Arrays are published after the lists they index, so concurrent readers never see out-of-range positions.
+        """
         if not _RELOAD_LOCK.acquire(timeout=5):
             return 0  # a full reload is running; the docs are persisted and will be loaded by it/next start
         try:
@@ -358,24 +411,40 @@ class CorpusIndex:
             emb = self.get_embedder()
             c_emb = emb.encode([c.text for c in chunks], settings.embed_passage_prefix)
             claims = [(base_doc + i, t) for i, d in enumerate(new) for t in claim_rows(d)]
-            q_emb = emb.encode([t for _, t in claims], settings.embed_query_prefix) if claims else None
+            q_emb = (
+                emb.encode([t for _, t in claims], settings.embed_query_prefix) if claims else None
+            )
             self.docs.extend(new)
             self.doc_chunks.extend([[base_chunk + i for i in ids] for ids in tmp.doc_chunks])
             self.chunks.extend(chunks)
             self.synthetic |= {base_chunk + i for i in tmp.synthetic}
-            self.chunk_emb = c_emb if self.chunk_emb is None or not len(self.chunk_emb) else np.vstack([self.chunk_emb, c_emb])
+            self.chunk_emb = (
+                c_emb
+                if self.chunk_emb is None or not len(self.chunk_emb)
+                else np.vstack([self.chunk_emb, c_emb])
+            )
             self.bm25 = _bm25_extend(self.bm25, [tokens(c.text) for c in chunks])
             if claims:
                 base_row = len(self.claim_texts)
                 self.claim_doc_idx.extend(i for i, _ in claims)
                 self.claim_texts.extend(t for _, t in claims)
-                self.claim_emb = q_emb if self.claim_emb is None or not len(self.claim_emb) else np.vstack([self.claim_emb, q_emb])
+                self.claim_emb = (
+                    q_emb
+                    if self.claim_emb is None or not len(self.claim_emb)
+                    else np.vstack([self.claim_emb, q_emb])
+                )
                 self.claim_bm25 = _bm25_extend(self.claim_bm25, [tokens(t) for _, t in claims])
                 for k, (i, _) in enumerate(claims):
-                    self.claim_row.setdefault(i, base_row + k)  # the first row of a doc is its checked claim
-            self.stats.update(documents=len(self.docs), chunks=len(self.chunks), factchecked_claims=len(self.claim_row),
-                              claim_index_rows=len(self.claim_texts),
-                              live_added=self.stats.get("live_added", 0) + len(new))
+                    self.claim_row.setdefault(
+                        i, base_row + k
+                    )  # the first row of a doc is its checked claim
+            self.stats.update(
+                documents=len(self.docs),
+                chunks=len(self.chunks),
+                factchecked_claims=len(self.claim_row),
+                claim_index_rows=len(self.claim_texts),
+                live_added=self.stats.get("live_added", 0) + len(new),
+            )
             log.info("live docs added: %d (chunks %d)", len(new), len(chunks))
             return len(new)
         finally:
@@ -385,7 +454,8 @@ class CorpusIndex:
 def claim_rows(d: SourceDoc) -> list[str]:
     """Rows of the claim index for a fact-check / incident: its checked claim, then its headline when the headline
     says something the claim does not (a headline naming who shared a post that the quoted claim never names).
-    The headline row only helps to FIND the analysis: claim matching still rules on the checked claim."""
+    The headline row only helps to FIND the analysis: claim matching still rules on the checked claim.
+    """
     if d.source_type not in ("factcheck", "incident") or not (d.claim or d.title):
         return []
     rows = [normalize_ws(d.claim or d.title)[:500]]

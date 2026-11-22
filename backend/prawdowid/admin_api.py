@@ -1,8 +1,13 @@
-"""Admin API for the source registry + the /admin page. Token-protected (X-Admin-Token, env PRAWDOWID_ADMIN_TOKEN).
+"""Authenticated source-registry management and the public registry projection.
+
+Admin API for the source registry + the /admin page. Token-protected (X-Admin-Token, env PRAWDOWID_ADMIN_TOKEN).
 
 Every change is written to data/sources/<id>.json (the contract, docs/SOURCE_REGISTRY.md) and to the
 source_changes audit table (who/when/what). Fetching never blocks a request except for the 3-record dry run.
+
+Reading guide: docs/backend/SOURCES.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import hmac
@@ -21,6 +26,7 @@ log = logging.getLogger("prawdowid.admin")
 
 router = APIRouter()
 
+
 def check_token(given: str | None, expected: str, header: str, env: str, role: str) -> None:
     """Fail closed: with no token configured the panel API is off (503), never open and never on a known default."""
     if not expected:
@@ -29,9 +35,20 @@ def check_token(given: str | None, expected: str, header: str, env: str, role: s
         raise HTTPException(401, f"Wymagany token {role} (nagłówek {header}).")
 
 
-def require_admin(x_admin_token: str | None = Header(default=None), x_admin_user: str | None = Header(default=None)) -> str:
-    check_token(x_admin_token, settings.admin_token, "X-Admin-Token", "PRAWDOWID_ADMIN_TOKEN", "administratora")
-    who = unquote(x_admin_user or "").strip()[:60]  # the panel sends it URL-encoded (headers are latin-1)
+def require_admin(
+    x_admin_token: str | None = Header(default=None),
+    x_admin_user: str | None = Header(default=None),
+) -> str:
+    check_token(
+        x_admin_token,
+        settings.admin_token,
+        "X-Admin-Token",
+        "PRAWDOWID_ADMIN_TOKEN",
+        "administratora",
+    )
+    who = unquote(x_admin_user or "").strip()[
+        :60
+    ]  # the panel sends it URL-encoded (headers are latin-1)
     return who or "administrator"
 
 
@@ -46,14 +63,16 @@ def _overview() -> list[dict]:
     out = []
     for sid, s in sources.items():
         nd = scheduler.next_due(s, problems.get(sid))
-        out.append({
-            **s,
-            "problems": problems.get(sid, []),
-            "docs": registry.count_docs(sid),
-            "last_run": runs.get(sid),
-            "next_run": nd.isoformat(timespec="minutes") if nd else None,
-            "running": cur.get("source_id") == sid,
-        })
+        out.append(
+            {
+                **s,
+                "problems": problems.get(sid, []),
+                "docs": registry.count_docs(sid),
+                "last_run": runs.get(sid),
+                "next_run": nd.isoformat(timespec="minutes") if nd else None,
+                "running": cur.get("source_id") == sid,
+            }
+        )
     return out
 
 
@@ -74,19 +93,35 @@ def _start_scheduler() -> None:
 def admin_sources(who: str = Depends(require_admin)):
     from .index import INDEX
 
-    return {"sources": _overview(), "scheduler": scheduler.status(),
-            "vocab": {"categories": registry.CATEGORIES, "methods": registry.METHODS, "topics": registry.TOPICS,
-                      "params": {m: {k: {"required": v[1], "default": v[2]} for k, v in spec.items()}
-                                 for m, spec in registry.PARAM_SPEC.items()}},
-            "index": {"documents": INDEX.stats.get("documents"), "loaded_at": INDEX.loaded_at,
-                      "excluded_files": INDEX.stats.get("excluded_files", [])}}
+    return {
+        "sources": _overview(),
+        "scheduler": scheduler.status(),
+        "vocab": {
+            "categories": registry.CATEGORIES,
+            "methods": registry.METHODS,
+            "topics": registry.TOPICS,
+            "params": {
+                m: {k: {"required": v[1], "default": v[2]} for k, v in spec.items()}
+                for m, spec in registry.PARAM_SPEC.items()
+            },
+        },
+        "index": {
+            "documents": INDEX.stats.get("documents"),
+            "loaded_at": INDEX.loaded_at,
+            "excluded_files": INDEX.stats.get("excluded_files", []),
+        },
+    }
 
 
 @router.get("/api/admin/sources/{source_id}")
 def admin_get(source_id: str, who: str = Depends(require_admin)):
     src = _get_or_404(source_id)
-    return {"source": src, "docs": registry.count_docs(source_id), "runs": state.recent_runs(20, source_id),
-            "changes": state.recent_changes(20, source_id)}
+    return {
+        "source": src,
+        "docs": registry.count_docs(source_id),
+        "runs": state.recent_runs(20, source_id),
+        "changes": state.recent_changes(20, source_id),
+    }
 
 
 @router.get("/api/admin/runs")
@@ -116,7 +151,10 @@ def admin_create(body: dict, who: str = Depends(require_admin)):
     sid = str(body.get("id") or "")
     try:
         if registry.ID_RE.match(sid) and registry.exists(sid):
-            raise HTTPException(409, "Źródło o tym identyfikatorze już istnieje — wybierz inny id albo edytuj istniejące.")
+            raise HTTPException(
+                409,
+                "Źródło o tym identyfikatorze już istnieje — wybierz inny id albo edytuj istniejące.",
+            )
         body.setdefault("added_by", who)
         body.setdefault("added_at", datetime.now(timezone.utc).date().isoformat())
         src = registry.save(body)
@@ -133,7 +171,9 @@ def admin_update(source_id: str, body: dict, who: str = Depends(require_admin)):
     merged = {**before, **{k: v for k, v in body.items() if not k.startswith("_")}, "id": source_id}
     merged["added_by"], merged["added_at"] = before.get("added_by"), before.get("added_at")
     try:
-        src = registry.save(merged, strict=set(merged.get("topics") or []) != set(before.get("topics") or []))
+        src = registry.save(
+            merged, strict=set(merged.get("topics") or []) != set(before.get("topics") or [])
+        )
     except registry.SourceError as e:
         raise _bad(e) from e
     state.log_change(who, source_id, "update", before, src)
@@ -173,7 +213,11 @@ def admin_delete(source_id: str, who: str = Depends(require_admin)):
         arch.mkdir(exist_ok=True)
         dest = arch / f"{source_id}-{datetime.now(timezone.utc):%Y%m%dT%H%M%S}.jsonl"
         shutil.move(str(corpus), dest)
-        archived = str(dest.relative_to(settings.root)) if dest.is_relative_to(settings.root) else str(dest)
+        archived = (
+            str(dest.relative_to(settings.root))
+            if dest.is_relative_to(settings.root)
+            else str(dest)
+        )
     registry.delete(source_id)
     state.log_change(who, source_id, "delete", before, None)
     scheduler.reload_async()
@@ -185,11 +229,23 @@ def admin_delete(source_id: str, who: str = Depends(require_admin)):
 def admin_test_config(body: dict, who: str = Depends(require_admin)):
     """Dry run of an unsaved config from the form (3 sample records, nothing written)."""
     body = {k: v for k, v in body.items() if not k.startswith("_")}
-    for k, default in (("id", "test_zrodla"), ("name", "test"), ("publisher", "test"), ("license", "?"),
-                       ("qualification", "?"), ("category", "media")):
+    for k, default in (
+        ("id", "test_zrodla"),
+        ("name", "test"),
+        ("publisher", "test"),
+        ("license", "?"),
+        ("qualification", "?"),
+        ("category", "media"),
+    ):
         body[k] = body.get(k) or default
-    body["url"] = body.get("url") or next((v for v in (body.get("params") or {}).values()
-                                           if isinstance(v, str) and v.startswith("http")), "https://example.org/")
+    body["url"] = body.get("url") or next(
+        (
+            v
+            for v in (body.get("params") or {}).values()
+            if isinstance(v, str) and v.startswith("http")
+        ),
+        "https://example.org/",
+    )
     try:
         src = registry.validate(body, strict=False)
     except registry.SourceError as e:
@@ -209,9 +265,14 @@ def admin_run(source_id: str, who: str = Depends(require_admin)):
         raise HTTPException(422, f"Metoda {src['method']} nie pobiera dokumentów.")
     cur = scheduler.current()
     if cur:
-        raise HTTPException(409, f"Trwa pobieranie źródła {cur.get('source_id')} — spróbuj za chwilę.")
+        raise HTTPException(
+            409, f"Trwa pobieranie źródła {cur.get('source_id')} — spróbuj za chwilę."
+        )
     scheduler.run_now_async(source_id, who)
-    return {"started": source_id, "message": "Pobieranie uruchomione w tle; wynik pojawi się w tabeli uruchomień."}
+    return {
+        "started": source_id,
+        "message": "Pobieranie uruchomione w tle; wynik pojawi się w tabeli uruchomień.",
+    }
 
 
 @router.post("/api/admin/suggest")
@@ -233,14 +294,35 @@ def public_registry() -> list[dict]:
     """Registry entries for the public catalogue: no params/scheduling internals, only what a citizen may audit."""
     sources, problems = registry.load_all()
     runs = state.last_runs()
-    keys = ("id", "name", "publisher", "url", "category", "tier", "enabled", "topics", "language", "license",
-            "qualification", "schedule_hours", "method", "scope", "scope_basis")
+    keys = (
+        "id",
+        "name",
+        "publisher",
+        "url",
+        "category",
+        "tier",
+        "enabled",
+        "topics",
+        "language",
+        "license",
+        "qualification",
+        "schedule_hours",
+        "method",
+        "scope",
+        "scope_basis",
+    )
     out = []
     for sid, s in sources.items():
         if sid in problems:
             continue
         r = runs.get(sid) or {}
         mtime = scheduler._corpus_mtime(sid)
-        out.append({**{k: s.get(k) for k in keys}, "docs": registry.count_docs(sid) if s.get("enabled") else 0,
-                    "last_update": r.get("last_ok") or (mtime.isoformat(timespec="minutes") if mtime else None)})
+        out.append(
+            {
+                **{k: s.get(k) for k in keys},
+                "docs": registry.count_docs(sid) if s.get("enabled") else 0,
+                "last_update": r.get("last_ok")
+                or (mtime.isoformat(timespec="minutes") if mtime else None),
+            }
+        )
     return sorted(out, key=lambda x: (not x["enabled"], x["tier"] or 9, x["name"] or ""))

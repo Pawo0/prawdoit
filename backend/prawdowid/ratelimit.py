@@ -1,4 +1,6 @@
-"""Per-client request limits: a sliding one-minute window per (bucket, client address), in process memory.
+"""Process-local rate limits keyed by client address and operation.
+
+Per-client request limits: a sliding one-minute window per (bucket, client address), in process memory.
 
 Buckets (limits in config.py, all PRAWDOWID_* variables):
   check  POST /api/check, /api/check/async       RATE_LIMIT        120/min
@@ -9,7 +11,10 @@ The client address is `request.client.host`. Behind a reverse proxy that is the 
 the proxy: uvicorn rewrites the client from X-Forwarded-For only for peers listed in FORWARDED_ALLOW_IPS
 (--forwarded-allow-ips; default 127.0.0.1,::1). compose.yaml sets it from PRAWDOWID_TRUSTED_PROXY_IPS. Without it,
 everyone behind the proxy shares one bucket. One process only — a second replica needs a shared store.
+
+Reading guide: docs/backend/API.md. Module map: docs/backend/MODULES.md.
 """
+
 from __future__ import annotations
 
 import math
