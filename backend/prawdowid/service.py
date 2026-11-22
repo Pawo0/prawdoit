@@ -24,15 +24,9 @@ from .schemas import CheckRequest, CheckResult, QuickConflict, QuickMatch, Quick
 from .security import ResolveError, UnsafeURL, neutralize, scan
 from .signals import sprawdz_signals
 from .schemas import RULES_VERSION
-from .textutil import is_task_request, mask_pii, normalize_ws, short, split_sentences, tokens
+from .textutil import HIGH_RISK, is_task_request, mask_pii, normalize_ws, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.service")
-
-HIGH_RISK = re.compile(
-    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|blackout\w*|"
-    r"epidemi\w*|jodek|jod\b|upadł\w* bank\w*|wybor\w*|głosowani\w*|referend\w*|rakiet\w*|dron\w*|sabota\w*)",
-    re.IGNORECASE,
-)
 
 _NO_TEXT = ("Nie udało się odczytać treści strony (strona jest pusta albo blokuje automatyczny dostęp — takich "
             "zabezpieczeń nie obchodzimy).")

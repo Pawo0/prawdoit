@@ -129,6 +129,15 @@ class States(RouterCase):
         self.assertGreater(near.priority, risky.priority)
         self.assertGreater(risky.priority, plain.priority)
 
+    def test_one_high_risk_list_for_the_router_and_the_engine(self):
+        from prawdowid import engine, textutil
+        self.assertIs(service.HIGH_RISK, textutil.HIGH_RISK)
+        self.assertIs(engine.HIGH_RISK, textutil.HIGH_RISK)
+        for text in ("Rozdają jod w szkołach.", "Apteki sprzedają jodek potasu.",  # were only in one of the two lists
+                     "Szczepionka zawiera mikroczipy.", "NATO wysyła wojsko na granicę."):
+            self.assertTrue(textutil.HIGH_RISK.search(text), text)
+        self.assertFalse(textutil.HIGH_RISK.search("Jodła rośnie w Tatrach."))
+
     def test_opinion_and_short_text_are_none(self):
         opinion, short = self.quick(OPINION, "Za krótko.")
         self.assertEqual((opinion.state, opinion.level, opinion.priority), ("none", "brak", 0.0))

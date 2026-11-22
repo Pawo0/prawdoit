@@ -321,6 +321,15 @@ def same_amount(a: tuple, b: tuple) -> bool:
     return a[1] == b[1] and abs(a[0] - b[0]) <= max(0.051, abs(a[0]) * 0.005)
 
 
+# High-risk topics (security, health, elections). One list for both uses: the engine asks for a second independent
+# source before a tier-2 verdict on such a claim stands alone, and the quick check (/api/quick) moves such sentences up
+# the queue and to an analyst.
+HIGH_RISK = re.compile(
+    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
+    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|jod|upadł\w* bank\w*|wybor\w*|głosowani\w*|"
+    r"referend\w*|rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
+
+
 def is_time_sensitive(s: str) -> bool:
     return bool(_TEMPORAL_NOW.search(s))
 

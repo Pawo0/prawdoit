@@ -23,17 +23,13 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import (amounts, is_time_sensitive, normalize_ws, rule_scope, same_amount, short, split_sentences,
-                       tokens)
+from .textutil import (HIGH_RISK, amounts, is_time_sensitive, normalize_ws, rule_scope, same_amount, short,
+                       split_sentences, tokens)
 
 log = logging.getLogger("prawdowid.engine")
 
 FC_TO_VERDICT = {"false": "falszywe", "misleading": "wprowadzajace_w_blad", "mixed": "wprowadzajace_w_blad",
                  "true": "potwierdzone", "unverifiable": "brak_dowodow"}
-HIGH_RISK = re.compile(
-    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
-    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|upadł\w* bank\w*|wybor\w*|głosowani\w*|referend\w*|"
-    r"rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
 
 
 @dataclass
