@@ -31,6 +31,9 @@ Sprawdzenie przebiega w stałej kolejności:
 4. **Ocena relacji.** Model NLI (mDeBERTa) ocenia, czy fragment popiera tezę, przeczy jej, czy jest neutralny.
    Liczby, daty i definicje wskaźników są porównywane osobno, bo NLI jest w nich zawodne. Dodatkowe sprawdzenia
    pilnują, by dowód dotyczył tej samej osoby, kwoty i okresu, a nie tylko podobnego tematu.
+   Sama ocena podobnej wypowiedzi przez fact-checkera nie wystarcza: wybrany cytat musi zawierać ustalenie (nie
+   pytanie ani relację z pogłoski) i obejmować całą tezę. Cytat, który tego nie spełnia, nie może być podstawą
+   werdyktu.
 5. **Decyzja.** Werdykt wynika z uporządkowanych reguł R1–R6 (`engine._decide()`), nie z modelu językowego. Sprzeczne
    dowody prowadzą do ujawnienia konfliktu i wstrzymania się. Podstawą rozstrzygnięcia mogą być tylko źródła urzędowe
    i fact-checkingowe; media i bazy incydentów służą jako kontekst.
@@ -49,14 +52,19 @@ Szczegóły: [silnik weryfikacji](docs/backend/ENGINE.md), [przebieg sprawdzenia
 - Kanały: strona WWW (z PWA i udostępnianiem z Androida), wtyczka przeglądarki, bot Discord, serwer MCP.
 - Rejestr kilkudziesięciu źródeł (fact-checkerzy i serwisy urzędowe), pobieranych według harmonogramu, z panelem
   administracyjnym. Indeks odświeża się bez restartu.
-- Na zbiorach testowych, w tym przygotowanych bez wglądu w kod, system spełnia cele MVP z sekcji 6 wyzwania.
-  Pozostałe błędy to „brak dowodów” zamiast werdyktu, czyli błąd bezpieczny. System nie potwierdził żadnej
-  fałszywej tezy ani nie zaprzeczył prawdziwej. Instrukcje wstrzyknięte w treść stron nie zmieniły żadnego werdyktu.
+- Na zbiorach testowych, w tym przygotowanych bez wglądu w kod, system spełnia cele MVP z sekcji 6 wyzwania dla
+  trafności werdyktu, wstrzymywania się przy braku dowodów, odporności na prompt injection i czasu odpowiedzi.
+  Pozostałe błędy to prawie wyłącznie „brak dowodów” zamiast werdyktu, czyli błąd bezpieczny. System nie potwierdził
+  żadnej fałszywej tezy ani nie zaprzeczył prawdziwej. Instrukcje wstrzyknięte w treść stron nie zmieniły żadnego werdyktu.
 - Scenariusze referencyjne organizatorów (A–J) przechodzą prawie w całości; wyjątki i ich przyczyny opisuje
   [eval/organizers](eval/organizers/README.md).
+- Cel pokrycia cytowań nie jest potwierdzony. Ręczny audyt wykazał, że nie każda teza w odpowiedzi miała oparcie
+  w cytacie. Kontrola cytatu powstała w odpowiedzi na ten audyt: odrzuca słabo uzasadnione odpowiedzi kosztem
+  większej liczby wstrzymań. Ponownej recenzji cytatów jeszcze nie wykonano. Zob. [audyt cytatów](docs/CITATION_AUDIT.md)
+  i [walidację poprawki](eval/citation_grounding_2026-11-22/README.md).
 - Odpowiedź z lokalnego korpusu zajmuje zwykle poniżej sekundy na CPU. Wyszukiwanie na żywo ma budżet 15 s.
 
-Wyniki z datami i wersją korpusu: `eval/audit_2026-11-22/`, `eval/organizers/results.md`. Ograniczenia:
+Wyniki z datami i wersją korpusu: `eval/citation_grounding_2026-11-22/`, `eval/organizers/results.md`. Ograniczenia:
 [ryzyka](docs/RISKS.md), [zgodność z wymaganiami](docs/COMPLIANCE.md).
 
 ## Uruchomienie
