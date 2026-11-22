@@ -141,25 +141,8 @@ ol.big-keys li{font-size:30px;margin-bottom:34px}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
-<style>
-.hero-art{filter:url(#brand-art)}
-/* Recolor archived application captures; keep the Discord client's own colors. */
-img.shot[src*="www-"],img.shot[src*="ext-"],img.shot[src*="clip-ext"]{filter:url(#legacy-brand)}
-video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
-</style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <filter id="brand-art" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.282353 0 -0.282353 0 1 1.129412 0 -1.129412 0 1 0.983007 0 -0.983007 0 1 0 0 0 1 0"/></filter>
-  <filter id="legacy-brand" color-interpolation-filters="sRGB">
-    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.5 -0.5 1 0 0" result="blue-difference"/>
-    <feComponentTransfer in="blue-difference" result="brand-mask"><feFuncA type="linear" slope="3" intercept="-0.3"/></feComponentTransfer>
-    <feColorMatrix in="SourceGraphic" type="matrix" values="0.282353 0 -0.282353 0 1 1.129412 0 -1.129412 0 1 0.983007 0 -0.983007 0 1 0 0 0 1 0" result="recolored"/>
-    <feComposite in="recolored" in2="brand-mask" operator="in" result="brand-pixels"/>
-    <feComposite in="SourceGraphic" in2="brand-mask" operator="out" result="other-pixels"/>
-    <feMerge><feMergeNode in="other-pixels"/><feMergeNode in="brand-pixels"/></feMerge>
-  </filter>
-</defs></svg>
 <div id="stage">
 
 <!-- 1 ======================================================== TITLE -->
@@ -256,7 +239,7 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
       </div>
     </div>
   </div>
-  <div class="src">Kadr z nagrania demo (<code>video/public/captures/web.mp4</code> 4,6 s, przycięty). Źródło: <code>web/index.html</code>, <code>backend/prawdowid/ocr.py</code>, <code>docs/DEMO.md</code>.</div>
+  <div class="src">Kadr z nagrania demo (<code>video/public/captures/web.mp4</code> 4,5 s, przycięty). Źródło: <code>web/index.html</code>, <code>backend/prawdowid/ocr.py</code>, <code>docs/DEMO.md</code>.</div>
   <div class="counter"></div>
 </section>
 
@@ -286,7 +269,7 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
       </div>
     </div>
   </div>
-  <div class="src">Kadr: <code>web.mp4</code> 10,5 s; klip w wersji HTML: <code>prawdowid-demo.mp4</code> 0:14,6–0:22,6. Czas wg znaczników <code>a-submit</code> → <code>a-result</code> w <code>web.json</code> (5,9 → 8,0 s).</div>
+  <div class="src">Kadr: <code>web.mp4</code> 10,5 s; klip w wersji HTML: kompozycja demo (<code>video/src</code>) 0:14,6–0:22,6. Czas wg znaczników <code>a-submit</code> → <code>a-result</code> w <code>web.json</code> (5,8 → 7,9 s).</div>
   <div class="counter"></div>
 </section>
 
@@ -307,7 +290,7 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
       </div>
     </div>
   </div>
-  <div class="src">Kadr: <code>web.mp4</code> 39,5 s (przycięty). Źródło: <code>docs/ARCHITECTURE.md</code> (pkt 6–7), <code>docs/DEMO.md</code>.</div>
+  <div class="src">Kadr: <code>web.mp4</code> 36,3 s (przycięty). Źródło: <code>docs/ARCHITECTURE.md</code> (pkt 6–7), <code>docs/DEMO.md</code>.</div>
   <div class="counter"></div>
 </section>
 
@@ -365,7 +348,7 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
       </div>
     </div>
   </div>
-  <div class="src">Kadr: <code>discord.mp4</code> 12,5 s; klip HTML: <code>prawdowid-demo.mp4</code> 0:52,6–1:03,4 (pseudonimy zasłonięte). Czas: <code>sent</code> → <code>reply</code> w <code>discord.json</code> (8,75 → 10,67 s).</div>
+  <div class="src">Kadr: <code>discord.mp4</code> 12,5 s; klip HTML: kompozycja demo (<code>video/src</code>) 0:52,4–1:03,2 (pseudonimy zasłonięte). Czas: <code>sent</code> → <code>reply</code> w <code>discord.json</code> (8,75 → 10,67 s).</div>
   <div class="counter"></div>
 </section>
 
@@ -412,7 +395,7 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
       </div>
     </div>
   </div>
-  <div class="src">Kadry: <code>extension.mp4</code> 3,6 s (przycięty); klip: <code>prawdowid-demo.mp4</code> 1:21,8–1:32 (w PDF kadr z 1:29). Źródło: <code>extension/content.js</code>.</div>
+  <div class="src">Kadry: <code>extension.mp4</code> 3,5 s (przycięty); klip: kompozycja demo (<code>video/src</code>) 1:21,5–1:34 (w PDF kadr z 1:31). Źródło: <code>extension/content.js</code>.</div>
   <div class="counter"></div>
 </section>
 
@@ -472,10 +455,6 @@ video.clip:not(.has-frame):not([src*="clip-dc"]){filter:url(#legacy-brand)}
   }
   // clips play only while their slide is shown; leaving a slide pauses and rewinds its clip
   const clips = slides.map(s => [...s.querySelectorAll('video.clip')]);
-  clips.flat().forEach(v => {
-    if (v.readyState >= 2) v.classList.add('has-frame');
-    v.addEventListener('loadeddata', () => v.classList.add('has-frame'), {once:true});
-  });
   function syncClips() {
     clips.forEach((vs, k) => vs.forEach(v => {
       if (k === idx) { if (v.paused) { v.currentTime = 0; const p = v.play(); if (p) p.catch(() => {}); } }
