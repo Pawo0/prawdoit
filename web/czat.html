@@ -1,8 +1,8 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — czat (adapter demonstracyjny)</title>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — czat (adapter demonstracyjny)</title>
 <style>
 .phone{position:relative;max-width:420px;margin:0 auto;border-radius:28px;border:10px solid #1f2937;background:#efeae2;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.15)}
 .ph-head{background:#075e54;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
-.ph-head img{width:34px;height:34px;border-radius:50%;background:#1d3557;padding:4px}
+.ph-head img{width:34px;height:34px;border-radius:50%;background:#9c1a32;padding:4px}
 .msgs{height:520px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:85%;padding:8px 12px;border-radius:10px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;font-size:.92rem;box-shadow:0 1px 1px rgba(0,0,0,.08)}
 .me{align-self:flex-end;background:#d9fdd3}.bot{align-self:flex-start;background:#fff}
@@ -44,8 +44,8 @@ function chatReply(res) {
     if (multi) L.push(`${i + 1}. „${cut(c.claim, 120)}”`);
     L.push(`${ICON[c.verdict]} *${c.verdict_label}*`);
     L.push(c.short_answer || cut(c.explanation, 420));
-    const i = c.main_evidence != null ? c.main_evidence : c.related_evidence;
-    const e = i != null ? c.evidence[i] : null;
+    const evidenceIndex = c.main_evidence != null ? c.main_evidence : c.related_evidence;
+    const e = evidenceIndex != null ? c.evidence[evidenceIndex] : null;
     const label = c.main_evidence != null ? "Źródło" : "Materiał pokrewny (nie rozstrzyga)";
     if (e) L.push(`${label}: ${e.publisher}, ${dmy(e.published_at)} — ${cut(e.title, 90)}\n${e.url}`);
     if (c.basis_line && c.verdict !== "nie_podlega_weryfikacji") { L.push(c.basis_line); if (c.limitation_line) L.push(c.limitation_line); }

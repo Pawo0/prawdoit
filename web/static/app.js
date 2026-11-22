@@ -12,6 +12,8 @@ function safeUrl(u) { try { const x = new URL(u); return ["http:", "https:"].inc
 function cut(s, n) { s = String(s ?? ""); return s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…"; }
 
 function chrome_() {
+  // Recolor the original dither in the browser, preserving every raster detail.
+  document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="brand-art" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.282353 0 -0.282353 0 1 1.129412 0 -1.129412 0 1 0.983007 0 -0.983007 0 1 0 0 0 1 0"/></filter></defs></svg>`);
   const h = document.createElement("header");
   h.className = "top";
   h.innerHTML = `<div class="wrap"><a class="logo" href="/" aria-label="Prawdowid — strona główna"><span class="brand-mark" aria-hidden="true"></span>Prawdowid</a>
@@ -118,7 +120,7 @@ function openWait({inline = null, container = null, title = "Sprawdzanie informa
   const prev = document.activeElement;
   const id = "w" + Math.random().toString(36).slice(2, 8);
   const win = `<section class="window wait-window"${inline ? "" : ` role="dialog" aria-modal="true" aria-labelledby="${id}-t" aria-describedby="${id}-s"`}>
-      <div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">${esc(title)}</span><span class="window-lines" aria-hidden="true"></span></div>
+      <div class="window-bar brand-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">${esc(title)}</span><span class="window-lines" aria-hidden="true"></span></div>
       <div class="loading-window"><h2 id="${id}-t">${esc(title)}</h2>
         <p id="${id}-s" class="wait-stage" role="status">${esc(label)}</p>
         <div class="loading-track" role="progressbar" aria-label="Trwa sprawdzanie"><span></span></div>
@@ -233,7 +235,7 @@ function renderClaim(c, i, n, full = false) {
       ${kind ? `<p class="small muted">Rodzaj wypowiedzi: ${kind}</p>` : ""}
       ${premises.length ? `<ul class="premises">${premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}${COMPUTED_PREMISE.test(p.label) ? " — wyliczenie Prawdowida" : ""}:</b> ${esc(p.value)}</li>`).join("")}</ul>
       <div class="small muted">Reguły: ${(c.rules_fired || []).map(esc).join(", ") || "—"} · <a href="/metodologia#reguly">opis reguł</a></div>` : ""}</details>` : "";
-  return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Wynik sprawdzenia${n > 1 ? ` · ${i + 1} z ${n}` : ""}</span><span class="window-lines" aria-hidden="true"></span></div><div class="claim-body">
+  return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}"><div class="window-bar brand-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Wynik sprawdzenia${n > 1 ? ` · ${i + 1} z ${n}` : ""}</span><span class="window-lines" aria-hidden="true"></span></div><div class="claim-body">
     <div class="verdict-hero"><span class="verdict-icon" aria-hidden="true">${VERDICT_ICON[c.verdict] || "?"}</span><div><div class="eyebrow">${n > 1 ? `Informacja ${i + 1} z ${n}` : "Co mówią źródła"}</div><h2>${esc(c.verdict === "falszywe" ? "Fałsz" : c.verdict_label)}</h2></div></div>
     <p class="verdict-explanation">${esc(c.short_answer || c.explanation)}</p>
     ${facts.length ? `<ul class="facts">${facts.map(f => `<li>${labelled(f)}</li>`).join("")}</ul>` : ""}

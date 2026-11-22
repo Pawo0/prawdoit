@@ -1,0 +1,57 @@
+{
+  "palettes": [
+    {
+      "id": "17-piasek",
+      "name": "17 / Piasek i czerwień",
+      "brand": "#81231e",
+      "deep": "#2b2c1e",
+      "paper": "#cab891",
+      "soft": "#e5dbc5",
+      "surface": "#e5dbc5",
+      "art": "#81231e",
+      "desc": "Najwierniejszy kolorystyce referencji: piaskowe tło, ciemnoczerwona rycina, oliwkowe i szałwiowe belki. Ciemny tekst i ramki z palety.",
+      "contrastWhite": 9.58,
+      "contrastPaper": 4.91
+    },
+    {
+      "id": "18-papier",
+      "name": "18 / Papier i czerwień",
+      "brand": "#81231e",
+      "deep": "#81231e",
+      "paper": "#f3eee2",
+      "soft": "#cab891",
+      "surface": "#f3eee2",
+      "art": "#81231e",
+      "desc": "Mój wybór: rozjaśniony papier daje oddech ilustracji. Piasek w zakładkach, oliwka w belkach, szałwia w objaśnieniach; czerwień prowadzi do działania.",
+      "contrastWhite": 9.58,
+      "contrastPaper": 8.27
+    },
+    {
+      "id": "19-szalwia",
+      "name": "19 / Szałwia i czerwień",
+      "brand": "#81231e",
+      "deep": "#81231e",
+      "paper": "#ede7d8",
+      "soft": "#cab891",
+      "surface": "#ede7d8",
+      "art": "#5f6a54",
+      "desc": "Spokojniejsza, szałwiowa rycina i czerwone przyciski. Zieleń w sekcji objaśnień, oliwkowe detale i piaskowe zakładki równoważą czerwień.",
+      "contrastWhite": 9.58,
+      "contrastPaper": 7.76
+    }
+  ],
+  "checks": [
+    {
+      "palette": "17-piasek",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "18-papier",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "19-szalwia",
+      "mobileOverflow": false
+    }
+  ]
+}

@@ -69,7 +69,7 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const s = stats[tab] = stats[tab] || {scanned: 0, flagged: 0};
           s.scanned += msg.items.length; s.flagged += data.filter(isMatch).length;
           api.action.setBadgeText({tabId: tab, text: s.flagged ? String(s.flagged) : ""});
-          api.action.setBadgeBackgroundColor?.({tabId: tab, color: "#443cf2"}); // a count of sourced tags, not an alarm
+          api.action.setBadgeBackgroundColor?.({tabId: tab, color: "#c92743"}); // a count of sourced tags, not an alarm
         }
         return sendResponse({ok: true, data});
       }

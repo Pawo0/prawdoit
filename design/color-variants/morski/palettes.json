@@ -1,0 +1,21 @@
+{
+  "palettes": [
+    {
+      "id": "20-morski",
+      "name": "20 / Morski i jasny papier",
+      "brand": "#08777c",
+      "deep": "#07565b",
+      "paper": "#f2f1e8",
+      "soft": "#d4e5de",
+      "desc": "Głęboki morski turkus na ilustracji, nagłówkach i przyciskach. Jasny, ciepły papier oraz subtelna morska zieleń w zakładkach i objaśnieniach.",
+      "contrastWhite": 5.33,
+      "contrastPaper": 4.7
+    }
+  ],
+  "checks": [
+    {
+      "palette": "20-morski",
+      "mobileOverflow": false
+    }
+  ]
+}

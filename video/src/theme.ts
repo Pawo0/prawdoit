@@ -1,13 +1,13 @@
-// The application's own visual language (web/static/style.css): cream paper, cobalt, Macintosh window chrome.
+// The application's own visual language (web/static/style.css): ivory paper, juicy carmine, Macintosh window chrome.
 export const C = {
-  paper: '#f4f3eb',
+  paper: '#faf5ec',
   paperDeep: '#eae9e2',
   ink: '#191919',
   muted: '#55554f',
   line: '#c4c3ba',
-  cobalt: '#443cf2',
-  cobaltDeep: '#3027cf',
-  sage: '#e3e7d5',
+  brand: '#c92743',
+  brandDeep: '#9c1a32',
+  accentSoft: '#f0dce0',
   false: '#a32424',
   true: '#17623b',
 };

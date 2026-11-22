@@ -19,7 +19,7 @@ const Cursor: React.FC<{x: number; y: number; zoom: number; since: number}> = ({
       {ring >= 0 ? (
         <div style={{position: 'absolute', left: x - (8 + ring * 5) / zoom, top: y - (8 + ring * 5) / zoom,
           width: (16 + ring * 10) / zoom, height: (16 + ring * 10) / zoom, boxSizing: 'border-box',
-          border: `${2.5 / zoom}px solid ${C.cobalt}`, opacity: ring > 4 ? 0.5 : 1}} />
+          border: `${2.5 / zoom}px solid ${C.brand}`, opacity: ring > 4 ? 0.5 : 1}} />
       ) : null}
       <svg width={20} height={30} viewBox="0 0 13 20" style={{position: 'absolute', left: x, top: y, overflow: 'visible',
         transform: `scale(${size * press})`, transformOrigin: '0 0', shapeRendering: 'crispEdges'}}>
@@ -35,7 +35,7 @@ const Ants: React.FC<{rect: Rect; zoom: number; frame: number}> = ({rect, zoom, 
   return (
     <svg style={{position: 'absolute', left: rect.x - pad, top: rect.y - pad, overflow: 'visible'}} width={rect.w + pad * 2} height={rect.h + pad * 2}>
       <rect x={0} y={0} width={rect.w + pad * 2} height={rect.h + pad * 2} fill="none" stroke="#fff" strokeWidth={sw} />
-      <rect x={0} y={0} width={rect.w + pad * 2} height={rect.h + pad * 2} fill="none" stroke={C.cobalt} strokeWidth={sw}
+      <rect x={0} y={0} width={rect.w + pad * 2} height={rect.h + pad * 2} fill="none" stroke={C.brand} strokeWidth={sw}
         strokeDasharray={`${dash} ${dash}`} strokeDashoffset={-(onTwos(frame) / 2) * (dash / 4)} />
     </svg>
   );
@@ -90,7 +90,7 @@ export const Footage: React.FC<{
       {dip > 0 ? <div style={{position: 'absolute', inset: 0, background: C.paper, opacity: dip}} /> : null}
       {cut && skipLabel ? (
         <div style={{position: 'absolute', right: 18, top: 18, padding: '8px 16px', background: C.ink, color: C.paper,
-          font: `22px ${PIXEL}`, boxShadow: `5px 5px 0 ${C.cobalt}`}}>
+          font: `22px ${PIXEL}`, boxShadow: `5px 5px 0 ${C.brand}`}}>
           {skipLabel(cut.skipped)}
         </div>
       ) : null}

@@ -14,13 +14,13 @@ export const Paper: React.FC<{children?: React.ReactNode}> = ({children}) => (
 
 const stripes = (color: string) => `repeating-linear-gradient(to bottom, ${color} 0 2px, transparent 2px 6px)`;
 
-export const TitleBar: React.FC<{title: string; right?: string; blue?: boolean; height?: number; size?: number}> =
-  ({title, right, blue, height = 46, size = 22}) => {
-    const fg = blue ? '#fff' : C.ink;
+export const TitleBar: React.FC<{title: string; right?: string; accented?: boolean; height?: number; size?: number}> =
+  ({title, right, accented, height = 46, size = 22}) => {
+    const fg = accented ? '#fff' : C.ink;
     return (
       <div style={{
         height, display: 'flex', alignItems: 'center', gap: 14, padding: '0 14px', boxSizing: 'border-box',
-        background: blue ? C.cobalt : C.paper, color: fg, borderBottom: `3px solid ${C.ink}`, font: `${size}px ${PIXEL}`,
+        background: accented ? C.brand : C.paper, color: fg, borderBottom: `3px solid ${C.ink}`, font: `${size}px ${PIXEL}`,
       }}>
         <span style={{width: 16, height: 16, border: `3px solid ${fg}`, flexShrink: 0}} />
         <span style={{whiteSpace: 'nowrap'}}>{title}</span>
@@ -32,13 +32,13 @@ export const TitleBar: React.FC<{title: string; right?: string; blue?: boolean; 
   };
 
 export const MacWindow: React.FC<{
-  rect: Rect; title: string; right?: string; blue?: boolean; children?: React.ReactNode; bar?: number; body?: React.CSSProperties;
-}> = ({rect, title, right, blue, children, bar = 46, body}) => (
+  rect: Rect; title: string; right?: string; accented?: boolean; children?: React.ReactNode; bar?: number; body?: React.CSSProperties;
+}> = ({rect, title, right, accented, children, bar = 46, body}) => (
   <div style={{
     position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, boxSizing: 'border-box',
     background: C.paper, border: `3px solid ${C.ink}`, boxShadow: `8px 8px 0 ${C.ink}`, display: 'flex', flexDirection: 'column',
   }}>
-    <TitleBar title={title} right={right} blue={blue} height={bar} />
+    <TitleBar title={title} right={right} accented={accented} height={bar} />
     <div style={{flex: 1, position: 'relative', overflow: 'hidden', ...body}}>{children}</div>
   </div>
 );
@@ -93,7 +93,7 @@ export const Captions: React.FC<{lines: Line[]; tag: string}> = ({lines, tag}) =
       position: 'absolute', left: CAPTION.x, top: CAPTION.y, width: CAPTION.w, height: CAPTION.h, boxSizing: 'border-box',
       background: C.paper, border: `3px solid ${C.ink}`, boxShadow: `8px 8px 0 ${C.ink}`, display: 'flex', alignItems: 'center',
     }}>
-      <div style={{alignSelf: 'stretch', display: 'flex', alignItems: 'center', padding: '0 22px', background: C.cobalt, color: '#fff',
+      <div style={{alignSelf: 'stretch', display: 'flex', alignItems: 'center', padding: '0 22px', background: C.brand, color: '#fff',
         font: `24px ${PIXEL}`, borderRight: `3px solid ${C.ink}`, whiteSpace: 'nowrap'}}>{tag}</div>
       <div style={{flex: 1, padding: '0 26px', font: `31px ${PIXEL}`, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden'}}>
         {line ? <Typed key={line.from} text={line.text} start={line.from} cps={46} /> : null}

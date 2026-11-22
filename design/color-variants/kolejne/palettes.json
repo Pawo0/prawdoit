@@ -1,0 +1,96 @@
+{
+  "palettes": [
+    {
+      "id": "05-grafit",
+      "name": "05 / Grafit i wanilia",
+      "brand": "#353734",
+      "deep": "#20221f",
+      "paper": "#f5f2e8",
+      "soft": "#ece1ad",
+      "desc": "Najbardziej oszczędny: grafitowa ilustracja i waniliowe akcenty. Techniczny, mocny i ponadczasowy.",
+      "contrastWhite": 12.02,
+      "contrastPaper": 10.73
+    },
+    {
+      "id": "06-oliwka",
+      "name": "06 / Oliwka i len",
+      "brand": "#626021",
+      "deep": "#444316",
+      "paper": "#f4f0e1",
+      "soft": "#e5e2bf",
+      "desc": "Wyraźnie żółtozielony kierunek. Przywodzi na myśl atlas, bibliotekę i papierowe archiwum.",
+      "contrastWhite": 6.53,
+      "contrastPaper": 5.72
+    },
+    {
+      "id": "07-bordo",
+      "name": "07 / Bordo i różany papier",
+      "brand": "#7a2946",
+      "deep": "#591b32",
+      "paper": "#f7efeb",
+      "soft": "#ead6dd",
+      "desc": "Szlachetny i zdecydowany, z charakterem redakcji. Bordo marki wymaga wyraźnego oddzielenia od czerwieni fałszu.",
+      "contrastWhite": 9.4,
+      "contrastPaper": 8.28
+    },
+    {
+      "id": "08-kakao",
+      "name": "08 / Kakao i owies",
+      "brand": "#674a36",
+      "deep": "#483224",
+      "paper": "#f4eee2",
+      "soft": "#e4d5bd",
+      "desc": "Najcieplejszy, spokojny duoton. Dobrze podkreśla rycinę i daje efekt starego druku.",
+      "contrastWhite": 8.05,
+      "contrastPaper": 6.96
+    },
+    {
+      "id": "09-ametyst",
+      "name": "09 / Ametyst i kreda",
+      "brand": "#704695",
+      "deep": "#50316e",
+      "paper": "#f4f0f3",
+      "soft": "#e3d9ec",
+      "desc": "Bardziej współczesny i wyrazisty fiolet. Zachowuje cyfrowy charakter bez niebieskiego akcentu.",
+      "contrastWhite": 7,
+      "contrastPaper": 6.2
+    },
+    {
+      "id": "10-bursztyn",
+      "name": "10 / Bursztyn i krem",
+      "brand": "#805c08",
+      "deep": "#5b4004",
+      "paper": "#faf3e3",
+      "soft": "#eddfa9",
+      "desc": "Złocisty, ciepły i plakatowy. Przygaszony bursztyn utrzymuje czytelność tekstów i przycisków.",
+      "contrastWhite": 6.08,
+      "contrastPaper": 5.5
+    }
+  ],
+  "checks": [
+    {
+      "palette": "05-grafit",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "06-oliwka",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "07-bordo",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "08-kakao",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "09-ametyst",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "10-bursztyn",
+      "mobileOverflow": false
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "palettes": [
+    {
+      "id": "11-karmin",
+      "name": "11 / Karmin i kość słoniowa",
+      "brand": "#b9233e",
+      "deep": "#8d152c",
+      "paper": "#f7f2e8",
+      "soft": "#eddcda",
+      "desc": "Mój wybór: nasycona czerwień z chłodną nutą. Wyrazista, graficzna i dobrze współgrająca z kremowym papierem.",
+      "contrastWhite": 6.23,
+      "contrastPaper": 5.58
+    },
+    {
+      "id": "12-cynober",
+      "name": "12 / Cynober i krem",
+      "brand": "#bd3b27",
+      "deep": "#942a1c",
+      "paper": "#faf2e6",
+      "soft": "#f0ddc8",
+      "desc": "Najbardziej energetyczna propozycja. Ciepła czerwień w stronę pomarańczu, z charakterem drukowanego plakatu.",
+      "contrastWhite": 5.5,
+      "contrastPaper": 4.95
+    },
+    {
+      "id": "13-cegla",
+      "name": "13 / Cegła i len",
+      "brand": "#9b4536",
+      "deep": "#723025",
+      "paper": "#f4efe3",
+      "soft": "#e8d9ca",
+      "desc": "Przygaszona, ziemista czerwień. Spokojniejsza, bardziej dojrzała alternatywa dla intensywnego karminu.",
+      "contrastWhite": 6.37,
+      "contrastPaper": 5.55
+    },
+    {
+      "id": "14-malina",
+      "name": "14 / Malina i porcelana",
+      "brand": "#a52b57",
+      "deep": "#7c1d40",
+      "paper": "#f8f1ef",
+      "soft": "#eed9e2",
+      "desc": "Chłodniejszy odcień czerwieni z różową nutą. Lekki, redakcyjny i mniej kojarzący się z alarmem.",
+      "contrastWhite": 6.81,
+      "contrastPaper": 6.1
+    },
+    {
+      "id": "15-wino",
+      "name": "15 / Wino i pergamin",
+      "brand": "#6e2336",
+      "deep": "#4e1725",
+      "paper": "#f4eee4",
+      "soft": "#e5d5d6",
+      "desc": "Najciemniejsza czerwień w zestawie. Kameralna, elegancka, z atmosferą biblioteki i dawnej ryciny.",
+      "contrastWhite": 10.73,
+      "contrastPaper": 9.3
+    },
+    {
+      "id": "16-sangwina",
+      "name": "16 / Sangwina i piasek",
+      "brand": "#8c3028",
+      "deep": "#63201b",
+      "paper": "#f6eee0",
+      "soft": "#e9d6c1",
+      "desc": "Głęboka, ciepła czerwień pigmentu. Mocny duoton, który szczególnie dobrze wydobywa fakturę ilustracji.",
+      "contrastWhite": 8.18,
+      "contrastPaper": 7.1
+    }
+  ],
+  "checks": [
+    {
+      "palette": "11-karmin",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "12-cynober",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "13-cegla",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "14-malina",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "15-wino",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "16-sangwina",
+      "mobileOverflow": false
+    }
+  ]
+}

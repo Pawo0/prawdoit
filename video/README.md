@@ -4,6 +4,11 @@ A 1:44 video of Prawdowid as it works today (`out/prawdowid-demo.mp4`): the webs
 Everything on screen inside the windows is a recording of the real application answering real requests;
 Remotion adds the window frame, camera moves, cursor, captions and title cards.
 
+The visual palette is **Soczysty karmin**: `#C92743`, `#9C1A32`, ivory `#FAF5EC`, and soft pink `#F0DCE0`.
+The existing demo and presentation clips were migrated with `tools/recolor-legacy.mjs input.mp4 output.mp4`;
+this changes colors in the archived footage without re-running checks or posting Discord messages.
+Use an original cobalt recording as input only once. Future recordings use the application's current palette directly.
+
 ```bash
 cd video && npm install
 npm run capture            # records the website and the extension (backend must run on :8000)

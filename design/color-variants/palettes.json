@@ -1,0 +1,66 @@
+{
+  "palettes": [
+    {
+      "id": "01-oberzyna",
+      "name": "01 / Oberżyna i pergamin",
+      "brand": "#63365b",
+      "deep": "#472541",
+      "paper": "#f4f0e8",
+      "soft": "#e9dfeb",
+      "desc": "Mój wybór: wyrazisty, redakcyjny charakter. Kolor marki wyraźnie oddzielony od ocen prawda / fałsz.",
+      "contrastWhite": 9.51,
+      "contrastPaper": 8.36
+    },
+    {
+      "id": "02-petrol",
+      "name": "02 / Petrol i kość słoniowa",
+      "brand": "#176568",
+      "deep": "#10494c",
+      "paper": "#f1f3eb",
+      "soft": "#dce8df",
+      "desc": "Spokojny i rzeczowy. Najbliższy narzędziu analitycznemu, z chłodnym, przygaszonym akcentem.",
+      "contrastWhite": 6.78,
+      "contrastPaper": 6.06
+    },
+    {
+      "id": "03-las",
+      "name": "03 / Las i papier",
+      "brand": "#40583b",
+      "deep": "#2d4029",
+      "paper": "#f2f0e5",
+      "soft": "#e2e5d2",
+      "desc": "Stonowany, archiwalny i ciepły. Najbardziej naturalne połączenie z papierem i grafiką rastrową.",
+      "contrastWhite": 7.84,
+      "contrastPaper": 6.86
+    },
+    {
+      "id": "04-miedz",
+      "name": "04 / Miedź i piasek",
+      "brand": "#964b2d",
+      "deep": "#71351f",
+      "paper": "#f7f0e5",
+      "soft": "#eddfc9",
+      "desc": "Ciepły, odważny i plakatowy. Najmocniej zmienia odbiór dotychczasowej identyfikacji.",
+      "contrastWhite": 6.29,
+      "contrastPaper": 5.55
+    }
+  ],
+  "checks": [
+    {
+      "palette": "01-oberzyna",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "02-petrol",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "03-las",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "04-miedz",
+      "mobileOverflow": false
+    }
+  ]
+}

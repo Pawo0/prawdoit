@@ -1,4 +1,4 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1d3557"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — katalog źródeł</title></head><body>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — katalog źródeł</title></head><body>
 <main class="wrap">
   <h1>Katalog źródeł</h1>
   <p class="lead">Prawdowid odpowiada wyłącznie na podstawie jawnego, zamkniętego zbioru źródeł. Każde źródło ma przypisaną kategorię, licencję oraz datę publikacji i pobrania. Lista jest dostępna do audytu.</p>
@@ -13,7 +13,7 @@
   <div class="card"><h2 style="margin-top:0">Rejestr źródeł</h2>
     <p class="small muted">Każde źródło ma jawny opis: wydawcę, poziom wiarygodności, licencję, uzasadnienie kwalifikacji i częstotliwość odświeżania. Wyłączone źródła nie są używane w ocenach.</p>
     <div style="overflow-x:auto"><table id="reg"><thead><tr><th>Źródło</th><th>Poziom</th><th>Odświeżanie</th><th>Dok.</th><th>Dlaczego wiarygodne</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h2 style="margin-top:0">Wydawcy w indeksie</h2><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div>
+  <div class="card"><h2 style="margin-top:0">Wydawcy w indeksie</h2><div style="overflow-x:auto"><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div></div>
 </main>
 <script>
 fetch("/api/sources").then(r => r.json()).then(d => {

@@ -1,0 +1,96 @@
+{
+  "palettes": [
+    {
+      "id": "11-karmin",
+      "name": "11 / Karmin — punkt odniesienia",
+      "brand": "#b9233e",
+      "deep": "#8d152c",
+      "paper": "#f7f2e8",
+      "soft": "#eddcda",
+      "desc": "Oryginał do porównania: nasycony karmin z chłodną nutą i jasna kość słoniowa.",
+      "contrastWhite": 6.23,
+      "contrastPaper": 5.58
+    },
+    {
+      "id": "21-karmin-cieply",
+      "name": "21 / Karmin i ciepły krem",
+      "brand": "#bb2d35",
+      "deep": "#8f1e28",
+      "paper": "#faf0e2",
+      "soft": "#edd9ce",
+      "desc": "Nieco cieplejsza czerwień, mniej różowa. Kremowe tło podkreśla charakter drukowanej ryciny.",
+      "contrastWhite": 5.93,
+      "contrastPaper": 5.26
+    },
+    {
+      "id": "22-karmin-gleboki",
+      "name": "22 / Głęboki karmin",
+      "brand": "#9f2038",
+      "deep": "#76152a",
+      "paper": "#f5efe4",
+      "soft": "#e7d5d2",
+      "desc": "Ciemniejszy i spokojniejszy od oryginału. Mocny kontrast, elegancki charakter i cieplejszy papier.",
+      "contrastWhite": 7.67,
+      "contrastPaper": 6.7
+    },
+    {
+      "id": "23-karmin-soczysty",
+      "name": "23 / Soczysty karmin",
+      "brand": "#c92743",
+      "deep": "#9c1a32",
+      "paper": "#faf5ec",
+      "soft": "#f0dce0",
+      "desc": "Jaśniejsza, bardziej nasycona czerwień na delikatniejszej kości słoniowej. Najbardziej wyrazisty wariant tej rodziny.",
+      "contrastWhite": 5.45,
+      "contrastPaper": 5.02
+    },
+    {
+      "id": "24-karmin-malinowy",
+      "name": "24 / Karmin z nutą maliny",
+      "brand": "#b12650",
+      "deep": "#851b3b",
+      "paper": "#f8f1ed",
+      "soft": "#edd9df",
+      "desc": "Subtelne przesunięcie w stronę maliny. Chłodniejszy, lżejszy odbiór przy zachowaniu mocnego czerwonego akcentu.",
+      "contrastWhite": 6.44,
+      "contrastPaper": 5.76
+    },
+    {
+      "id": "25-karmin-przygaszony",
+      "name": "25 / Karmin na starym papierze",
+      "brand": "#a33d48",
+      "deep": "#7e2a35",
+      "paper": "#f2ece0",
+      "soft": "#e5d7cc",
+      "desc": "Mniej nasycony, miękki karmin i ciemniejszy papier. Najspokojniejsza, lekko nostalgiczna interpretacja oryginału.",
+      "contrastWhite": 6.33,
+      "contrastPaper": 5.38
+    }
+  ],
+  "checks": [
+    {
+      "palette": "11-karmin",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "21-karmin-cieply",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "22-karmin-gleboki",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "23-karmin-soczysty",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "24-karmin-malinowy",
+      "mobileOverflow": false
+    },
+    {
+      "palette": "25-karmin-przygaszony",
+      "mobileOverflow": false
+    }
+  ]
+}
