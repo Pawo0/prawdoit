@@ -209,7 +209,8 @@ _VERDICT_RULES: list[tuple[str, str | None]] = [
     # order matters: more specific first
     ("czesciowa prawda", "mixed"), ("czesciowo prawda", "mixed"), ("czesciowy falsz", "mixed"),
     ("czesciowo falsz", "mixed"), ("polprawda", "mixed"), ("mostly true", "mixed"),
-    ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
+    ("mostly false", "mixed"), ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"),
+    ("mixed", "mixed"),
     ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("niesprawdzal", "unverifiable"),
     ("brak dowodow", "unverifiable"), ("sie zweryfikowac", "unverifiable"), ("insufficient evidence", "unverifiable"),
     ("w wiekszosci", "mixed"),
@@ -239,11 +240,19 @@ def clean_label(raw: str | None) -> str | None:
     return (s[0].upper() + s[1:]) if s else None
 
 
+# Labels that are not a rating of a claim: satire, explainers, analyses and reports, a promise-tracker status, a bare
+# "checked" mark. They map to no class, so the record is context only (research/04 §5.3: satire is not verifiable as
+# such; when re-shared as real news, the re-shared claim needs its own check). Substrings for the first group, whole
+# labels for the second (a sentence put into the rating field may contain "raport" and still rate the claim).
+_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")
+_NOT_A_RATING = {"analiza", "raport", "fact-checked", "fact checked", "zrealizowane"}
+
+
 def map_verdict(raw: str | None) -> str | None:
     if not raw:
         return None
     n = _norm(raw)
-    if any(x in n for x in ("satyr", "satire", "wyjasniamy", "explain")):
+    if n in _NOT_A_RATING or any(x in n for x in _NO_VERDICT):
         return None
     for key, val in _VERDICT_RULES:
         if key in n:

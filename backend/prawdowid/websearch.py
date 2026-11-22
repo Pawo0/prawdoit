@@ -568,7 +568,8 @@ _GFC_TTL = 6 * 3600
 _VERDICT_RULES = [
     ("czesciowa prawda", "mixed"), ("czesciowo prawda", "mixed"), ("czesciowy falsz", "mixed"),
     ("czesciowo falsz", "mixed"), ("polprawda", "mixed"), ("mostly true", "mixed"),
-    ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
+    ("mostly false", "mixed"), ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"),
+    ("mixed", "mixed"),
     ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("niesprawdzal", "unverifiable"),
     ("brak dowodow", "unverifiable"), ("sie zweryfikowac", "unverifiable"), ("insufficient evidence", "unverifiable"),
     ("w wiekszosci", "mixed"),
@@ -584,7 +585,9 @@ _VERDICT_RULES = [
     ("scam", "false"), ("altered", "false"),
     ("prawda", "true"), ("prawdziw", "true"), ("true", "true"), ("correct", "true"),
 ]
-_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")  # labels that are not a rating of a claim
+# labels that are not a rating of a claim (the same lists as ingest/common.py): substrings, then whole labels
+_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")
+_NOT_A_RATING = {"analiza", "raport", "fact-checked", "fact checked", "zrealizowane"}
 
 
 def map_rating(raw: str | None) -> str | None:
@@ -595,7 +598,7 @@ def map_rating(raw: str | None) -> str | None:
 
     n = "".join(c for c in unicodedata.normalize("NFKD", raw.lower()) if not unicodedata.combining(c))
     n = n.replace("ł", "l").strip(" .!:- ")
-    if any(x in n for x in _NO_VERDICT):
+    if n in _NOT_A_RATING or any(x in n for x in _NO_VERDICT):
         return None
     return next((v for k, v in _VERDICT_RULES if k in n), None)
 
