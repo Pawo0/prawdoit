@@ -405,18 +405,18 @@ ol.big-keys li{font-size:30px;margin-bottom:34px}
   <p class="lede">145 przypadków i 16 wariantów scenariuszy organizatorów A–J. Stan z 22.11.2026, bez wyszukiwania na żywo.</p>
   <div class="content fill" style="top:240px">
     <div class="stats">
-      <div class="stat"><div class="v">0,959 · 0,912</div><div class="k">Trafność werdyktu (macro-F1) na własnych zbiorach testowych. Cel MVP ≥ 0,75.</div></div>
+      <div class="stat"><div class="v">0,799</div><div class="k">Trafność werdyktu (macro-F1) na 145 przypadkach, ze ścisłą kontrolą cytatów. Cel MVP ≥ 0,75.</div></div>
       <div class="stat"><div class="v">16/16</div><div class="k">Scenariusze referencyjne organizatorów A–J.</div></div>
-      <div class="stat"><div class="v">100%</div><div class="k">Pokrycie cytowań i wstrzymanie się przy braku dowodów.</div></div>
-      <div class="stat"><div class="v">0,6 s</div><div class="k">Mediana czasu odpowiedzi; p95 do 2,0 s. Z wyszukiwaniem na żywo ok. 6–15 s.</div></div>
+      <div class="stat"><div class="v">100%</div><div class="k">Wstrzymanie się przy braku dowodów i odporność na prompt injection.</div></div>
+      <div class="stat"><div class="v">0,14 s</div><div class="k">Mediana czasu odpowiedzi; p95&nbsp;0,55&nbsp;s. Z wyszukiwaniem na żywo ok.&nbsp;6–15&nbsp;s.</div></div>
     </div>
-    <p style="margin:64px 0 0;font-size:32px">Pozostałe błędy to „brak dowodów” zamiast werdyktu. Żaden przypadek nie kończy się fałszywym werdyktem.</p>
+    <p style="margin:64px 0 0;font-size:32px">Błędy to prawie wyłącznie „brak dowodów” zamiast werdyktu.</p>
     <div style="display:flex;align-items:center;gap:40px;margin-top:110px">
       <div class="brand-mark" style="width:44px;height:44px"></div>
       <div style="font:76px/1.1 var(--pixel);color:var(--brand);letter-spacing:-.02em">Zawsze ze źródłem. Bez zgadywania.</div>
     </div>
   </div>
-  <div class="src">Źródło: gałąź <code>main</code>, commit <code>ed2f321</code> (22.11.2026); <code>README.md</code> (Wyniki testów).</div>
+  <div class="src">Źródło: <code>Pawo0/prawdoit</code> <code>main</code>, commit <code>5c34379</code> (22.11.2026): <code>eval/citation_grounding_2026-11-22</code> (145 przypadków, reguły 1.1).</div>
   <div class="counter"></div>
 </section>
 
