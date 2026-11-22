@@ -131,7 +131,8 @@ _INJECTION_PATTERNS = [
 _INJ_RE = re.compile(
     "|".join(f"(?:{p})" for p in _INJECTION_PATTERNS), re.IGNORECASE | re.MULTILINE
 )
-_HIDDEN_RE = re.compile(r"[​-‏‪-‮⁠-⁤﻿]")
+# Escape invisible characters in source; the regex still matches their Unicode code points.
+_HIDDEN_RE = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 
 
 _B64 = re.compile(r"\b[A-Za-z0-9+/]{24,}={0,2}")
