@@ -16,7 +16,7 @@
     "key_env": "PRAWDOWID_GOOGLE_FACTCHECK_KEY",
     "max_docs": 1000
   },
-  "enabled": true,
+  "enabled": false,
   "schedule_hours": 12,
   "web_search": false,
   "topics": [
@@ -29,5 +29,6 @@
   "scope": "organiser_recommended",
   "scope_basis": "Nie wymienione z nazwy przez organizatora (0 wzmianek w rules/resources.txt, treści zadania, scenariuszach referencyjnych i instrukcji EUvsDisinfo). Podstawa pośrednia: rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (AFP Sprawdzam — sygnatariusz IFCN wg research/02). Droga: baza weryfikatorów faktów Google z rules/resources.txt, w której oceny tego wydawcy występują z languageCode=pl — organizator wskazał bazę, nie tego wydawcę.",
   "added_by": "zespół Prawdowid (oceny wydawcy z bazy weryfikatorów faktów Google, rules/resources.txt)",
-  "added_at": "2026-11-21"
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-22: wyniki Google Fact Check Tools API nie są przechowywane w korpusie (warunki Google APIs §5e: bez baz danych i trwałych kopii zwracanych treści bez zgody właściciela). 39 zapisanych rekordów usunięto; oceny tego wydawcy są dostępne wyłącznie w zapytaniach na żywo (wpis google_factcheck, wymaga klucza)."
 }

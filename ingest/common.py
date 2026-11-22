@@ -284,6 +284,21 @@ def clip(s: str | None, n: int = MAX_TEXT) -> str:
     return cut.rstrip() + " […]"
 
 
+EXCERPT_CHARS = 300
+
+
+def excerpt(body: str | None, title: str = "", claim: str | None = "", n: int = EXCERPT_CHARS) -> str:
+    """For articles without an open licence (FakeNews.pl, Pravda, CERT Polska): ONE verbatim passage of at most n
+    characters, the finding rather than the restated claim (backend/prawdowid/textutil.finding_excerpt). The record
+    keeps the facts (claim, rating, title, dates, link) and this quote; the article itself stays at its link."""
+    backend = str(ROOT / "backend")
+    if backend not in sys.path:
+        sys.path.insert(0, backend)
+    from prawdowid.textutil import finding_excerpt  # stdlib-only module
+
+    return finding_excerpt(clean_text(body), title or "", claim or "", n)
+
+
 def iso_date(s: str | None) -> str | None:
     if not s:
         return None

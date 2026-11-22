@@ -8,8 +8,9 @@ ClaimReview; the ClaimReviews Pravda entered via Google's Fact Check Markup Tool
 the Data Commons feed (data/raw/claimreview_feed_pl.jsonl, produced by
 harvest_claimreview_feed.py) and are joined by URL -> claim, claim author, verdict.
 
-Licence: no open licence stated on the site (default: all rights reserved) -> claim + verdict
-+ excerpt (≤2500 chars) + link.
+Licence: no open licence stated on the site (default: all rights reserved) -> claim, rating, title,
+dates, link + ONE verbatim excerpt (≤300 chars, the passage stating the finding; common.excerpt). The
+licence the Data Commons feed gives for a ClaimReview (sdLicense) is kept in the record's licence.
 """
 from __future__ import annotations
 
@@ -18,14 +19,15 @@ import json
 
 import trafilatura
 
-from common import (RAW_DIR, JsonlWriter, PoliteSession, clean_text, clip, iso_date, jsonld_blocks,
+from common import (RAW_DIR, JsonlWriter, PoliteSession, clean_text, excerpt, iso_date, jsonld_blocks,
                     log, map_verdict, now_iso, sitemap_urls)
 
 SOURCE = "pravda"
 BASE = "https://pravda.org.pl"
-LICENSE = ("© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored claim, "
-           "verdict, excerpt (≤2500 chars) + link for citation. Claim/verdict from Pravda's own "
-           "ClaimReview markup (Google Fact Check Tools feed).")
+LICENSE = ("© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored: checked claim, "
+           "rating, title, dates and link, plus one verbatim excerpt (≤300 chars) quoted with attribution; the "
+           "article is read at its link. Claim/rating from Pravda's own ClaimReview markup (Data Commons "
+           "ClaimReview feed).")
 
 
 def norm(u: str) -> str:
@@ -35,7 +37,7 @@ def norm(u: str) -> str:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--extra-recent", type=int, default=60, help="newest posts without ClaimReview")
-    ap.add_argument("--max-chars", type=int, default=2500)
+    ap.add_argument("--max-chars", type=int, default=300, help="excerpt length (no open licence: keep it short)")
     ap.add_argument("--delay", type=float, default=1.5)
     args = ap.parse_args()
 
@@ -83,6 +85,8 @@ def main():
             tags += [str(k).lower() for k in kw]
         if cr:
             tags.append("claimreview")
+        tags.append(f"excerpt:finding{args.max_chars}")
+        lic = LICENSE + (f" Feed licence (sdLicense): {cr['sd_license']}." if cr.get("sd_license") else "")
         w.write({
             "id": f"{SOURCE}:{url.rstrip('/').rsplit('/', 1)[-1]}",
             "source_type": "factcheck",
@@ -93,8 +97,8 @@ def main():
             "published_at": iso_date(art.get("datePublished")) or cr.get("review_date"),
             "retrieved_at": now_iso(),
             "language": "pl",
-            "license": LICENSE,
-            "text": clip(body, args.max_chars),
+            "license": lic,
+            "text": excerpt(body, title, claim, args.max_chars),
             "claim": claim[:1000] if claim else None,
             "claim_author": cr.get("claim_author"),
             "verdict_raw": verdict_raw,

@@ -93,6 +93,7 @@ def main():
                     "verdict_raw": clean_text(rr.get("alternateName") or rr.get("name") or "") or None,
                     "rating_explanation": clean_text(rr.get("ratingExplanation") or "") or None,
                     "review_date": iso_date(str(cr.get("datePublished") or "")),
+                    "sd_license": cr.get("sdLicense") or el.get("sdLicense") or None,  # kept in harvest_pravda's licence
                     "feed_retrieved_at": now_iso(),
                 }
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")

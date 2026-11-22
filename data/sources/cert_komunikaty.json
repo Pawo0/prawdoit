@@ -14,7 +14,8 @@
     "link_regex": "^https://moje\\.cert\\.pl/komunikaty/\\d{4}/\\d+/[a-z0-9-]+/$",
     "max_items": 20,
     "min_text_chars": 200,
-    "date_regex": "<h1[^>]*data-advisory-title[^>]*>.*?</h1>\\s*<div[^>]*>\\s*<div>\\s*(\\d{2}-\\d{2}-\\d{4})"
+    "date_regex": "<h1[^>]*data-advisory-title[^>]*>.*?</h1>\\s*<div[^>]*>\\s*<div>\\s*(\\d{2}-\\d{2}-\\d{4})",
+    "excerpt_chars": 300
   },
   "enabled": true,
   "schedule_hours": 6,
@@ -24,7 +25,7 @@
     "oszustwa"
   ],
   "language": "pl",
-  "license": "© NASK / CERT Polska — brak otwartej licencji; krótkie fragmenty z przypisem i linkiem (prawo cytatu)",
+  "license": "© NASK / CERT Polska — brak otwartej licencji; zapisane: tytuł, data, link i jeden dosłowny fragment (do 300 znaków) z przypisem (prawo cytatu, art. 29 pr. aut.)",
   "qualification": "Zespół CSIRT NASK: ostrzeżenia o kampaniach phishingowych i oszustwach. robots.txt zezwala tylko na /komunikaty/ (kanał RSS /advisories/feed/ jest zablokowany w robots.txt, więc nie jest używany). Zweryfikowano: 20 linków na 2 stronach listy, artykuł 1200–4200 znaków z datą. Data publikacji z nagłówka komunikatu (params.date_regex, format DD-MM-RRRR): bez tego 3 ze 119 komunikatów dostawały datę z treści (np. rok podatności).",
   "scope": "organiser_listed",
   "scope_basis": "rules/resources.txt: moje.cert.pl/komunikaty/",

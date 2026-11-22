@@ -112,7 +112,6 @@ _TEMPORAL_NOW = re.compile(
     r"breaking|najnowsze|trwa|w tej chwili)\b",
     re.IGNORECASE,
 )
-_YEAR = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
 
 
 def is_question(s: str) -> bool:
@@ -322,12 +321,24 @@ def same_amount(a: tuple, b: tuple) -> bool:
     return a[1] == b[1] and abs(a[0] - b[0]) <= max(0.051, abs(a[0]) * 0.005)
 
 
-def is_time_sensitive(s: str) -> bool:
-    return bool(_TEMPORAL_NOW.search(s))
+# High-risk topics (security, health, elections). One list for both uses: the engine asks for a second independent
+# source before a tier-2 verdict on such a claim stands alone, and the quick check (/api/quick) moves such sentences up
+# the queue and to an analyst.
+HIGH_RISK = re.compile(
+    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
+    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|jod|upadł\w* bank\w*|wybor\w*|głosowani\w*|"
+    r"referend\w*|rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
+
+
+_YEAR = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
 
 
 def years_in(s: str) -> list[int]:
     return [int(y) for y in _YEAR.findall(s)]
+
+
+def is_time_sensitive(s: str) -> bool:
+    return bool(_TEMPORAL_NOW.search(s))
 
 
 # ------------------------------------------------------------------ PII masking (RODO: data minimisation)
@@ -445,6 +456,122 @@ def unmark_excerpt(s: str) -> str:
     return max(parts, key=len) if len(parts) > 1 else (s or "")
 
 
+# ------------------------------------------------------------------ rules (bans, obligations, new regulations)
+_RULE = re.compile(
+    r"\bnie\s+będ\w*\s+(?:mogł\w*|można|wolno)\b|\bnie\s+(?:wolno|można)\b"
+    r"|\b(?:zakaz\w*|zakazan\w*|nakaz\w*|obowiąz(?:ek|ku|kiem|ki|kow\w*|uj\w*)|zobowiązan\w*)\b"
+    r"|\b(?:wchodz\w*|wejd\w*|weszł\w*|wejści\w*)\s+w\s+życie\b"
+    r"|\bwprowadz\w*\s+(?:\w+\s+){0,3}?(?:zakaz\w*|nakaz\w*|obowiąz\w*|opłat\w*|stref\w*|limit\w*|ogranicze\w*|"
+    r"przepis\w*|zasad\w*|podat\w*|kar\w*)\b")
+_FROM_DATE = re.compile(r"\bod\s+(?:przyszł\w+|następn\w+|nowego|kolejn\w+|jutra|poniedziałku|wtorku|środy|czwartku|"
+                        r"piątku|soboty|niedzieli|\d{1,2}(?:\.\d{1,2}|\s+\w+)|stycznia|lutego|marca|kwietnia|maja|"
+                        r"czerwca|lipca|sierpnia|września|października|listopada|grudnia|(?:19|20)\d\d)\b")
+_FROM_DATE_BAN = re.compile(r"\bnie\s+(?:będ\w*|wjad\w*|wjedzi\w*|wjech\w*|wejd\w*|kupi\w*|sprzeda\w*|"
+                            r"zapłaci\w*|dostan\w*|zaparkuj\w*)\b")
+_EU_SCOPE = re.compile(r"\b(?:ue|unii|unia|unię|unijn\w*|bruksel\w*|dyrektyw\w*|komisj\w+\s+europejsk\w*|"
+                       r"parlament\w*\s+europejsk\w*|europejsk\w+\s+(?:komisj|parlament)\w*)\b")
+_LOCAL_SCOPE = re.compile(r"\b(?:gmin\w*|miast\w*|miejsk\w*|centrum|śródmieści\w*|dzielnic\w*|osiedl\w*|ulic\w*|"
+                          r"rynek|rynku|starówk\w*|burmistrz\w*|wójt\w*|ratusz\w*|radn\w*|rad\w*\s+(?:gminy|miasta)|"
+                          r"prezydent\w*\s+miasta|stref\w*\s+(?:czyst\w+|płatn\w+|ograniczon\w+))\b")
+
+
+def is_rule_claim(claim: str) -> bool:
+    """Does the claim say that a rule (ban, obligation, new regulation) applies or starts to apply?"""
+    c = claim.lower()
+    return bool(_RULE.search(c) or (_FROM_DATE.search(c) and _FROM_DATE_BAN.search(c)))
+
+
+def rule_scope(claim: str) -> str | None:
+    """Who would adopt the rule the claim describes: "eu", "local" (a municipality), "national"; None if no rule."""
+    if not is_rule_claim(claim):
+        return None
+    c = claim.lower()
+    return "eu" if _EU_SCOPE.search(c) else "local" if _LOCAL_SCOPE.search(c) else "national"
+
+
 def short(s: str, n: int = 280) -> str:
     s = normalize_ws(s)
     return s if len(s) <= n else s[: n - 1].rsplit(" ", 1)[0] + "…"
+
+
+# ------------------------------------------------------------------ stored excerpts of third-party articles
+# Sources whose terms give no licence (FakeNews.pl, Pravda, NASK/CERT) are stored as facts (claim, rating, title, date,
+# link) plus ONE verbatim excerpt of at most 300 characters: the passage a verdict card would quote. Measured on the
+# eval sets (research notes, sources_alignment.md, "finding" trim): no case and no organiser scenario changed.
+def _excerpt_words(s: str) -> str:
+    return " ".join(re.findall(r"[^\W_]+", (s or "").lower()))
+
+
+def _excerpt_restates(window: str, claim: str) -> bool:
+    w, c = _excerpt_words(window), _excerpt_words(claim)
+    if not claim:
+        return False
+    if not w or w in c:
+        return True
+    return any(len(x) >= 20 and x in w for x in (_excerpt_words(y) for y in split_sentences(claim)))
+
+
+def _excerpt_cut(s: str, n: int) -> str:
+    if len(s) <= n:
+        return s
+    i = s.rfind(" ", 0, n)
+    return s[: i if i > n // 2 else n].rstrip(" ,;:–-")
+
+
+def _excerpt_spans(text: str) -> tuple[str, list[tuple[int, int]]]:
+    src = re.sub(r"[ \t]+", " ", text)
+    out, pos = [], 0
+    for s in split_sentences(text):
+        s2 = re.sub(r"\s+", " ", s).strip()
+        i = src.find(s2, pos)
+        if i < 0:
+            continue
+        out.append((i, i + len(s2)))
+        pos = i + len(s2)
+    return src, out
+
+
+def lead_excerpt(text: str, max_len: int = 300) -> str:
+    """The opening sentences of `text`, verbatim, up to max_len characters."""
+    src, sp = _excerpt_spans(text)
+    if not sp:
+        return _excerpt_cut(src, max_len)
+    a, b = sp[0]
+    for _, y in sp[1:]:
+        if y - a > max_len:
+            break
+        b = y
+    return _excerpt_cut(src[a:b], max_len)
+
+
+def opening_excerpt(text: str, title: str = "", max_len: int = 300) -> str:
+    """The opening of `text`, verbatim, up to max_len characters, after its headline when the text starts by repeating
+    it (an advisory's first lines say what is going on; a headline match would only repeat the title)."""
+    text, head = normalize_ws(text or ""), normalize_ws(title or "")
+    if head and text.startswith(head) and len(text) > len(head) + 16:
+        text = text[len(head):].lstrip(" \n.:–-")
+    return lead_excerpt(text, max_len) if text else ""
+
+
+def finding_excerpt(text: str, title: str = "", claim: str = "", max_len: int = 300) -> str:
+    """One verbatim excerpt of at most max_len characters: the sentence, or two neighbouring sentences, sharing most
+    words with the headline (which states the finding), leaving out sentences that restate the checked claim;
+    shorter windows win ties and windows that fit without cutting are preferred. Falls back to the opening."""
+    text = normalize_ws(text or "")
+    if not text:
+        return ""
+    src, sp = _excerpt_spans(text)
+    wins = list(sp) + [(x[0], y[1]) for x, y in zip(sp, sp[1:]) if y[0] - x[1] <= 6]
+    wins = [(a, b) for a, b in wins if b - a >= 16]
+    head = set(tokens(title or ""))
+    best, best_score = None, -1.0
+    for a, b in wins:
+        w = src[a:b]
+        if _excerpt_restates(w, claim or ""):
+            continue
+        score = (len(head & set(tokens(w))) / len(head) if head else 0) - len(w) / 5000 - a / 1e6
+        if b - a > max_len:
+            score -= 0.25
+        if score > best_score:
+            best, best_score = w, score
+    return _excerpt_cut(best, max_len) if best else lead_excerpt(text, max_len)

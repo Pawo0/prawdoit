@@ -5,7 +5,8 @@ transparent, versioned rules (R1–R6, see /metodologia) over retrieved, cited e
 *understand* text: embeddings for retrieval / claim matching, NLI for stance.
 
 Source tiers (by source type and process — never by political orientation or domain reputation):
-  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN, bazy incydentów   C (3) media
+  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN   B (3) baza incydentów   C (4) media
+Only tiers 1 and 2 settle a verdict alone; a catalogue entry is context unless a tier 1-2 source agrees.
 """
 from __future__ import annotations
 
@@ -23,17 +24,13 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import (amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens,
-                       unmark_excerpt, years_in)
+from .textutil import (HIGH_RISK, amounts, is_time_sensitive, normalize_ws, rule_scope, same_amount, short,
+                       split_sentences, tokens, unmark_excerpt, years_in)
 
 log = logging.getLogger("prawdowid.engine")
 
 FC_TO_VERDICT = {"false": "falszywe", "misleading": "wprowadzajace_w_blad", "mixed": "wprowadzajace_w_blad",
                  "true": "potwierdzone", "unverifiable": "brak_dowodow"}
-HIGH_RISK = re.compile(
-    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
-    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|upadł\w* bank\w*|wybor\w*|głosowani\w*|referend\w*|"
-    r"rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -166,7 +163,7 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_te
         own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
         if own:
             windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
-    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
+    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document)
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
     fc_tokens = set(tokens(d.claim or ""))
     src = _squash(d.text or "")
@@ -228,7 +225,7 @@ def _restates(window: str, claim: str) -> bool:
 
 
 def _squash(s: str) -> str:
-    """Whitespace-normalised text: the form in which gate V2 compares a quote with its source."""
+    """Whitespace-normalised text: the form in which a quote is compared with its source (_quote_ok)."""
     return re.sub(r"\s+", " ", normalize_ws(s)).strip()
 
 
@@ -336,7 +333,9 @@ def _relevance(q_tokens: set[str], text: str) -> float:
 
 
 def _quote_ok(fragment: str, doc_text: str) -> bool:
-    """Validity gate V2: the quoted fragment must be a verbatim substring of the stored source text."""
+    """V2: the quoted fragment is a verbatim substring of the stored source text. _fragment_windows cuts every
+    quote out of that text, so this holds by construction; it is asserted in tests/test_fragment_windows.py rather
+    than re-checked on every answer (a runtime gate never fired: 0 of 145 eval cases)."""
     return _squash(fragment) in _squash(doc_text)
 
 
@@ -359,15 +358,44 @@ def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidenc
         license=d.license)
 
 
+# ---- "what would settle it" (an abstention names the kind of source that would decide the claim)
+# Stems are anchored at a word start: a bare "cen" matched "centrum" and "lek" matched "lekko".
+_LAW = re.compile(r"\b(?:ustaw(?:a|y|ie|ę|ą|om|ami|ach)?|przepis\w*|rozporządz\w*|praw(?:o|a|em)|kodeks\w*|"
+                  r"dyrektyw\w*|unijn\w*|ue|bruksel\w*)\b")
+_NUMBERS = re.compile(r"\d|%|\b(?:procent\w*|mln|mld|tys|wzro(?:st\w*|sł\w*|śnie|sną|sn\w*)|"
+                      r"spad(?:ek|ku|ki|kiem|ł\w*|nie|ną|a|ają)|inflacj\w*|cen(?:a|y|ie|ę|ą|om|ami|ach)?|cenow\w*|"
+                      r"płac(?:a|y|e|ą|ę|ami)?|wynagrodze\w*|pensj\w*|emerytur\w*|świadcze\w*|zasił\w*|"
+                      r"bezroboci\w*|pkb)\b")
+_HEALTH = re.compile(r"\b(?:szczepi\w*|szczepion\w*|chorob\w*|lek(?:i|u|ów|iem|ami|arstw\w*|arz\w*)?|zdrow\w*|"
+                     r"wirus\w*|szpital\w*|epidemi\w*|pandemi\w*)\b")
+_SECURITY = re.compile(r"\b(?:wojsk\w*|wojn\w*|armi\w*|nato|ukrain\w*|rosj\w*|rosyjsk\w*|granic\w*|ambasad\w*|"
+                       r"msz|mon|dyplomac\w*|żołnierz\w*)\b")
+
+
+# A rule is settled by the act that makes it, which states the area (or the people and things) it covers and the date
+# it enters into force. Which act depends on who could adopt it (textutil.rule_scope).
+_RULE_SETTLE = {
+    "eu": ("akt prawny UE w EUR-Lex (rozporządzenie, dyrektywa lub decyzja) — z zakresem, którego dotyczy, i datą "
+           "wejścia w życie; dyrektywa wiąże obywateli dopiero przez polską ustawę (ISAP)"),
+    "local": ("uchwała rady gminy lub miasta (akt prawa miejscowego, ogłaszany w wojewódzkim dzienniku urzędowym) — "
+              "z opisem obszaru, który obejmuje, i datą wejścia w życie"),
+    "national": ("ustawa lub rozporządzenie w Dzienniku Ustaw (wyszukiwarka ISAP Sejmu) — z zakresem, którego dotyczy, "
+                 "i datą wejścia w życie"),
+}
+
+
 def _would_settle(claim: str) -> str:
     c = claim.lower()
-    if re.search(r"ustaw|przepis|rozporządz|prawo|zakaz|nakaz|kodeks|dyrektyw|unijn|ue\b|bruksel", c):
+    scope = rule_scope(c)
+    if scope:
+        return _RULE_SETTLE[scope]
+    if _LAW.search(c):
         return "akt prawny w ISAP (Dziennik Ustaw) lub EUR-Lex albo komunikat właściwego ministerstwa"
-    if re.search(r"\d|procent|%|mln|mld|tys|wzrost|spad|inflac|cen|płac|emerytur|świadcze", c):
+    if _NUMBERS.search(c):
         return "aktualne dane GUS, NBP, Eurostatu lub komunikat ZUS/właściwego ministerstwa"
-    if re.search(r"szczepion|chorob|lek|zdrow|wirus|szpital", c):
+    if _HEALTH.search(c):
         return "komunikat Ministerstwa Zdrowia / GIS lub analiza organizacji fact-checkingowej"
-    if re.search(r"wojsk|armi|nato|ukrain|rosj|granic|ambasad|msz|dyplomac", c):
+    if _SECURITY.search(c):
         return "komunikat MSZ, MON lub RCB albo analiza organizacji fact-checkingowej"
     return "komunikat właściwej instytucji lub analiza organizacji fact-checkingowej (IFCN/EFCSN)"
 
@@ -585,14 +613,6 @@ _GENERIC = set(tokens("polsce polska polski gus nbp eurostat kurs średni dane w
 
 def _anchors(claim: str) -> set[str]:
     return {t for t in tokens(claim) if not t[0].isdigit() and t not in _GENERIC and len(t) > 2}
-
-
-def _anchor_text(claim: str, d) -> str:
-    """Sentences of the source that mention the claim's subject (e.g. 'frekwencja', 'Nawrocki'), for number checks."""
-    anchors = _anchors(claim)
-    scored = [(len(anchors & set(tokens(x))), i, x) for i, x in enumerate(split_sentences(d.text[:6000]))]
-    best = sorted([t for t in scored if t[0] > 0], key=lambda t: (-t[0], t[1]))[:3]
-    return " ".join(x for _, _, x in sorted(best, key=lambda t: t[1]))
 
 
 _WORD = re.compile(r"[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+")
@@ -911,16 +931,12 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
 
     # ---- evidence validity gates + stance classification
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
-    quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
     metadata_only: list[str] = []  # V3: matched records with no text of their own (see has_own_text)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
-            continue
-        if not _quote_ok(c.fragment, d.text or ""):
-            quote_failures += 1  # V2 failed: never show a quote we cannot find verbatim in the source
             continue
         if d.source_type in ("factcheck", "incident"):
             nc, same, differs = c.nli_claim, None, None
@@ -1027,9 +1043,6 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         for d, differs in guarded[:2]:
             res.limitations.append(f"Bardzo podobnego twierdzenia sprawdzonego przez {d.publisher} („{short(d.claim or d.title, 110)}”) "
                                    f"nie uznano za to samo: różni się nazwą lub liczbą ({differs}) (reguła G1).")
-    if quote_failures:
-        res.limitations.append(f"Pominięto {quote_failures} materiał(y), których cytatu nie dało się dosłownie "
-                               "odnaleźć w źródle (bramka V2).")
     return res
 
 
@@ -1061,6 +1074,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
     time_sensitive = is_time_sensitive(claim.text)
     sup_ab = [c for c in support if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
     ref_ab = [c for c in refute if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
+    misleading = [c for c in misleading if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]  # a catalogue entry alone never decides
 
     verdict, main, decisive = "brak_dowodow", None, []
     # ---- R2: conflict guard

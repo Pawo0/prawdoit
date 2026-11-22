@@ -63,6 +63,7 @@ from .config import settings
 from .fetch import UA, fetch_url
 from .robots import RobotsTxt
 from .schemas import ClaimResult, LiveSearchInfo, SecurityEvent, SourceDoc
+from .sources.registry import GOV_LICENSE
 from .security import check_public_url, neutralize, scan
 from .textutil import STOP, normalize_ws, short, tokens
 
@@ -135,7 +136,7 @@ class TrustedSource:
 
 _FALLBACK = [
     TrustedSource("gov_pl", "Serwis Rzeczypospolitej Polskiej gov.pl", "gov.pl", "https://www.gov.pl", "official", 1,
-                  "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło", True),
+                  GOV_LICENSE, True),
     TrustedSource("demagog", "Demagog", "demagog.org.pl", "https://demagog.org.pl", "factcheck", 2,
                   "© Stowarzyszenie Demagog — krótkie fragmenty z podaniem źródła (prawo cytatu)", True),
     TrustedSource("fakenews_pl", "FakeNews.pl", "fakenews.pl", "https://fakenews.pl", "factcheck", 2,
@@ -850,26 +851,64 @@ def search_trusted(claim: str, deadline: float, check_id: str | None = None) -> 
     return out
 
 
-# ---------------------------------------------------------------- persistence (next identical question → corpus)
+# ---------------------------------------------------------------- persistence (off by default)
+# Pages found by a live search are used for the answer being prepared and are NOT written to data/corpus unless
+# PRAWDOWID_LIVE_PERSIST_DAYS > 0. When it is on, a stored page expires after that many days, never later than the
+# audit-log retention (PRAWDOWID_RETENTION_DAYS, 30): expired lines are deleted on every write and at startup, so one
+# person's question cannot change everyone's later answers for good. Deleting live_web.jsonl removes them all.
 _PERSIST_LOCK = threading.Lock()
 
 
+def persist_days() -> int:
+    return max(0, min(settings.live_persist_days, settings.retention_days))
+
+
+def _live_lines(cutoff: str) -> list[str]:
+    """Lines of live_web.jsonl retrieved at or after `cutoff` (ISO time); unreadable lines are dropped."""
+    keep = []
+    for line in LIVE_CORPUS.read_text(encoding="utf-8").splitlines() if LIVE_CORPUS.exists() else []:
+        try:
+            if (json.loads(line).get("retrieved_at") or "") >= cutoff:
+                keep.append(line)
+        except (ValueError, AttributeError):
+            continue
+    return keep
+
+
+def _cutoff(days: int) -> str:
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def purge_live_corpus() -> int:
+    """Delete stored live-search pages past their retention (all of them when persistence is off)."""
+    with _PERSIST_LOCK:
+        if not LIVE_CORPUS.exists():
+            return 0
+        lines = LIVE_CORPUS.read_text(encoding="utf-8").splitlines()
+        keep = _live_lines(_cutoff(persist_days())) if persist_days() else []
+        if len(keep) != len(lines):
+            LIVE_CORPUS.write_text("".join(x + "\n" for x in keep), encoding="utf-8")
+        return len(lines) - len(keep)
+
+
 def persist(docs: list[SourceDoc]) -> int:
-    if not docs:
+    days = persist_days()
+    if not docs or not days:
         return 0
     with _PERSIST_LOCK:
+        keep = _live_lines(_cutoff(days))
         known: set[str] = set()
-        if LIVE_CORPUS.exists():
-            for line in LIVE_CORPUS.read_text(encoding="utf-8").splitlines():
-                try:
-                    known.add(json.loads(line)["url"].rstrip("/"))
-                except (ValueError, KeyError, TypeError):
-                    continue
+        for line in keep:
+            try:
+                known.add(json.loads(line)["url"].rstrip("/"))
+            except (ValueError, KeyError, TypeError, AttributeError):
+                continue
         new = [d for d in docs if d.url.rstrip("/") not in known]
-        if new:
-            with LIVE_CORPUS.open("a", encoding="utf-8") as fh:
-                for d in new:
-                    fh.write(json.dumps(d.model_dump(), ensure_ascii=False) + "\n")
+        LIVE_CORPUS.write_text("".join(x + "\n" for x in keep)
+                               + "".join(json.dumps(d.model_dump(), ensure_ascii=False) + "\n" for d in new),
+                               encoding="utf-8")
         return len(new)
 
 

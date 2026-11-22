@@ -50,6 +50,9 @@ async def rate_limit(request: Request, call_next):
 
 @app.on_event("startup")
 def _startup() -> None:
+    from .websearch import purge_live_corpus
+
+    purge_live_corpus()  # expired live-search pages (all of them when storing is off), before indexing
     INDEX.load()
     # A shipped embedding cache can skip loading the retrieval model entirely.
     # Warm it before readiness, rather than downloading it on the first user's request.

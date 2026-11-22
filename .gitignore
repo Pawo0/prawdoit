@@ -20,3 +20,6 @@ ingest/__pycache__/
 data/raw/
 # local agent worktrees
 .claude/
+# pages found by live search (websearch.persist): not stored unless PRAWDOWID_LIVE_PERSIST_DAYS > 0, and then
+# expired after at most the audit retention; never committed
+data/corpus/live_web.jsonl

@@ -54,6 +54,11 @@ class ApiError(RuntimeError):
 
 
 EXPECTED_ERRORS = (ApiError,)
+# Google APIs Terms of Service §5e: no databases or permanent copies of returned content without the content owner's
+# permission. A scheduled run of this handler therefore never writes to data/corpus (fetchers.fetch_custom refuses
+# it). The admin panel's dry run ("Testuj") still shows a few records without storing them, and answers query the
+# API live (websearch.py, registry entry google_factcheck) with an in-memory cache only.
+PERSIST = False
 
 
 def _host(url: str) -> str:

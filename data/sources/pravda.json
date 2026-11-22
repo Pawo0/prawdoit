@@ -19,7 +19,7 @@
     "zdrowie"
   ],
   "language": "pl",
-  "license": "© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored claim, verdict, excerpt (≤2500 chars) + link for citation. Claim/verdict from Pravda's own ClaimReview markup (Google Fact Check Tools feed).",
+  "license": "© Stowarzyszenie Pravda; no open licence stated (all rights reserved). Stored: checked claim, rating, title, dates and link, plus one verbatim excerpt (≤300 chars) quoted with attribution; the article is read at its link. Claim/rating from Pravda's own ClaimReview markup (Data Commons ClaimReview feed).",
   "qualification": "Polska organizacja fact-checkingowa zweryfikowana przez EFCSN; oceny z własnym oznaczeniem ClaimReview (kanał Google Fact Check Tools). Kategoria B: liczy się tylko po dopasowaniu twierdzenia. Skrypt wymaga data/raw/claimreview_feed_pl.jsonl (ingest/run_factchecks.sh feed).",
   "scope": "organiser_recommended",
   "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (Pravda — EFCSN); oceny Pravdy są w kanale ClaimReview Google Fact Check Tools (rules/resources.txt)",

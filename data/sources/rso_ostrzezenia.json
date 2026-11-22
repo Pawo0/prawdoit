@@ -18,7 +18,7 @@
   "web_search": true,
   "topics": ["bezpieczenstwo", "pogoda", "woda_powodz", "drogi", "kolej", "rzad"],
   "language": "pl",
-  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "license": "Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 (CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.",
   "qualification": "Oficjalne komunikaty ostrzegawcze RSO (MSWiA, wojewodowie, IMGW-PIB, GDDKiA, PKP PLK) wyświetlane na gov.pl/web/gov/ostrzezenia. Strona to aplikacja JS — pobieramy publiczne JSON API, z którego korzysta (/api/data/proxy/rso/komunikatyxml/wszystkie/{kategoria}/0). Jeden rekord na komunikat; historia zachowana. Pokrywa URL-e: gov.pl/web/gov/ostrzezenia (+ #/_/mazowieckie/wszystkie).",
   "scope": "organiser_listed",
   "scope_basis": "rules/resources.txt: gov.pl/web/gov/ostrzezenia (+ #/_/mazowieckie/wszystkie)",

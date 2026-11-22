@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,6 +62,9 @@ class Settings:
     quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))               # then 503 + Retry-After, never a queue
     retention_days: int = int(_env("RETENTION_DAYS", "30"))
     auto_retention_days: int = int(_env("AUTO_RETENTION_DAYS", "7"))     # audit rows of mode="auto" (no text stored)
+    # pages found by live search kept in data/corpus/live_web.jsonl: 0 = never stored (default); otherwise days,
+    # capped at retention_days (websearch.persist_days)
+    live_persist_days: int = int(_env("LIVE_PERSIST_DAYS", "0"))
 
     # --- channels (secrets only from env, never committed) ---
     wa_verify_token: str = _env("WA_VERIFY_TOKEN", "")
@@ -81,8 +84,6 @@ class Settings:
     # --- cost estimate per answer (observability; docs/COSTS.md). CPU: 4 vCPU VPS ~120 zł/mies. -> zł per vCPU-second
     cost_pln_per_cpu_s: float = float(_env("COST_PLN_PER_CPU_S", "0.0000116"))
     cost_pln_per_1k_llm_tokens: float = float(_env("COST_PLN_PER_1K_LLM_TOKENS", "0"))  # 0 = local model / no LLM
-
-    extra: dict = field(default_factory=dict)
 
 
 settings = Settings()

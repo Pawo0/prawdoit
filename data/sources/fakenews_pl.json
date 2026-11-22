@@ -20,7 +20,7 @@
     "oszustwa"
   ],
   "language": "pl",
-  "license": "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Stored claim, verdict, excerpt (≤2500 chars) + link for citation.",
+  "license": "© fakenews.pl / Fundacja „Przeciwdziałamy Dezinformacji”, all rights reserved (no open licence). Stored: checked claim, rating, title, dates and link, plus one verbatim excerpt (≤300 chars) quoted with attribution; the article is read at its link.",
   "qualification": "Serwis Fundacji „Przeciwdziałamy Dezinformacji”, sygnatariusz IFCN; artykuły z tezą, oceną i źródłami. Kategoria B: liczy się tylko po dopasowaniu twierdzenia; przechowujemy twierdzenie, ocenę i fragment z linkiem.",
   "scope": "organiser_recommended",
   "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (FakeNews.pl — sygnatariusz IFCN)",

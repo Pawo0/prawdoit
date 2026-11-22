@@ -17,5 +17,6 @@
   "scope": "organiser_implied",
   "scope_basis": "Nie jest osobnym źródłem: zapis dokumentów pobranych na żywo wyłącznie z domen włączonych źródeł rejestru (tag registry:<id> w każdym rekordzie) — zakres wynika z tych wpisów",
   "added_by": "zespół Prawdowid (websearch.py)",
-  "added_at": "2026-11-21"
+  "added_at": "2026-11-21",
+  "notes": "2026-11-22: strony z wyszukiwania na żywo służą tylko bieżącej odpowiedzi i domyślnie nie są zapisywane (PRAWDOWID_LIVE_PERSIST_DAYS=0). Po włączeniu zapisu rekord wygasa po tylu dniach, najwyżej po okresie retencji dziennika (30 dni); wygasłe linie są usuwane przy każdym zapisie i przy starcie. 15 wcześniej zapisanych stron usunięto z repozytorium; plik jest w .gitignore."
 }
