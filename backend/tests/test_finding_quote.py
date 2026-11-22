@@ -6,6 +6,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import _testenv  # noqa: E402,F401
 
@@ -86,6 +88,40 @@ class Rerank(unittest.TestCase):
             engine._rerank_findings(CLAIM, cands)
         self.assertLessEqual(len(m.call_args[0][0]), engine.FINDING_NLI_BUDGET)
         self.assertEqual(m.call_count, 1)
+
+
+class OppositeClaim(unittest.TestCase):
+    """The analysis rated the opposite of the user's claim (claim match with same=False): its verdict words are about
+    the claim the user denies, so they earn no finding bonus when the quote is chosen."""
+    VERDICT_ONLY = "Sprawdziliśmy, dlaczego to nieprawda."
+    NEUTRAL = "W rzeczywistości zamknięto jedną szkołę z trzech."
+
+    def test_verdict_words_count_only_for_the_same_claim(self):
+        q, fc = set(tokens(CLAIM)), set(tokens(FC_CLAIM))
+        same = engine._finding_score(self.VERDICT_ONLY, q, fc, CLAIM)
+        opposite = engine._finding_score(self.VERDICT_ONLY, q, fc, CLAIM, opposite=True)
+        self.assertAlmostEqual(same - opposite, 0.3)
+
+    def test_other_finding_cues_still_count(self):
+        q, fc = set(tokens(CLAIM)), set(tokens(FC_CLAIM))
+        self.assertEqual(engine._finding_score(self.NEUTRAL, q, fc, CLAIM),
+                         engine._finding_score(self.NEUTRAL, q, fc, CLAIM, opposite=True))
+
+    def test_best_fragment_drops_the_verdict_sentence(self):
+        text = ("W gminie Zielonka zamknięto wszystkie szkoły podstawowe. Wyjaśniamy, dlaczego to fałsz. "
+                "Rada gminy zamknęła jedną szkołę podstawową w 2025 r. i połączyła dwie pozostałe.")
+        doc = SimpleNamespace(text=text, title="Szkoły w gminie Zielonka działają", claim=FC_CLAIM, source_type="factcheck")
+        chunk = SimpleNamespace(text=text)
+        index = SimpleNamespace(doc_chunks=[[0]], synthetic=set(), chunk_emb=np.ones((1, 2), dtype=np.float32),
+                                chunks=[chunk], docs=[doc])
+        q_emb = np.ones(2, dtype=np.float32)
+        q = set(tokens(CLAIM))
+        with mock.patch.object(engine, "INDEX", index):
+            same, _, _ = engine._best_fragment(0, q_emb, q, CLAIM)
+            opposite, _, _ = engine._best_fragment(0, q_emb, q, CLAIM, opposite=True)
+        self.assertIn("to fałsz", same)
+        self.assertNotIn("to fałsz", opposite)
+        self.assertIn(engine._squash(opposite), engine._squash(text))  # still verbatim
 
 
 if __name__ == "__main__":

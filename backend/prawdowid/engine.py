@@ -77,27 +77,32 @@ def _fmt_date(s: str | None) -> str:
 
 # How a fact-check states its finding, as opposed to the sentences that retell the viral claim (genre cues, not topics)
 _FINDING = re.compile(
-    r"\b(?:w rzeczywistości|w istocie|tak naprawdę|faktycznie|w praktyce|nieprawd\w*|fałsz\w*|manipulac\w*|"
-    r"zmanipulowan\w*|wprowadza\w* w błąd|wyrwan\w* z kontekstu|nie (?:jest|są|był\w*|został\w*|ma|mają|dotycz\w*|"
-    r"pokazuj\w*|przedstawia\w*|oznacza|wynika|potwierdza\w*)|nigdy nie|nie ma (?:żadnych )?(?:dowod\w*|danych|"
-    r"informacji|podstaw)|brak (?:jest )?(?:dowod\w*|potwierdzeni\w*)|pochodz\w* z|sprzed|archiwaln\w*|"
-    r"(?:nagrani\w*|film\w*|wideo|zdjęci\w*|materiał\w*) (?:z|sprzed) |"
+    r"\b(?:w rzeczywistości|w istocie|tak naprawdę|faktycznie|w praktyce|wyrwan\w* z kontekstu|nie (?:jest|są|był\w*|"
+    r"został\w*|ma|mają|dotycz\w*|pokazuj\w*|przedstawia\w*|oznacza|wynika|potwierdza\w*)|nigdy nie|nie ma (?:żadnych )?"
+    r"(?:dowod\w*|danych|informacji|podstaw)|brak (?:jest )?(?:dowod\w*|potwierdzeni\w*)|pochodz\w* z|sprzed|"
+    r"archiwaln\w*|(?:nagrani\w*|film\w*|wideo|zdjęci\w*|materiał\w*) (?:z|sprzed) |"
     r"(?:dane|statystyk\w*|badani\w*|raport\w*|analiz\w*)\b[^.]{0,80}\b(?:pokazuj\w*|wskazuj\w*|wynika|potwierdzaj\w*)|"
     r"wynika z|według (?:danych|ekspert\w*|naukowc\w*)|wbrew|nie potwierdz\w*|zaprzecz\w*|zdementowa\w*|dementuj\w*|"
-    r"(?:poprawn|prawidłow|błędn|nieprawdziw|nieścisł|zawyżon|zaniżon)\w*|zgodn\w* z prawdą)", re.I)
+    r"(?:poprawn|prawidłow|błędn|nieścisł|zawyżon|zaniżon)\w*)", re.I)
+# The fact-checker's verdict words ("to nieprawda", "fałsz", "manipulacja", "zgodne z prawdą"): a finding cue too, but
+# one about the CHECKED claim. When the user asserts the opposite of that claim (claim match with same=False), the
+# words describe the claim the user denies, so a window that carries only them is no finding for the user's claim.
+_VERDICT_WORD = re.compile(
+    r"\b(?:nieprawd\w*|fałsz\w*|manipulac\w*|zmanipulowan\w*|wprowadza\w* w błąd|zgodn\w* z prawdą)", re.I)
 _RETELLS = re.compile(
     r"\b(?:rzekom\w*|krąż\w*|pojawi\w* się\s+(?:\w+\s+){0,3}?(?:wpis\w*|post\w*|nagrani\w*|film\w*|informacj\w*|"
     r"zdjęci\w*|artykuł\w*|grafik\w*|materiał\w*)|internau\w*|autorzy?\s+(?:post\w*|wpis\w*|nagrani\w*|materiał\w*)|"
     r"twierdz\w*|sugeruj\w*|przekonuj\w*|alarmuj\w*|w mediach społecznościowych|w sieci)\b", re.I)
 
 
-def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: str) -> float:
+def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: str, opposite: bool = False) -> float:
     """Bonus for a fact-check window that carries the finding rather than the claim: a finding cue, a year earlier
     than the one the claim speaks of, an amount that differs from the claim's; a penalty for retelling the claim
     ("Na Facebooku pojawiło się nagranie rzekomo…") and for a near-restatement (hardly a word beyond the user's claim
-    and the checked claim)."""
+    and the checked claim). opposite: the analysis rated the opposite of the user's claim, so its verdict words
+    (_VERDICT_WORD) earn nothing."""
     wt = set(tokens(w))
-    bonus = 0.3 if _FINDING.search(w) else 0.0
+    bonus = 0.3 if _FINDING.search(w) or (not opposite and _VERDICT_WORD.search(w)) else 0.0
     if _RETELLS.search(w):
         bonus -= 0.25
     if wt and len(wt - q_tokens - fc_tokens) / len(wt) < 0.3:
@@ -111,13 +116,13 @@ def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: 
     return bonus
 
 
-def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str],
-                   claim_text: str = "") -> tuple[str, float, tuple[tuple[str, float], ...]]:
+def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_text: str = "",
+                   opposite: bool = False) -> tuple[str, float, tuple[tuple[str, float], ...]]:
     """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
     then the 1–2 consecutive sentences with the highest lexical overlap with the claim, cut verbatim out of the
     stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI.
     Returns (fragment, chunk similarity, the best few windows with their scores: fact-checks only, for the NLI
-    re-ranking in verify_claim)."""
+    re-ranking in verify_claim). opposite: see _finding_score (known only after claim matching, see verify_claim)."""
     ids = [i for i in INDEX.doc_chunks[doc_idx] if i not in INDEX.synthetic]
     d = INDEX.docs[doc_idx]
     if not ids:
@@ -145,7 +150,7 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str],
         wt = set(tokens(w))
         head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
         base = len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
-        return base + _finding_score(w, q_tokens, fc_tokens, claim_text) if head_tokens else base
+        return base + _finding_score(w, q_tokens, fc_tokens, claim_text, opposite) if head_tokens else base
 
     ranked = sorted(((w, score(w)) for w in windows), key=lambda x: -x[1])
     if not head_tokens:
@@ -928,6 +933,18 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
     resolved = consistent_matches(support, refute, misleading, evidence)
+    # a match on the OPPOSITE claim (same=False): the quote was chosen before matching, with the analysis' verdict
+    # words ("to nieprawda") counted as a finding; they are about the claim the user denies, so choose again without
+    for c in ranked:
+        d = INDEX.docs[c.doc_idx]
+        if c.same is not False or d.source_type not in ("factcheck", "incident") or c.archival or c.explains:
+            continue
+        frag, _, alts = _best_fragment(c.doc_idx, q_emb, q_tokens, claim.query, opposite=True)
+        if frag != c.fragment and _quote_ok(frag, d.text or ""):
+            c.fragment, c.alternatives = frag, alts
+            for e in evidence:
+                if e.doc_id == d.id:
+                    e.fragment = frag
     # the quote of a decisive fact-check: the window whose NLI relation matches the verdict direction (a refuting
     # finding for a refuted claim, a confirming one for a confirmed claim); archival / asked-number quotes stay
     fc = [(c, "contra" if c in refute else "entail") for c in sorted(refute + support, key=lambda c: -c.claim_cos)
