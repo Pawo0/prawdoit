@@ -6,7 +6,8 @@ Panel administratora (`/admin`) edytuje te pliki; harmonogram pobiera źródła 
 roboczymi i trafia do SQLite (`data/runtime/prawdowid.sqlite`, tabela `source_runs`), nie do pliku źródła.
 
 Katalog `/zrodla` (rejestr i wydawcy osobno) oraz lista źródeł `/admin` mają paginację po 10, 25 lub 50 pozycji
-(domyślnie 10), licznik i przyciski pierwszej, poprzedniej, następnej i ostatniej strony. Stronicowanie działa
+(domyślnie 10), licznik, numery stron oraz przyciski pierwszej, poprzedniej, następnej i ostatniej strony.
+Sterowanie jest dostępne nad i pod każdą tabelą; oba zestawy przycisków i limitów są zsynchronizowane. Stronicowanie działa
 w przeglądarce; API nadal zwraca pełne listy do audytu i integracji. Automatyczne odświeżanie panelu zachowuje
 wybraną stronę i limit; po usunięciu ostatniej strony wybierana jest ostatnia dostępna. Zmiana limitu wraca
 na pierwszą stronę. Test z kontrolowanym API: `node eval/test_source_pagination.cjs` (Playwright/Chromium,

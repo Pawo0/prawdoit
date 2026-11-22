@@ -57,7 +57,10 @@ table{border-collapse:collapse;width:100%;font-size:.92rem;background:#fff}
 .adm .table-pagination select{width:auto}
 .table-pagination select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);padding:6px}
 .table-pagination select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
-.pagination-controls{display:flex;flex-wrap:wrap;gap:6px}
+.pagination-controls,.pagination-pages{display:flex;flex-wrap:wrap;gap:6px}
+.pagination-pages{align-items:center}
+.table-pagination{margin-bottom:12px}
+.table-pagination button[aria-current=page]{background:var(--brand);color:var(--card);border-color:var(--brand)}
 .table-pagination .pagination-controls button{padding:8px 10px;min-height:44px;font-size:.85rem}
 .table-pagination button:disabled{cursor:default}
 @media(max-width:480px){.pagination-controls{gap:4px}.table-pagination .pagination-controls button{font-size:.78rem;padding:8px 6px}}

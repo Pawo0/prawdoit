@@ -43,7 +43,9 @@ const publishers = sources.map(s => ({publisher: s.publisher, tier_label: 'urzę
  await page.locator('#reg tbody tr').first().waitFor();
  assert.equal(await page.locator('#reg tbody tr').count(), 10);
  assert.equal(await reg.getByLabel('Poprzednia strona', {exact: true}).isDisabled(), true);
- await reg.getByLabel('Następna strona', {exact: true}).click();
+ const regBottom = nav('Rejestr źródeł (dół tabeli)');
+ await reg.getByLabel('Strona 2', {exact: true}).click();
+ assert.equal(await regBottom.locator('[aria-current="page"]').innerText(), '2');
  assert.match(await page.locator('#reg tbody tr').first().innerText(), /Źródło 10/);
  assert.match(await page.locator('#reg tbody tr').first().innerText(), /spoza listy organizatora/);
  assert.match(await reg.getByRole('status').innerText(), /11–20 z 53/);
@@ -51,7 +53,8 @@ const publishers = sources.map(s => ({publisher: s.publisher, tier_label: 'urzę
  await reg.getByLabel('Ostatnia strona', {exact: true}).click();
  assert.equal(await page.locator('#reg tbody tr').count(), 3);
  assert.equal(await reg.getByLabel('Następna strona', {exact: true}).isDisabled(), true);
- await reg.getByRole('combobox').selectOption('25');
+ await regBottom.getByRole('combobox').selectOption('25');
+ assert.equal(await reg.getByRole('combobox').inputValue(), '25');
  assert.equal(await page.locator('#reg tbody tr').count(), 25);
  assert.match(await reg.getByRole('status').innerText(), /Strona 1 z 3/);
  await pubs.getByLabel('Następna strona', {exact: true}).click();
@@ -79,6 +82,7 @@ const publishers = sources.map(s => ({publisher: s.publisher, tier_label: 'urzę
  assert.deepEqual(mutations, ['/api/admin/sources/source_10/run', '/api/admin/sources/source_10/disable']);
  await page.evaluate(() => load());
  assert.match(await adm.getByRole('status').innerText(), /11–20 z 53/);
+ assert.equal(await nav('Źródła administratora (dół tabeli)').locator('[aria-current="page"]').innerText(), '2');
  await adm.getByRole('combobox').selectOption('50');
  await adm.getByLabel('Ostatnia strona', {exact: true}).click();
  assert.equal(await page.locator('#src tbody tr').count(), 3);

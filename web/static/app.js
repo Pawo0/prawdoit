@@ -18,7 +18,7 @@ function chrome_() {
   h.className = "top";
   h.innerHTML = `<div class="wrap"><a class="logo" href="/" aria-label="Prawdowid — strona główna"><span class="brand-mark" aria-hidden="true"></span>Prawdowid</a>
     <nav class="site-nav" aria-label="Menu główne"><a href="/" ${location.pathname === "/" ? 'aria-current="page"' : ""}>Sprawdź</a><a href="/zrodla">Źródła</a><a class="nav-method" href="/metodologia">Jak to działa</a>
-    <details class="nav-more"><summary>Więcej</summary><div><a href="/metodologia">Jak to działa</a><a href="/czat">Czat demonstracyjny</a><a href="/o-projekcie">O projekcie</a><a href="/moderator">Panel analityka</a></div></details></nav><span class="nav-tail" aria-hidden="true"></span><span class="header-tag">Oparte na źródłach.</span></div>`;
+    <details class="nav-more"><summary>Więcej</summary><div><a href="/moderator">Panel moderatora</a><a href="/admin">Źródła dla admina</a></div></details></nav><span class="nav-tail" aria-hidden="true"></span><span class="header-tag">Oparte na źródłach.</span></div>`;
   const skip = document.createElement("a"); skip.className = "skip-link"; skip.href = "#main"; skip.textContent = "Przejdź do treści";
   document.body.prepend(skip);
   if (!document.querySelector("main").id) document.querySelector("main").id = "main";
