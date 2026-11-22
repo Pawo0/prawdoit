@@ -1,4 +1,4 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — źródła (administrator)</title>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><script src="/static/pagination.js"></script><title>Prawdowid — źródła (administrator)</title>
 <style>
 [hidden]{display:none!important}
 .scroll{overflow-x:auto}
@@ -133,7 +133,15 @@ async function load() {
      <b>Indeks:</b> ${ix.documents ?? "—"} dokumentów, wczytany ${when(ix.loaded_at)}${ix.excluded_files.length ? ` · pominięte pliki (wyłączone źródła): ${ix.excluded_files.map(esc).join(", ")}` : ""}</div>
      <button class="secondary sm" id="reload">Przeładuj indeks</button></div>`;
   $("reload").onclick = async () => { try { const r = await api("/api/admin/reload", {method: "POST"}); $("msg").innerHTML = `<div class="info">Indeks przeładowany: ${r.documents ?? "—"} dokumentów.</div>`; load(); } catch (e) { showErr($("msg"), e); } };
-  $("src").querySelector("tbody").innerHTML = d.sources.map(s => {
+  sourcePager.setItems(d.sources);
+  const [runs, ch] = await Promise.all([api("/api/admin/runs?limit=30"), api("/api/admin/changes?limit=20")]);
+  $("runs").querySelector("tbody").innerHTML = runs.runs.map(r => { const st = RUNST[r.status] || ["", r.status];
+    return `<tr><td class="small">${when(r.started)}</td><td><span class="kbd small">${esc(r.source_id)}</span></td><td class="small">${esc(r.trigger)}</td><td><span class="chip ${st[0]}">${esc(st[1])}</span></td><td>${r.n_new ?? "—"}</td><td>${r.n_total ?? "—"}</td><td class="small msg">${esc(r.message)}</td></tr>`; }).join("") || '<tr><td colspan="7" class="muted">Brak uruchomień.</td></tr>';
+  $("changes").querySelector("tbody").innerHTML = ch.changes.map(c => `<tr><td class="small">${when(c.at)}</td><td>${esc(c.who)}</td><td><span class="kbd small">${esc(c.source_id)}</span></td><td>${esc({create: "dodano", update: "zmieniono", enable: "włączono", disable: "wyłączono", delete: "usunięto"}[c.action] || c.action)}</td><td class="small">${Object.keys(c.diff).map(esc).join(", ")}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Brak zmian.</td></tr>';
+}
+
+const sourcePager = paginateTable($("src"), "Źródła administratora", rows => {
+  $("src").querySelector("tbody").innerHTML = rows.map(s => {
     const r = s.last_run, st = r ? (RUNST[r.status] || ["", r.status]) : null;
     const sched = !s.schedule_hours ? "ręcznie" : `co ${s.schedule_hours} h`;
     const next = s.next_run ? (new Date(s.next_run) <= new Date() ? "teraz" : when(s.next_run)) : "";
@@ -156,11 +164,7 @@ async function load() {
   document.querySelectorAll("[data-run]").forEach(b => b.onclick = async () => {
     try { const r = await api(`/api/admin/sources/${b.dataset.run}/run`, {method: "POST"}); $("msg").innerHTML = `<div class="info">${esc(r.message)}</div>`; setTimeout(load, 1500); }
     catch (e) { showErr($("msg"), e); } });
-  const [runs, ch] = await Promise.all([api("/api/admin/runs?limit=30"), api("/api/admin/changes?limit=20")]);
-  $("runs").querySelector("tbody").innerHTML = runs.runs.map(r => { const st = RUNST[r.status] || ["", r.status];
-    return `<tr><td class="small">${when(r.started)}</td><td><span class="kbd small">${esc(r.source_id)}</span></td><td class="small">${esc(r.trigger)}</td><td><span class="chip ${st[0]}">${esc(st[1])}</span></td><td>${r.n_new ?? "—"}</td><td>${r.n_total ?? "—"}</td><td class="small msg">${esc(r.message)}</td></tr>`; }).join("") || '<tr><td colspan="7" class="muted">Brak uruchomień.</td></tr>';
-  $("changes").querySelector("tbody").innerHTML = ch.changes.map(c => `<tr><td class="small">${when(c.at)}</td><td>${esc(c.who)}</td><td><span class="kbd small">${esc(c.source_id)}</span></td><td>${esc({create: "dodano", update: "zmieniono", enable: "włączono", disable: "wyłączono", delete: "usunięto"}[c.action] || c.action)}</td><td class="small">${Object.keys(c.diff).map(esc).join(", ")}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Brak zmian.</td></tr>';
-}
+});
 
 function initForm() {
   $("f-method").innerHTML = VOCAB.methods.map(m => `<option value="${m}">${esc(METHOD[m] || m)}</option>`).join("");

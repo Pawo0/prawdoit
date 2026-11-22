@@ -1,4 +1,4 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><title>Prawdowid — katalog źródeł</title></head><body>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c92743"><link rel="icon" href="/static/icon.svg"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js"></script><script src="/static/pagination.js"></script><title>Prawdowid — katalog źródeł</title></head><body>
 <main class="wrap">
   <h1>Katalog źródeł</h1>
   <p class="lead">Prawdowid odpowiada wyłącznie na podstawie jawnego, zamkniętego zbioru źródeł. Każde źródło ma przypisaną kategorię, licencję oraz datę publikacji i pobrania. Lista jest dostępna do audytu.</p>
@@ -16,13 +16,24 @@
   <div class="card"><h2 style="margin-top:0">Wydawcy w indeksie</h2><div style="overflow-x:auto"><table id="t"><thead><tr><th>Wydawca</th><th>Kategoria</th><th>Domeny</th><th>Dok.</th><th>Zakres dat</th><th>Licencja / warunki</th></tr></thead><tbody></tbody></table></div></div>
 </main>
 <script>
-fetch("/api/sources").then(r => r.json()).then(d => {
+fetch("/api/sources").then(r => {
+  if (!r.ok) throw new Error("Błąd HTTP " + r.status);
+  return r.json();
+}).then(d => {
   const s = d.stats;
   document.getElementById("stats").innerHTML = `<b>${s.documents}</b> dokumentów · <b>${s.domains}</b> domen · <b>${s.publishers}</b> wydawców · <b>${s.factchecked_claims}</b> zweryfikowanych twierdzeń · typy: ${Object.entries(s.by_type).map(([k,v]) => esc(k)+": "+v).join(", ")} · model wyszukiwania: <span class="kbd">${esc(s.embed_model)}</span>`;
   const LVL = {1: "1 — urzędowe / pierwotne", 2: "2 — fact-checking", 3: "3 — baza incydentów", 4: "4 — media (kontekst)"};
-  document.querySelector("#reg tbody").innerHTML = (d.sources || []).map(r => `<tr${r.enabled ? "" : ' class="muted"'}><td><a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a><div class="small muted">${esc(r.publisher)}${r.enabled ? "" : " · wyłączone"}</div></td><td class="small">${esc(LVL[r.tier] || r.tier)}</td><td class="small">${r.schedule_hours ? "co " + esc(r.schedule_hours) + " h" : (["live_search", "google_factcheck", "reference_only"].includes(r.method) ? "na żywo / link" : "ręcznie")}<div class="muted">ostatnio: ${fmtDate(r.last_update)}</div></td><td>${r.docs}</td><td class="small">${esc(r.qualification)}</td><td class="small">${esc(shortLic(r.license))}</td></tr>`).join("");
+  const registryPager = paginateTable(document.getElementById("reg"), "Rejestr źródeł", rows => {
+  document.querySelector("#reg tbody").innerHTML = rows.map(r => `<tr${r.enabled ? "" : ' class="muted"'}><td><a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a><div class="small muted">${esc(r.publisher)}${r.enabled ? "" : " · wyłączone"}</div></td><td class="small">${esc(LVL[r.tier] || r.tier)}</td><td class="small">${r.schedule_hours ? "co " + esc(r.schedule_hours) + " h" : (["live_search", "google_factcheck", "reference_only"].includes(r.method) ? "na żywo / link" : "ręcznie")}<div class="muted">ostatnio: ${fmtDate(r.last_update)}</div></td><td>${r.docs}</td><td class="small">${esc(r.qualification)}</td><td class="small">${esc(shortLic(r.license))}</td></tr>`).join("");
   const SCOPE = {organiser_listed: "z listy organizatora", organiser_implied: "wskazane przez organizatora (scenariusze, instrukcje)", organiser_recommended: "rekomendowane w treści zadania", outside: "spoza listy organizatora"};
-  document.querySelectorAll("#reg tbody tr").forEach((tr, i) => { const r = (d.sources || [])[i]; if (!r || !SCOPE[r.scope]) return; const e = document.createElement("div"); e.className = "small muted"; e.textContent = "Zakres: " + SCOPE[r.scope]; e.title = r.scope_basis || ""; tr.cells[0].appendChild(e); });
-  document.querySelector("#t tbody").innerHTML = d.publishers.map(p => `<tr><td>${esc(p.publisher)}</td><td>${esc(p.tier_label)}</td><td>${p.domains.map(esc).join("<br>")}</td><td>${p.documents}</td><td>${fmtDate(p.oldest)} – ${fmtDate(p.newest)}</td><td class="small">${p.licenses.map(esc).join("<br>")}</td></tr>`).join("");
+  document.querySelectorAll("#reg tbody tr").forEach((tr, i) => { const r = rows[i]; if (!r || !SCOPE[r.scope]) return; const e = document.createElement("div"); e.className = "small muted"; e.textContent = "Zakres: " + SCOPE[r.scope]; e.title = r.scope_basis || ""; tr.cells[0].appendChild(e); });
+  });
+  registryPager.setItems(d.sources || []);
+  const publishersPager = paginateTable(document.getElementById("t"), "Wydawcy w indeksie", rows => {
+  document.querySelector("#t tbody").innerHTML = rows.map(p => `<tr><td>${esc(p.publisher)}</td><td>${esc(p.tier_label)}</td><td>${p.domains.map(esc).join("<br>")}</td><td>${p.documents}</td><td>${fmtDate(p.oldest)} – ${fmtDate(p.newest)}</td><td class="small">${p.licenses.map(esc).join("<br>")}</td></tr>`).join("");
+  });
+  publishersPager.setItems(d.publishers || []);
+}).catch(() => {
+  document.getElementById("stats").innerHTML = '<div class="err" role="alert">Nie udało się wczytać katalogu źródeł. Odśwież stronę, aby spróbować ponownie.</div>';
 });
 </script></body></html>
