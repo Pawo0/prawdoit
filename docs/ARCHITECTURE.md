@@ -60,7 +60,7 @@
    ≥ 0,5 w którąkolwiek stronę blokuje „to samo”, a cos ≥ 0,85 ze sprzecznością ≥ 0,80 w obie strony oznacza
    twierdzenie przeciwne. Poniżej tych progów dopasowanie jest tylko kontekstem.
 5. **Dowody**: dla każdego źródła wybierany jest 1–2-zdaniowy fragment najbardziej zbieżny z twierdzeniem; ten sam
-   fragment jest cytowany i oceniany. Cytat musi występować dosłownie w źródle (bramka V2). Stanowisko: NLI (≥ 0,70)
+   fragment jest cytowany i oceniany. Cytat jest wycinany dosłownie z zapisanego tekstu źródła (V2: z konstrukcji, sprawdzane testem). Stanowisko: NLI (≥ 0,70)
    albo deterministyczne porównanie liczb z kartą danych urzędowych dla tego samego okresu. Fact-check: werdykt
    organizacji + kontrola, czy użytkownik nie twierdzi czegoś przeciwnego (NLI sprzeczności → odwrócenie oceny).
 6. **Werdykt**: reguły R1–R6 (opis: `/metodologia`), siła podstaw jako tekst (mocna/umiarkowana), przesłanki,

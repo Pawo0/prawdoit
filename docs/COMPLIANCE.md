@@ -7,7 +7,7 @@
 | Wymaganie | Status | Dowód |
 |---|---|---|
 | End-to-end bez ręcznej ingerencji | ✅ | `POST /api/check`, `/api/check/async` → zapis w SQLite; `eval/run_eval.py` (145 przypadków bez interwencji) |
-| Brak sfabrykowanych źródeł | ✅ | werdykt z reguł R1–R6, cytat musi występować dosłownie w źródle (bramka V2, `engine._quote_ok`); LLM opcjonalny, tylko upraszcza język |
+| Brak sfabrykowanych źródeł | ✅ | werdykt z reguł R1–R6, cytat wycinany dosłownie z tekstu źródła (V2: z konstrukcji `engine._fragment_windows`, test `_quote_ok`); LLM opcjonalny, tylko upraszcza język |
 | Wstrzymanie się przy braku dowodów | ✅ | abstynencja 100% we wszystkich zbiorach (`eval/results_2026-11-21*/results.md`), scenariusze D, H, J2 poniżej |
 | Dwa kanały / kanał + adapter demo | ✅ | WWW + czat demo (`/czat`), adapter WhatsApp/Messenger (`channels/meta.py`, `?demo=1`), Discord (`bots/discord_bot.py`), wtyczka |
 

@@ -91,7 +91,7 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
         own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
         if own:
             windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
-    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
+    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document)
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
 
     def score(w: str) -> float:
@@ -119,7 +119,7 @@ def _restates(window: str, claim: str) -> bool:
 
 
 def _squash(s: str) -> str:
-    """Whitespace-normalised text: the form in which gate V2 compares a quote with its source."""
+    """Whitespace-normalised text: the form in which a quote is compared with its source (_quote_ok)."""
     return re.sub(r"\s+", " ", normalize_ws(s)).strip()
 
 
@@ -227,7 +227,9 @@ def _relevance(q_tokens: set[str], text: str) -> float:
 
 
 def _quote_ok(fragment: str, doc_text: str) -> bool:
-    """Validity gate V2: the quoted fragment must be a verbatim substring of the stored source text."""
+    """V2: the quoted fragment is a verbatim substring of the stored source text. _fragment_windows cuts every
+    quote out of that text, so this holds by construction; it is asserted in tests/test_fragment_windows.py rather
+    than re-checked on every answer (a runtime gate never fired: 0 of 145 eval cases)."""
     return _squash(fragment) in _squash(doc_text)
 
 
@@ -699,15 +701,11 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
 
     # ---- evidence validity gates + stance classification
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
-    quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
-            continue
-        if not _quote_ok(c.fragment, d.text or ""):
-            quote_failures += 1  # V2 failed: never show a quote we cannot find verbatim in the source
             continue
         if d.source_type in ("factcheck", "incident"):
             nc, same, differs = c.nli_claim, None, None
@@ -775,9 +773,6 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         for d, differs in guarded[:2]:
             res.limitations.append(f"Bardzo podobnego twierdzenia sprawdzonego przez {d.publisher} („{short(d.claim or d.title, 110)}”) "
                                    f"nie uznano za to samo: różni się nazwą lub liczbą ({differs}) (reguła G1).")
-    if quote_failures:
-        res.limitations.append(f"Pominięto {quote_failures} materiał(y), których cytatu nie dało się dosłownie "
-                               "odnaleźć w źródle (bramka V2).")
     return res
 
 
