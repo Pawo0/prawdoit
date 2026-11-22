@@ -23,7 +23,8 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens, years_in
+from .textutil import (amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens,
+                       unmark_excerpt, years_in)
 
 log = logging.getLogger("prawdowid.engine")
 
@@ -339,14 +340,23 @@ def _quote_ok(fragment: str, doc_text: str) -> bool:
     return _squash(fragment) in _squash(doc_text)
 
 
+def shown_fragment(fragment: str, doc_text: str) -> str:
+    """The fragment as the answer, the API and the UI show it: without the ELI ingest marker ("[fragment: „…”]"),
+    which is not the publisher's text. What is left must still pass gate V2 (a verbatim slice of the stored text);
+    if it did not, the fragment is shown as stored."""
+    out = unmark_excerpt(fragment)
+    return out if out == fragment or (out and _quote_ok(out, doc_text)) else fragment
+
+
 def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidence:
     d = INDEX.docs[c.doc_idx]
     return Evidence(
         doc_id=d.id, title=d.title, publisher=d.publisher, domain=d.domain, url=d.url, source_type=d.source_type,
         tier=TIER[d.source_type], published_at=d.published_at, retrieved_at=d.retrieved_at, age_days=INDEX.doc_age(d),
-        fragment=c.fragment, factcheck_claim=d.claim, factcheck_verdict_raw=d.verdict_raw, factcheck_verdict=d.verdict,
-        retrieval_score=round(c.retrieval, 4), similarity=round(max(c.claim_cos, c.frag_cos), 3), stance=stance,
-        stance_score=round(score, 3), same_claim=same, license=d.license)
+        fragment=shown_fragment(c.fragment, d.text or ""), factcheck_claim=d.claim, factcheck_verdict_raw=d.verdict_raw,
+        factcheck_verdict=d.verdict, retrieval_score=round(c.retrieval, 4),
+        similarity=round(max(c.claim_cos, c.frag_cos), 3), stance=stance, stance_score=round(score, 3), same_claim=same,
+        license=d.license)
 
 
 def _would_settle(claim: str) -> str:
@@ -1188,7 +1198,7 @@ def _explain(verdict: str, main: _Cand | None, evidence: list[Evidence], conflic
             body += " Część twierdzenia jest prawdziwa, ale całość daje mylny obraz."
     else:
         body = f" Według źródła: {who} ({when})."
-    body += f" Fragment źródła: „{short(main.fragment, 260)}”"
+    body += f" Fragment źródła: „{short(shown_fragment(main.fragment, d.text or ''), 260)}”"
     if missing_context:
         body += f" Brakujący kontekst: {missing_context}"
     return lead + body, None

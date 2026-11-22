@@ -434,6 +434,17 @@ def drop_pii_tags(s: str) -> str:
     return normalize_ws(PII_TAG.sub(" ", s))
 
 
+# Marker the ELI ingest puts before each excerpt of an act's text ("[fragment: „Art. 90.”] …") — not publisher text.
+EXCERPT_MARKER = re.compile(r"\[fragment: „[^”\]]{0,80}”\]\s*")
+
+
+def unmark_excerpt(s: str) -> str:
+    """The quote without the ingest marker. A marker inside the quote separates two excerpts of the act: the longer
+    one is kept, so the quote stays one verbatim slice of the stored text."""
+    parts = [x.strip() for x in EXCERPT_MARKER.split(s or "")]
+    return max(parts, key=len) if len(parts) > 1 else (s or "")
+
+
 def short(s: str, n: int = 280) -> str:
     s = normalize_ws(s)
     return s if len(s) <= n else s[: n - 1].rsplit(" ", 1)[0] + "…"

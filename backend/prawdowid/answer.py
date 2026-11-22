@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 
 from .schemas import CheckResult, ClaimResult, Evidence
-from .textutil import amounts, asks_who_checked, same_amount, short, split_sentences, tokens
+from .textutil import amounts, asks_who_checked, same_amount, short, split_sentences, tokens, unmark_excerpt
 
 FC_LABEL = {"false": "fałsz", "true": "prawda", "misleading": "wprowadzające w błąd", "mixed": "częściowa prawda",
             "unverifiable": "nieweryfikowalne"}
@@ -67,8 +67,6 @@ QUOTE_MAX = 300  # a quote in the answer: whole sentences up to this length, els
 _NOT_END = re.compile(r"(?:(?:\b(?:art|ust|pkt|lit|poz|nr|par|rozdz|dz)\.?|§)\s*\d+[a-z]?|\b(?:art|ust|pkt|lit|poz|par|"
                       r"rozdz|dz|r|tj|np|ok|godz|tys|mln|mld|św|dr|prof|im|al|ul|in|m|zm|późn|nast|dot|wg|ww|tzw|tzn|ds|"
                       r"sygn|gen|płk|ks|pt|ub|br|jw|pn|pon|wt|śr|czw|pt|sob|niedz)|\b[A-ZĄĆĘŁŃÓŚŹŻ]|(?:^|\s)\d{1,3}[a-z]?)$", re.I)
-# Marker the ELI ingest puts before each excerpt of an act's text ("[fragment: „Art. 90.”] …") — not publisher text.
-_MARKER = re.compile(r"\[fragment: „[^”\]]{0,80}”\]\s*")
 
 
 def _sentence_ends(s: str) -> list[int]:
@@ -83,10 +81,9 @@ def _sentence_ends(s: str) -> list[int]:
 
 
 def _unmark(s: str) -> str:
-    """The quote without the ingest marker. A marker inside the quote separates two excerpts of the act: the longer
-    one is kept, so the quote stays one verbatim slice of the stored text."""
-    parts = [x.strip() for x in _MARKER.split(s or "")]
-    return max(parts, key=len) if len(parts) > 1 else (s or "")
+    """The quote without the ELI ingest marker (textutil.unmark_excerpt). Evidence fragments arrive without it
+    (engine._evidence); this keeps the quote clean for any other caller too."""
+    return unmark_excerpt(s)
 
 
 def _q(s: str | None, n: int = 150) -> str:
