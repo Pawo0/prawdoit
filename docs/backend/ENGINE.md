@@ -51,6 +51,24 @@ To opis nawigacyjny, nie alternatywna implementacja progów. Dokładna kolejnoś
 
 Nazwy reguł, `reason_codes` i pola dowodów są częścią audytu. Zmieniając ich znaczenie, trzeba rozważyć wersję reguł, testy i zgodność zapisanych analiz.
 
+## Kontrola cytatu V5 (reguły 1.1)
+
+Dopasowanie do twierdzenia ocenionego przez fact-checkera identyfikuje analizę, ale nie wystarcza już do werdyktu. Przed R2–R5 `_ground_factchecks()` sprawdza osobno fragment, który zostanie pokazany użytkownikowi:
+
+- przeszukuje cały zapisany tekst analizy, również poza granicami fragmentów indeksu;
+- wybiera ograniczoną listę dosłownych cytatów, uwzględniając ustalenia i wymagane liczby;
+- odrzuca pytania i fragmenty jedynie relacjonujące pogłoskę;
+- przy potwierdzeniu wymaga świadectwa wszystkich jawnych liczb; nie zaokrągla procentów na podstawie podobieństwa;
+- sprawdza relację NLI do tezy użytkownika lub dopasowanej wypowiedzi, z uwzględnieniem zaprzeczenia; przy obalaniu może sprawdzać też oznajmujący nagłówek ustalenia;
+- dla oceny „wprowadzające w błąd” szuka sprostowania, ograniczenia lub jawnego, kontekstowego ustalenia analizy; nie uznaje samego powtórzenia tezy za uzasadnienie;
+- przy niepowodzeniu usuwa kandydata z grup rozstrzygających i czyści dopasowanie używane do wyboru głównego dowodu. Materiał pozostaje kontekstem.
+
+Reguła `V5:CYTAT_NIE_UZASADNIA_TEZY` oznacza odrzucony kandydat. Jeżeli żaden inny dowód nie wystarcza, wynik jest abstynencją z powodem `BRAK_UZASADNIAJACEGO_CYTATU`. Odrzucenie jednego materiału nie blokuje poprawnego dowodu z innej publikacji.
+
+[`grounding.py`](../../backend/prawdowid/grounding.py) zawiera kontrole liczb, okresu i zakresu. Surowe sumy zdarzeń nie rozstrzygają wskaźnika „na 1000 osób”. Nieustalone „do naszego kraju” nie wyznacza kraju nazwanego przez użytkownika. Te kontrole ograniczają też możliwość zgłoszenia pozornego konfliktu źródeł urzędowych. Specjalne, deterministyczne porównania kart danych i dat oraz datowanie archiwalnych materiałów zachowują osobne ścieżki.
+
+NLI i reguły językowe pozostają omylne. V5 jest kontrolą produkcyjną, a nie niezależnym sędzią ewaluacji. Nowego odsetka poprawności cytowania nie wolno obliczać przez policzenie zaakceptowanych przez V5 materiałów. Do tego służy odrębny [protokół adnotacji](../../eval/citations/README.md).
+
 ## Siła podstawy odpowiedzi
 
 Siła uwzględnia typ źródła, zgodność fragmentu, wiek materiału, konflikty i liczbę grup wydawców. Grupowanie po wydawcy przybliża niezależność; dwie redakcje cytujące jedną depeszę nie muszą być dwoma niezależnymi ustaleniami.

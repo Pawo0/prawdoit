@@ -1,0 +1,191 @@
+{
+  "protocol": "1.0",
+  "reviewed_packets": 30,
+  "total_packets": 30,
+  "complete_sample_review": true,
+  "counts": {
+    "assertions": 57,
+    "with_citation": 57,
+    "supported_assertions": 47,
+    "links": 62,
+    "correct_links": 48,
+    "quote_links": 46,
+    "correct_quote_links": 32,
+    "metadata_links": 12,
+    "derived_links": 4,
+    "nonverbatim_links": 0
+  },
+  "citation_presence": 1.0,
+  "evidence_coverage": 0.8245614035087719,
+  "citation_correctness": 0.6956521739130435,
+  "evidence_link_correctness": 0.7741935483870968,
+  "coverage_target_met_on_sample": false,
+  "correctness_target_met_on_sample": false,
+  "reviewer_types": [
+    "ai_single_reviewer"
+  ],
+  "human_validation_complete": false,
+  "findings": [
+    {
+      "packet_id": "P003",
+      "assertion_id": "A01",
+      "proposition": "Argument o utrzymującej się grypie po wielu latach szczepień wprowadza w błąd.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "partial",
+          "reason": "Wyświetlony fragment jest pytaniem i zapowiedzią wyjaśnienia, nie podaje brakującego kontekstu ani skuteczności szczepień. Pełny zapis artykułu zawiera te informacje, lecz wybrany cytat ich nie pokazuje.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P011",
+      "assertion_id": "A01",
+      "proposition": "Zestawienie jednej trzeciej urodzeń w Polsce i połowy w lubuskim/zachodniopomorskim wprowadza w błąd.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "partial",
+          "reason": "Fragment stwierdza błąd dla ściany zachodniej, szczególnie dolnośląskiego, którego użytkownik nie wymienił; nie pokazuje wartości dla lubuskiego/zachodniopomorskiego ani danych krajowych.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P011",
+      "assertion_id": "A03",
+      "proposition": "Część sprawdzanego twierdzenia jest prawdziwa.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "partial",
+          "reason": "Sama korekta odsetka na ścianie zachodniej nie wskazuje, która inna część tezy jest prawdziwa; potrzebny jest szerszy cytat.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P021",
+      "assertion_id": "A01",
+      "proposition": "Wyjaśnienie demontażu niemieckich farm wiatrowych ich nieopłacalnością wprowadza w błąd.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "unsupported",
+          "reason": "Fragment jedynie powtarza sugestie postów. Nie podaje sprostowania ani faktycznej przyczyny demontażu.",
+          "support_field": "fragment",
+          "support_span": ""
+        },
+        {
+          "id": "C1E2",
+          "judgment": "partial",
+          "reason": "Dodatkowy cytat opisuje jedną działającą farmę Alpha Ventus. Pomaga z konkretnym przykładem, ale sam nie uzasadnia ogólnej oceny przyczyn demontażu farm.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P022",
+      "assertion_id": "A01",
+      "proposition": "Taylor Swift nie wykonała opisanego gestu podczas warszawskiego koncertu 1 sierpnia 2024.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "unsupported",
+          "reason": "Informacja, że post ze zdjęciem wywołał oburzenie, nie wyjaśnia pochodzenia zdjęcia ani nie obala gestu w danym miejscu i czasie.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P023",
+      "assertion_id": "A01",
+      "proposition": "Teza o dziesięciokrotnie wyższej liczbie przestępstw na 1000 Ukraińców jest manipulacją.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "partial",
+          "reason": "Liczby wszystkich przestępstw i wszystkich obcokrajowców nie dają mianowników ludności ani liczby przestępstw Ukraińców. Nie pozwalają samodzielnie ocenić ilorazu na 1000 osób.",
+          "support_field": "fragment",
+          "support_span": ""
+        },
+        {
+          "id": "C1E2",
+          "judgment": "partial",
+          "reason": "Udział 2% wszystkich przestępstw również nie jest wskaźnikiem na 1000 osób.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P024",
+      "assertion_id": "A02",
+      "proposition": "Nawrocki otrzymał 50,89% ważnych głosów.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "unsupported",
+          "reason": "W wybranym dowodzie nie ma odsetka 50,89%; pozostałe wyświetlane materiały również go nie podają. Dowód zwycięstwa nie dowodzi tego dokładnego odsetka.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P025",
+      "assertion_id": "A01",
+      "proposition": "Polska wybierała 53 posłów do PE w 2024 r.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "unsupported",
+          "reason": "Fragment podaje 720 miejsc dla całej UE, nie 53 dla Polski. Pełny rekord źródła zawiera 53, ale wybrany cytat to pomija.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P025",
+      "assertion_id": "A02",
+      "proposition": "Polska delegacja należała do największych w PE.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "unsupported",
+          "reason": "Liczba wszystkich mandatów UE nie ustala rankingu państw. Inny cytat dotyczy EPP, a nie porównania wszystkich krajów.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    },
+    {
+      "packet_id": "P027",
+      "assertion_id": "A01",
+      "proposition": "Pravda i Demagog podają sprzeczne informacje o aktualnych 5 mln ukraińskich uchodźców w Rosji.",
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "partial",
+          "reason": "„Wielu” uchodźców w Rosji nie podaje 5 mln ani aktualnej daty, więc nie ustanawia sprzeczności w tym samym zakresie.",
+          "support_field": "fragment",
+          "support_span": ""
+        },
+        {
+          "id": "C1E2",
+          "judgment": "unsupported",
+          "reason": "Fragment dotyczy przybycia do Polski, a nie liczby uchodźców w Rosji.",
+          "support_field": "fragment",
+          "support_span": ""
+        }
+      ]
+    }
+  ]
+}

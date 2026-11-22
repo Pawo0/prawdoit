@@ -114,15 +114,14 @@ przeszła prawdziwa ścieżka pobrania (httpx, limity, trafilatura), skan i neut
 **Mierniki** (zbiory `eval/`, `PRAWDOWID_LIVE_SEARCH=0`, korpus 8703 dok.; przebieg 22.11.2026 na `64f7b2b` — werdykty,
 statusy i reguły identyczne jak na `5aceb6b`): macro-F1 dev **0,975** · „ślepy 1” **0,899** · „ślepy 2” **0,872**
 (cel ≥ 0,75; oba „ślepe” zbiory są dziś zbiorami strojenia — niezależną estymatą są tylko pierwsze przebiegi, 0,774
-i 0,747, README); pokrycie cytowań 100%; abstynencja 100%; odporność na injection 100%; statusy niewerdyktowe 100%;
+i 0,747, README); obecność materiału przy werdykcie (dawne proxy pokrycia) 100%; abstynencja 100%; odporność na injection 100%; statusy niewerdyktowe 100%;
 spójność kanałów 100%; pętla informacji: tak.
 **Czas:** mediana 0,5–0,7 s, p95 1,7–1,9 s na `5aceb6b`; przebieg 22.11 szedł na współdzielonym serwerze (load average
 ≈ 180 na 128 rdzeniach) i dał medianę 4,4–5,3 s, p95 14,7–21,4 s — cel ≤ 30 s spełniony w obu.
 **Koszt 100 testów** (`engine.cost_estimate`: czas × stawka 1 vCPU 0,0000116 zł/s; płatnych API brak): zmierzony
 ≈ **0,001 zł** (90–115 s obliczeń na 100 przypadków, `5aceb6b`); przy założeniu, że sprawdzenie zajmuje cały serwer
 4 vCPU, ≈ 0,005 zł; deklarowany w `docs/COSTS.md`: < 0,05 zł na 1000 zapytań.
-Poprawność cytowania (≥ 85%) mierzona automatycznie (cytat dosłowny + zgodność stanowiska); ręczna próba — do
-wykonania przez jury.
+**Audyt cytowań z 22.11.2026:** [jawne adnotacje 30 odpowiedzi i 57 atomowych tez](CITATION_AUDIT.md) dały pokrycie dowodem **47/57 = 82,5%** (cel ≥95%) oraz poprawność powiązań teza–cytat **32/46 = 69,6%** (cel ≥85%). Oba cele nie zostały osiągnięte w tej próbce. To pojedyncza recenzja AI odrębna od silnika/NLI, nie niezależna ocena człowieka. Dawne 100% mierzyło obecność materiału i nie potwierdzało tych wymagań. Pakiety do niezależnej recenzji człowieka są przygotowane.
 
 ## Sekcja 8 — kryteria oceny (gdzie szukać dowodów)
 | Kryterium | Dowody |

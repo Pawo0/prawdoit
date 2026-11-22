@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-22",
+  "engine_base_commit": "859842e8ed5cc8b6cd33eed6f34618c8cc48255a",
+  "engine_changes_during_audit": false,
+  "runtime": "fresh temporary database and copy of data/index",
+  "settings": {
+    "PRAWDOWID_SCHEDULER": "0",
+    "PRAWDOWID_LIVE_SEARCH": "0",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "disabled_credentials": "PRAWDOWID_LLM_* and external search provider credentials removed from collection process",
+  "scope": "145 existing development fixtures; 30 stratified outputs; not a new blind test or population estimate",
+  "reviewer": "single AI reviewer, same assistant who worked on repository; not an independent human",
+  "input_files": {
+    "eval/cases.jsonl": "f7ecb892f4ced9973d398d05bcc4dcafd56ee6398d25bb487cd156a5820d7ffa",
+    "eval/cases_heldout.jsonl": "22d431b5737bcea8e0a472fb0dc1455e2d6a00647ffb1a038310cc1552c3081b",
+    "eval/cases_blind2.jsonl": "8ae04fb98c5999ca3a5275c5df97e7001506e39e19760b3ca886f5ddea811cf2"
+  },
+  "artifact_file_sha256": {
+    "capture/responses.jsonl": "8f9cb454d9d5d6adaeadd31acedaea71a9d2c1aedf6f338377e081f5d0b9845d",
+    "capture/citation_sources.jsonl": "ea5ffa3f77bfdf29cc9b3ce42340d409c2c57c74ad54869b54d57e08140a369c",
+    "capture/cases.jsonl": "2262f715e8cdbe33325a219c0d2009c0b584b28a07ed6e249ee15c00174ff282",
+    "review/packets.jsonl": "27718ad5f488c8626fd923fa8f6da724aca22b4492ff3850bdade506242ac4e3",
+    "review/reviews.ai.jsonl": "cf86ced02fa683e2f740311df9791034b3e0878b0bce9f91682e415774698032",
+    "report.json": "c508c270b573d7590eac13cc66e174462ae7040a11d8670d2ddb0a2661d3bf52"
+  }
+}

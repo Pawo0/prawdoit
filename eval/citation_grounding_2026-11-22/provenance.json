@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-22",
+  "base_commit": "859842e",
+  "rules_version": "1.1",
+  "code_state": "uncommitted working tree; exact file hashes below",
+  "settings": {
+    "PRAWDOWID_SCHEDULER": "0",
+    "PRAWDOWID_LIVE_SEARCH": "0",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "runtime": "fresh temporary runtime and copied data/index; LLM/search credentials removed",
+  "code_sha256": {
+    "backend/prawdowid/engine.py": "4dd888fe829ab0aba14b25c6608d1696a12b32fcab930b3ae3cb661ad2ebff3b",
+    "backend/prawdowid/grounding.py": "1e33b7a548e2798cea198a8745e7e58162f0afd6263dad2c9327595b1634cf85",
+    "backend/prawdowid/answer.py": "f0e81fa1e18b55df973099cf8791e518e5f80215a4724c9bb71eae0803688925",
+    "backend/prawdowid/schemas.py": "cb611ede6e276f5befc483323e4a149717a4af3b7d86bfc7006f3604f923d82b",
+    "eval/run_eval.py": "9e5a18f517ec53833f067a5a70532158f657386de4e9dbc04464b775f08027c8"
+  },
+  "artifacts_sha256": {
+    "paired_outputs.json": "57d8883419feda001599c4aa6d7a4ae27539f95a7c0e1ed81371cd69eb74a425",
+    "capture/citation_capture.json": "0fc9269c3a360f781c3cf6092de5a0637b18c6882446df300de867662ccfca7d",
+    "capture/citation_sources.jsonl": "ea5ffa3f77bfdf29cc9b3ce42340d409c2c57c74ad54869b54d57e08140a369c",
+    "capture/results.json": "d6558682d40c193f945fb1d9b4dc411f1558207a2e82fe7c22c71178244137d0",
+    "capture/cases.jsonl": "2262f715e8cdbe33325a219c0d2009c0b584b28a07ed6e249ee15c00174ff282",
+    "capture/responses.jsonl": "42b4eabb01ecfd84d45ef47ccf450c141a49558711285fc40f31a9b55a9b1478",
+    "capture/results.md": "c4acd1de1fe2925944fb1357c0017abeb9bf8c8302a641eb420996a677c87582",
+    "organizers/results.json": "652efffe59c5fdff7530b2e82396543911817f6c60c9c0239751b99a625d0036",
+    "organizers/results.md": "92cdda76b9f52e1ed1c6a9608d234247f9042f04ef60c84ae418578fdae3beca"
+  },
+  "independent_citation_audit_after_fix": false,
+  "ocr_note": "OCR implemented; screenshot scenario currently fails interpretation of header/date metadata. User states colleague is working on this separately."
+}

@@ -56,7 +56,7 @@ Mamy:
 | Usuwanie sesji i retencja | Usunięcie sesji z powiązanymi zapisami; skonfigurowany okres przechowywania audytu. | Automatyczne czyszczenie audytu odbywa się przy starcie API, nie cyklicznie. |
 | Prywatność biernego sprawdzania wtyczki | Tryb `auto` korzysta z lokalnego korpusu, nie pobiera URL, nie używa live-search ani LLM, nie tworzy spraw i zapisuje skrót zamiast tekstu. | Dotyczy biernego trybu, nie ręcznie zleconej analizy. |
 | Obserwowalność | Czasy etapów, modele, błędy, abstynencje i szacunkowy koszt odpowiedzi. | Koszt jest estymatą, nie pomiarem rzeczywistego CPU ani pełnym rachunkiem dostawców. |
-| Przejrzysta podstawa oceny | Cytaty pochodzą z materiałów, a werdykty z reguł nad dowodami. Domena lub popularność nie przesądzają oceny. | Semantyczna poprawność cytowań wymaga niezależnego pomiaru. |
+| Przejrzysta podstawa oceny | Cytaty pochodzą z materiałów, a werdykty z reguł nad dowodami. Domena lub popularność nie przesądzają oceny. | Audyt adnotacji AI: pokrycie 82,5%, poprawność cytowania 69,6%; niezależna recenzja człowieka pozostaje do wykonania ([raport](CITATION_AUDIT.md)). |
 | Jawne zależności zewnętrzne | Lokalnie uruchamiane modele, opis dostawców i przepływów danych, komunikowanie nieaktywnych lub niedostępnych integracji. | Opcjonalny LLM ma ograniczoną walidację wyjaśnień; domyślna ścieżka działa bez niego. |
 
 Szczegóły: [ryzyka](RISKS.md), [model danych](DATA_MODEL.md), [koszty i przetwarzanie](COSTS.md).
@@ -111,7 +111,7 @@ Ostatni pomiar na trzech istniejących zbiorach:
 | Spójność WWW i adaptera drugiego kanału | 100% | 100% | 100% | 100% próby |
 | Mediana czasu bez live-search | 324 ms | 188 ms | 202 ms | ≤ 30 s |
 
-**Jak interpretować wyniki:** te zbiory były używane podczas rozwoju, więc nie są obecnie niezależnym testem ślepym. Automatyczne pokrycie cytowaniami wynosiło 100%, ale jest wskaźnikiem pomocniczym i nie potwierdza wymaganego progu 85% semantycznej poprawności cytowania. Pomiary czasu nie obejmują rozruchu modeli ani działania publicznego hostingu. W zbiorze Dev jedno wejście z rzeczywistym URL zakończyło się błędem technicznym w ograniczonym środowisku.
+**Jak interpretować wyniki:** te zbiory były używane podczas rozwoju, więc nie są obecnie niezależnym testem ślepym. Dawne 100% mierzyło obecność materiału, a nie pokrycie tez dowodem. [Audyt 30 odpowiedzi](CITATION_AUDIT.md) wykazał 47/57 tez z wystarczającym dowodem (82,5%) i 32/46 poprawnych relacji teza–cytat (69,6%). To pojedyncza ocena AI, bez niezależnego zatwierdzenia przez człowieka; oba progi pozostają niespełnione w tej recenzji. Pomiary czasu nie obejmują rozruchu modeli ani działania publicznego hostingu. W zbiorze Dev jedno wejście z rzeczywistym URL zakończyło się błędem technicznym w ograniczonym środowisku.
 
 Dowody: [weryfikacja backendu](../eval/backend_refactor_2026-11-22/verification.json), [scenariusze A–J](../eval/backend_refactor_2026-11-22/organizers-results.md), [pomiar Dev](../eval/audit_2026-11-22/dev/results.json), [Heldout](../eval/audit_2026-11-22/heldout/results.json), [Blind2](../eval/audit_2026-11-22/blind2/results.json).
 
@@ -127,7 +127,7 @@ Przed zgłoszeniem pozostaje potwierdzić nazwę zespołu i opis do 4000 znaków
 
 Najważniejsze prace dotyczące pełnego potwierdzenia wymagań:
 
-1. Niezależna ocena poprawności cytatów i pomiar zgodny z definicją pokrycia każdej tezy dowodem.
+1. Niezależna recenzja człowieka na przygotowanych pakietach audytu oraz poprawa doboru cytatów wskazanego w [raporcie](CITATION_AUDIT.md). Protokół pomiaru każdej atomowej tezy i pierwsza ocena AI są już dostępne.
 2. Cykliczne egzekwowanie retencji podczas ciągłej pracy serwera.
 3. Obsługa brakujących dat publikacji bez ich zgadywania.
 4. Poprawa OCR F1 i próba na kontenerze z polskimi danymi Tesseracta.

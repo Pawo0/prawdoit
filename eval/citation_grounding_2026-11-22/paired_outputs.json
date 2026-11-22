@@ -1,0 +1,568 @@
+[
+  {
+    "packet_id": "P001",
+    "case_id": "blind2:B2-09",
+    "before_verdicts": [
+      "falszywe"
+    ],
+    "after": [
+      {
+        "claim": "Hiszpania, Włochy, Grecja i Cypr są zwolnione z paktu migracyjnego, a Polska nie – i za każdego nieprzyjętego migranta zapłacimy 20 tys. euro kary",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Demagog (23.06.2026): „Pakt migracyjny. Wszystkie państwa UE są nim związane”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P002",
+    "case_id": "blind2:B2-06",
+    "before_verdicts": [
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Szef InPostu Brzoska ranny w strzelaninie w stolicy 😱 a media milczą",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Demagog (24.08.2026): „Obajtek i Glapiński skłóceni w studiu TVN? Uwaga, to scam”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P003",
+    "case_id": "heldout:H51",
+    "before_verdicts": [
+      "wprowadzajace_w_blad",
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Od prawie 80 lat jest szczepionka na grypę, a ludzie dalej chorują, to po co się w ogóle szczepić?",
+        "verdict": "wprowadzajace_w_blad",
+        "conflicting": false,
+        "rules": [
+          "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+          "HR:JEDNO_ZRODLO_ESKALACJA"
+        ],
+        "short_answer": "Ta informacja wprowadza w błąd. Demagog ocenił twierdzenie „Od 78 lat mamy szczepionkę na grypę i wciąż mamy grypę” jako „Brakujący kontekst” (analiza z 14.10.2025). Demagog pisze: „To, że choroba nie została eradykowana, nie oznacza, że szczepienia nie działają”.",
+        "main_doc_id": "demagog:fake_news/po-co-szczepienia-na-grype-skoro-ludzie-dalej-choruja-wyjasniamy",
+        "main_fragment": "To, że choroba nie została eradykowana, nie oznacza, że szczepienia nie działają."
+      },
+      {
+        "claim": "A euro po 4,46 zł, masakra.",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Potrzebne byłoby źródło, np. aktualne dane GUS, NBP, Eurostatu lub komunikat ZUS/właściwego ministerstwa. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P004",
+    "case_id": "blind2:B2-44",
+    "before_verdicts": [
+      "potwierdzone"
+    ],
+    "after": [
+      {
+        "claim": "W 2025 r. w Polsce zmarło 405 747 osób.",
+        "verdict": "potwierdzone",
+        "conflicting": false,
+        "rules": [
+          "R5:POTWIERDZONE"
+        ],
+        "short_answer": "Tak. Potwierdza to Główny Urząd Statystyczny — Bank Danych Lokalnych: „Liczba zgonów w Polsce w 2025 r.: 405 747 (GUS, Bank Danych Lokalnych, zmienna 65: Zgony ogółem / ogółem, jednostka: -)”.",
+        "main_doc_id": "gus:bdl:65:2025",
+        "main_fragment": "Liczba zgonów w Polsce w 2025 r.: 405 747 (GUS, Bank Danych Lokalnych, zmienna 65: Zgony ogółem / ogółem, jednostka: -)."
+      }
+    ]
+  },
+  {
+    "packet_id": "P005",
+    "case_id": "blind2:B2-28",
+    "before_verdicts": [
+      "falszywe"
+    ],
+    "after": [
+      {
+        "claim": "Referendum z 15 października 2023 r. było wiążące, bo wzięła w nim udział ponad połowa uprawnionych",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Państwowa Komisja Wyborcza (18.10.2023): „4. Państwowa Komisja Wyborcza stwierdza, że więcej niż połowa uprawnionych do głosowania, o której mowa w art. 66 ust. 1 ustawy z dnia 14 marca 2003 r. o referendum ogólnokrajowym , wynosi 14 766 298 osób”. Nie rozstrzyga on samego twierdzenia. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P006",
+    "case_id": "heldout:H50",
+    "before_verdicts": [
+      "falszywe",
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Inflacja we wrześniu 2026 przekroczyła 6%!",
+        "verdict": "falszywe",
+        "conflicting": false,
+        "rules": [
+          "R3:FALSZYWE"
+        ],
+        "short_answer": "Nie. Przeczy temu Główny Urząd Statystyczny (23.10.2026): „Inflacja CPI w Polsce w wrześniu 2026 r. wyniosła 4,1% r/r (wskaźnik cen towarów i usług konsumpcyjnych 104,1, analogiczny miesiąc roku poprzedniego = 100)”. Liczba w twierdzeniu nie zgadza się z danymi źródła za ten sam okres.",
+        "main_doc_id": "gus:cpi:2026-09",
+        "main_fragment": "Inflacja CPI w Polsce w wrześniu 2026 r. wyniosła 4,1% r/r (wskaźnik cen towarów i usług konsumpcyjnych 104,1, analogiczny miesiąc roku poprzedniego = 100); w porównaniu z poprzednim miesiącem: 100,7 (wzrost o 0,7% m/m); w porównaniu z grudniem roku poprzedniego: 103,7."
+      },
+      {
+        "claim": "Dobrze chociaż, że bezrobocie rejestrowane trzyma się na 5,8%.",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Potrzebne byłoby źródło, np. aktualne dane GUS, NBP, Eurostatu lub komunikat ZUS/właściwego ministerstwa. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P007",
+    "case_id": "dev:O1",
+    "before_verdicts": [
+      "nie_podlega_weryfikacji"
+    ],
+    "after": [
+      {
+        "claim": "Uważam, że ten rząd jest najgorszy w historii Polski.",
+        "verdict": "nie_podlega_weryfikacji",
+        "conflicting": false,
+        "rules": [
+          "R1:NIE_PODLEGA_WERYFIKACJI"
+        ],
+        "short_answer": "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić. Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P008",
+    "case_id": "blind2:B2-36",
+    "before_verdicts": [
+      "nie_podlega_weryfikacji"
+    ],
+    "after": [
+      {
+        "claim": "Wejście do strefy euro byłoby dla Polski gospodarczą katastrofą",
+        "verdict": "nie_podlega_weryfikacji",
+        "conflicting": false,
+        "rules": [
+          "R1:NIE_PODLEGA_WERYFIKACJI"
+        ],
+        "short_answer": "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić. Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P009",
+    "case_id": "heldout:H54",
+    "before_verdicts": [
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Na początku 2024 roku Polska liczyła około 36,6 mln mieszkańców",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Potrzebne byłoby źródło, np. aktualne dane GUS, NBP, Eurostatu lub komunikat ZUS/właściwego ministerstwa. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P010",
+    "case_id": "blind2:B2-45",
+    "before_verdicts": [
+      "falszywe"
+    ],
+    "after": [
+      {
+        "claim": "Tusk powiedział w Holandii, że II wojna światowa zaczęła się od polskiego ataku na Westerplatte",
+        "verdict": "falszywe",
+        "conflicting": false,
+        "rules": [
+          "R3:FALSZYWE",
+          "HR:JEDNO_ZRODLO_ESKALACJA",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie. Demagog ocenił twierdzenie „Donald Tusk powiedział, że winnymi ataku na Westerplatte 1 września 1939 roku byli Polacy” jako „Fałsz” (analiza z 13.05.2025). Demagog pisze: „Aby zweryfikować, co tak naprawdę powiedział Donald Tusk, odnajdujemy nieprzetłumaczony zapis z przemowy polityka. Okazuje się, że premier wcale nie powiedział, że za atak na Westerplatte odpowiadali Polacy”.",
+        "main_doc_id": "demagog:fake_news/tusk-powiedzial-ze-ii-wojna-zaczela-sie-od-polskiego-ataku-na-westerplatte-to-blad-tlumaczenia",
+        "main_fragment": "Aby zweryfikować, co tak naprawdę powiedział Donald Tusk, odnajdujemy nieprzetłumaczony zapis z przemowy polityka. Okazuje się, że premier wcale nie powiedział, że za atak na Westerplatte odpowiadali Polacy."
+      }
+    ]
+  },
+  {
+    "packet_id": "P011",
+    "case_id": "heldout:H16",
+    "before_verdicts": [
+      "wprowadzajace_w_blad"
+    ],
+    "after": [
+      {
+        "claim": "Już co trzecie dziecko w Polsce rodzi się poza małżeństwem, a w lubuskim czy zachodniopomorskim to nawet połowa",
+        "verdict": "wprowadzajace_w_blad",
+        "conflicting": false,
+        "rules": [
+          "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+        ],
+        "short_answer": "Częściowo. Demagog ocenił twierdzenie „W Polsce w tej chwili 33% dzieci rodzi się poza małżeństwami. 50% się rodzi tych dzieci na ścianie zachodniej, czyli lubuskie, zachodniopomorskie, dolnośląskie” jako „Częściowa prawda” (analiza z 26.06.2026). Demagog pisze: „Błędnie przytoczył natomiast odsetek takich urodzeń na ścianie zachodniej – jest on niższy, szczególnie w województwie dolnośląskim. Dlatego wypowiedź oceniamy jako częściową prawdę”.",
+        "main_doc_id": "demagog:wypowiedzi/co-trzecie-dziecko-rodzi-sie-poza-malzenstwem-trend-jest-wzrostowy",
+        "main_fragment": "Błędnie przytoczył natomiast odsetek takich urodzeń na ścianie zachodniej – jest on niższy, szczególnie w województwie dolnośląskim. Dlatego wypowiedź oceniamy jako częściową prawdę."
+      }
+    ]
+  },
+  {
+    "packet_id": "P012",
+    "case_id": "heldout:H36",
+    "before_verdicts": [
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Radni w Olsztynie przegłosowali, że od 1 grudnia komunikacja miejska będzie darmowa dla wszystkich mieszkańców",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Potrzebne byłoby źródło, np. komunikat przewoźnika lub miejskiego zarządu transportu albo obowiązujący cennik i regulamin przewozu. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P013",
+    "case_id": "heldout:H07",
+    "before_verdicts": [
+      "falszywe"
+    ],
+    "after": [
+      {
+        "claim": "Komenda Stołeczna ogłosiła dla Warszawy najwyższy stopień alarmowy, policjantów ściągają z urlopów do roboty",
+        "verdict": "falszywe",
+        "conflicting": false,
+        "rules": [
+          "R3:FALSZYWE",
+          "HR:JEDNO_ZRODLO_ESKALACJA"
+        ],
+        "short_answer": "Nie. Demagog ocenił twierdzenie „W Warszawie policja ogłosiła właśnie najwyższy stopień alarmowy i funkcjonariusze są pilnie ściągani do służby” jako „Falsz” (analiza z 10.11.2026). Demagog pisze: „Analiza w pigułce - Komenda Stołeczna Policji, w odpowiedzi na nasze pytanie, zdementowała doniesienia, według których w Warszawie ogłoszono „najwyższy stopień alarmowy””.",
+        "main_doc_id": "demagog:wypowiedzi/najwyzszy-stopien-alarmowy-w-warszawie-policja-dementuje",
+        "main_fragment": "Analiza w pigułce - Komenda Stołeczna Policji, w odpowiedzi na nasze pytanie, zdementowała doniesienia, według których w Warszawie ogłoszono „najwyższy stopień alarmowy”."
+      }
+    ]
+  },
+  {
+    "packet_id": "P014",
+    "case_id": "heldout:H35",
+    "before_verdicts": [
+      "nie_podlega_weryfikacji"
+    ],
+    "after": [
+      {
+        "claim": "Kraków to najpiękniejsze miasto w Europie, Warszawa się nie umywa!!",
+        "verdict": "nie_podlega_weryfikacji",
+        "conflicting": false,
+        "rules": [
+          "R1:NIE_PODLEGA_WERYFIKACJI"
+        ],
+        "short_answer": "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić. Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P015",
+    "case_id": "dev:I1",
+    "before_verdicts": [],
+    "after": []
+  },
+  {
+    "packet_id": "P016",
+    "case_id": "blind2:B2-33",
+    "before_verdicts": [
+      "nie_podlega_weryfikacji"
+    ],
+    "after": [
+      {
+        "claim": "Atom to jedyna sensowna przyszłość polskiej energetyki, a wiatraki to fanaberia ekologów",
+        "verdict": "nie_podlega_weryfikacji",
+        "conflicting": false,
+        "rules": [
+          "R1:NIE_PODLEGA_WERYFIKACJI"
+        ],
+        "short_answer": "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić. Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P017",
+    "case_id": "blind2:B2-04",
+    "before_verdicts": [
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Słyszałam, że w wyborach nie można się wylegitymować mObywatelem i trzeba mieć plastikowy dowód, inaczej nie dadzą karty. Czy to prawda?",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Potrzebne byłoby źródło, np. ustawa lub rozporządzenie w Dzienniku Ustaw (wyszukiwarka ISAP Sejmu) — z zakresem, którego dotyczy, i datą wejścia w życie. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P018",
+    "case_id": "heldout:H55",
+    "before_verdicts": [],
+    "after": []
+  },
+  {
+    "packet_id": "P019",
+    "case_id": "heldout:H32",
+    "before_verdicts": [
+      "nie_podlega_weryfikacji"
+    ],
+    "after": [
+      {
+        "claim": "Tusk to najgorszy premier w historii III RP i powinien natychmiast podać się do dymisji",
+        "verdict": "nie_podlega_weryfikacji",
+        "conflicting": false,
+        "rules": [
+          "R1:NIE_PODLEGA_WERYFIKACJI"
+        ],
+        "short_answer": "To opinia, a nie twierdzenie o faktach — nie da się jej potwierdzić ani obalić. Mogę sprawdzić konkretne fakty, na których się opiera (liczby, daty, decyzje) — wpisz je osobno.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P020",
+    "case_id": "dev:J1",
+    "before_verdicts": [],
+    "after": []
+  },
+  {
+    "packet_id": "P021",
+    "case_id": "heldout:H31",
+    "before_verdicts": [
+      "wprowadzajace_w_blad"
+    ],
+    "after": [
+      {
+        "claim": "Czy to prawda, że w Niemczech demontują farmy wiatrowe, bo energia z wiatru im się nie spina finansowo?",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Demagog (17.04.2025): „Farma wiatrowa w Niemczech wyłączona przez brak dotacji?”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P022",
+    "case_id": "heldout:H04",
+    "before_verdicts": [
+      "falszywe"
+    ],
+    "after": [
+      {
+        "claim": "Taylor Swift zrobiła nazistowski gest na koncercie na Narodowym 1 sierpnia 2024, w rocznicę Powstania! Jest zdjęcie w necie.",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Stowarzyszenie Pravda (23.10.2024): „Czy 1 sierpnia Taylor Swift hajlowała na stadionie Narodowym?”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P023",
+    "case_id": "blind2:B2-15",
+    "before_verdicts": [
+      "wprowadzajace_w_blad"
+    ],
+    "after": [
+      {
+        "claim": "Statystyki nie kłamią: na każdy tysiąc Ukraińców przypada u nas dziesięć razy więcej przestępstw niż na tysiąc Polaków",
+        "verdict": "wprowadzajace_w_blad",
+        "conflicting": false,
+        "rules": [
+          "R4:WPROWADZAJACE_W_BLAD(fact-check)"
+        ],
+        "short_answer": "Ta informacja wprowadza w błąd. Demagog ocenił twierdzenie „Ukraińcy popełniają w Polsce 10 razy więcej przestępstw na 1000 osób niż Polacy” jako „Manipulacja” (analiza z 28.07.2026). Demagog pisze: „Oficjalne dane statystyczne pokazują, że wskaźnik przestępczości w przeliczeniu na 1000 mieszkańców jest wyższy wśród Polaków niż wśród obywateli Ukrainy. Czemu obcokrajowcy są poszukiwani?”.",
+        "main_doc_id": "demagog:wypowiedzi/kto-popelnia-wiecej-przestepstw-wyjasniamy-przestepczosc-ukraincow",
+        "main_fragment": "Oficjalne dane statystyczne pokazują, że wskaźnik przestępczości w przeliczeniu na 1000 mieszkańców jest wyższy wśród Polaków niż wśród obywateli Ukrainy. Czemu obcokrajowcy są poszukiwani?"
+      }
+    ]
+  },
+  {
+    "packet_id": "P024",
+    "case_id": "heldout:H20",
+    "before_verdicts": [
+      "potwierdzone"
+    ],
+    "after": [
+      {
+        "claim": "Karol Nawrocki wygrał drugą turę wyborów prezydenckich w 2025 r., dostał 50,89% ważnych głosów",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Demagog (04.06.2025): „Zaświadczenia o prawie do głosowania nadużywane? Brakuje dowodów”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P025",
+    "case_id": "blind2:B2-16",
+    "before_verdicts": [
+      "potwierdzone"
+    ],
+    "after": [
+      {
+        "claim": "W eurowyborach w 2024 r. Polska wybierała 53 europosłów – to jedna z największych delegacji w Parlamencie Europejskim",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Demagog (31.05.2024): „Eurowybory – ile mandatów przypadnie Polsce?”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P026",
+    "case_id": "heldout:H26",
+    "before_verdicts": [
+      "potwierdzone"
+    ],
+    "after": [
+      {
+        "claim": "UE wcale nie zakazuje naprawiania samochodów starszych niż 15 lat, to fejk z internetu",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Stowarzyszenie Pravda (30.11.2024): „Czy UE wprowadza zakaz naprawy starych samochodów?”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P027",
+    "case_id": "dev:B1",
+    "before_verdicts": [
+      "brak_dowodow"
+    ],
+    "after": [
+      {
+        "claim": "Właśnie ogłoszono: 5 milionów obywateli Ukrainy uciekło teraz do Rosji.",
+        "verdict": "brak_dowodow",
+        "conflicting": false,
+        "rules": [
+          "R6:BRAK_DOWODOW",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Nie udało mi się tego potwierdzić. Znalazłem tylko materiał pokrewny — Stowarzyszenie Pravda (07.05.2022): „Czy obywatele Ukrainy znajdują schronienie również w Rosji?”. Nie rozstrzyga on samego twierdzenia — w pełnej analizie sprawdzisz, czego dokładnie dotyczy. Brak wyniku w bazie nie oznacza, że to nieprawda.",
+        "main_doc_id": null,
+        "main_fragment": null
+      }
+    ]
+  },
+  {
+    "packet_id": "P028",
+    "case_id": "heldout:H13",
+    "before_verdicts": [
+      "wprowadzajace_w_blad"
+    ],
+    "after": [
+      {
+        "claim": "Orlen sprzedaje Ukrainie paliwo po 2,94 zł za litr, a my na stacjach płacimy po 8 zł!!! Gdzie tu sprawiedliwość?",
+        "verdict": "wprowadzajace_w_blad",
+        "conflicting": false,
+        "rules": [
+          "R4:WPROWADZAJACE_W_BLAD(fact-check)",
+          "V5:CYTAT_NIE_UZASADNIA_TEZY"
+        ],
+        "short_answer": "Ta informacja wprowadza w błąd. Demagog ocenił twierdzenie „Dla Ukraińców paliwo za 2,94 za litr, a dla Polaków po 8 zł…” jako „Manipulacja” (analiza z 24.07.2026). Demagog pisze: „Warto więc zauważyć, że poseł PiS porównał aktualne ceny paliw na stacjach benzynowych z cenami paliwa wyeksportowanego do Ukrainy w 2025 roku. Jak się okazuje, nie jest to jedyna manipulacja w jego wpisie”.",
+        "main_doc_id": "demagog:wypowiedzi/orlen-sprzedaje-ukrainie-paliwo-za-3-zl-a-polakom-drozej-fakty-sa-inne",
+        "main_fragment": "Warto więc zauważyć, że poseł PiS porównał aktualne ceny paliw na stacjach benzynowych z cenami paliwa wyeksportowanego do Ukrainy w 2025 roku. Jak się okazuje, nie jest to jedyna manipulacja w jego wpisie."
+      }
+    ]
+  },
+  {
+    "packet_id": "P029",
+    "case_id": "dev:J2",
+    "before_verdicts": [],
+    "after": []
+  },
+  {
+    "packet_id": "P030",
+    "case_id": "dev:J3",
+    "before_verdicts": [],
+    "after": []
+  }
+]

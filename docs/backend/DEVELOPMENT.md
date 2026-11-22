@@ -70,7 +70,7 @@ PRAWDOWID_SCHEDULER=0 PRAWDOWID_LIVE_SEARCH=0 \
 
 Przed uruchomieniem skopiuj `data/index/` do wybranego katalogu indeksu, jeśli chcesz uniknąć ponownego liczenia wszystkich embeddingów. Wskaż świeży runtime przy każdym niezależnym pomiarze.
 
-Obecne zbiory służyły do rozwoju systemu. Wynik po poprawkach nie jest nową oceną ślepą. Automatyczne pokrycie cytowań jest wskaźnikiem pomocniczym; semantyczną poprawność trzeba oceniać niezależnie. Sama refaktoryzacja powinna zachować wyniki przy tych samych danych, modelach i ustawieniach.
+Obecne zbiory służyły do rozwoju systemu. Wynik po poprawkach nie jest nową oceną ślepą. Dawny licznik obecności cytowań jest dostępny jako `citation_presence_proxy`; rzeczywiste pokrycie i poprawność wymagają adnotacji. [Protokół audytu](../../eval/citations/README.md) opisuje zamrożenie pełnych odpowiedzi (`--citation-audit`), pakiety recenzenckie i pomiar każdej atomowej tezy. [Aktualny raport](../CITATION_AUDIT.md) zawiera pierwszą ocenę AI i ograniczenia niezależności. Sama refaktoryzacja powinna zachować wyniki przy tych samych danych, modelach i ustawieniach.
 
 ## Sprawdzenie kontraktu HTTP
 

@@ -37,6 +37,7 @@ FC_LABEL = {
     "unverifiable": "nieweryfikowalne",
 }
 REASON = {
+    "BRAK_UZASADNIAJACEGO_CYTATU": "dostępne fragmenty nie wystarczają do rozstrzygnięcia całej tezy",
     "BRAK_MATERIALOW": "brak materiałów na ten temat w katalogu źródeł",
     "TYLKO_MATERIALY_POKREWNE": "są tylko materiały na pokrewny temat",
     "ZRODLA_SPRZECZNE": "źródła są ze sobą sprzeczne",
@@ -479,9 +480,7 @@ def _short_answer(c: ClaimResult, live: str = "") -> str:
             dated = f"Materiał pochodzi z {year} r. " if re.fullmatch(r"(19|20)\d\d", year) else ""
             return f"Częściowo. {dated}{c.missing_context.rstrip('.')} (źródło: {e.publisher})."
         opener = (
-            "Częściowo."
-            if e.factcheck_verdict == "mixed"
-            else "Częściowo, ale całość wprowadza w błąd."
+            "Częściowo." if e.factcheck_verdict == "mixed" else "Ta informacja wprowadza w błąd."
         )
         return f"{opener} {_who_checked(e)}{_finding(c, e)}"
 

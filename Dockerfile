@@ -50,7 +50,8 @@ RUN ln -s /var/lib/prawdowid/corpus /app/data/corpus \
     && ln -s /var/lib/prawdowid/sources /app/data/sources \
     && mkdir -p /app/data/raw \
     && chown prawdowid:prawdowid /app/data/raw \
-    && python /app/docker/start.py --write-release /app/seed/RELEASE /app/seed/corpus /app/seed/sources /app/data/index
+    && python /app/docker/start.py --write-release /app/seed/RELEASE /app/seed/corpus /app/seed/sources /app/data/index \
+    && chmod -R a+rX /app
 
 USER prawdowid
 EXPOSE 8000

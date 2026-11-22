@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from . import measures
+from . import grounding, measures
 from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
@@ -123,7 +123,7 @@ _FINDING = re.compile(
 # one about the CHECKED claim. When the user asserts the opposite of that claim (claim match with same=False), the
 # words describe the claim the user denies, so a window that carries only them is no finding for the user's claim.
 _VERDICT_WORD = re.compile(
-    r"\b(?:nieprawd\w*|fałsz\w*|manipulac\w*|zmanipulowan\w*|wprowadza\w* w błąd|zgodn\w* z prawdą)",
+    r"\b(?:nieprawd\w*|fałsz\w*|manipulac\w*|zmanipulowan\w*|wprowadza\w* w błąd|zgodn\w* z prawdą|częściow\w* prawd\w*|nie oznacza|nie dowodzi)",
     re.I,
 )
 _RETELLS = re.compile(
@@ -212,13 +212,11 @@ def _best_fragment(
         # zamknięta"), and that reads as a finding (_finding_score). The claim itself is quoted only when the record
         # has nothing else.
         own = [
-            w
-            for k in ids
-            for w in _fragment_windows(INDEX.chunks[k].text, d.text or "")
-            if not _restates(w, d.claim)
+            w for w in _fragment_windows(d.text or "", d.text or "") if not _restates(w, d.claim)
         ]
         if own:
-            windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
+            findings = [window for window in own if grounding.has_finding(window)]
+            windows, head_tokens = list(dict.fromkeys(findings or own)), set(tokens(d.title))
     if (
         not windows
     ):  # nothing of this passage can be found in the stored text (e.g. a title-only document)
@@ -242,38 +240,132 @@ def _best_fragment(
     ranked = sorted(((w, score(w)) for w in windows), key=lambda x: -x[1])
     if not head_tokens:
         return ranked[0][0], cos, ()
-    # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI for the verdict)
+    # a leading list bullet of the analysis is not part of the quote
     ranked = [((w.lstrip("-–•* ") or w), sc) for w, sc in ranked]
-    return ranked[0][0], cos, tuple(ranked[:3])
+    shortlist = ranked[:3]
+    findings = sorted(
+        ranked,
+        key=lambda item: -_finding_score(item[0], q_tokens, fc_tokens, claim_text, opposite),
+    )
+    if findings and findings[0] not in shortlist:
+        shortlist.append(findings[0])
+    contextual = [
+        item
+        for item in ranked
+        if _VERDICT_WORD.search(item[0])
+        and _finding_score(item[0], q_tokens, fc_tokens, claim_text, opposite) > 0
+    ]
+    if contextual and contextual[0] not in shortlist:
+        shortlist.append(contextual[0])
+    if re.search(r"\d", claim_text):
+        complete = [
+            item for item in ranked if grounding.numeric_support_complete(claim_text, item[0])
+        ]
+        if complete and complete[0] not in shortlist:
+            shortlist.append(complete[0])
+    return ranked[0][0], cos, tuple(shortlist)
 
 
-FINDING_NLI_BUDGET = (
-    12  # windows judged by NLI per claim when choosing the quote of decisive fact-checks
-)
+def _ground_factchecks(claim, support, refute, misleading, evidence) -> list[str]:
+    """Verify displayed findings, including misleading ratings, before R2–R5.
 
-
-def _rerank_findings(claim_query: str, items: list) -> dict[int, str]:
-    """For decisive fact-checks, prefer among the best windows the one whose NLI relation to the user's claim matches
-    the verdict direction (want = 'contra' for a refuting, 'entail' for a supporting item): lexical score + 0.5 x
-    (wanted - opposite probability). One NLI batch of at most FINDING_NLI_BUDGET windows. Returns doc_idx -> quote;
-    every quote is re-checked against the stored text (gate V2). The verdict itself is not touched.
+    No semantic inference from the rating itself. Direct support/refutation uses
+    NLI on the quote, its matched checked claim, or a refuting headline. A
+    misleading finding must show a limitation or an explicit contextual judgment.
+    Both routes reject questions, allegation-only passages and mismatched scope.
+    The per-document budget is bounded and cannot be consumed by earlier docs.
     """
-    pairs, owners = [], []
-    for c, want in items:
-        for w, base in c.alternatives:
-            if len(pairs) >= FINDING_NLI_BUDGET:
-                break
-            pairs.append((w, claim_query))
-            owners.append((c, want, w, base))
-    if not owners:
-        return {}
-    best: dict[int, tuple[float, str]] = {}
-    for (c, want, w, base), s_ in zip(owners, NLI_MODEL.score(pairs)):
-        direction = (s_.contra - s_.entail) if want == "contra" else (s_.entail - s_.contra)
-        val = base + 0.5 * direction
-        if c.doc_idx not in best or val > best[c.doc_idx][0]:
-            best[c.doc_idx] = (val, w)
-    return {k: w for k, (_, w) in best.items() if _quote_ok(w, INDEX.docs[k].text or "")}
+    work, pairs, best = [], [], {}
+    for group, direction in ((support, "entail"), (refute, "contra"), (misleading, "context")):
+        for candidate in group:
+            document = INDEX.docs[candidate.doc_idx]
+            if document.source_type not in ("factcheck", "incident") or candidate.archival:
+                continue
+            windows = list(
+                dict.fromkeys([candidate.fragment, *(w for w, _ in candidate.alternatives)])
+            )[:6]
+            for window in windows:
+                if not (_quote_ok(window, document.text or "") and grounding.has_finding(window)):
+                    continue
+                if not grounding.comparable_scope(claim.query, window):
+                    continue
+                if direction == "entail" and not grounding.numeric_support_complete(
+                    claim.query, window
+                ):
+                    continue
+                if direction in ("contra", "context") and not grounding.has_numeric_comparison(
+                    claim.query, window
+                ):
+                    continue
+                # The checked claim can be a clearer wording of the same claim.
+                # Matching has already checked polarity, entities and quantities;
+                # the excerpt must still justify the corresponding relation.
+                hypotheses = [(claim.query, direction)]
+                checked = candidate.unit if candidate.via_unit else document.claim
+                if checked and candidate.same is not None and direction != "context":
+                    checked_direction = (
+                        direction
+                        if candidate.same
+                        else {"contra": "entail", "entail": "contra"}[direction]
+                    )
+                    hypotheses.append((checked, checked_direction))
+                headline = headline_statement(document.title)
+                if headline and (
+                    direction == "context" or (direction == "contra" and candidate.same is True)
+                ):
+                    hypotheses.append((headline, "entail"))
+                if direction == "context":
+                    # Partial truth needs evidence of a limitation, not an NLI
+                    # entailment of the allegation as retold in the article.
+                    hypotheses = [(claim.query, "contra")]
+                    if headline:
+                        hypotheses.append((headline, "entail"))
+                    if (
+                        _VERDICT_WORD.search(window)
+                        and _finding_score(
+                            window,
+                            set(tokens(claim.query)),
+                            set(tokens(document.claim or "")),
+                            claim.query,
+                        )
+                        > 0
+                    ):
+                        # An explicit contextualised finding of the matched analysis.
+                        # This is a deterministic finding rule, not a model score.
+                        best.setdefault(candidate.doc_idx, (1.0, window))
+                for hypothesis, relation in dict.fromkeys(hypotheses):
+                    work.append((candidate, relation, window))
+                    pairs.append((window, hypothesis))
+    for (candidate, direction, window), stance in zip(work, NLI_MODEL.score(pairs)):
+        wanted = stance.contra if direction == "contra" else stance.entail
+        opposite = stance.entail if direction == "contra" else stance.contra
+        if wanted >= settings.nli_strong and wanted > max(opposite, stance.neutral):
+            old = best.get(candidate.doc_idx)
+            if old is None or wanted > old[0]:
+                best[candidate.doc_idx] = (wanted, window)
+    rejected = []
+    for group in (support, refute, misleading):
+        for candidate in group[:]:
+            document = INDEX.docs[candidate.doc_idx]
+            if document.source_type not in ("factcheck", "incident") or candidate.archival:
+                continue
+            accepted = best.get(candidate.doc_idx)
+            if accepted:
+                candidate.fragment = accepted[1]
+            else:
+                group.remove(candidate)
+                # _decisive in answer.py also uses the rating + same_claim, so
+                # clear that match as well as the engine's stance.
+                candidate.implied = None
+                rejected.append(document.id)
+            for item in evidence:
+                if item.doc_id == document.id:
+                    if accepted:
+                        item.fragment = shown_fragment(candidate.fragment, document.text or "")
+                    else:
+                        item.stance = "kontekst"
+                        item.same_claim = None
+    return rejected
 
 
 def _words(s: str) -> str:
@@ -1414,11 +1506,20 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             definitional.append(candidate)
         elif candidate.nli is not None:
             stance = candidate.nli
+            if not candidate.numeric and not grounding.comparable_scope(
+                claim.query, candidate.fragment
+            ):
+                evidence.append(_evidence(candidate, "kontekst", candidate.frag_cos, None))
+                continue
             strong_topic = candidate.numeric is not None or candidate.frag_cos >= 0.72
             if (
                 stance.entail >= settings.nli_strong
                 and stance.entail > stance.contra
                 and strong_topic
+                and (
+                    candidate.numeric
+                    or grounding.numeric_support_complete(claim.query, candidate.fragment)
+                )
             ):
                 support.append(candidate)
                 evidence.append(_evidence(candidate, "popiera", stance.entail, None))
@@ -1426,6 +1527,10 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 stance.contra >= settings.nli_strong
                 and stance.contra > stance.entail
                 and strong_topic
+                and (
+                    candidate.numeric
+                    or grounding.has_numeric_comparison(claim.query, candidate.fragment)
+                )
                 and (
                     candidate.numeric
                     or _relevance(query_tokens, f"{document.title} {candidate.fragment}") >= 0.5
@@ -1455,28 +1560,11 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
             for e in evidence:
                 if e.doc_id == document.id:
                     e.fragment = fragment
-    # the quote of a decisive fact-check: the window whose NLI relation matches the verdict direction (a refuting
-    # finding for a refuted claim, a confirming one for a confirmed claim); archival / asked-number quotes stay
-    factcheck_candidates = [
-        (candidate, "contra" if candidate in refute else "entail")
-        for candidate in sorted(refute + support, key=lambda candidate: -candidate.claim_cos)
-        if INDEX.docs[candidate.doc_idx].source_type in ("factcheck", "incident")
-        and not candidate.archival
-        and not candidate.explains
-        and len(candidate.alternatives) > 1
-    ]
-    if factcheck_candidates:
-        stage_started_at = time.perf_counter()
-        for doc_idx, quote in _rerank_findings(claim.query, factcheck_candidates).items():
-            for candidate, _ in factcheck_candidates:
-                if candidate.doc_idx == doc_idx:
-                    candidate.fragment = quote
-            for e in evidence:
-                if e.doc_id == INDEX.docs[doc_idx].id:
-                    e.fragment = quote
-        timings["nli_ms"] = (
-            timings.get("nli_ms", 0) + (time.perf_counter() - stage_started_at) * 1000
-        )
+    # Claim matching identifies the publication, but only a verified displayed
+    # finding may decide the user's claim (V5). Rejected items remain context.
+    stage_started_at = time.perf_counter()
+    ungrounded = _ground_factchecks(claim, support, refute, misleading, evidence)
+    timings["nli_ms"] = timings.get("nli_ms", 0) + (time.perf_counter() - stage_started_at) * 1000
     result = _decide(
         claim,
         support,
@@ -1487,6 +1575,14 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         high_risk,
         keep={INDEX.docs[candidate.doc_idx].id for candidate in candidates if candidate.explains},
     )
+    if ungrounded:
+        result.rules_fired.append("V5:CYTAT_NIE_UZASADNIA_TEZY")
+        if result.verdict == "brak_dowodow":
+            result.reason_codes.append("BRAK_UZASADNIAJACEGO_CYTATU")
+            result.what_unknown = (
+                "Znaleziono podobne analizy, ale dostępne fragmenty nie uzasadniają "
+                "rozstrzygnięcia całej tezy w podanym zakresie."
+            )
     result.meta_question = getattr(claim, "meta", "") or None
     if metadata_only:
         result.rules_fired.append("V3:TYLKO_METADANE")
@@ -1821,11 +1917,9 @@ def _explain(
         )
         if main.nli_claim is not None and main.nli_claim.contra >= 0.8:
             body += " Twoje zdanie mówi coś przeciwnego niż to sprawdzone twierdzenie."
-        if d.verdict == "mixed":
-            body += " Część twierdzenia jest prawdziwa, ale całość daje mylny obraz."
     else:
         body = f" Według źródła: {who} ({when})."
-    body += f" Fragment źródła: „{short(shown_fragment(main.fragment, d.text or ''), 260)}”"
+    body += f" Fragment źródła: „{shown_fragment(main.fragment, d.text or '')}”"
     if missing_context:
         body += f" Brakujący kontekst: {missing_context}"
     return lead + body, None

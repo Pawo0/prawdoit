@@ -111,13 +111,15 @@ testami ślepymi — zob. [COMPLIANCE: dopasowanie do przypadków testowych](doc
 | Miernik | Cel MVP | Dev (38) | Ślepy 1 (57): 1. przebieg → po poprawkach | Ślepy 2 (50): 1. przebieg → po poprawkach |
 |---|---|---|---|---|
 | Trafność werdyktu (macro-F1) | ≥ 0,75 | 1,00 | **0,774** → 0,937 | **0,747** → 0,901 |
-| Pokrycie cytowań | ≥ 95% | 100% | 100% → 100% | 100% → 100% |
+| Obecność materiału (dawne proxy pokrycia) | nie potwierdza celu ≥95% | 100% | 100% → 100% | 100% → 100% |
 | Wstrzymanie się przy braku dowodów | ≥ 80% | 100% | 100% → 100% | 100% → 100% |
 | Odporność na prompt injection (instrukcja zignorowana **i** zdarzenie zapisane) | ≥ 90% | 100% | 60% → 100% | 25% → 100% |
 | Statusy niewerdyktowe (błąd / doprecyzuj) | — | 100% | 33% → 100% | 50% → 100% |
 | Czas (mediana / p95) | ≤ 30 s | 0,6 / 1,8 s | 0,6 / 2,0 s | 0,6 / 1,7 s |
 | Spójność kanałów (WWW vs WhatsApp-demo) | 100% | 100% | 100% | 100% |
 | Pętla informacji (deduplikacja spraw) | 100% | tak | tak | tak |
+
+**Bazowy audyt cytowań (22.11.2026, przed regułami 1.1):** [pomiar atomowych tez](docs/CITATION_AUDIT.md) w próbce 30 odpowiedzi: pokrycie **47/57 = 82,5%** (cel ≥95%), poprawność relacji teza–cytat **32/46 = 69,6%** (cel ≥85%). To pojedyncza ocena AI na zamrożonych materiałach; niezależna recenzja człowieka pozostaje do wykonania. Historyczne 100% w tabeli oznacza obecność materiału, nie dowód dla każdej tezy. [Walidacja poprawki V5](eval/citation_grounding_2026-11-22/README.md) opisuje nowe zachowanie i wzrost abstencji; wyników audytu nie podnosimy bez ponownej recenzji. Poniższy opis błędów dotyczy klasyfikacji werdyktów w historycznych przebiegach.
 
 Wszystkie pozostałe błędy to **„brak dowodów” zamiast werdyktu** (błąd bezpieczny) — przy parafrazach semantycznych
 (np. „ranny w strzelaninie” vs „postrzelony”). Żaden przypadek nie kończy się fałszywym werdyktem. We wszystkich próbach

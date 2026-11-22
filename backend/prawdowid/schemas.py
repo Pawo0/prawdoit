@@ -124,7 +124,7 @@ class ClaimResult(BaseModel):
     meta_question: Optional[str] = None
 
 
-RULES_VERSION = "1.0"
+RULES_VERSION = "1.1"
 
 
 class SecurityEvent(BaseModel):

@@ -1,0 +1,32 @@
+{
+  "packet_id": "PXXX",
+  "packet_sha256": "hash z pakietu",
+  "reviewer_type": "independent_human",
+  "reviewer_id": "imię lub stały pseudonim recenzenta",
+  "inventory_complete": true,
+  "surfaces": {
+    "C1.verdict": {
+      "category": "factual",
+      "reason": "Zawiera ustalenie o świecie."
+    }
+  },
+  "assertions": [
+    {
+      "id": "A01",
+      "proposition": "Jedno atomowe ustalenie, z właściwą negacją werdyktu.",
+      "anchor": "dokładny fragment wskazanej powierzchni",
+      "surface_ids": [
+        "C1.verdict"
+      ],
+      "citations": [
+        {
+          "id": "C1E1",
+          "judgment": "supported",
+          "support_field": "fragment",
+          "support_span": "dokładny fragment widocznego cytatu uzasadniający tę tezę",
+          "reason": "Dlaczego cytat wspiera właśnie tę tezę, z uwzględnieniem czasu, podmiotu i liczb."
+        }
+      ]
+    }
+  ]
+}

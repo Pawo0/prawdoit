@@ -1,0 +1,16 @@
+{
+  "seed": 20261122,
+  "population": 145,
+  "sample_size": 30,
+  "method": "equal-stratum round robin without replacement; shuffled within strata",
+  "strata": [
+    "multiple",
+    "no_claim",
+    "potwierdzone",
+    "falszywe",
+    "wprowadzajace_w_blad",
+    "brak_dowodow",
+    "nie_podlega_weryfikacji"
+  ],
+  "packets_sha256": "bb8db9f736c3cf1fbd8b735bd448dd9b680df0c54372e0cc800c548489813584"
+}
