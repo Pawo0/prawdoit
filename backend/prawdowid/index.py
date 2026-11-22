@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import math
+import os
 import threading
 import time
 from collections import Counter, defaultdict
@@ -217,8 +218,7 @@ class CorpusIndex:
 
     def _embed_cached(self, texts: list[str], prefix: str, kind: str) -> np.ndarray:
         """Incremental per-text cache: only texts not seen before are embedded (corpus updates are cheap)."""
-        slug = hashlib.sha1((settings.embed_model + prefix).encode()).hexdigest()[:10]
-        kpath, vpath = settings.index_dir / f"emb-{slug}.keys.json", settings.index_dir / f"emb-{slug}.npy"
+        kpath, vpath = _cache_paths(prefix)
         keys: list[str] = json.loads(kpath.read_text()) if kpath.exists() else []
         vecs = np.load(vpath) if vpath.exists() and keys else None
         pos = {k: i for i, k in enumerate(keys)}
@@ -373,4 +373,68 @@ def _bm25_extend(bm: BM25 | None, docs_tokens: list[list[str]]) -> BM25:
     return bm
 
 
+# ------------------------------------------------------------------ embedding cache files
+def _cache_paths(prefix: str) -> tuple[Path, Path]:
+    """keys (sha1 of each embedded text, in row order) and vectors of the cache for the configured model + prefix."""
+    slug = hashlib.sha1((settings.embed_model + prefix).encode()).hexdigest()[:10]
+    return settings.index_dir / f"emb-{slug}.keys.json", settings.index_dir / f"emb-{slug}.npy"
+
+
+def prune_cache(corpus_dir: Path | None = None) -> dict:
+    """Drop cached vectors whose text no corpus file can produce any more (deleted sources, rewritten records).
+    Every *.jsonl in corpus_dir counts, enabled in the registry or not, so switching a source back on never needs a
+    re-embed; records are not de-duplicated across files for the same reason. The texts are those load() would embed:
+    the chunking and the claim rows come from CorpusIndex itself (its embedding step is only recorded, nothing is
+    encoded), so the prune follows any change to them. Run: python -m prawdowid.index prune"""
+    corpus_dir = corpus_dir or settings.corpus_dir
+    docs: list[SourceDoc] = []
+    for f in sorted(corpus_dir.glob("*.jsonl")):
+        for line in f.read_text(encoding="utf-8").splitlines():
+            try:
+                d = SourceDoc(**json.loads(line)) if line.strip() else None
+            except Exception:  # noqa: BLE001 — as load(): malformed lines are skipped
+                d = None
+            if d is not None and (d.text or d.claim):
+                d.text = normalize_ws(d.text)[:6000]
+                docs.append(d)
+    wanted: dict[str, set[str]] = defaultdict(set)
+
+    def record(texts: list[str], prefix: str, kind: str) -> np.ndarray:
+        wanted[prefix].update(hashlib.sha1(t.encode("utf-8", "ignore")).hexdigest() for t in texts)
+        return np.zeros((len(texts), 384), dtype=np.float32)
+
+    tmp = CorpusIndex()
+    tmp.docs = docs
+    tmp._embed_cached = record  # type: ignore[method-assign]
+    tmp._build_chunks()
+    tmp._build_indexes()
+    out = {}
+    for prefix, keep in wanted.items():
+        kpath, vpath = _cache_paths(prefix)
+        if not (kpath.exists() and vpath.exists()):
+            continue
+        keys: list[str] = json.loads(kpath.read_text())
+        rows = [i for i, k in enumerate(keys) if k in keep]
+        out[kpath.name] = {"before": len(keys), "after": len(rows)}
+        if len(rows) < len(keys):
+            ktmp, vtmp = kpath.with_name(kpath.name + ".tmp"), vpath.with_name(vpath.name + ".tmp")
+            with vtmp.open("wb") as fh:
+                np.save(fh, np.load(vpath)[rows])
+            ktmp.write_text(json.dumps([keys[i] for i in rows]))
+            os.replace(vtmp, vpath)
+            os.replace(ktmp, kpath)
+    log.info("embedding cache pruned: %s", out)
+    return out
+
+
 INDEX = CorpusIndex()
+
+
+if __name__ == "__main__":
+    import sys
+
+    if sys.argv[1:] == ["prune"]:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        print(json.dumps(prune_cache(), indent=2))
+    else:
+        sys.exit("usage: python -m prawdowid.index prune")
