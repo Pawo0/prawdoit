@@ -1,3 +1,9 @@
 # Scheduled legacy harvesters; ML dependencies remain in backend/requirements-container.txt.
 requests==2.34.2
 selectolax==1.0.2
+# Harvesters the registry schedules, with the versions of the local ingest environments
+# (ingest/.venv, ingest/.venv_official): EUvsDisinfo reads its dataset copy as parquet; GUS publishes
+# tables as xlsx; the ClaimReview feed is streamed as JSON.
+pyarrow==26.0.1
+openpyxl==3.1.5
+ijson==3.6.0

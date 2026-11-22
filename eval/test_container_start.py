@@ -57,7 +57,7 @@ class StartupTests(unittest.TestCase):
                 self.assertEqual(history.read_bytes(), b"existing-history")
                 self.assertEqual(list((root / "state/index").glob("*.tmp")), [])
 
-    def test_private_admin_token_required(self):
+    def test_admin_token_error_names_the_variable(self):
         for value in ("", "demo-admin"):
             env = {"PRAWDOWID_MODERATOR_TOKEN": "private-test-token", "PRAWDOWID_ADMIN_TOKEN": value}
             with self.subTest(token=value), patch.dict(os.environ, env, clear=True):
@@ -87,6 +87,54 @@ class StartupTests(unittest.TestCase):
                 startup.prepare(root / "index-seed", root / "seed")
                 self.assertEqual(corpus.read_text(), "harvested")
                 self.assertFalse((root / "state/sources/test.json").exists())
+
+    def test_new_data_release_replaces_volume_data_and_keeps_previous(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seed, index_seed = root / "seed", root / "index-seed"
+            for name, filename in (("sources", "test.json"), ("corpus", "test.jsonl")):
+                (seed / name).mkdir(parents=True)
+                (seed / name / filename).write_text("release-1")
+            index_seed.mkdir()
+            (index_seed / "emb-test.npy").write_bytes(b"cache-1")
+            (seed / "RELEASE").write_text(startup.seed_release(seed / "corpus", seed / "sources", index_seed))
+            env = {
+                "PRAWDOWID_MODERATOR_TOKEN": "private-test-token",
+                "PRAWDOWID_ADMIN_TOKEN": "private-admin-token",
+                "PRAWDOWID_RUNTIME_DIR": str(root / "state/runtime"),
+                "PRAWDOWID_INDEX_DIR": str(root / "state/index"),
+                "HF_HOME": str(root / "models"),
+            }
+            corpus, cache = root / "state/corpus/test.jsonl", root / "state/index/emb-test.npy"
+            with patch.dict(os.environ, env, clear=True):
+                startup.prepare(index_seed, seed)
+                self.assertEqual(corpus.read_text(), "release-1")
+                corpus.write_text("harvested")
+                cache.write_bytes(b"grown-cache")
+                startup.prepare(index_seed, seed)  # restart, same image: the volume's data stays
+                self.assertEqual(corpus.read_text(), "harvested")
+                self.assertEqual(cache.read_bytes(), b"grown-cache")
+                (seed / "corpus/test.jsonl").write_text("release-2")
+                (index_seed / "emb-test.npy").write_bytes(b"cache-2")
+                release_2 = startup.seed_release(seed / "corpus", seed / "sources", index_seed)
+                (seed / "RELEASE").write_text(release_2)
+                startup.prepare(index_seed, seed)  # new image with other data: replaced, the old copy kept
+                self.assertEqual(corpus.read_text(), "release-2")
+                self.assertEqual(cache.read_bytes(), b"cache-2")
+                self.assertEqual((root / "state/previous/corpus/test.jsonl").read_text(), "harvested")
+                self.assertEqual((root / "state/seed-release").read_text().strip(), release_2)
+                self.assertEqual(sorted(p.name for p in (root / "state").iterdir()),
+                                 ["corpus", "index", "previous", "runtime", "seed-release", "sources"])
+
+    def test_release_digest_follows_content(self):
+        with tempfile.TemporaryDirectory() as temp:
+            folder = Path(temp) / "corpus"
+            folder.mkdir()
+            (folder / "a.jsonl").write_text("x")
+            first = startup.seed_release(folder)
+            self.assertEqual(first, startup.seed_release(folder))
+            (folder / "a.jsonl").write_text("y")
+            self.assertNotEqual(first, startup.seed_release(folder))
 
     def test_without_discord_executes_api_directly(self):
         with patch.object(startup, "prepare"), patch.dict(os.environ, {"PRAWDOWID_DISCORD_TOKEN": ""}), \

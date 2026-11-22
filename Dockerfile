@@ -45,10 +45,12 @@ COPY data/sources /app/seed/sources
 COPY data/index /app/data/index
 COPY data/watchlist.json /app/data/watchlist.json
 COPY docker/start.py docker/healthcheck.py /app/docker/
+# corpus and sources live on the state volume (seeded by start.py); RELEASE identifies the shipped data.
 RUN ln -s /var/lib/prawdowid/corpus /app/data/corpus \
     && ln -s /var/lib/prawdowid/sources /app/data/sources \
     && mkdir -p /app/data/raw \
-    && chown prawdowid:prawdowid /app/data/raw
+    && chown prawdowid:prawdowid /app/data/raw \
+    && python /app/docker/start.py --write-release /app/seed/RELEASE /app/seed/corpus /app/seed/sources /app/data/index
 
 USER prawdowid
 EXPOSE 8000

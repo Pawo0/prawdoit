@@ -136,15 +136,24 @@ Po zmianie kodu lub korpusu:
 docker compose up -d --build
 ```
 
-Dla TLS dodaj `--profile tls`. Obraz zawiera początkowy korpus i rejestr źródeł. Przy pierwszym starcie są kopiowane do wolumenu `state`
+Dla TLS dodaj `--profile tls`. Obraz zawiera korpus, rejestr źródeł i cache embeddingów w wersji przetestowanej
+w repozytorium. Przy pierwszym starcie korpus i rejestr są kopiowane do wolumenu `state`
 (`/var/lib/prawdowid/corpus` i `/var/lib/prawdowid/sources`), a `/app/data/corpus` i `/app/data/sources`
-wskazują na nie przez dowiązania. Dzięki temu harmonogram, wyszukiwanie na żywo, panel i stare skrypty
-korzystają z tych samych trwałych danych. Restart lub nowy obraz nie nadpisują istniejącego rejestru ani korpusu,
-nie przywracają też źródeł usuniętych w panelu. Aktualizacje tych danych wykonuj przez panel/harmonogram;
-sama przebudowa obrazu po zmianie plików w repo nie zastępuje już zainicjalizowanych danych w wolumenie.
+wskazują na nie przez dowiązania. Dzięki temu harmonogram, wyszukiwanie na żywo, panel i skrypty `ingest/`
+korzystają z tych samych trwałych danych. Blokady harmonogramu i skryptów trafiają do `/var/lib/prawdowid/runtime`.
+
+- **Restart kontenera** (ten sam obraz) zachowuje wszystko z wolumenu: zmiany z panelu `/admin`, usunięte źródła,
+  dokumenty pobrane przez harmonogram i uzupełniony cache embeddingów.
+- **Nowy obraz z innymi danymi** zastępuje w wolumenie korpus, rejestr i cache embeddingów tymi z obrazu.
+  Obraz niesie skrót swoich danych (`/app/seed/RELEASE`), a wolumen zapamiętuje zainstalowaną wersję
+  (`/var/lib/prawdowid/seed-release`). Po wdrożeniu nowej wersji z repozytorium działa więc dokładnie
+  przetestowany korpus. Poprzedni korpus i rejestr zostają w `/var/lib/prawdowid/previous/` (jedna generacja).
+  Zmiany wprowadzone wcześniej w panelu trzeba wtedy powtórzyć albo przenieść do `data/sources` w repozytorium.
+  Harmonogram uzupełnia źródła według `schedule_hours`, a czasy plików korpusu są zachowane z obrazu.
+- Nowy obraz z niezmienionymi danymi (zmiana samego kodu) nie dotyka danych w wolumenie.
+
 Surowy cache pobranych stron (`/app/data/raw`) jest roboczy i nie jest montowany w trwałym wolumenie.
-Kontener kopiuje gotowe embeddingi tylko do pustego cache,
-a aplikacja uzupełnia go dla nowych fragmentów. Nie nadpisuje istniejącej bazy SQLite. Wykonuj kopie wolumenu
+Baza SQLite nigdy nie jest nadpisywana. Wykonuj kopie wolumenu
 `state` przy zatrzymanym backendzie, aby otrzymać spójną kopię bazy. Przywracaj z zachowaniem właściciela UID 10001.
 
 Po pierwszym udanym pobraniu modeli możesz ustawić `HF_HUB_OFFLINE=1`, aby ładować je wyłącznie z wolumenu.
@@ -172,6 +181,9 @@ nie zezwala na żądania do nowego serwera. Następnie przeładuj rozszerzenie i
 
 `backend/requirements-container.txt` przypina bezpośrednie zależności runtime do wersji z lokalnego środowiska
 Python 3.12. Zależności pośrednie są rozwiązywane podczas budowania — nie jest to pełny lockfile.
+`ingest/requirements-container.txt` dodaje pakiety skryptów harmonogramu (`requests`, `selectolax`, `pyarrow` dla
+EUvsDisinfo, `openpyxl` dla GUS, `ijson` dla kanału ClaimReview) w wersjach z lokalnych środowisk `ingest/.venv*`;
+w kontenerze skrypty działają tym samym interpreterem co API.
 PyTorch jest instalowany z oficjalnego indeksu CPU; Discord jest dołączony do obrazu jako opcjonalny proces; Playwright i MCP nie są instalowane.
 Odczyt zrzutów ekranu (`image_b64` w `/api/check`) używa lokalnego Tesseracta z pakietów Debiana `tesseract-ocr`
 i `tesseract-ocr-pol` wraz z zależnościami systemowymi. Obraz nie jest zapisywany; bez programu `tesseract` API zwraca komunikat techniczny.

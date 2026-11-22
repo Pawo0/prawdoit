@@ -11,6 +11,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -454,11 +455,14 @@ def canonical_url(url: str) -> str:
 
 
 class RunLock:
-    """Non-blocking per-source lock (data/runtime/harvest_<source>.lock): a second concurrent run of the same
-    harvester (CLI + scheduler) exits instead of hitting the site twice and racing on the corpus file."""
+    """Non-blocking per-source lock (<runtime dir>/harvest_<source>.lock): a second concurrent run of the same
+    harvester (CLI + scheduler) exits instead of hitting the site twice and racing on the corpus file. The runtime
+    dir is the backend's (PRAWDOWID_RUNTIME_DIR, default data/runtime), so the lock lands on writable state in the
+    container too, where /app/data itself is read-only to the service user."""
 
     def __init__(self, source: str):
-        self.path = ROOT / "data" / "runtime" / f"harvest_{source}.lock"
+        runtime = os.environ.get("PRAWDOWID_RUNTIME_DIR", "").strip()
+        self.path = (Path(runtime) if runtime else ROOT / "data" / "runtime") / f"harvest_{source}.lock"
         self.fh = None
 
     def __enter__(self) -> bool:

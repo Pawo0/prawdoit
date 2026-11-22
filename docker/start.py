@@ -1,6 +1,7 @@
 """Initialize state; run API alone or supervise API + optional Discord adapter."""
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import signal
@@ -26,6 +27,33 @@ def copy_seed(source: Path, destination: Path) -> None:
             os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns))
 
 
+def seed_release(*folders: Path) -> str:
+    """Digest of the curated data an image ships (corpus, source registry, embedding cache): file paths and contents.
+    Written to /app/seed/RELEASE at build time; a different value on start means a new release of the data."""
+    h = hashlib.sha256()
+    for folder in folders:
+        for f in sorted(p for p in folder.rglob("*") if p.is_file() and p.name != "RELEASE"):
+            h.update(f"{folder.name}/{f.relative_to(folder)}\0".encode())
+            with f.open("rb") as fh:
+                for block in iter(lambda: fh.read(1 << 20), b""):
+                    h.update(block)
+    return h.hexdigest()[:16]
+
+
+def install_seed(source: Path, destination: Path, previous: Path) -> None:
+    """Replace destination with a fresh copy of source; the replaced folder is kept as previous (one generation)."""
+    temporary = destination.with_name(destination.name + ".bootstrap")
+    if temporary.exists():
+        shutil.rmtree(temporary)
+    copy_seed(source, temporary)
+    if destination.exists():
+        if previous.exists():
+            shutil.rmtree(previous)
+        previous.parent.mkdir(parents=True, exist_ok=True)
+        destination.replace(previous)
+    temporary.replace(destination)
+
+
 def prepare(seed: Path = Path("/app/data/index"), data_seed: Path = Path("/app/seed")) -> None:
     # Both panel tokens are required; the public demo values are refused (they work only with PRAWDOWID_DEV_MODE=1
     # outside the container, see backend/prawdowid/config.py).
@@ -41,23 +69,31 @@ def prepare(seed: Path = Path("/app/data/index"), data_seed: Path = Path("/app/s
     for folder in (runtime, index, cache):
         folder.mkdir(parents=True, exist_ok=True)
     # /app/data links point here, also for legacy scripts which use fixed paths.
-    # Initialize once; preserve admin edits, source deletions and harvested documents on restarts.
+    # Restarts keep the volume's data: admin edits, source deletions, harvested documents, the grown embedding cache.
+    # A new image whose curated data differs (RELEASE) replaces corpus, registry and cache with what it ships, so a
+    # redeploy serves the data that was tested; the replaced corpus and registry are kept under previous/.
+    state = runtime.parent
+    release_file, marker = data_seed / "RELEASE", state / "seed-release"
+    release = release_file.read_text().strip() if release_file.exists() else ""
+    installed = marker.read_text().strip() if marker.exists() else ""
+    refresh = bool(release) and release != installed
     for name in ("corpus", "sources"):
-        source, destination = data_seed / name, runtime.parent / name
-        if source.is_dir() and not destination.exists():
-            temporary = destination.with_name(name + ".bootstrap")
-            if temporary.exists():
-                shutil.rmtree(temporary)
-            copy_seed(source, temporary)
-            temporary.replace(destination)
-    # Seed an empty volume with the shipped embeddings. Preserve caches from later corpus updates.
+        source, destination = data_seed / name, state / name
+        if source.is_dir() and (refresh or not destination.exists()):
+            install_seed(source, destination, state / "previous" / name)
+    # The shipped embeddings fill an empty cache, and replace the cache on a new data release.
     for pattern in ("*.npy", "*.keys.json"):
         for source in seed.glob(pattern):
             destination = index / source.name
-            if not destination.exists():
+            if refresh or not destination.exists():
                 temporary = destination.with_suffix(destination.suffix + ".tmp")
                 shutil.copyfile(source, temporary)
                 temporary.replace(destination)
+    if refresh:
+        if installed:
+            print(f"New data release {release} (was {installed}): corpus, source registry and embedding cache "
+                  f"replaced; the previous corpus and registry are in {state / 'previous'}.", flush=True)
+        marker.write_text(release + "\n")
     # PaaS platforms conventionally inject PORT; uvicorn reads UVICORN_PORT.
     os.environ["UVICORN_PORT"] = os.environ.get("PORT", os.environ.get("UVICORN_PORT", "8000"))
 
@@ -117,6 +153,9 @@ def supervise(command: list[str]) -> int:
 
 
 def main() -> int:
+    if sys.argv[1:2] == ["--write-release"]:  # build time: start.py --write-release <RELEASE file> <data dir>...
+        Path(sys.argv[2]).write_text(seed_release(*(Path(a) for a in sys.argv[3:])) + "\n")
+        return 0
     prepare()
     if len(sys.argv) < 2:
         raise SystemExit("Missing server command")
