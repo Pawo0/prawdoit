@@ -106,8 +106,9 @@ class CorpusIndex:
         self.chunks: list[Chunk] = []
         self.bm25: BM25 | None = None
         self.chunk_emb: np.ndarray | None = None
-        self.claim_doc_idx: list[int] = []  # docs that carry a fact-checked claim
+        self.claim_doc_idx: list[int] = []  # per row of the claim index: the doc (a checked claim or its headline)
         self.claim_texts: list[str] = []
+        self.claim_row: dict[int, int] = {}  # doc -> its checked-claim row (headline rows are only for finding it)
         self.claim_emb: np.ndarray | None = None
         self.claim_bm25: BM25 | None = None
         self.embedder: Embedder | None = None
@@ -148,7 +149,8 @@ class CorpusIndex:
         self.stats = {
             "documents": len(docs),
             "chunks": len(self.chunks),
-            "factchecked_claims": len(self.claim_texts),
+            "factchecked_claims": len(self.claim_row),
+            "claim_index_rows": len(self.claim_texts),
             "domains": len({d.domain for d in docs}),
             "publishers": len({d.publisher for d in docs}),
             "by_type": dict(Counter(d.source_type for d in docs)),
@@ -246,11 +248,13 @@ class CorpusIndex:
     def _build_indexes(self) -> None:
         self.bm25 = BM25([tokens(c.text) for c in self.chunks])
         self.chunk_emb = self._embed_cached([c.text for c in self.chunks], settings.embed_passage_prefix, "chunks")
-        self.claim_doc_idx, self.claim_texts = [], []
+        self.claim_doc_idx, self.claim_texts, self.claim_row = [], [], {}
         for di, d in enumerate(self.docs):
-            if d.source_type in ("factcheck", "incident") and (d.claim or d.title):
+            for k, t in enumerate(claim_rows(d)):
+                if k == 0:
+                    self.claim_row[di] = len(self.claim_texts)
                 self.claim_doc_idx.append(di)
-                self.claim_texts.append(normalize_ws(d.claim or d.title)[:500])
+                self.claim_texts.append(t)
         self.claim_emb = self._embed_cached(self.claim_texts, settings.embed_query_prefix, "claims")
         self.claim_bm25 = BM25([tokens(t) for t in self.claim_texts])
 
@@ -272,20 +276,44 @@ class CorpusIndex:
         return [(i, s, float(cos[i]) if len(cos) else 0.0) for i, s in ranked]
 
     def match_claims(self, q_emb: np.ndarray, query: str, k: int = 8) -> list[tuple[int, float]]:
-        """Nearest fact-checked claims: (doc_idx, cosine). Lexical hits are re-scored with cosine."""
+        """Nearest fact-checked claims: (doc_idx, cosine of the doc's closest row), one result per document.
+        WHICH k documents are returned is decided by reciprocal-rank fusion of the dense and the lexical (BM25)
+        ranking, as in search_chunks — re-sorting their union by cosine alone would drop every lexical hit; the
+        cosine of each returned document is what the decision step uses."""
         if self.claim_emb is None or not len(self.claim_emb):
             return []
         cos = self.claim_emb @ q_emb
-        cand = set(np.argsort(-cos)[:k].tolist())
-        if self.claim_bm25:
-            cand |= {i for i, _ in self.claim_bm25.search(tokens(query), k=k)}
-        ranked = sorted(((self.claim_doc_idx[i], float(cos[i])) for i in cand), key=lambda x: -x[1])
-        return ranked[:k]
+        dense = np.argsort(-cos)[:2 * k].tolist()  # a doc may have two rows (claim, headline)
+        lexical = [i for i, _ in self.claim_bm25.search(tokens(query), k=2 * k)] if self.claim_bm25 else []
+        best: dict[int, float] = {}
+        fused: dict[int, float] = defaultdict(float)
+        for rows in (dense, lexical):
+            seen: list[int] = []
+            for i in rows:
+                di = self.claim_doc_idx[i]
+                best[di] = max(best.get(di, -1.0), float(cos[i]))
+                if di not in seen:
+                    fused[di] += 1.0 / (60 + len(seen))
+                    seen.append(di)
+        for di in best:  # a lexical hit on one row: the doc's closest row still sets its cosine
+            r = self.claim_row.get(di)
+            for i in (r, r + 1) if r is not None else ():
+                if i < len(self.claim_doc_idx) and self.claim_doc_idx[i] == di:
+                    best[di] = max(best[di], float(cos[i]))
+        top = sorted(fused, key=lambda di: (-fused[di], -best[di]))[:k]
+        return sorted(((di, best[di]) for di in top), key=lambda x: -x[1])
+
+    def checked_claim_cos(self, doc_idx: int, q_emb: np.ndarray) -> float:
+        """Cosine to the doc's checked claim itself (not its headline): what claim matching rules on."""
+        row = self.claim_row.get(doc_idx)
+        return float(self.claim_emb[row] @ q_emb) if row is not None and self.claim_emb is not None else 0.0
 
     def match_claims_batch(self, q_embs: np.ndarray, verdicts: tuple = ("false", "misleading", "mixed")
                            ) -> tuple[np.ndarray, np.ndarray]:
         """Extension fast path: best fact-checked claim (restricted to the given verdicts) per query row."""
-        rows = [i for i, di in enumerate(self.claim_doc_idx) if self.docs[di].verdict in verdicts]
+        # checked claims only: a debunk's headline often states the correction, so it must not flag a sentence
+        rows = [i for i, di in enumerate(self.claim_doc_idx)
+                if self.claim_row.get(di) == i and self.docs[di].verdict in verdicts]
         if not rows or not len(q_embs):
             return np.zeros(len(q_embs), dtype=int), np.zeros(len(q_embs))
         sims = q_embs @ self.claim_emb[rows].T
@@ -326,8 +354,7 @@ class CorpusIndex:
             chunks = [Chunk(base_chunk + c.idx, base_doc + c.doc_idx, c.text) for c in tmp.chunks]
             emb = self.get_embedder()
             c_emb = emb.encode([c.text for c in chunks], settings.embed_passage_prefix)
-            claims = [(base_doc + i, normalize_ws(d.claim or d.title)[:500]) for i, d in enumerate(new)
-                      if d.source_type in ("factcheck", "incident") and (d.claim or d.title)]
+            claims = [(base_doc + i, t) for i, d in enumerate(new) for t in claim_rows(d)]
             q_emb = emb.encode([t for _, t in claims], settings.embed_query_prefix) if claims else None
             self.docs.extend(new)
             self.doc_chunks.extend([[base_chunk + i for i in ids] for ids in tmp.doc_chunks])
@@ -336,16 +363,33 @@ class CorpusIndex:
             self.chunk_emb = c_emb if self.chunk_emb is None or not len(self.chunk_emb) else np.vstack([self.chunk_emb, c_emb])
             self.bm25 = _bm25_extend(self.bm25, [tokens(c.text) for c in chunks])
             if claims:
+                base_row = len(self.claim_texts)
                 self.claim_doc_idx.extend(i for i, _ in claims)
                 self.claim_texts.extend(t for _, t in claims)
                 self.claim_emb = q_emb if self.claim_emb is None or not len(self.claim_emb) else np.vstack([self.claim_emb, q_emb])
                 self.claim_bm25 = _bm25_extend(self.claim_bm25, [tokens(t) for _, t in claims])
-            self.stats.update(documents=len(self.docs), chunks=len(self.chunks), factchecked_claims=len(self.claim_texts),
+                for k, (i, _) in enumerate(claims):
+                    self.claim_row.setdefault(i, base_row + k)  # the first row of a doc is its checked claim
+            self.stats.update(documents=len(self.docs), chunks=len(self.chunks), factchecked_claims=len(self.claim_row),
+                              claim_index_rows=len(self.claim_texts),
                               live_added=self.stats.get("live_added", 0) + len(new))
             log.info("live docs added: %d (chunks %d)", len(new), len(chunks))
             return len(new)
         finally:
             _RELOAD_LOCK.release()
+
+
+def claim_rows(d: SourceDoc) -> list[str]:
+    """Rows of the claim index for a fact-check / incident: its checked claim, then its headline when the headline
+    says something the claim does not (a headline naming who shared a post that the quoted claim never names).
+    The headline row only helps to FIND the analysis: claim matching still rules on the checked claim."""
+    if d.source_type not in ("factcheck", "incident") or not (d.claim or d.title):
+        return []
+    rows = [normalize_ws(d.claim or d.title)[:500]]
+    head = normalize_ws(d.title or "")[:500]
+    if d.claim and head and set(tokens(head)) - set(tokens(rows[0])):
+        rows.append(head)
+    return rows
 
 
 def _bm25_extend(bm: BM25 | None, docs_tokens: list[list[str]]) -> BM25:

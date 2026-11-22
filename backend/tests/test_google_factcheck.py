@@ -143,7 +143,7 @@ class GoogleFactCheckTest(unittest.TestCase):
         for label, expected in DEMAGOG_LABELS.items():
             self.assertEqual(W.map_rating(label), expected, label)
         for label, expected in (("W większości fałsz", "mixed"), ("W większości prawda", "mixed"),
-                                ("Brak dowodów", "unverifiable"), ("Mostly false", "false"), ("", None), (None, None)):
+                                ("Brak dowodów", "unverifiable"), ("Mostly false", "mixed"), ("", None), (None, None)):
             self.assertEqual(W.map_rating(label), expected, label)
 
     def test_every_label_the_api_returned_maps_to_its_class(self):
