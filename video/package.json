@@ -1,0 +1,29 @@
+{
+  "name": "prawdowid-demo-video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Demo video of Prawdowid: real browser captures composited with Remotion.",
+  "scripts": {
+    "capture": "node capture/run.mjs",
+    "capture:discord": "node capture/discord.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Demo out/prawdowid-demo.mp4",
+    "still": "remotion still src/index.ts Demo"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.545",
+    "@remotion/fonts": "^4.0.545",
+    "@remotion/media": "^4.0.545",
+    "@remotion/transitions": "^4.0.545",
+    "playwright-core": "^1.65.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.545"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
