@@ -116,6 +116,29 @@ def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: 
     return bonus
 
 
+_QUOTE_OPENERS = "-–•* „\"'«("
+MID_SENTENCE_PENALTY = 0.4  # as heavy as a near-restatement (_finding_score): a cut quote is as weak a quote
+
+
+def _starts_mid_sentence(window: str, source: str) -> bool:
+    """Does this quote begin inside a sentence of the source? The sentence splitter also breaks at a line break
+    inside a sentence and after an abbreviation it did not recognise, so a window can start mid-sentence: with a
+    lowercase letter, with a closing bracket it never opened, inside a word, or right after a comma or semicolon.
+    `source` is the whitespace-squashed text the window was cut from."""
+    w = window.lstrip(_QUOTE_OPENERS)
+    if not w:
+        return False
+    if w[0].islower():
+        return True
+    close, opening = w.find(")"), w.find("(")
+    if close >= 0 and (opening < 0 or close < opening):
+        return True
+    i = source.find(window)
+    if i <= 0:
+        return False
+    return source[i - 1].isalnum() or source[:i].rstrip().endswith((",", ";"))
+
+
 def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_text: str = "",
                    opposite: bool = False) -> tuple[str, float, tuple[tuple[str, float], ...]]:
     """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
@@ -145,12 +168,16 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_te
     if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
     fc_tokens = set(tokens(d.claim or ""))
+    src = _squash(d.text or "")
 
     def score(w: str) -> float:
         wt = set(tokens(w))
         head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
         base = len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
-        return base + _finding_score(w, q_tokens, fc_tokens, claim_text, opposite) if head_tokens else base
+        if not head_tokens:
+            return base
+        cut = MID_SENTENCE_PENALTY if _starts_mid_sentence(w, src) else 0.0  # a whole-sentence quote of the finding
+        return base + _finding_score(w, q_tokens, fc_tokens, claim_text, opposite) - cut
 
     ranked = sorted(((w, score(w)) for w in windows), key=lambda x: -x[1])
     if not head_tokens:

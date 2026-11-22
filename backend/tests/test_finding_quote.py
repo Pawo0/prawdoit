@@ -124,5 +124,43 @@ class OppositeClaim(unittest.TestCase):
         self.assertIn(engine._squash(opposite), engine._squash(text))  # still verbatim
 
 
+class MidSentence(unittest.TestCase):
+    def test_cut_starts(self):
+        src = engine._squash("Rada gminy podała, że w szkole uczy się\nponad dwustu uczniów. Budżet (ok. 4 mln zł) "
+                             "uchwalono w maju. Dyrektorka szkoły, Anna Nowak, potwierdziła plan.")
+        self.assertTrue(engine._starts_mid_sentence("ponad dwustu uczniów.", src))  # line break inside a sentence
+        self.assertTrue(engine._starts_mid_sentence("4 mln zł) uchwalono w maju.", src))  # bracket never opened
+        self.assertTrue(engine._starts_mid_sentence("Anna Nowak, potwierdziła plan.", src))  # after a comma
+        self.assertTrue(engine._starts_mid_sentence("szkoły, Anna Nowak, potwierdziła plan.", src))
+        self.assertTrue(engine._starts_mid_sentence("ajca szkoły, Anna Nowak", "Dyrektorka szkoły, Anna Nowak"))  # mid-word
+
+    def test_whole_sentences(self):
+        src = engine._squash("Rada gminy podała dane. Budżet (ok. 4 mln zł) uchwalono w maju.\n- Szkoła działa dalej.")
+        for w in ("Rada gminy podała dane.", "Budżet (ok. 4 mln zł) uchwalono w maju.", "- Szkoła działa dalej.",
+                  "„Szkoła działa dalej”"):
+            self.assertFalse(engine._starts_mid_sentence(w, src), w)
+
+    def test_best_fragment_prefers_a_whole_sentence(self):
+        # the finding's sentence runs over a line break, so the splitter also yields its second half on its own
+        head = ("Rada gminy na sesji w ratuszu omawiała przez kilka godzin sprawozdanie burmistrza, plan remontów dróg "
+                "gminnych, oświetlenie ulic, dotacje dla klubów sportowych, program opieki nad zabytkami, budowę ścieżki "
+                "rowerowej wzdłuż rzeki, harmonogram odbioru odpadów, wysokość opłat za wodę, stypendia dla uczniów, "
+                "zakup nowego wozu dla straży, przebudowę targowiska, a także sprawy oświaty, i po długiej dyskusji "
+                "radni przyjęli informację, że")
+        text = (f"W gminie Zielonka zamknięto wszystkie szkoły podstawowe. {head}\nzamknięto jedną szkołę podstawową "
+                "w gminie Zielonka w 2025 roku. Dwie pozostałe szkoły w gminie działają.")
+        doc = SimpleNamespace(text=text, title="W gminie Zielonka zamknięto jedną szkołę", claim=FC_CLAIM,
+                              source_type="factcheck")
+        index = SimpleNamespace(doc_chunks=[[0]], synthetic=set(), chunk_emb=np.ones((1, 2), dtype=np.float32),
+                                chunks=[SimpleNamespace(text=text)], docs=[doc])
+
+        def best():
+            with mock.patch.object(engine, "INDEX", index):
+                return engine._best_fragment(0, np.ones(2, dtype=np.float32), set(tokens(CLAIM)), CLAIM)[0]
+        self.assertTrue(best().startswith("Rada gminy"), best())
+        with mock.patch.object(engine, "MID_SENTENCE_PENALTY", 0.0):
+            self.assertTrue(best().startswith("zamknięto"))  # without the penalty the cut half wins
+
+
 if __name__ == "__main__":
     unittest.main()
