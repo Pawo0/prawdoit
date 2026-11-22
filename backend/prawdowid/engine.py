@@ -160,8 +160,8 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_te
         # A fact-check's text starts by restating the checked claim, which always overlaps the user's words most and
         # wins the best chunk. Quoting it back proves nothing: the quote must be the analysis' finding. So the whole
         # analysis is searched (the claim's own sentences left out) for the passage that shares most words with the
-        # user's claim AND with the fact-checker's headline, which states the finding ("Depesza PAP nie została
-        # usunięta"), and that reads as a finding (_finding_score). The claim itself is quoted only when the record
+        # user's claim AND with the fact-checker's headline, which states the finding ("Szkoła w gminie nie została
+        # zamknięta"), and that reads as a finding (_finding_score). The claim itself is quoted only when the record
         # has nothing else.
         own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
         if own:
