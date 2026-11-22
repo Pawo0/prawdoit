@@ -112,6 +112,17 @@ class MetadataOnly(unittest.TestCase):
         self.assertTrue(engine.has_own_text(SPECIFIC))  # the analysis dates the recording
         empty = fc("e", "Redakcja C", "Tytuł analizy", "Twierdzenie", text="")
         self.assertFalse(engine.has_own_text(empty))
+        # the stored excerpt restates the finding in the headline's words: still a passage of the article
+        reworded = fc("r", "Redakcja C", "Polecenie spółki dotyczące informowania o awarii jest prawdziwe",
+                      "Spółka kazała stacjom informować o awarii.",
+                      text="Polecenie spółki dotyczące informowania o awarii jest prawdziwe, co spółka potwierdziła.")
+        self.assertTrue(engine.has_own_text(reworded))
+        reorder = fc("o", "Redakcja C", "Polecenie spółki dotyczące informowania o awarii jest prawdziwe",
+                     "Spółka kazała stacjom informować o awarii.",
+                     text="Prawdziwe jest polecenie spółki dotyczące informowania o awarii.")
+        self.assertTrue(engine.has_own_text(reorder))
+        headline_only = fc("h", "Redakcja C", "Tytuł analizy", "Twierdzenie", text="Tytuł analizy")
+        self.assertFalse(engine.has_own_text(headline_only))
 
 
 if __name__ == "__main__":

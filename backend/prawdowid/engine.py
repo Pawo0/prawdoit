@@ -776,9 +776,16 @@ _NEGATION = re.compile(r"\b(nie|nigdy|żadn\w*|zadn\w*|bez)\b", re.I)
 
 def has_own_text(d) -> bool:
     """Does the record carry text of its own beyond its headline and the checked claim? A ClaimReview metadata entry
-    (rating, claim, headline, link) does not: there is no passage of the analysis to quote as the finding, and the
-    organisers' rule is that every verdict rests on a source quoted verbatim."""
-    return bool(set(tokens(d.text or "")) - set(tokens(d.title or "")) - set(tokens(d.claim or "")))
+    (rating, claim, headline, link; its text is the headline and the claim joined) does not: there is no passage of
+    the analysis to quote as the finding, and the organisers' rule is that every verdict rests on a source quoted
+    verbatim. The headline and the claim are removed as whole passages, not word by word: a sentence of the article
+    that restates the finding in the headline's words ("Polecenie … jest prawdziwe") is the publisher's text and
+    counts as its own (the stored excerpt of a source kept as facts + one excerpt is often exactly that sentence)."""
+    rest = normalize_ws(d.text or "").lower()
+    for part in sorted({normalize_ws(d.title or "").lower(), normalize_ws(d.claim or "").lower()}, key=len, reverse=True):
+        if part:
+            rest = rest.replace(part, " ")
+    return bool(tokens(rest))
 
 
 def match_support(c: _Cand) -> tuple[int, float]:
