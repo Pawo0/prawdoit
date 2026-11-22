@@ -7,7 +7,8 @@ Used by service.run_check. Two providers:
    per fact-checker site listed in `params.publisher_sites` of data/sources/google_factcheck.json (Demagog), sent
    with `reviewPublisherSiteFilter` — this is the API route to Demagog's reviews. Only reviews published on a
    domain from the source registry become evidence (the Polish part of Google's ClaimReview index also contains SEO
-   spam — see ingest/harvest_claimreview_feed.py); others are only counted. Missing key = silently inactive.
+   spam — see ingest/harvest_claimreview_feed.py); others are only counted. Missing key = the provider is inactive
+   and the result says so (a `nieaktywne` step in `live_search.steps` and a line in `engine.unavailable`).
 
 2. **Trusted-domain web search**, used only when the corpus (and Google) produced no usable evidence for a factual
    claim. Allowed domains = hosts of `data/sources/*.json` entries with `enabled` and `web_search` true (small
@@ -30,7 +31,8 @@ sites themselves** (provider `sitesearch`):
   Optional, better recall when configured: self-hosted SearXNG (`PRAWDOWID_SEARXNG_URL`, JSON API) and Brave Search
   API (`PRAWDOWID_BRAVE_KEY`), both queried with `site:` filters and strictly post-filtered on the whitelist.
 
-Failures are never verdicts: an error/timeout yields a notice ("Nie mogę teraz…") and the local answer stays as it is;
+Failures are never verdicts: an error/timeout yields a notice ("…niedostępny (błąd techniczny)…") and the local answer
+stays as it is;
 every failure is logged with store.log_error. Demo/eval switches:
   PRAWDOWID_FORCE_FAIL=google_factcheck,websearch  simulate an outage (also without a key)
   PRAWDOWID_LIVE_SEARCH=0                          disable the whole live stage (reproducible eval)
@@ -61,6 +63,7 @@ from .config import settings
 from .fetch import UA, fetch_url
 from .robots import RobotsTxt
 from .schemas import ClaimResult, LiveSearchInfo, SecurityEvent, SourceDoc
+from .sources.registry import GOV_LICENSE
 from .security import check_public_url, neutralize, scan
 from .textutil import STOP, normalize_ws, short, tokens
 
@@ -133,7 +136,7 @@ class TrustedSource:
 
 _FALLBACK = [
     TrustedSource("gov_pl", "Serwis Rzeczypospolitej Polskiej gov.pl", "gov.pl", "https://www.gov.pl", "official", 1,
-                  "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło", True),
+                  GOV_LICENSE, True),
     TrustedSource("demagog", "Demagog", "demagog.org.pl", "https://demagog.org.pl", "factcheck", 2,
                   "© Stowarzyszenie Demagog — krótkie fragmenty z podaniem źródła (prawo cytatu)", True),
     TrustedSource("fakenews_pl", "FakeNews.pl", "fakenews.pl", "https://fakenews.pl", "factcheck", 2,
@@ -265,7 +268,7 @@ def robots_allowed(url: str, timeout: float = 3.0) -> bool:
 #   * demagog.org.pl matches the WHOLE query as one phrase, in titles only ("Wrocław latk" → 0 hits, "Wrocław" → 75);
 #   * gov.pl runs a full-text engine that ranks by any word.
 # So we never send the claim itself. We pick its 2–4 most distinctive words — proper names and rare content words
-# (rarity = IDF in the local corpus), never meta words ("czy Demagog sprawdzał…", fact-checker names) and only
+# (rarity = IDF in the local corpus), never meta words ("czy ktoś sprawdzał…", fact-checker names) and only
 # reluctantly verbs, which are usually paraphrased — and run several short variants in parallel: all top terms
 # together (AND engines) and each top term alone (phrase/title engines). For substring engines the words are cut to
 # a stem (Wrocławiu → Wrocław, 65-latkowie → latk, darmowymi → darmow), so other inflections still match. The union of
@@ -275,7 +278,7 @@ _SEARCH_STOP = set("""czy prawda prawdą nieprawda podobno ponoć słyszałem s�
     zostało zostały została będą była było były jest są ma mają można mogą tylko już od wczoraj dziś dzisiaj jutro
     teraz obecnie nowy nowa nowe wszystkie wszyscy ludzie każdy około ponad prawie dlaczego czemu skąd kiedyś
     ostatnio naprawdę rzeczywiście faktycznie mln mld tys proc""".split())
-# meta words: about checking, not about the topic ("Czy Demagog sprawdzał, czy…", "w analizie…", "to fałsz?")
+# meta words: about checking, not about the topic ("Czy ktoś weryfikował, czy…", "w analizie…", "to fałsz?")
 # (matches surface words and 6-letter stems: sprawdzał/sprawd, weryfikował/weryfi, artykule/artyku)
 _META_RX = re.compile(r"^(sprawd|weryfi|zweryf|analiz|przean|oceni|ocenił|fact|prawd|nieprawd|artyku|tekst|twierd|"
                       r"źródł|zrodl|tez[aęey]$|wpis$|wpisu$|post$|posta$|postu$|link|stron[aęeyi]?$|stronie$)", re.I)
@@ -568,7 +571,8 @@ _GFC_TTL = 6 * 3600
 _VERDICT_RULES = [
     ("czesciowa prawda", "mixed"), ("czesciowo prawda", "mixed"), ("czesciowy falsz", "mixed"),
     ("czesciowo falsz", "mixed"), ("polprawda", "mixed"), ("mostly true", "mixed"),
-    ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
+    ("mostly false", "mixed"), ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"),
+    ("mixed", "mixed"),
     ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("niesprawdzal", "unverifiable"),
     ("brak dowodow", "unverifiable"), ("sie zweryfikowac", "unverifiable"), ("insufficient evidence", "unverifiable"),
     ("w wiekszosci", "mixed"),
@@ -584,7 +588,9 @@ _VERDICT_RULES = [
     ("scam", "false"), ("altered", "false"),
     ("prawda", "true"), ("prawdziw", "true"), ("true", "true"), ("correct", "true"),
 ]
-_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")  # labels that are not a rating of a claim
+# labels that are not a rating of a claim (the same lists as ingest/common.py): substrings, then whole labels
+_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")
+_NOT_A_RATING = {"analiza", "raport", "fact-checked", "fact checked", "zrealizowane"}
 
 
 def map_rating(raw: str | None) -> str | None:
@@ -595,7 +601,7 @@ def map_rating(raw: str | None) -> str | None:
 
     n = "".join(c for c in unicodedata.normalize("NFKD", raw.lower()) if not unicodedata.combining(c))
     n = n.replace("ł", "l").strip(" .!:- ")
-    if any(x in n for x in _NO_VERDICT):
+    if n in _NOT_A_RATING or any(x in n for x in _NO_VERDICT):
         return None
     return next((v for k, v in _VERDICT_RULES if k in n), None)
 
@@ -652,9 +658,9 @@ def google_queries(text: str) -> list[list[str]]:
     """Rounds of query forms for claims:search, most specific first.
 
     Measured against the real API (2026-11-21): the engine stems Polish words ('65-latkowie' finds '65-latków') but
-    wants every query word in the review's claim or title, so a whole sentence or question returns nothing — 'Czy PAP
-    usunęła depeszę o wypowiedzi Donalda Tuska przed powodzią?' → 0 results, 'Donalda Tuska PAP wypowiedzi powodzią'
-    → the Demagog review. Rare proper names alone can fail ('Rzeszów IRINN' → 0) while the opening words of the
+    wants every query word in the review's claim or title, so a whole sentence or question returns nothing — a full
+    question about a deleted news-agency dispatch → 0 results, its four rarest words (names, agency, topic) → the
+    review. Rare proper names alone can fail ('Rzeszów IRINN' → 0) while the opening words of the
     claim as the fact-checker wrote it succeed ('Stacja IRINN pokazała mapę' → the AFP review). Hence rounds: the 4
     most distinctive words of the claim; its first words as written; the 3 most distinctive words; then pairs of the
     most distinctive word with each of the next three (a user rarely uses the fact-checker's exact wording)."""
@@ -845,36 +851,78 @@ def search_trusted(claim: str, deadline: float, check_id: str | None = None) -> 
     return out
 
 
-# ---------------------------------------------------------------- persistence (next identical question → corpus)
+# ---------------------------------------------------------------- persistence (off by default)
+# Pages found by a live search are used for the answer being prepared and are NOT written to data/corpus unless
+# PRAWDOWID_LIVE_PERSIST_DAYS > 0. When it is on, a stored page expires after that many days, never later than the
+# audit-log retention (PRAWDOWID_RETENTION_DAYS, 30): expired lines are deleted on every write and at startup, so one
+# person's question cannot change everyone's later answers for good. Deleting live_web.jsonl removes them all.
 _PERSIST_LOCK = threading.Lock()
 
 
+def persist_days() -> int:
+    return max(0, min(settings.live_persist_days, settings.retention_days))
+
+
+def _live_lines(cutoff: str) -> list[str]:
+    """Lines of live_web.jsonl retrieved at or after `cutoff` (ISO time); unreadable lines are dropped."""
+    keep = []
+    for line in LIVE_CORPUS.read_text(encoding="utf-8").splitlines() if LIVE_CORPUS.exists() else []:
+        try:
+            if (json.loads(line).get("retrieved_at") or "") >= cutoff:
+                keep.append(line)
+        except (ValueError, AttributeError):
+            continue
+    return keep
+
+
+def _cutoff(days: int) -> str:
+    from datetime import datetime, timedelta, timezone
+
+    return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def purge_live_corpus() -> int:
+    """Delete stored live-search pages past their retention (all of them when persistence is off)."""
+    with _PERSIST_LOCK:
+        if not LIVE_CORPUS.exists():
+            return 0
+        lines = LIVE_CORPUS.read_text(encoding="utf-8").splitlines()
+        keep = _live_lines(_cutoff(persist_days())) if persist_days() else []
+        if len(keep) != len(lines):
+            LIVE_CORPUS.write_text("".join(x + "\n" for x in keep), encoding="utf-8")
+        return len(lines) - len(keep)
+
+
 def persist(docs: list[SourceDoc]) -> int:
-    if not docs:
+    days = persist_days()
+    if not docs or not days:
         return 0
     with _PERSIST_LOCK:
+        keep = _live_lines(_cutoff(days))
         known: set[str] = set()
-        if LIVE_CORPUS.exists():
-            for line in LIVE_CORPUS.read_text(encoding="utf-8").splitlines():
-                try:
-                    known.add(json.loads(line)["url"].rstrip("/"))
-                except (ValueError, KeyError, TypeError):
-                    continue
+        for line in keep:
+            try:
+                known.add(json.loads(line)["url"].rstrip("/"))
+            except (ValueError, KeyError, TypeError, AttributeError):
+                continue
         new = [d for d in docs if d.url.rstrip("/") not in known]
-        if new:
-            with LIVE_CORPUS.open("a", encoding="utf-8") as fh:
-                for d in new:
-                    fh.write(json.dumps(d.model_dump(), ensure_ascii=False) + "\n")
+        LIVE_CORPUS.write_text("".join(x + "\n" for x in keep)
+                               + "".join(json.dumps(d.model_dump(), ensure_ascii=False) + "\n" for d in new),
+                               encoding="utf-8")
         return len(new)
 
 
 # ---------------------------------------------------------------- orchestration used by service.run_check
-NOTICE_GOOGLE_FAIL = ("Nie mogę teraz sprawdzić indeksu Google z powodu błędu dostępu. "
-                      "Odpowiedź opiera się na lokalnej bazie źródeł.")
-NOTICE_WEB_FAIL = ("Nie mogę teraz przeszukać zaufanych stron w internecie z powodu błędu dostępu. "
-                   "Odpowiedź opiera się na lokalnej bazie źródeł.")
-NOTICE_BOTH_FAIL = ("Nie mogę teraz sprawdzić indeksu Google ani przeszukać zaufanych stron w internecie z powodu błędu "
-                    "dostępu. Odpowiedź opiera się na lokalnej bazie źródeł.")
+NOTICE_GOOGLE_FAIL = ("Indeks Google Fact Check jest teraz niedostępny (błąd techniczny), więc go nie sprawdziłem. "
+                      "Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
+NOTICE_WEB_FAIL = ("Wyszukiwanie na zaufanych stronach jest teraz niedostępne (błąd techniczny). "
+                   "Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
+NOTICE_GOOGLE_OFF = ("Indeksu Google Fact Check nie sprawdzano: na serwerze nie skonfigurowano klucza API "
+                     "(ustawienie serwera, nie ocena treści).")
+NOTICE_LIVE_OFF = ("Wyszukiwanie na żywo (Google Fact Check, zaufane strony) jest wyłączone na tym serwerze — "
+                   "sprawdzono tylko lokalną bazę źródeł.")
+NOTICE_BOTH_FAIL = ("Indeks Google Fact Check i wyszukiwanie na zaufanych stronach są teraz niedostępne (błąd "
+                    "techniczny). Odpowiedź opiera się na lokalnej bazie źródeł — to nie jest ocena treści.")
 
 
 def _usable(r: ClaimResult) -> bool:
@@ -900,10 +948,15 @@ class LiveStage:
 
     # -------------------------------------------------- Google (parallel to the local search)
     def start_google(self, claims: list) -> None:
-        if not self.enabled or not (_env("GOOGLE_FACTCHECK_KEY") or forced_fail("google_factcheck")):
-            return  # missing key = provider silently inactive
+        if not self.enabled:
+            return
         queries = [c.query for c in claims if c.kind == "fakt"]
         if not queries:
+            return
+        if not (_env("GOOGLE_FACTCHECK_KEY") or forced_fail("google_factcheck")):
+            # missing key: the provider is inactive, and the result says so (never an empty "no reviews" answer)
+            self.google = dict(provider="google_factcheck", query="", n_results=0, status="nieaktywne",
+                               notice=NOTICE_GOOGLE_OFF, elapsed_ms=0.0)
             return
         # per claim: keyword rounds, each a general query + one per configured fact-checker site (Demagog), so the
         # publisher the organisers' scenarios rely on is not crowded out of the 10 results (see google_search)
@@ -1043,12 +1096,17 @@ class LiveStage:
                         elapsed_ms=round((time.perf_counter() - self.t_web) * 1000, 1))
         self.warnings.append(notice)
 
+    def inactive(self) -> list[str]:
+        """Providers that did not run because of the server configuration (for `engine.unavailable`)."""
+        return [s["notice"] for s in (self.google, self.web) if s and s.get("status") == "nieaktywne"]
+
     def info(self) -> LiveSearchInfo | None:
         steps = [s for s in (self.google, self.web) if s]
         if not steps:
             return None
         main = self.web or self.google
-        notices = [s["notice"] for s in steps if s.get("notice")]
+        # an inactive provider is reported in its step and in engine.unavailable; it is the notice only when nothing ran
+        notices = [s["notice"] for s in steps if s.get("notice") and (s.get("status") != "nieaktywne" or s is main)]
         if notices == [NOTICE_GOOGLE_FAIL, NOTICE_WEB_FAIL]:
             notices = [NOTICE_BOTH_FAIL]
         return LiveSearchInfo(provider=main["provider"], query=main["query"], n_results=main["n_results"],

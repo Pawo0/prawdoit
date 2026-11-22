@@ -4,7 +4,7 @@ pages (vaccines, energy prices, CPK, migration, food, drones...), RCB alerts and
 "prawdziwe czy fałszywe komunikaty", UdSC migration statistics.
 
 gov.pl robots.txt: "User-Agent: * / Allow: /" (checked at runtime anyway).
-Licence: gov.pl text content CC BY-SA 4.0 (https://www.gov.pl/web/gov/warunki-korzystania).
+Licence: each record keeps gov.pl's own terms, quoted (https://www.gov.pl/web/gov/prawa-autorskie).
 
 Outputs:
   data/corpus/official_govpl_msz.jsonl    (MSZ news, comms pages)
@@ -22,7 +22,12 @@ from official_common import (JsonlWriter, RobotsDisallowed, fetch_text, html_to_
                              make_record, pl_date)
 
 BASE = "https://www.gov.pl"
-LICENSE = "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło"
+# same text as backend/prawdowid/sources/registry.GOV_LICENSE (gov.pl's own terms, quoted)
+LICENSE = ("Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez "
+           "użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra "
+           "Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są "
+           "udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 "
+           "(CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.")
 
 PUBLISHERS = {
     "dyplomacja": "Ministerstwo Spraw Zagranicznych",

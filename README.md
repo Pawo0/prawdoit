@@ -23,7 +23,7 @@ pokazuje, co mówią źródła.
 
 ## Docker — backend i strona WWW
 
-Skopiuj `.env.example` do `.env`, ustaw prywatny `PRAWDOWID_MODERATOR_TOKEN`, następnie uruchom:
+Skopiuj `.env.example` do `.env`, ustaw prywatne `PRAWDOWID_MODERATOR_TOKEN` i `PRAWDOWID_ADMIN_TOKEN`, następnie uruchom:
 
 ```bash
 docker compose up -d --build
@@ -39,12 +39,13 @@ cd backend
 uv venv --python 3.12 .venv && source .venv/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu
 uv pip install -r requirements.txt
-uvicorn prawdowid.api:app --port 8000        # start ~10 s: repo zawiera gotowy cache embeddingów (data/index/)
+PRAWDOWID_DEV_MODE=1 uvicorn prawdowid.api:app --port 8000   # start ~10 s: repo zawiera gotowy cache embeddingów (data/index/)
 ```
 Otwórz http://localhost:8000 · czat demo: http://localhost:8000/czat · panel analityka: http://localhost:8000/moderator
-(token demo: `demo-moderator`, zmień przez `PRAWDOWID_MODERATOR_TOKEN`) · **panel źródeł: http://localhost:8000/admin**
-(token demo: `demo-admin`, zmień przez `PRAWDOWID_ADMIN_TOKEN`; wpisz go w polu tokenu panelu — trafia do nagłówka
-`X-Admin-Token`). W panelu: dodawanie źródła z „Wykryj automatycznie”, test bez zapisu, włącz/wyłącz, „Uruchom teraz”,
+(token `demo-moderator` tylko w trybie lokalnym `PRAWDOWID_DEV_MODE=1`, inaczej `PRAWDOWID_MODERATOR_TOKEN`) ·
+**panel źródeł: http://localhost:8000/admin** (token `demo-admin` tylko w trybie lokalnym, inaczej
+`PRAWDOWID_ADMIN_TOKEN`; wpisz go w polu tokenu panelu — trafia do nagłówka `X-Admin-Token`). Bez ustawionego tokenu
+i bez trybu lokalnego oba panele są zamknięte (API odpowiada 503); kontener nie wystartuje bez dwóch prywatnych tokenów. W panelu: dodawanie źródła z „Wykryj automatycznie”, test bez zapisu, włącz/wyłącz, „Uruchom teraz”,
 historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), model danych: [DATA_MODEL](docs/DATA_MODEL.md).
 
 ## Co nowego (21.11.2026)
@@ -68,11 +69,12 @@ historia pobrań. Opis rejestru: [SOURCE_REGISTRY](docs/SOURCE_REGISTRY.md), mod
 ## Zmienne środowiskowe (wszystkie opcjonalne)
 | Zmienna | Domyślnie | Do czego |
 |---|---|---|
-| `PRAWDOWID_ADMIN_TOKEN` | `demo-admin` | token panelu źródeł `/admin` (zmień poza demo) |
-| `PRAWDOWID_MODERATOR_TOKEN` | `demo-moderator` | token panelu analityka `/moderator` |
+| `PRAWDOWID_ADMIN_TOKEN` | — (panel zamknięty) | token panelu źródeł `/admin`; wymagany w kontenerze |
+| `PRAWDOWID_MODERATOR_TOKEN` | — (panel zamknięty) | token panelu analityka `/moderator`; wymagany w kontenerze |
+| `PRAWDOWID_DEV_MODE` | `0` | `1` = tylko lokalnie: puste tokeny zastępują jawne `demo-moderator` / `demo-admin`; kontener odmawia startu z `1` |
 | `PRAWDOWID_SCHEDULER` | `1` | `0` = harmonogram pobierania źródeł wyłączony (np. w testach) |
 | `PRAWDOWID_LIVE_SEARCH` | `1` | `0` = bez wyszukiwania na żywo (powtarzalna ewaluacja, praca offline) |
-| `PRAWDOWID_GOOGLE_FACTCHECK_KEY` | — | klucz Google Fact Check Tools API; bez klucza dostawca jest nieaktywny |
+| `PRAWDOWID_GOOGLE_FACTCHECK_KEY` | — | klucz Google Fact Check Tools API; bez klucza dostawca jest nieaktywny, a każdy wynik to mówi (`engine.unavailable`, krok `nieaktywne` w `live_search`) |
 | `PRAWDOWID_SEARXNG_URL` | — | własna instancja SearXNG (JSON API) jako dodatkowa wyszukiwarka z filtrem `site:` |
 | `PRAWDOWID_BRAVE_KEY` | — | klucz Brave Search API (j.w.) |
 | `PRAWDOWID_FORCE_FAIL` | — | symulacja awarii do demo/testów, np. `google_factcheck,websearch` (scenariusz J) |
@@ -100,7 +102,9 @@ Obsługuje DM, wzmianki, `/sprawdz`, menu wiadomości i `/usun_sesje`. [Konfigur
 Trzy zbiory (łącznie 145 przypadków, scenariusze A–J), przebieg 21.11.2026 na korpusie 4,4 tys. dok. (`eval/results_2026-11-21*/`),
 bez wyszukiwania na żywo (`PRAWDOWID_LIVE_SEARCH=0`, powtarzalność). Zbiory „ślepe” przygotowały niezależne agenty wyłącznie na podstawie
 korpusu i opisu wyzwania, bez wglądu w kod. **Uczciwą estymatą jakości są pierwsze przebiegi na zbiorach ślepych**
-(kolumny „1. przebieg”); kolejne kolumny pokazują wynik po poprawkach ogólnych (reguły, nie łatki pod przypadki).
+(kolumny „1. przebieg”); kolejne kolumny pokazują wynik po poprawkach. Część tych poprawek powtarzała sformułowania
+przypadków ze zbiorów ślepych (usunięte albo uogólnione 22.11.2026), więc oba zbiory są dziś **zbiorami strojenia**, nie
+testami ślepymi — zob. [COMPLIANCE: dopasowanie do przypadków testowych](docs/COMPLIANCE.md#dopasowanie-do-przypadków-testowych).
 
 | Miernik | Cel MVP | Dev (38) | Ślepy 1 (57): 1. przebieg → po poprawkach | Ślepy 2 (50): 1. przebieg → po poprawkach |
 |---|---|---|---|---|

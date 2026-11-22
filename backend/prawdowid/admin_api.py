@@ -21,9 +21,16 @@ log = logging.getLogger("prawdowid.admin")
 
 router = APIRouter()
 
+def check_token(given: str | None, expected: str, header: str, env: str, role: str) -> None:
+    """Fail closed: with no token configured the panel API is off (503), never open and never on a known default."""
+    if not expected:
+        raise HTTPException(503, f"Panel {role} jest wyłączony: na serwerze nie ustawiono {env}.")
+    if not given or not hmac.compare_digest(given.encode(), expected.encode()):
+        raise HTTPException(401, f"Wymagany token {role} (nagłówek {header}).")
+
+
 def require_admin(x_admin_token: str | None = Header(default=None), x_admin_user: str | None = Header(default=None)) -> str:
-    if not x_admin_token or not hmac.compare_digest(x_admin_token, settings.admin_token):
-        raise HTTPException(401, "Wymagany token administratora (nagłówek X-Admin-Token).")
+    check_token(x_admin_token, settings.admin_token, "X-Admin-Token", "PRAWDOWID_ADMIN_TOKEN", "administratora")
     who = unquote(x_admin_user or "").strip()[:60]  # the panel sends it URL-encoded (headers are latin-1)
     return who or "administrator"
 

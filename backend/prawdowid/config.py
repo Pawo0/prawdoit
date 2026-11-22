@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def _env(name: str, default: str) -> str:
     return os.environ.get(f"PRAWDOWID_{name}", default)
+
+
+_DEV_MODE = _env("DEV_MODE", "0") == "1"  # explicit local development only (README); never set in the container
 
 
 @dataclass(frozen=True)
@@ -38,10 +41,12 @@ class Settings:
     # --- retrieval / decision thresholds (explicit, documented in /metodologia) ---
     top_k_retrieval: int = 40
     top_k_evidence: int = 6
-    claim_match_threshold: float = float(_env("CLAIM_MATCH_T", "0.82"))   # cosine: same claim as a fact-check
-    claim_match_soft: float = float(_env("CLAIM_MATCH_SOFT", "0.74"))     # related claim, needs NLI agreement
+    # cosine of a related fact-checked claim: retrieval candidates from claim_match_soft - 0.06, router near-miss.
+    # Whether it is the SAME claim is decided by engine.claim_match (cosine + NLI cutoffs in code, docs/ARCHITECTURE.md
+    # step 4). The unused `claim_match_threshold` (0.82, env CLAIM_MATCH_T) and `nli_weak` (0.50) were removed
+    # 2026-11-22; nothing read them.
+    claim_match_soft: float = float(_env("CLAIM_MATCH_SOFT", "0.74"))
     nli_strong: float = 0.70
-    nli_weak: float = 0.50
     stale_days: int = 365  # evidence older than this for time-sensitive claims -> archival warning
 
     # --- safety ---
@@ -57,6 +62,9 @@ class Settings:
     quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))               # then 503 + Retry-After, never a queue
     retention_days: int = int(_env("RETENTION_DAYS", "30"))
     auto_retention_days: int = int(_env("AUTO_RETENTION_DAYS", "7"))     # audit rows of mode="auto" (no text stored)
+    # pages found by live search kept in data/corpus/live_web.jsonl: 0 = never stored (default); otherwise days,
+    # capped at retention_days (websearch.persist_days)
+    live_persist_days: int = int(_env("LIVE_PERSIST_DAYS", "0"))
 
     # --- channels (secrets only from env, never committed) ---
     wa_verify_token: str = _env("WA_VERIFY_TOKEN", "")
@@ -65,15 +73,17 @@ class Settings:
     wa_app_secret: str = _env("WA_APP_SECRET", "")
     fb_page_token: str = _env("FB_PAGE_TOKEN", "")
     fb_verify_token: str = _env("FB_VERIFY_TOKEN", "")
-    moderator_token: str = _env("MODERATOR_TOKEN", "demo-moderator")
-    admin_token: str = _env("ADMIN_TOKEN", "demo-admin")          # source registry admin panel (/admin)
+    # Panel tokens fail closed: unset = the moderator / admin API answers 503 and the panel stays locked. The public
+    # demo values exist only in explicit local-dev mode (PRAWDOWID_DEV_MODE=1); the container refuses to start
+    # without two private tokens (docker/start.py).
+    dev_mode: bool = _DEV_MODE
+    moderator_token: str = _env("MODERATOR_TOKEN", "").strip() or ("demo-moderator" if _DEV_MODE else "")
+    admin_token: str = _env("ADMIN_TOKEN", "").strip() or ("demo-admin" if _DEV_MODE else "")  # source registry (/admin)
     scheduler: bool = _env("SCHEDULER", "1") == "1"                 # background fetching of registry sources
 
     # --- cost estimate per answer (observability; docs/COSTS.md). CPU: 4 vCPU VPS ~120 zł/mies. -> zł per vCPU-second
     cost_pln_per_cpu_s: float = float(_env("COST_PLN_PER_CPU_S", "0.0000116"))
     cost_pln_per_1k_llm_tokens: float = float(_env("COST_PLN_PER_1K_LLM_TOKENS", "0"))  # 0 = local model / no LLM
-
-    extra: dict = field(default_factory=dict)
 
 
 settings = Settings()

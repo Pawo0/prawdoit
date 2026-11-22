@@ -10,7 +10,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prawdowid.engine import _fragment_windows, _quote_ok, _squash  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+from unittest import mock  # noqa: E402
+
+from prawdowid import engine  # noqa: E402
+from prawdowid.engine import _fragment_windows, _quote_ok, _squash, shown_fragment  # noqa: E402
+from prawdowid.schemas import SourceDoc  # noqa: E402
 from prawdowid.textutil import split_sentences  # noqa: E402
 
 # A Demagog-style quote with an editor's note. "– dop. Demagog]." is split after the abbreviation "dop.", which the
@@ -101,6 +106,40 @@ class FragmentWindows(unittest.TestCase):
         self.assertEqual(len(windows[0]), 520)
         for w in self.assert_all_verbatim(NOTE + " " + QUOTE, NOTE + " " + QUOTE):
             self.assertTrue(16 <= len(w) <= 520)
+
+
+class ShownFragment(unittest.TestCase):
+    """The ingest marker before an excerpt of an act ("[fragment: „…”]") is not the publisher's text: the evidence
+    fragment drops it, and what is shown stays a verbatim slice of the stored text."""
+    STORED = ("Ustawa o ochronie zieleni w miastach.\n[fragment: „drzew”] Art. 4. Usunięcie drzewa z terenu "
+              "nieruchomości wymaga zezwolenia wójta.\n[fragment: „krzew”] Art. 9. Krzewy sadzi się wiosną.")
+
+    def test_leading_marker(self):
+        frag = "[fragment: „drzew”] Art. 4. Usunięcie drzewa z terenu nieruchomości wymaga zezwolenia wójta."
+        out = shown_fragment(frag, self.STORED)
+        self.assertEqual(out, "Art. 4. Usunięcie drzewa z terenu nieruchomości wymaga zezwolenia wójta.")
+        self.assertTrue(_quote_ok(out, self.STORED))
+
+    def test_marker_between_two_excerpts_keeps_the_longer(self):
+        frag = ("Art. 4. Usunięcie drzewa z terenu nieruchomości wymaga zezwolenia wójta. [fragment: „krzew”] "
+                "Art. 9. Krzewy sadzi się wiosną.")
+        self.assertTrue(_quote_ok(frag, self.STORED))
+        out = shown_fragment(frag, self.STORED)
+        self.assertTrue(out.startswith("Art. 4.") and "[fragment" not in out)
+        self.assertTrue(_quote_ok(out, self.STORED))
+
+    def test_plain_fragment_unchanged(self):
+        frag = "Art. 9. Krzewy sadzi się wiosną."
+        self.assertEqual(shown_fragment(frag, self.STORED), frag)
+
+    def test_evidence_item_carries_the_clean_fragment(self):
+        doc = SourceDoc(id="akt:1", source_type="official", publisher="Wydawca aktów", domain="example.invalid",
+                        url="https://example.invalid/akt/1", title="Ustawa o ochronie zieleni", text=self.STORED)
+        cand = engine._Cand(doc_idx=0, chunk_text="", retrieval=0.5, cos=0.8,
+                            fragment="[fragment: „krzew”] Art. 9. Krzewy sadzi się wiosną.")
+        with mock.patch.object(engine, "INDEX", SimpleNamespace(docs=[doc], doc_age=lambda d: 10)):
+            ev = engine._evidence(cand, "kontekst", 0.8, None)
+        self.assertEqual(ev.fragment, "Art. 9. Krzewy sadzi się wiosną.")
 
 
 if __name__ == "__main__":

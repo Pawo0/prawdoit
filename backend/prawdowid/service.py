@@ -19,20 +19,15 @@ from .config import settings
 from .engine import same_claim, verify_claim
 from .fetch import FetchError, fetch_url
 from .index import INDEX
+from .linefilter import drop_metadata_lines
 from .nli import NLI_MODEL
 from .schemas import CheckRequest, CheckResult, QuickConflict, QuickMatch, QuickRequest, QuickResult
 from .security import ResolveError, UnsafeURL, neutralize, scan
 from .signals import sprawdz_signals
 from .schemas import RULES_VERSION
-from .textutil import mask_pii, normalize_ws, short, split_sentences, tokens
+from .textutil import HIGH_RISK, is_task_request, mask_pii, normalize_ws, short, split_sentences, tokens
 
 log = logging.getLogger("prawdowid.service")
-
-HIGH_RISK = re.compile(
-    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|blackout\w*|"
-    r"epidemi\w*|jodek|jod\b|upadł\w* bank\w*|wybor\w*|głosowani\w*|referend\w*|rakiet\w*|dron\w*|sabota\w*)",
-    re.IGNORECASE,
-)
 
 _NO_TEXT = ("Nie udało się odczytać treści strony (strona jest pusta albo blokuje automatyczny dostęp — takich "
             "zabezpieczeń nie obchodzimy).")
@@ -51,13 +46,16 @@ def engine_info() -> dict:
         "embed_model": settings.embed_model,
         "nli_model": NLI_MODEL.name,
         "llm": settings.llm_model if llm.enabled() else None,
+        "llm_status": ("skonfigurowany — tylko upraszcza język gotowego wyjaśnienia" if llm.enabled()
+                       else "nieskonfigurowany — wyjaśnienia z szablonów"),
         "corpus_documents": INDEX.stats.get("documents"),
         "corpus_loaded_at": INDEX.loaded_at,
         "rules_version": RULES_VERSION,
         "processing": ("lokalnie (serwer własny)" + ("" if not llm.enabled() else f"; LLM: {settings.llm_base_url}")
                        + ("; wyszukiwanie na żywo: tylko zaufane domeny z rejestru źródeł"
-                          + (" + Google Fact Check API" if os.environ.get("PRAWDOWID_GOOGLE_FACTCHECK_KEY") else "")
-                          if websearch.live_enabled() else "")),
+                          + (" + Google Fact Check API" if os.environ.get("PRAWDOWID_GOOGLE_FACTCHECK_KEY")
+                             else " (Google Fact Check nieaktywne: brak klucza API)")
+                          if websearch.live_enabled() else "; wyszukiwanie na żywo wyłączone")),
     }
 
 
@@ -69,11 +67,14 @@ def cost_estimate(res: CheckResult) -> dict:
     llm_pln = tokens / 1000 * settings.cost_pln_per_1k_llm_tokens
     ls = res.live_search
     return {"pln": round(cpu + llm_pln, 6), "cpu_pln": round(cpu, 6), "llm_tokens": tokens, "llm_pln": round(llm_pln, 6),
-            "external_calls": len(ls.steps) if ls else 0}
+            "external_calls": sum(s.get("status") != "nieaktywne" for s in ls.steps) if ls else 0}
 
 
+TASK_MESSAGE = ("To prośba o napisanie lub przetłumaczenie tekstu, a nie informacja do sprawdzenia, więc nie wydajemy "
+                "werdyktu. Prawdowid sprawdza twierdzenia o faktach — wklej wiadomość lub zdanie, które chcesz "
+                "zweryfikować.")
 OCR_NOTICE = ("Tekst odczytałem automatycznie z obrazu (OCR) — mogą w nim być błędy odczytu. "
-              "Data widoczna na obrazie nie potwierdza sama w sobie rzeczywistej daty publikacji.")
+              "Data na zrzucie ekranu jest tylko częścią obrazu i nie dowodzi, kiedy tekst naprawdę opublikowano.")
 
 
 def _read_image(req: CheckRequest, res: CheckResult, cid: str, timings: dict) -> str:
@@ -104,6 +105,11 @@ def _read_image(req: CheckRequest, res: CheckResult, cid: str, timings: dict) ->
     return text
 
 
+def _masked(page: dict) -> dict:
+    """A fetched page goes through the same PII masking as the user's text (claims may come from it)."""
+    return {**page, "title": mask_pii(page.get("title") or ""), "text": mask_pii(page.get("text") or "")}
+
+
 def run_check(req: CheckRequest, progress=None) -> CheckResult:
     """progress: optional callback(stage, stage_label) — used by the async job API (jobs.py).
 
@@ -125,6 +131,13 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
     ocr_text = _read_image(req, res, cid, timings) if (req.image_b64 and not auto) else ""
     if ocr_text:  # the question that came with the screenshot first, then what the image says
         text = normalize_ws(f"{text}\n{ocr_text}")[: settings.max_input_chars]
+    # Direct identifiers (PESEL, ID card / passport, phone, bank account, personal e-mail) are masked here, once,
+    # before claim extraction: retrieval, the live-search queries, the optional LLM, the audit row (result_json) and the
+    # moderator queue only ever see the placeholders. Names, places, dates, amounts and statistics are not masked
+    # (policy: textutil.mask_pii, docs/COMPLIANCE.md). URLs stay as typed so links can be fetched.
+    text, ocr_text = mask_pii(text), mask_pii(ocr_text)
+    user_text = mask_pii(req.text or "")
+    unavailable: list[str] = []  # dependencies that did not run (config, key, outage) — engine.unavailable, shown in UI
     url = "" if auto else (req.url or "").strip()  # auto: text only, nothing is fetched on the user's behalf
     # a bare URL pasted as text
     if not url and not auto and re.fullmatch(r"https?://\S+", text):
@@ -135,7 +148,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         t0 = time.perf_counter()
         websearch.emit(progress, "pobieranie")
         try:
-            page = fetch_url(url)
+            page = _masked(fetch_url(url))
             res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
             if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
                 raise FetchError(_NO_TEXT)
@@ -157,7 +170,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             store.log_error(cid, "fetch", str(e))
         timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
 
-    # a message with a link ("Czy X? Sprawdź też tę stronę: https://…"): the question stays the claim source, the page
+    # a message with a link ("Czy X? Zobacz ten artykuł: https://…"): the question stays the claim source, the page
     # is fetched with the same SSRF guard, scanned for injected instructions (scenario E) and used for claims only
     # when the message itself has none. A failed fetch is a notice, never a verdict and never a failed check.
     page_text = ""
@@ -167,7 +180,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         t0 = time.perf_counter()
         websearch.emit(progress, "pobieranie")
         try:
-            page = fetch_url(link)
+            page = _masked(fetch_url(link))
             res.url_meta = {k: page[k] for k in ("url", "domain", "title", "sitename", "date", "author")}
             if len(page.get("text") or "") < 80:  # e.g. a bot-protection stub page
                 raise FetchError(_NO_TEXT)
@@ -182,29 +195,34 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
         timings["fetch_ms"] = (time.perf_counter() - t0) * 1000
 
     res.input_excerpt = short(mask_pii(text or url), 500)
-    domains = {urlparse(u).hostname or "" for u in re.findall(r"https?://\S+", f"{url} {req.text or ''}")}
+    domains = {urlparse(u).hostname or "" for u in re.findall(r"https?://\S+", f"{url} {user_text}")}
     res.warnings += source_status_notices({d.removeprefix("www.") for d in domains if d})
     if res.status == "ok":
-        res.security_events += scan(req.text or "", "wiadomość użytkownika")
+        res.security_events += scan(user_text, "wiadomość użytkownika")
         if ocr_text:
             res.security_events += scan(ocr_text, "tekst odczytany z obrazu")
         if res.security_events:
             res.warnings.append("W treści wykryto fragmenty przypominające polecenia dla systemu (np. „zignoruj "
                                 "instrukcje”). Potraktowaliśmy je jako zwykły tekst — nie wpływają na ocenę. "
                                 "Zdarzenie zostało zapisane.")
-        clean = neutralize(re.sub(r"https?://\S+", " ", text) if page_text else text)
-        claims = extract_claims(clean, max_claims=3)
-        if page_text and not any(len(c.query.split()) >= 3 for c in claims):
-            clean = neutralize(page_text)  # "Co z tym artykułem? <link>": the claims are on the linked page
+        # metadata lines (author + date, handles, share counters, OCR debris) go before neutralize(), which joins lines
+        clean = neutralize(drop_metadata_lines(re.sub(r"https?://\S+", " ", text) if page_text else text))
+        task = is_task_request(clean)  # "napisz wiersz…", "przetłumacz…": a task, not information to check
+        claims = [] if task else extract_claims(clean, max_claims=3)
+        if page_text and not task and not any(len(c.query.split()) >= 3 for c in claims):
+            clean = neutralize(drop_metadata_lines(page_text))  # "Co z tym artykułem? <link>": claims on the page
             claims = extract_claims(clean, max_claims=3)
         vocab = INDEX.bm25.postings if INDEX.bm25 else {}
         known = [t for t in tokens(clean) if t in vocab and not t[0].isdigit()]
-        if not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
+        if task:
+            res.status = "poza_zakresem"
+            res.status_message = TASK_MESSAGE
+        elif not claims or not any(len(c.query.split()) >= 3 for c in claims) or len(set(known)) < 2:
             res.status = "doprecyzuj"
             res.status_message = ("Nie rozpoznaliśmy twierdzenia, które da się sprawdzić. Napisz jedno konkretne zdanie, "
                                   "np. „Od 2026 r. emerytury w Polsce zostaną obniżone o 20%”, albo wklej link.")
-        elif page_text and res.url_meta and provenance.asks_same_item(req.text or ""):
-            # "Czy ten wpis dotyczy tej samej depeszy, którą sprawdzał Demagog? <link>": a question about the identity
+        elif page_text and res.url_meta and provenance.asks_same_item(user_text):
+            # "Czy ten artykuł to ten sam tekst, który oceniał <checker>? <link>": a question about the identity
             # of the linked item, answered by comparing its headline and date with the fact-check records (scenario I)
             try:
                 res.claims = [provenance.check_linked_item(claims[0].text, res.url_meta)]
@@ -217,6 +235,11 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             live = websearch.LiveStage(cid, progress)  # Google Fact Check + trusted-domain fallback; never raises
             if auto or req.live_search is False:
                 live.enabled = False  # start_google() and finish() are then no-ops: local corpus only
+                unavailable.append("Wyszukiwanie na żywo nie było używane w tym sprawdzeniu ("
+                                   + ("sprawdzenie w tle z wtyczki" if auto else "wyłączone w zapytaniu")
+                                   + ") — sprawdzono tylko lokalną bazę źródeł.")
+            elif not live.enabled:
+                unavailable.append(websearch.NOTICE_LIVE_OFF)
             try:
                 websearch.emit(progress, "baza")
                 live.start_google(claims)
@@ -232,6 +255,7 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                 res.live_search = live.info()
                 res.security_events += live.events
                 res.warnings += live.warnings
+                unavailable += live.inactive()
 
     # optional LLM rephrasing of already-decided explanations
     if res.claims and llm.enabled() and not auto:  # auto: the text is not sent to the LLM endpoint
@@ -242,7 +266,18 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
                 res.engine.setdefault("llm_calls", []).append(usage)
                 if txt:
                     c.explanation = txt
+        calls = res.engine.get("llm_calls", [])
+        errors = sorted({u["error"] for u in calls if u.get("error")})
+        if errors:  # an outage is said out loud; the deterministic explanation stays and the verdict is unchanged
+            unavailable.append(f"Model językowy był niedostępny (błąd techniczny: {', '.join(errors)}) — wyjaśnienie "
+                               "pochodzi z szablonu, werdykt bez zmian.")
+            store.log_error(cid, "llm", ", ".join(errors))
+        if any(u.get("rejected") for u in calls):
+            unavailable.append("Tekst modelu językowego odrzucono w walidacji (np. nowe liczby lub linki) — "
+                               "wyjaśnienie pochodzi z szablonu.")
         timings["llm_ms"] = (time.perf_counter() - t0) * 1000
+    if unavailable:
+        res.engine["unavailable"] = list(dict.fromkeys(unavailable))
 
     # claim decomposition overview + SPRAWDŹ educational signals (never affect verdicts)
     if res.claims:

@@ -28,7 +28,7 @@
     "rzad"
   ],
   "language": "pl",
-  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "license": "Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 (CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.",
   "qualification": "Codzienny raport Krajowego Centrum Zarządzania Kryzysowego: ostrzeżenia meteo/hydro, jakość powietrza, zatrucia CO, wysłane Alerty RCB (z treścią SMS), stopnie alarmowe. Strona jest nadpisywana co dzień, więc zapisujemy migawkę na każdy dzień (data z treści raportu; url ?data=RRRR-MM-DD otwiera bieżącą wersję).",
   "scope": "organiser_listed",
   "scope_basis": "rules/resources.txt: gov.pl/web/rcb/raport-dobowy3",

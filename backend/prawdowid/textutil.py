@@ -70,7 +70,7 @@ def tokens(text: str, stem: int = 6) -> list[str]:
     """Lowercase, drop stopwords, strip diacritics and truncate to a prefix — a crude but robust stemmer for
     a highly inflected language (szczepionki/szczepionek/szczepionkach -> szczep)."""
     out = []
-    for m in _TOKEN_RE.finditer(text.lower()):
+    for m in _TOKEN_RE.finditer(PII_TAG.sub(" ", text).lower()):
         t = m.group(0)
         if t in STOP or len(t) < 2:
             continue
@@ -82,16 +82,21 @@ def tokens(text: str, stem: int = 6) -> list[str]:
 
 
 # ------------------------------------------------------------------ claim heuristics
-_OPINION = re.compile(
-    r"\b(uważam|sądzę|myślę|moim zdaniem|według mnie|wydaje mi się|mam wrażenie|czuję|wierzę|lubię|nie lubię|"
-    r"nienawidzę|kocham|powin(?:ien|na|no|ni|ny)|należy|trzeba by|najlepsz\w*|najgorsz\w*|beznadziejn\w*|"
-    r"wspaniał\w*|okropn\w*|skandal\w*|hańb\w*|żenujące|głupi\w*|piękn\w*|brzydk\w*|zdrajc\w*|obrzydliw\w*|"
-    r"naj(?:piękn|wspanialsz|fajn|cudown|gorsz|lepsz|głupsz|mądrzejsz|brzydsz|okropniejsz)\w*|nie umywa|"
-    r"genialn\w*|fatalny\w*|fatalna|cudown\w*|super\b|beznadzie\w*|"
-    r"jedyn\w* sensown\w*|sensown\w*|fanaberi\w*|bzdur\w*|absurd\w*|"
-    r"byłob[yi]|byłaby|byłyby|gdyby|powinno się)\b",
-    re.IGNORECASE,
-)
+# Opinion / evaluation markers: with no number in the sentence, claim_kind() calls it an opinion. A lexicon by
+# category — not phrases of particular inputs: first-person stance, normative modals, evaluative words (positive and
+# negative, with superlatives), comparison idioms and hypotheticals. Words that also occur in reported facts
+# ("wybitny", "największy", "katastrofa", "kompromitacja", "byłby" in a relative clause) are left out on purpose.
+_STANCE = (r"uważam|sądzę|myślę|moim zdaniem|według mnie|wydaje mi się|mam wrażenie|czuję|wierzę|nie wierzę|"
+           r"jestem przekonan\w*|lubię|nie lubię|nienawidzę|kocham|uwielbiam|(?:nie )?podoba mi się")
+_NORMATIVE = r"powin(?:ien|na|no|ni|ny)|powinno się|należy|należałoby|trzeba by|trzeba było"
+_EVALUATIVE = (
+    r"najlepsz\w*|najgorsz\w*|naj(?:piękn|wspanialsz|fajn|cudown|gorsz|lepsz|głupsz|mądrzejsz|brzydsz|okropniejsz)\w*|"
+    r"wspaniał\w*|piękn\w*|cudown\w*|genialn\w*|świetn\w*|rewelacyjn\w*|super\b|sensown\w*|"
+    r"beznadzie\w*|okropn\w*|fataln\w*|skandal\w*|hańb\w*|haniebn\w*|żenując\w*|żałosn\w*|głupi\w*|idiotyczn\w*|"
+    r"brzydk\w*|obrzydliw\w*|zdrajc\w*|bzdur\w*|absurd\w*|nonsens\w*|bezsens\w*|niedorzeczn\w*|fanaberi\w*")
+_COMPARISON = r"nie umywa\w*|nie dorasta\w* do pięt|bije na głowę|nie ma porównania"
+_HYPOTHETICAL = r"byłob[yi]|byłaby|byłyby|gdyby"
+_OPINION = re.compile(rf"\b({_STANCE}|{_NORMATIVE}|{_EVALUATIVE}|{_COMPARISON}|{_HYPOTHETICAL})\b", re.IGNORECASE)
 _PREDICTION = re.compile(r"\b(będzie|będą|zostanie|zostaną|wkrótce|za rok|za miesiąc|w przyszłym|prognoz\w*)\b", re.I)
 _FACTUAL_CUE = re.compile(
     r"\b(jest|są|był\w*|wynosi|wyniósł|wyniosła|wzrósł|wzrosła|spadł\w*|ogłosił\w*|wprowadz\w*|zakaz\w*|nakaz\w*|"
@@ -107,7 +112,6 @@ _TEMPORAL_NOW = re.compile(
     r"breaking|najnowsze|trwa|w tej chwili)\b",
     re.IGNORECASE,
 )
-_YEAR = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
 
 
 def is_question(s: str) -> bool:
@@ -115,16 +119,43 @@ def is_question(s: str) -> bool:
     return s.endswith("?") or bool(re.match(r"^(czy|kiedy|dlaczego|ile|jak|kto|co|gdzie|po co)\b", s, re.I))
 
 
+# A request to produce or transform text ("napisz wiersz", "przetłumacz to", "write a story") is a task, not information
+# to check. Generic: an imperative production verb at the start + a text-genre object (or a translation), and no sign
+# of a fact-check request anywhere in the message — "Napisz, czy to prawda, że…" is still checked.
+_POLITE = re.compile(r"^\s*(?:(?:proszę|prosze|please|hej|cześć|czesc)[,!]?\s+)?(?:(?:czy\s+)?(?:możesz|mozesz|"
+                     r"mógłbyś|mogłabyś|can you|could you)\s+)?(?:mi\s+|me\s+)?", re.I)
+_TASK_REQUEST = re.compile(
+    r"^(?:"
+    r"(?:napisz|napisać|stwórz|stworzyć|wygeneruj|wygenerować|ułóż|ułożyć|wymyśl|wymyślić|zredaguj|przygotuj|"
+    r"opowiedz|opowiedzieć|narysuj|zaprojektuj|zaprogramuj|dokończ|write|compose|generate|create|draw|tell)\b"
+    r"(?:\s+\S+){0,4}?\s+(?:wiersz\w*|wierszyk\w*|piosenk\w*|tekst\w*\s+piosenk\w*|rymowank\w*|limeryk\w*|haiku|"
+    r"fraszk\w*|bajk\w*|baśń|basn\w*|opowiadani\w*|histori\w*|esej\w*|wypracowani\w*|rozprawk\w*|list\w*|mail\w*|"
+    r"e-mail\w*|życzeni\w*|zyczeni\w*|przemówieni\w*|toast\w*|dowcip\w*|żart\w*|zart\w*|kawał\w*|przepis\w*|kod\w*|"
+    r"program\w*|skrypt\w*|funkcj\w*|slogan\w*|hasł\w*\s+reklam\w*|ogłoszeni\w*|post\w*|tweet\w*|wpis\w*\s+na|"
+    r"obraz\w*|rysun\w*|logo|poem|song|story|essay|letter|joke|code|recipe)\b"
+    r"|(?:przetłumacz|przetlumacz|przetłumaczyć|translate)\b)", re.I)
+_FACTCHECK_INTENT = re.compile(r"\b(?:prawd\w*|fałsz\w*|falsz\w*|sprawd\w*|zweryfik\w*|weryfik\w*|potwierdz\w*|"
+                               r"fake\w*|true|false|czy|że|iż|ze\s+niby)\b", re.I)
+
+
+def is_task_request(s: str) -> bool:
+    """'Napisz mi wiersz o jesieni' -> True; 'Napisz, czy to prawda, że VAT spadnie' -> False."""
+    body = _POLITE.sub("", re.sub(r"https?://\S+", " ", s or ""), count=1)
+    return bool(_TASK_REQUEST.match(body)) and not _FACTCHECK_INTENT.search(body)
+
+
 _PREAMBLE = re.compile(
     r"^\s*(?:(?:czy\s+)?to\s+prawda,?\s+że|prawda,?\s+że|czy|podobno|ponoć|"
     r"(?:słyszał\w*|czytał\w*|widział\w*|dostał\w*|ktoś\s+(?:mi\s+)?(?:napisał|powiedział|wysłał|przesłał)\w*|"
     r"(?:w|na)\s+(?:telewizji|tv|internecie|necie|radiu|fejsie|facebooku|grupie)\s+(?:mówią|mówili|piszą|pisali|podali|podają)"
     r")[^,.?!]{0,60}?,?\s*że)\s+", re.I)
-_TRAILING_META = re.compile(r"\s*(to jak to (w końcu )?jest|czy to prawda|prawda to|serio|o co chodzi|co o tym myślicie|"
-                            r"co wy na to|jak to jest)\s*\?*\s*$", re.I)
+# trailing "is that so?" tags of a forwarded message — not part of the claim
+_TRAILING_META = re.compile(r"\s*((?:to\s+|a\s+)?jak\s+to\s+(?:w\s+końcu\s+|właściwie\s+|naprawdę\s+|w\s+ogóle\s+)?jest|"
+                            r"czy to prawda|prawda to|to prawda|serio|naprawdę|o co chodzi|co o tym myślicie|"
+                            r"co wy na to|ktoś coś wie|ktoś wie(?:,? czy to prawda)?)\s*\?*\s*$", re.I)
 
 
-# "Czy Demagog sprawdzał, czy X?", "Czy ktoś już weryfikował informację, że X?", "Czy fact-checkerzy ocenili, czy X?"
+# "Czy Konkret24 weryfikował, czy X?", "Czy ktoś już sprawdzał informację, że X?", "Czy fact-checkerzy ocenili, czy X?"
 # -> X: a question about whether somebody checked a claim is answered by checking the claim itself (the answer then
 # names who checked it). Only stripped when the verb is followed by "czy"/"że", so "Czy NIK zbadała wydatki…" stays.
 _CHECKED_BY = re.compile(
@@ -134,8 +165,8 @@ _CHECKED_BY = re.compile(
     r"(?:czy|że|to,?\s+(?:czy|że)|informacj\w*,?\s+(?:że|o\s+tym,?\s+że)|twierdzeni\w*,?\s+że|tez\w*,?\s+że)\s+", re.I)
 
 
-# Sentences ABOUT a check rather than about the world: "Dlaczego w analizie Demagoga jest 650 mln zł?",
-# "Sprawdź też tę stronę: …". They stay in the text shown to the user but are left out of the retrieval query.
+# Sentences ABOUT a check rather than about the world: "Skąd w tym raporcie liczba 12 tys. osób?",
+# "Zobacz jeszcze ten artykuł: …". They stay in the text shown to the user but are left out of the retrieval query.
 _META_SENTENCE = re.compile(
     r"^\s*(?:(?:a|i|to)\s+)?(?:dlaczego|czemu|skąd|jak\s+to\s+możliwe)\b[^.?!]*\b(?:analiz\w*|weryfikac\w*|"
     r"fact-?check\w*|ocen\w*|sprawdz\w*|artyku\w*|tekś\w*|tekst\w*|raport\w*)"
@@ -147,7 +178,7 @@ _CHECK_VERB = (r"(?:sprawdza\w*|sprawdzi\w*|zweryfikowa\w*|weryfikowa\w*|analizo
                r"ocenil\w*|ocenił\w*|zbada\w*|bada\w*|opisywa\w*|opisa\w*)")
 _OBJ = r"(?:to|tego|tę\s+\w+|ten\s+\w+|tą\s+\w+|o\s+tym|już)"
 # A sentence that only asks WHETHER / WHO checked the rest of the message, with no claim of its own:
-# "Czy Demagog to sprawdzał?", "Czy ktoś już to zweryfikował?", "Czy fact-checkerzy sprawdzali tę informację?".
+# "Czy OKO.press to sprawdzało?", "Czy ktoś już to zweryfikował?", "Czy fact-checkerzy sprawdzali tę informację?".
 _CHECKED_QUESTION = re.compile(
     rf"^\s*czy\s+(?P<who>(?:(?!(?:to|tego|tę|ten|już|kiedyś)\b)[\w.-]+\s+){{0,3}}?)(?:już\s+|kiedyś\s+)?(?:{_OBJ}\s+)?"
     rf"(?:już\s+)?{_CHECK_VERB}(?:\s+{_OBJ})?(?:\s+(?:informacj\w*|wiadomoś\w*|tez\w*|twierdzeni\w*|wpis\w*))?"
@@ -155,7 +186,7 @@ _CHECKED_QUESTION = re.compile(
 
 
 def checked_question(s: str) -> str | None:
-    """'Czy Demagog to sprawdzał?' -> 'Demagog'; 'Czy ktoś to sprawdził?' -> 'ktoś'; any other sentence -> None."""
+    """'Czy AFP to sprawdzało?' -> 'AFP'; 'Czy ktoś to sprawdził?' -> 'ktoś'; any other sentence -> None."""
     m = _CHECKED_QUESTION.match(s or "")
     return m.group("who").strip() if m else None
 
@@ -167,7 +198,7 @@ def is_meta_sentence(s: str) -> bool:
 
 def split_meta(s: str) -> tuple[str, str]:
     """(claim part, meta clauses) — also splits after an abbreviation the sentence splitter keeps
-    ('…700 mln zł. Dlaczego w analizie…?'). If everything is meta, the whole text stays the claim part."""
+    ('…12 tys. osób. Skąd w raporcie…?'). If everything is meta, the whole text stays the claim part."""
     parts = re.split(r"(?<=[.?!:])\s+(?=[„\"(]?[A-ZĄĆĘŁŃÓŚŹŻ])", s or "")
     keep = [x for x in parts if not is_meta_sentence(x)]
     if not keep or len(keep) == len(parts):
@@ -176,12 +207,12 @@ def split_meta(s: str) -> tuple[str, str]:
 
 
 def asks_who_checked(s: str) -> str | None:
-    """'Czy Demagog sprawdzał, czy X?' -> 'Demagog'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
+    """'Czy Konkret24 weryfikował, czy X?' -> 'Konkret24'; 'Czy ktoś to sprawdzał, że…' -> ''; plain claim -> None."""
     s = _TRAILING_META.sub("", s.strip())
     m = _CHECKED_BY.match(s) or _CHECKED_BY.match(_PREAMBLE.sub("", s))
     if m:
         return re.sub(r"\s+(to|już)$", "", m.group("who").strip(), flags=re.I)
-    # "Czy Demagog to sprawdzał? <claim>" — the question is a sentence of its own, before or after the claim
+    # "Czy ktoś to sprawdzał? <claim>" — the question is a sentence of its own, before or after the claim
     for sent in split_sentences(s):
         who = checked_question(sent)
         if who is not None:
@@ -190,7 +221,7 @@ def asks_who_checked(s: str) -> str | None:
 
 
 def strip_preamble(s: str) -> str:
-    """'Słyszałam w telewizji, że X. To jak to w końcu jest?' -> 'X' (the reported claim itself)."""
+    """'Kolega mi napisał, że X. Serio?' -> 'X' (the reported claim itself)."""
     s = _TRAILING_META.sub("", s.strip())
     for _ in range(3):  # "Czy to prawda, że Demagog sprawdzał, czy X" → X
         t = _CHECKED_BY.sub("", _PREAMBLE.sub("", s)).strip()
@@ -210,10 +241,13 @@ _META = set("hej cześć siema hejka witam dzień dobry elo sprawdź sprawdz spr
 
 
 def content_words(s: str) -> list[str]:
-    return [w for w in re.findall(r"[a-ząćęłńóśźż0-9]+", s.lower()) if w not in STOP and w not in _META and len(w) > 2]
+    return [w for w in re.findall(r"[a-ząćęłńóśźż0-9]+", PII_TAG.sub(" ", s).lower())
+            if w not in STOP and w not in _META and len(w) > 2]
 
 
-_LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat)\b[^.!?]{0,40}[!.]+\s*", re.I)
+# a sensational opener before the claim ("Szok w Sejmie! <fact>", "UWAGA!!! <fact>") — a lexicon of clickbait cues
+_LEADIN = re.compile(r"^\s*(?:\S+\s+){0,3}?(?:skandal\w*|szok\w*|pilne|uwaga|hańba|tragedia|dramat|alarm\w*|sensacj\w*|"
+                     r"wstyd\w*|koszmar\w*|niewiarygodn\w*|breaking)\b[^.!?]{0,40}[!.]+\s*", re.I)
 
 
 _PAST = re.compile(r"\b\w{3,}(?:ł|ła|ło|li|ły)\b")
@@ -233,7 +267,7 @@ def claim_kind(s: str) -> str:
     patterns: stripping there would only add ambiguity ("czuję" I feel / "czuje" he feels, "mają" / "3 maja")."""
     leadin, opinion, prediction, factual, past_rx, compound_future, bedzie = (
         _KIND_RX if _PL_DIACRITIC.search(s) else _KIND_RX_PLAIN)
-    s = leadin.sub("", s) or s  # "Skandal we Wrocławiu! <fact>" — the exclamation is not the claim
+    s = leadin.sub("", s) or s  # "Szok w Sejmie! <fact>" — the exclamation is not the claim
     if opinion.search(s) and not _NUMBER.search(s):
         return "opinia"
     if is_question(s):
@@ -287,30 +321,257 @@ def same_amount(a: tuple, b: tuple) -> bool:
     return a[1] == b[1] and abs(a[0] - b[0]) <= max(0.051, abs(a[0]) * 0.005)
 
 
-def is_time_sensitive(s: str) -> bool:
-    return bool(_TEMPORAL_NOW.search(s))
+# High-risk topics (security, health, elections). One list for both uses: the engine asks for a second independent
+# source before a tier-2 verdict on such a claim stands alone, and the quick check (/api/quick) moves such sentences up
+# the queue and to an analyst.
+HIGH_RISK = re.compile(
+    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
+    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|jod|upadł\w* bank\w*|wybor\w*|głosowani\w*|"
+    r"referend\w*|rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
+
+
+_YEAR = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
 
 
 def years_in(s: str) -> list[int]:
     return [int(y) for y in _YEAR.findall(s)]
 
 
+def is_time_sensitive(s: str) -> bool:
+    return bool(_TEMPORAL_NOW.search(s))
+
+
 # ------------------------------------------------------------------ PII masking (RODO: data minimisation)
-_PII = [
-    (re.compile(r"\b\d{11}\b"), "[PESEL]"),
-    (re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?\d{4}){6}\b|\b\d{2}(?:[ ]?\d{4}){6}\b"), "[NR_KONTA]"),
-    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[EMAIL]"),
-    (re.compile(r"(?<!\d)(?:\+?48[ -]?)?(?:\d{3}[ -]?\d{3}[ -]?\d{3})(?!\d)"), "[TELEFON]"),
-    (re.compile(r"\b[A-Z]{3}\s?\d{6}\b"), "[DOWOD]"),
-]
+# Policy (organisers' clarification; docs/COMPLIANCE.md): mask the direct identifiers of private persons — PESEL,
+# ID card and passport numbers, phone numbers, bank account numbers, personal e-mail addresses — and nothing the check
+# needs. Names (public figures above all), institutions, places, dates, amounts, statistics and legal references are
+# never masked. Every pattern is validated (checksums, strict formats, phone context), so factual numbers survive.
+PII_TAG = re.compile(r"\[(?:PESEL|DOWOD|PASZPORT|TELEFON|NR_KONTA|EMAIL)\]")
+_URL_SPAN = re.compile(r"(?:https?://|www\.)\S+", re.I)
+_EMAIL = re.compile(r"(?<![\w.+-])([\w.+-]+)@[\w-]+(?:\.[\w-]+)+")
+# role mailboxes of institutions are contact points, not personal data
+_ROLE_MAILBOX = re.compile(r"(?:info|kontakt|contact|biuro|office|sekretariat|kancelaria|press|prasa|media|rzecznik\w*|"
+                           r"redakcja|newsroom|iod|abuse|support|pomoc|help|cert|incydent\w*|zgloszeni\w*|hello|"
+                           r"no-?reply)", re.I)
+_IBAN = re.compile(r"(?<![\w])[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,3})?(?![\w])")
+_NRB = re.compile(r"(?<![\w.,])\d{2}(?:[ ]?\d{4}){6}(?![\w]|[.,]\d| \d)")  # Polish account number = IBAN without "PL"
+_PESEL = re.compile(r"(?<![\w.,+])\d{11}(?![\w]|[.,]\d)")
+# "PL…" + digits are site / register codes (Natura 2000 PLH220032, PLB…), not identity documents
+_ID_CARD = re.compile(r"(?<![\w])(?!PL)[A-Z]{3}[ ]?\d{6}(?![\w])")
+_PASSPORT = re.compile(r"(?<![\w])[A-Z]{2}[ ]?\d{7}(?![\w])")
+_PHONE_INTL = re.compile(r"(?<![\w+])(?:\+|00(?=[1-9]))\d{1,3}[ -]?\(?\d{1,4}\)?(?:[ -]?\d{2,4}){2,4}(?![\w]|[.,]\d)")
+_PHONE_PL = re.compile(r"(?<![\w+.,/-])(?<!\d )(?:\(?\d{2}\)?[ -]?\d{3}[ -]?\d{2}[ -]?\d{2}|\d{3}[ -]?\d{3}[ -]?\d{3})"
+                       r"(?![\w]|[.,]\d| \d)")
+# a number followed by a unit or a currency is an amount or a statistic, never a phone number
+_UNIT_AFTER = re.compile(r"\s*(?:zł|zl\b|pln|eur|euro|usd|dolar|\$|€|£|%|proc|mln|mld|tys|os[óo]b|ludzi|mieszka|głos|"
+                         r"glos|km|kg|ton|ha\b|m2|m²|szt|egz|daw|wyświetl|razy)", re.I)
+# a domestic number counts as a phone only when the text says so ("tel.", "zadzwoń", "mój numer"…) or it is written
+# with dashes; "numer partii 716371209", "nr KRS …" and bare digit groups stay
+_PHONE_CONTEXT = re.compile(r"(?:\b(?:tel|kom|fax|faks)\.?|\b(?:telefon|komórk|komork|zadzwo|dzwo|sms|esemes|whatsapp|"
+                            r"signal|telegram|kontakt|infolini)\w*|\b(?:pod|na|z|ze|ten|tego|tym|m[óo]j|tw[óo]j|jego|jej|ich|nasz|wasz|nieznan)\w*"
+                            r"\s+(?:numer\w*|nr\.?)(?:\s+tel\w*\.?)?)[^.!?\n]{0,25}$", re.I)
+
+
+def _label(s: str, start: int, words: str) -> bool:
+    """The identifier is named right before the number ("PESEL: …", "nr dowodu …")."""
+    return bool(re.search(rf"\b(?:{words})\w*[^.!?\n\d]{{0,15}}$", s[max(0, start - 40): start], re.I))
+
+
+def _pesel_ok(d: str) -> bool:
+    check = (10 - sum(int(x) * w for x, w in zip(d, (1, 3, 7, 9, 1, 3, 7, 9, 1, 3))) % 10) % 10
+    return check == int(d[10]) and 1 <= int(d[2:4]) % 20 <= 12 and 1 <= int(d[4:6]) <= 31
+
+
+def _weighted_ok(code: str, weights: tuple[int, ...]) -> bool:
+    """ID card (AAA + 6 digits) and passport (AA + 7 digits): letters A=10…Z=35, weighted sum ≡ 0 (mod 10)."""
+    return sum(int(ch, 36) * w for ch, w in zip(code.replace(" ", ""), weights)) % 10 == 0
+
+
+def _iban_ok(raw: str) -> bool:
+    s = raw.replace(" ", "").upper()
+    s = "PL" + s if s[:2].isdigit() else s
+    return 15 <= len(s) <= 34 and int("".join(str(int(ch, 36)) for ch in s[4:] + s[:4])) % 97 == 1
+
+
+def pii_spans(s: str) -> list[tuple[str, int, int]]:
+    """(kind, start, end) of every direct identifier in `s`; URLs are left as typed (links must still open)."""
+    taken = [(m.start(), m.end()) for m in _URL_SPAN.finditer(s)]
+    spans: list[tuple[str, int, int]] = []
+
+    def add(kind: str, a: int, b: int) -> None:
+        if not any(a < e and b > st for st, e in taken):
+            spans.append((kind, a, b))
+            taken.append((a, b))
+
+    for m in _EMAIL.finditer(s):
+        if not _ROLE_MAILBOX.fullmatch(m.group(1)):
+            add("EMAIL", m.start(), m.end())
+    for rx in (_IBAN, _NRB):
+        for m in rx.finditer(s):
+            if _iban_ok(m.group(0)) or _label(s, m.start(), "kont|rachun|iban|nrb|przelew"):
+                add("NR_KONTA", m.start(), m.end())
+    for m in _PESEL.finditer(s):
+        if _pesel_ok(m.group(0)) or _label(s, m.start(), "pesel"):
+            add("PESEL", m.start(), m.end())
+    for m in _ID_CARD.finditer(s):
+        if _weighted_ok(m.group(0), (7, 3, 1, 9, 7, 3, 1, 7, 3)) or _label(s, m.start(), "dowod|dowód"):
+            add("DOWOD", m.start(), m.end())
+    for m in _PASSPORT.finditer(s):
+        if _weighted_ok(m.group(0), (7, 3, 9, 1, 7, 3, 1, 7, 3)) or _label(s, m.start(), "paszport"):
+            add("PASZPORT", m.start(), m.end())
+    for m in _PHONE_INTL.finditer(s):
+        if 9 <= sum(ch.isdigit() for ch in m.group(0)) <= 15 and not _UNIT_AFTER.match(s, m.end()):
+            add("TELEFON", m.start(), m.end())
+    for m in _PHONE_PL.finditer(s):
+        g = m.group(0)
+        if _UNIT_AFTER.match(s, m.end()):
+            continue
+        if _PHONE_CONTEXT.search(s[max(0, m.start() - 40): m.start()]) or "-" in g:
+            add("TELEFON", m.start(), m.end())
+    return sorted(spans, key=lambda x: x[1])
 
 
 def mask_pii(s: str) -> str:
-    for rx, rep in _PII:
-        s = rx.sub(rep, s)
-    return s
+    """Replace direct identifiers with [PESEL] / [DOWOD] / [PASZPORT] / [TELEFON] / [NR_KONTA] / [EMAIL]. Idempotent."""
+    out, last = [], 0
+    for kind, a, b in pii_spans(s or ""):
+        out += [s[last:a], f"[{kind}]"]
+        last = b
+    return "".join(out) + (s or "")[last:]
+
+
+def drop_pii_tags(s: str) -> str:
+    """The placeholders stay in what the user sees, never in a retrieval or live-search query."""
+    return normalize_ws(PII_TAG.sub(" ", s))
+
+
+# Marker the ELI ingest puts before each excerpt of an act's text ("[fragment: „Art. 90.”] …") — not publisher text.
+EXCERPT_MARKER = re.compile(r"\[fragment: „[^”\]]{0,80}”\]\s*")
+
+
+def unmark_excerpt(s: str) -> str:
+    """The quote without the ingest marker. A marker inside the quote separates two excerpts of the act: the longer
+    one is kept, so the quote stays one verbatim slice of the stored text."""
+    parts = [x.strip() for x in EXCERPT_MARKER.split(s or "")]
+    return max(parts, key=len) if len(parts) > 1 else (s or "")
+
+
+# ------------------------------------------------------------------ rules (bans, obligations, new regulations)
+_RULE = re.compile(
+    r"\bnie\s+będ\w*\s+(?:mogł\w*|można|wolno)\b|\bnie\s+(?:wolno|można)\b"
+    r"|\b(?:zakaz\w*|zakazan\w*|nakaz\w*|obowiąz(?:ek|ku|kiem|ki|kow\w*|uj\w*)|zobowiązan\w*)\b"
+    r"|\b(?:wchodz\w*|wejd\w*|weszł\w*|wejści\w*)\s+w\s+życie\b"
+    r"|\bwprowadz\w*\s+(?:\w+\s+){0,3}?(?:zakaz\w*|nakaz\w*|obowiąz\w*|opłat\w*|stref\w*|limit\w*|ogranicze\w*|"
+    r"przepis\w*|zasad\w*|podat\w*|kar\w*)\b")
+_FROM_DATE = re.compile(r"\bod\s+(?:przyszł\w+|następn\w+|nowego|kolejn\w+|jutra|poniedziałku|wtorku|środy|czwartku|"
+                        r"piątku|soboty|niedzieli|\d{1,2}(?:\.\d{1,2}|\s+\w+)|stycznia|lutego|marca|kwietnia|maja|"
+                        r"czerwca|lipca|sierpnia|września|października|listopada|grudnia|(?:19|20)\d\d)\b")
+_FROM_DATE_BAN = re.compile(r"\bnie\s+(?:będ\w*|wjad\w*|wjedzi\w*|wjech\w*|wejd\w*|kupi\w*|sprzeda\w*|"
+                            r"zapłaci\w*|dostan\w*|zaparkuj\w*)\b")
+_EU_SCOPE = re.compile(r"\b(?:ue|unii|unia|unię|unijn\w*|bruksel\w*|dyrektyw\w*|komisj\w+\s+europejsk\w*|"
+                       r"parlament\w*\s+europejsk\w*|europejsk\w+\s+(?:komisj|parlament)\w*)\b")
+_LOCAL_SCOPE = re.compile(r"\b(?:gmin\w*|miast\w*|miejsk\w*|centrum|śródmieści\w*|dzielnic\w*|osiedl\w*|ulic\w*|"
+                          r"rynek|rynku|starówk\w*|burmistrz\w*|wójt\w*|ratusz\w*|radn\w*|rad\w*\s+(?:gminy|miasta)|"
+                          r"prezydent\w*\s+miasta|stref\w*\s+(?:czyst\w+|płatn\w+|ograniczon\w+))\b")
+
+
+def is_rule_claim(claim: str) -> bool:
+    """Does the claim say that a rule (ban, obligation, new regulation) applies or starts to apply?"""
+    c = claim.lower()
+    return bool(_RULE.search(c) or (_FROM_DATE.search(c) and _FROM_DATE_BAN.search(c)))
+
+
+def rule_scope(claim: str) -> str | None:
+    """Who would adopt the rule the claim describes: "eu", "local" (a municipality), "national"; None if no rule."""
+    if not is_rule_claim(claim):
+        return None
+    c = claim.lower()
+    return "eu" if _EU_SCOPE.search(c) else "local" if _LOCAL_SCOPE.search(c) else "national"
 
 
 def short(s: str, n: int = 280) -> str:
     s = normalize_ws(s)
     return s if len(s) <= n else s[: n - 1].rsplit(" ", 1)[0] + "…"
+
+
+# ------------------------------------------------------------------ stored excerpts of third-party articles
+# Sources whose terms give no licence (FakeNews.pl, Pravda, NASK/CERT) are stored as facts (claim, rating, title, date,
+# link) plus ONE verbatim excerpt of at most 300 characters: the passage a verdict card would quote. Measured on the
+# eval sets (research notes, sources_alignment.md, "finding" trim): no case and no organiser scenario changed.
+def _excerpt_words(s: str) -> str:
+    return " ".join(re.findall(r"[^\W_]+", (s or "").lower()))
+
+
+def _excerpt_restates(window: str, claim: str) -> bool:
+    w, c = _excerpt_words(window), _excerpt_words(claim)
+    if not claim:
+        return False
+    if not w or w in c:
+        return True
+    return any(len(x) >= 20 and x in w for x in (_excerpt_words(y) for y in split_sentences(claim)))
+
+
+def _excerpt_cut(s: str, n: int) -> str:
+    if len(s) <= n:
+        return s
+    i = s.rfind(" ", 0, n)
+    return s[: i if i > n // 2 else n].rstrip(" ,;:–-")
+
+
+def _excerpt_spans(text: str) -> tuple[str, list[tuple[int, int]]]:
+    src = re.sub(r"[ \t]+", " ", text)
+    out, pos = [], 0
+    for s in split_sentences(text):
+        s2 = re.sub(r"\s+", " ", s).strip()
+        i = src.find(s2, pos)
+        if i < 0:
+            continue
+        out.append((i, i + len(s2)))
+        pos = i + len(s2)
+    return src, out
+
+
+def lead_excerpt(text: str, max_len: int = 300) -> str:
+    """The opening sentences of `text`, verbatim, up to max_len characters."""
+    src, sp = _excerpt_spans(text)
+    if not sp:
+        return _excerpt_cut(src, max_len)
+    a, b = sp[0]
+    for _, y in sp[1:]:
+        if y - a > max_len:
+            break
+        b = y
+    return _excerpt_cut(src[a:b], max_len)
+
+
+def opening_excerpt(text: str, title: str = "", max_len: int = 300) -> str:
+    """The opening of `text`, verbatim, up to max_len characters, after its headline when the text starts by repeating
+    it (an advisory's first lines say what is going on; a headline match would only repeat the title)."""
+    text, head = normalize_ws(text or ""), normalize_ws(title or "")
+    if head and text.startswith(head) and len(text) > len(head) + 16:
+        text = text[len(head):].lstrip(" \n.:–-")
+    return lead_excerpt(text, max_len) if text else ""
+
+
+def finding_excerpt(text: str, title: str = "", claim: str = "", max_len: int = 300) -> str:
+    """One verbatim excerpt of at most max_len characters: the sentence, or two neighbouring sentences, sharing most
+    words with the headline (which states the finding), leaving out sentences that restate the checked claim;
+    shorter windows win ties and windows that fit without cutting are preferred. Falls back to the opening."""
+    text = normalize_ws(text or "")
+    if not text:
+        return ""
+    src, sp = _excerpt_spans(text)
+    wins = list(sp) + [(x[0], y[1]) for x, y in zip(sp, sp[1:]) if y[0] - x[1] <= 6]
+    wins = [(a, b) for a, b in wins if b - a >= 16]
+    head = set(tokens(title or ""))
+    best, best_score = None, -1.0
+    for a, b in wins:
+        w = src[a:b]
+        if _excerpt_restates(w, claim or ""):
+            continue
+        score = (len(head & set(tokens(w))) / len(head) if head else 0) - len(w) / 5000 - a / 1e6
+        if b - a > max_len:
+            score -= 0.25
+        if score > best_score:
+            best, best_score = w, score
+    return _excerpt_cut(best, max_len) if best else lead_excerpt(text, max_len)

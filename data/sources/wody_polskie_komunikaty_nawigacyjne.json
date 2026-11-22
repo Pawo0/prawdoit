@@ -31,7 +31,7 @@
     "transport"
   ],
   "language": "pl",
-  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "license": "Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 (CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.",
   "qualification": "Zarządca śródlądowych dróg wodnych; komunikaty o zamknięciach i ograniczeniach żeglugi (np. Odra, Wisła). Strona z resources.txt to indeks — pobieramy 10 stron 'obowiązujące komunikaty' regionalnych zarządów (odnalezione ręcznie 2026-11-21; zmiana adresów = pusta strona, sprawdzić). Pokrywa URL: gov.pl/web/wody-polskie/komunikaty-nawigacyjne.",
   "scope": "organiser_listed",
   "scope_basis": "rules/resources.txt: gov.pl/web/wody-polskie/komunikaty-nawigacyjne",

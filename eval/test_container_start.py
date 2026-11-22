@@ -15,7 +15,17 @@ spec.loader.exec_module(startup)
 class StartupTests(unittest.TestCase):
     def test_private_token_required(self):
         for value in ("", "demo-moderator"):
-            with self.subTest(token=value), patch.dict(os.environ, {"PRAWDOWID_MODERATOR_TOKEN": value}, clear=True):
+            env = {"PRAWDOWID_MODERATOR_TOKEN": value, "PRAWDOWID_ADMIN_TOKEN": "private-admin"}
+            with self.subTest(token=value), patch.dict(os.environ, env, clear=True):
+                with self.assertRaises(SystemExit):
+                    startup.prepare()
+
+    def test_private_admin_token_required(self):
+        for env in ({"PRAWDOWID_MODERATOR_TOKEN": "private-mod"},
+                    {"PRAWDOWID_MODERATOR_TOKEN": "private-mod", "PRAWDOWID_ADMIN_TOKEN": "demo-admin"},
+                    {"PRAWDOWID_MODERATOR_TOKEN": "private-mod", "PRAWDOWID_ADMIN_TOKEN": "private-admin",
+                     "PRAWDOWID_DEV_MODE": "1"}):
+            with self.subTest(env=env), patch.dict(os.environ, env, clear=True):
                 with self.assertRaises(SystemExit):
                     startup.prepare()
 
@@ -28,6 +38,7 @@ class StartupTests(unittest.TestCase):
             (seed / "emb-test.keys.json").write_text('["test"]')
             env = {
                 "PRAWDOWID_MODERATOR_TOKEN": "private-test-token",
+                "PRAWDOWID_ADMIN_TOKEN": "private-admin-token",
                 "PRAWDOWID_RUNTIME_DIR": str(root / "state/runtime"),
                 "PRAWDOWID_INDEX_DIR": str(root / "state/index"),
                 "HF_HOME": str(root / "models"),

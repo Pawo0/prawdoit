@@ -19,7 +19,7 @@
     "oszustwa"
   ],
   "language": "pl",
-  "license": "© NASK / CERT Polska — brak otwartej licencji; krótkie fragmenty z przypisem i linkiem (prawo cytatu); lista hole.cert.pl: dowolne użycie",
+  "license": "© NASK / CERT Polska — brak otwartej licencji; zapisane: tytuł, data, link i jeden dosłowny fragment (do 300 znaków) z przypisem (prawo cytatu, art. 29 pr. aut.); lista hole.cert.pl: dowolne użycie",
   "qualification": "Krajowy zespół CSIRT działający w NASK-PIB; organ właściwy dla ostrzeżeń o zagrożeniach w sieci i kampaniach oszustw. Kategoria A w zakresie swoich kompetencji.",
   "scope": "organiser_implied",
   "scope_basis": "Ta sama instytucja (CERT Polska / NASK) co adres z listy: rules/resources.txt: moje.cert.pl/komunikaty/; także rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): materiały NASK",

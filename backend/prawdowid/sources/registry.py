@@ -23,6 +23,14 @@ HANDLER_RE = re.compile(r"^[a-z0-9_]{1,64}$")
 SCRIPT_RE = re.compile(r"^ingest/[A-Za-z0-9_\-]+\.py$")
 
 CATEGORIES = ("official", "factcheck", "incident", "media")
+# Licence of texts on www.gov.pl: the portal's own words, quoted (not our reading of them); checked on the page
+# gov.pl/web/gov/prawa-autorskie (the same text is on /warunki-korzystania). Subdomains such as odyseusz.gov.pl are
+# separate services and do not get this string.
+GOV_LICENSE = ("Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez "
+               "użytkowników z materiałów urzędowych opublikowanych w serwisie Gov.pl nie wymaga zgody Ministra "
+               "Cyfryzacji.” „Treści tekstowe publikowane w serwisie (z wyłączeniem treści audiowizualnych), są "
+               "udostępniane na licencji typu Creative Commons: uznanie autorstwa - na tych samych warunkach 4.0 "
+               "(CC BY-SA 4.0).” Utwory osób trzecich: za zgodą ich właścicieli. Podajemy źródło i link.")
 DEFAULT_TIER = {"official": 1, "factcheck": 2, "incident": 3, "media": 4}
 FETCH_METHODS = ("rss", "sitemap", "html_list", "govpl_list", "custom", "legacy_script")  # run by the scheduler
 NOOP_METHODS = ("live_search", "google_factcheck", "reference_only")                    # never fetched on schedule
@@ -65,6 +73,8 @@ PARAM_SPEC: dict[str, dict[str, tuple[type | tuple, bool, object]]] = {
 }
 COMMON_PARAMS = {"max_docs": (int, False, DEFAULT_MAX_DOCS),   # cap on records kept in data/corpus/<id>.jsonl
                  "max_chars": (int, False, None),               # cap on stored text per record (default 4000)
+                 # sources without an open licence: store only the opening passage, verbatim, up to this many chars
+                 "excerpt_chars": (int, False, None),
                  "delay_s": ((int, float), False, None)}        # min. seconds between requests to one host (≥ 1)
 
 

@@ -13,9 +13,14 @@ from urllib.request import urlopen
 
 
 def prepare(seed: Path = Path("/app/data/index")) -> None:
-    token = os.environ.get("PRAWDOWID_MODERATOR_TOKEN", "").strip()
-    if not token or token == "demo-moderator":
-        raise SystemExit("Set PRAWDOWID_MODERATOR_TOKEN to a private value before starting the container.")
+    # Both panel tokens are required; the public demo values are refused (they work only with PRAWDOWID_DEV_MODE=1
+    # outside the container, see backend/prawdowid/config.py).
+    for name, demo in (("PRAWDOWID_MODERATOR_TOKEN", "demo-moderator"), ("PRAWDOWID_ADMIN_TOKEN", "demo-admin")):
+        token = os.environ.get(name, "").strip()
+        if not token or token == demo:
+            raise SystemExit(f"Set {name} to a private value before starting the container.")
+    if os.environ.get("PRAWDOWID_DEV_MODE", "0") == "1":
+        raise SystemExit("PRAWDOWID_DEV_MODE=1 is for local development only; unset it in the container.")
     runtime = Path(os.environ["PRAWDOWID_RUNTIME_DIR"])
     index = Path(os.environ["PRAWDOWID_INDEX_DIR"])
     cache = Path(os.environ["HF_HOME"])

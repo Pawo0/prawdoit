@@ -5,7 +5,8 @@ transparent, versioned rules (R1–R6, see /metodologia) over retrieved, cited e
 *understand* text: embeddings for retrieval / claim matching, NLI for stance.
 
 Source tiers (by source type and process — never by political orientation or domain reputation):
-  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN, bazy incydentów   C (3) media
+  A (1) źródło pierwotne / urzędowe   B (2) fact-checking IFCN/EFCSN   B (3) baza incydentów   C (4) media
+Only tiers 1 and 2 settle a verdict alone; a catalogue entry is context unless a tier 1-2 source agrees.
 """
 from __future__ import annotations
 
@@ -16,22 +17,20 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from . import measures
 from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens
+from .textutil import (HIGH_RISK, amounts, is_time_sensitive, normalize_ws, rule_scope, same_amount, short,
+                       split_sentences, tokens, unmark_excerpt, years_in)
 
 log = logging.getLogger("prawdowid.engine")
 
 FC_TO_VERDICT = {"false": "falszywe", "misleading": "wprowadzajace_w_blad", "mixed": "wprowadzajace_w_blad",
                  "true": "potwierdzone", "unverifiable": "brak_dowodow"}
-HIGH_RISK = re.compile(
-    r"\b(ewakuac\w*|wojn\w*|mobilizac\w*|pob[oó]r\w*|atak\w*|zamach\w*|skażon\w*|zatru\w*|alarm\w*|schron\w*|"
-    r"blackout\w*|epidemi\w*|pandemi\w*|szczepion\w*|jodek|upadł\w* bank\w*|wybor\w*|głosowani\w*|referend\w*|"
-    r"rakiet\w*|dron\w*|sabota\w*|sankcj\w*|wojsk\w*|armi\w*|nato)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -49,7 +48,8 @@ class _Cand:
     nli_claim_rev: object | None = None  # NLI(fact-checked claim -> user claim): used only for negation detection
     numeric: str | None = None  # deterministic number check vs. an official fact card: "zgodne" | "niezgodne"
     extra_irrelevant: bool = False  # official card about another period / currency / act
-    definitional: bool = False  # number differs, but the card uses a measure the claim did not name
+    # number differs, but the claim may use another definition of the indicator (measures.py): the note saying why
+    definitional: str = ""
     # one sentence of a multi-sentence checked claim (see _claim_units): the user often repeats only the rated core
     unit: str = ""
     unit_cos: float = 0.0
@@ -58,6 +58,12 @@ class _Cand:
     nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
     explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
     archival: tuple[int, int] | None = None  # (year of the material per the analysis, year it is presented as)
+    alternatives: tuple[tuple[str, float], ...] = ()  # fact-checks: the best-scoring quotable windows, best first
+    # fact-check match: same (True = the user asserts the checked claim, False = its opposite), the verdict it implies
+    # for the user's claim, and whether it was matched through one sentence of the checked claim (claim_units)
+    same: bool | None = None
+    implied: str | None = None
+    via_unit: bool = False
 
 
 def _fmt_date(s: str | None) -> str:
@@ -67,14 +73,81 @@ def _fmt_date(s: str | None) -> str:
     return f"{d}.{m}.{y}" if d else s
 
 
-def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple[str, float]:
+# How a fact-check states its finding, as opposed to the sentences that retell the viral claim (genre cues, not topics)
+_FINDING = re.compile(
+    r"\b(?:w rzeczywistości|w istocie|tak naprawdę|faktycznie|w praktyce|wyrwan\w* z kontekstu|nie (?:jest|są|był\w*|"
+    r"został\w*|ma|mają|dotycz\w*|pokazuj\w*|przedstawia\w*|oznacza|wynika|potwierdza\w*)|nigdy nie|nie ma (?:żadnych )?"
+    r"(?:dowod\w*|danych|informacji|podstaw)|brak (?:jest )?(?:dowod\w*|potwierdzeni\w*)|pochodz\w* z|sprzed|"
+    r"archiwaln\w*|(?:nagrani\w*|film\w*|wideo|zdjęci\w*|materiał\w*) (?:z|sprzed) |"
+    r"(?:dane|statystyk\w*|badani\w*|raport\w*|analiz\w*)\b[^.]{0,80}\b(?:pokazuj\w*|wskazuj\w*|wynika|potwierdzaj\w*)|"
+    r"wynika z|według (?:danych|ekspert\w*|naukowc\w*)|wbrew|nie potwierdz\w*|zaprzecz\w*|zdementowa\w*|dementuj\w*|"
+    r"(?:poprawn|prawidłow|błędn|nieścisł|zawyżon|zaniżon)\w*)", re.I)
+# The fact-checker's verdict words ("to nieprawda", "fałsz", "manipulacja", "zgodne z prawdą"): a finding cue too, but
+# one about the CHECKED claim. When the user asserts the opposite of that claim (claim match with same=False), the
+# words describe the claim the user denies, so a window that carries only them is no finding for the user's claim.
+_VERDICT_WORD = re.compile(
+    r"\b(?:nieprawd\w*|fałsz\w*|manipulac\w*|zmanipulowan\w*|wprowadza\w* w błąd|zgodn\w* z prawdą)", re.I)
+_RETELLS = re.compile(
+    r"\b(?:rzekom\w*|krąż\w*|pojawi\w* się\s+(?:\w+\s+){0,3}?(?:wpis\w*|post\w*|nagrani\w*|film\w*|informacj\w*|"
+    r"zdjęci\w*|artykuł\w*|grafik\w*|materiał\w*)|internau\w*|autorzy?\s+(?:post\w*|wpis\w*|nagrani\w*|materiał\w*)|"
+    r"twierdz\w*|sugeruj\w*|przekonuj\w*|alarmuj\w*|w mediach społecznościowych|w sieci)\b", re.I)
+
+
+def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: str, opposite: bool = False) -> float:
+    """Bonus for a fact-check window that carries the finding rather than the claim: a finding cue, a year earlier
+    than the one the claim speaks of, an amount that differs from the claim's; a penalty for retelling the claim
+    ("Na Facebooku pojawiło się nagranie rzekomo…") and for a near-restatement (hardly a word beyond the user's claim
+    and the checked claim). opposite: the analysis rated the opposite of the user's claim, so its verdict words
+    (_VERDICT_WORD) earn nothing."""
+    wt = set(tokens(w))
+    bonus = 0.3 if _FINDING.search(w) or (not opposite and _VERDICT_WORD.search(w)) else 0.0
+    if _RETELLS.search(w):
+        bonus -= 0.25
+    if wt and len(wt - q_tokens - fc_tokens) / len(wt) < 0.3:
+        bonus -= 0.4
+    claim_years = years_in(claim_text)
+    if claim_years and any(y < min(claim_years) for y in years_in(w)):
+        bonus += 0.15
+    stated = amounts(claim_text)
+    if stated and any(a[1] == x[1] and not same_amount(a, x) for a in amounts(w) for x in stated):
+        bonus += 0.15
+    return bonus
+
+
+_QUOTE_OPENERS = "-–•* „\"'«("
+MID_SENTENCE_PENALTY = 0.4  # as heavy as a near-restatement (_finding_score): a cut quote is as weak a quote
+
+
+def _starts_mid_sentence(window: str, source: str) -> bool:
+    """Does this quote begin inside a sentence of the source? The sentence splitter also breaks at a line break
+    inside a sentence and after an abbreviation it did not recognise, so a window can start mid-sentence: with a
+    lowercase letter, with a closing bracket it never opened, inside a word, or right after a comma or semicolon.
+    `source` is the whitespace-squashed text the window was cut from."""
+    w = window.lstrip(_QUOTE_OPENERS)
+    if not w:
+        return False
+    if w[0].islower():
+        return True
+    close, opening = w.find(")"), w.find("(")
+    if close >= 0 and (opening < 0 or close < opening):
+        return True
+    i = source.find(window)
+    if i <= 0:
+        return False
+    return source[i - 1].isalnum() or source[:i].rstrip().endswith((",", ";"))
+
+
+def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str], claim_text: str = "",
+                   opposite: bool = False) -> tuple[str, float, tuple[tuple[str, float], ...]]:
     """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
     then the 1–2 consecutive sentences with the highest lexical overlap with the claim, cut verbatim out of the
-    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI."""
+    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI.
+    Returns (fragment, chunk similarity, the best few windows with their scores: fact-checks only, for the NLI
+    re-ranking in verify_claim). opposite: see _finding_score (known only after claim matching, see verify_claim)."""
     ids = [i for i in INDEX.doc_chunks[doc_idx] if i not in INDEX.synthetic]
     d = INDEX.docs[doc_idx]
     if not ids:
-        return (d.text or d.title)[:400], 0.0
+        return (d.text or d.title)[:400], 0.0, ()
     sims = INDEX.chunk_emb[ids] @ q_emb
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
@@ -84,23 +157,58 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
         # A fact-check's text starts by restating the checked claim, which always overlaps the user's words most and
         # wins the best chunk. Quoting it back proves nothing: the quote must be the analysis' finding. So the whole
         # analysis is searched (the claim's own sentences left out) for the passage that shares most words with the
-        # user's claim AND with the fact-checker's headline, which states the finding ("Depesza PAP nie została
-        # usunięta"). The claim itself is quoted only when the record has nothing else.
+        # user's claim AND with the fact-checker's headline, which states the finding ("Szkoła w gminie nie została
+        # zamknięta"), and that reads as a finding (_finding_score). The claim itself is quoted only when the record
+        # has nothing else.
         own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
         if own:
             windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
-    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
+    if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document)
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
+    fc_tokens = set(tokens(d.claim or ""))
+    src = _squash(d.text or "")
 
     def score(w: str) -> float:
         wt = set(tokens(w))
         head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
-        return len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
+        base = len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
+        if not head_tokens:
+            return base
+        cut = MID_SENTENCE_PENALTY if _starts_mid_sentence(w, src) else 0.0  # a whole-sentence quote of the finding
+        return base + _finding_score(w, q_tokens, fc_tokens, claim_text, opposite) - cut
 
-    best = max(windows, key=score)
-    if head_tokens:  # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI)
-        best = best.lstrip("-–•* ") or best
-    return best, cos
+    ranked = sorted(((w, score(w)) for w in windows), key=lambda x: -x[1])
+    if not head_tokens:
+        return ranked[0][0], cos, ()
+    # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI for the verdict)
+    ranked = [((w.lstrip("-–•* ") or w), sc) for w, sc in ranked]
+    return ranked[0][0], cos, tuple(ranked[:3])
+
+
+FINDING_NLI_BUDGET = 12  # windows judged by NLI per claim when choosing the quote of decisive fact-checks
+
+
+def _rerank_findings(claim_query: str, items: list) -> dict[int, str]:
+    """For decisive fact-checks, prefer among the best windows the one whose NLI relation to the user's claim matches
+    the verdict direction (want = 'contra' for a refuting, 'entail' for a supporting item): lexical score + 0.5 x
+    (wanted - opposite probability). One NLI batch of at most FINDING_NLI_BUDGET windows. Returns doc_idx -> quote;
+    every quote is re-checked against the stored text (gate V2). The verdict itself is not touched."""
+    pairs, owners = [], []
+    for c, want in items:
+        for w, base in c.alternatives:
+            if len(pairs) >= FINDING_NLI_BUDGET:
+                break
+            pairs.append((w, claim_query))
+            owners.append((c, want, w, base))
+    if not owners:
+        return {}
+    best: dict[int, tuple[float, str]] = {}
+    for (c, want, w, base), s_ in zip(owners, NLI_MODEL.score(pairs)):
+        direction = (s_.contra - s_.entail) if want == "contra" else (s_.entail - s_.contra)
+        val = base + 0.5 * direction
+        if c.doc_idx not in best or val > best[c.doc_idx][0]:
+            best[c.doc_idx] = (val, w)
+    return {k: w for k, (_, w) in best.items() if _quote_ok(w, INDEX.docs[k].text or "")}
 
 
 def _words(s: str) -> str:
@@ -117,7 +225,7 @@ def _restates(window: str, claim: str) -> bool:
 
 
 def _squash(s: str) -> str:
-    """Whitespace-normalised text: the form in which gate V2 compares a quote with its source."""
+    """Whitespace-normalised text: the form in which a quote is compared with its source (_quote_ok)."""
     return re.sub(r"\s+", " ", normalize_ws(s)).strip()
 
 
@@ -155,7 +263,7 @@ _YEAR_RX = re.compile(r"\b(19|20)\d\d\b")
 
 
 def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str | None:
-    """'Dlaczego w analizie jest 650 mln zł?': the verbatim passage of the analysis that gives the asked number.
+    """'Skąd w analizie 36 mln zł?': the verbatim passage of the analysis that gives the asked number.
     Sentences of the checked claim itself are skipped. Among the passages that contain the number, the one that also
     states its period (a year) is preferred, so the quote shows what the figure refers to; then the shortest."""
     in_claim = _squash(claim_text)
@@ -165,13 +273,14 @@ def asked_number_fragment(text: str, claim_text: str, asked: list[tuple]) -> str
 
 
 # ------------------------------------------------------------------ old material presented as current (rule R3a)
-# "Czy film udostępniony przez X w 2026 r. pokazywał ówczesny protest pod Y?" — a claim that a recording / photo shows
-# an event of the time it was shared. A fact-check about that material that dates it to an EARLIER year refutes it
+# "Nagranie z wczorajszej demonstracji w X pokazuje Y" — a claim that a recording / photo shows an event of the time it
+# was shared (a common misinformation pattern: real but old material re-shared as current). A fact-check about that material that dates it to an EARLIER year refutes it
 # deterministically (the NLI model reads almost every sentence of such an analysis as a contradiction, so it cannot
 # be used here). Same material = the analysis names at least two of the claim's proper names.
 _MATERIAL = re.compile(r"\b(film\w*|nagra\w*|wideo|video|klip\w*|zdjęci\w*|zdjęć|fotografi\w*|materiał\w*)\b", re.I)
-_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|tegoroczn\w*|teraz|dziś|"
-                            r"dzisiaj|niedawn\w*)\b", re.I)
+# time markers that place the material at the time it was shared (used only when the claim gives no year)
+_PRESENTED_NOW = re.compile(r"\b(ówczesn\w*|wówczas|aktualn\w*|bieżąc\w*|obecn\w*|dzisiejsz\w*|wczorajsz\w*|tegoroczn\w*|"
+                            r"najnowsz\w*|śwież\w*|teraz|dziś|dzisiaj|wczoraj|niedawn\w*|w tym roku)\b", re.I)
 _ORIGIN = re.compile(r"\b(pochodz\w*|nagran\w*|nakręcon\w*|zarejestrowan\w*|wykonan\w*|zrobion\w*|powstał\w*)\b"
                      r"[^.]{0,40}?\b(?:z|w|we)\s+(?:[^\W\d]+\s+){0,2}?((?:19|20)\d\d)\b", re.I)
 _PROPER = re.compile(r"(?<=[\s(„\"])[A-ZĄĆĘŁŃÓŚŹŻ][\wąćęłńóśźż-]{2,}")
@@ -224,8 +333,18 @@ def _relevance(q_tokens: set[str], text: str) -> float:
 
 
 def _quote_ok(fragment: str, doc_text: str) -> bool:
-    """Validity gate V2: the quoted fragment must be a verbatim substring of the stored source text."""
+    """V2: the quoted fragment is a verbatim substring of the stored source text. _fragment_windows cuts every
+    quote out of that text, so this holds by construction; it is asserted in tests/test_fragment_windows.py rather
+    than re-checked on every answer (a runtime gate never fired: 0 of 145 eval cases)."""
     return _squash(fragment) in _squash(doc_text)
+
+
+def shown_fragment(fragment: str, doc_text: str) -> str:
+    """The fragment as the answer, the API and the UI show it: without the ELI ingest marker ("[fragment: „…”]"),
+    which is not the publisher's text. What is left must still pass gate V2 (a verbatim slice of the stored text);
+    if it did not, the fragment is shown as stored."""
+    out = unmark_excerpt(fragment)
+    return out if out == fragment or (out and _quote_ok(out, doc_text)) else fragment
 
 
 def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidence:
@@ -233,20 +352,50 @@ def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidenc
     return Evidence(
         doc_id=d.id, title=d.title, publisher=d.publisher, domain=d.domain, url=d.url, source_type=d.source_type,
         tier=TIER[d.source_type], published_at=d.published_at, retrieved_at=d.retrieved_at, age_days=INDEX.doc_age(d),
-        fragment=c.fragment, factcheck_claim=d.claim, factcheck_verdict_raw=d.verdict_raw, factcheck_verdict=d.verdict,
-        retrieval_score=round(c.retrieval, 4), similarity=round(max(c.claim_cos, c.frag_cos), 3), stance=stance,
-        stance_score=round(score, 3), same_claim=same, license=d.license)
+        fragment=shown_fragment(c.fragment, d.text or ""), factcheck_claim=d.claim, factcheck_verdict_raw=d.verdict_raw,
+        factcheck_verdict=d.verdict, retrieval_score=round(c.retrieval, 4),
+        similarity=round(max(c.claim_cos, c.frag_cos), 3), stance=stance, stance_score=round(score, 3), same_claim=same,
+        license=d.license)
+
+
+# ---- "what would settle it" (an abstention names the kind of source that would decide the claim)
+# Stems are anchored at a word start: a bare "cen" matched "centrum" and "lek" matched "lekko".
+_LAW = re.compile(r"\b(?:ustaw(?:a|y|ie|ę|ą|om|ami|ach)?|przepis\w*|rozporządz\w*|praw(?:o|a|em)|kodeks\w*|"
+                  r"dyrektyw\w*|unijn\w*|ue|bruksel\w*)\b")
+_NUMBERS = re.compile(r"\d|%|\b(?:procent\w*|mln|mld|tys|wzro(?:st\w*|sł\w*|śnie|sną|sn\w*)|"
+                      r"spad(?:ek|ku|ki|kiem|ł\w*|nie|ną|a|ają)|inflacj\w*|cen(?:a|y|ie|ę|ą|om|ami|ach)?|cenow\w*|"
+                      r"płac(?:a|y|e|ą|ę|ami)?|wynagrodze\w*|pensj\w*|emerytur\w*|świadcze\w*|zasił\w*|"
+                      r"bezroboci\w*|pkb)\b")
+_HEALTH = re.compile(r"\b(?:szczepi\w*|szczepion\w*|chorob\w*|lek(?:i|u|ów|iem|ami|arstw\w*|arz\w*)?|zdrow\w*|"
+                     r"wirus\w*|szpital\w*|epidemi\w*|pandemi\w*)\b")
+_SECURITY = re.compile(r"\b(?:wojsk\w*|wojn\w*|armi\w*|nato|ukrain\w*|rosj\w*|rosyjsk\w*|granic\w*|ambasad\w*|"
+                       r"msz|mon|dyplomac\w*|żołnierz\w*)\b")
+
+
+# A rule is settled by the act that makes it, which states the area (or the people and things) it covers and the date
+# it enters into force. Which act depends on who could adopt it (textutil.rule_scope).
+_RULE_SETTLE = {
+    "eu": ("akt prawny UE w EUR-Lex (rozporządzenie, dyrektywa lub decyzja) — z zakresem, którego dotyczy, i datą "
+           "wejścia w życie; dyrektywa wiąże obywateli dopiero przez polską ustawę (ISAP)"),
+    "local": ("uchwała rady gminy lub miasta (akt prawa miejscowego, ogłaszany w wojewódzkim dzienniku urzędowym) — "
+              "z opisem obszaru, który obejmuje, i datą wejścia w życie"),
+    "national": ("ustawa lub rozporządzenie w Dzienniku Ustaw (wyszukiwarka ISAP Sejmu) — z zakresem, którego dotyczy, "
+                 "i datą wejścia w życie"),
+}
 
 
 def _would_settle(claim: str) -> str:
     c = claim.lower()
-    if re.search(r"ustaw|przepis|rozporządz|prawo|zakaz|nakaz|kodeks|dyrektyw|unijn|ue\b|bruksel", c):
+    scope = rule_scope(c)
+    if scope:
+        return _RULE_SETTLE[scope]
+    if _LAW.search(c):
         return "akt prawny w ISAP (Dziennik Ustaw) lub EUR-Lex albo komunikat właściwego ministerstwa"
-    if re.search(r"\d|procent|%|mln|mld|tys|wzrost|spad|inflac|cen|płac|emerytur|świadcze", c):
+    if _NUMBERS.search(c):
         return "aktualne dane GUS, NBP, Eurostatu lub komunikat ZUS/właściwego ministerstwa"
-    if re.search(r"szczepion|chorob|lek|zdrow|wirus|szpital", c):
+    if _HEALTH.search(c):
         return "komunikat Ministerstwa Zdrowia / GIS lub analiza organizacji fact-checkingowej"
-    if re.search(r"wojsk|armi|nato|ukrain|rosj|granic|ambasad|msz|dyplomac", c):
+    if _SECURITY.search(c):
         return "komunikat MSZ, MON lub RCB albo analiza organizacji fact-checkingowej"
     return "komunikat właściwej instytucji lub analiza organizacji fact-checkingowej (IFCN/EFCSN)"
 
@@ -265,11 +414,27 @@ def _numbers(s: str) -> list[tuple[float, str]]:
     return [(float(v.replace(",", ".")), _unit(u)) for v, u in _NUM.findall(s)]
 
 
+_ORDINAL = {"i": 1, "ii": 2, "iii": 3, "iv": 4, "1": 1, "2": 2, "3": 3, "4": 4, "pierwsz": 1, "drug": 2, "trzeci": 3,
+            "czwart": 4}
+_QUARTER_RX = re.compile(r"\b(i{1,3}|iv|[1-4])\s*(?:kw\.|kwarta\w*)|\bq([1-4])\b|\b(pierwsz|drug|trzeci|czwart)\w*\s+kwarta\w*")
+_HALF_RX = re.compile(r"\b(i{1,2}|[12])\s*półrocz\w*|\b(pierwsz|drug)\w*\s+(?:półrocz\w*|połow\w*\s+(?:roku|20\d\d))"
+                      r"|\b20\d\d-s([12])\b")
+
+
 def _date_keys(s: str) -> tuple[set[str], set[int]]:
+    """Years and months a text refers to. Months come from month names, YYYY-MM, MM.YYYY / MM/YYYY, quarters
+    ("III kwartał", "Q3", "w trzecim kwartale") and halves ("I półrocze", "w pierwszej połowie roku", "2026-S1")."""
     low = s.lower()
     years = {y for y in re.findall(r"\b(20\d\d)\b", low)}
     months = {i + 1 for i, m in enumerate(_MONTHS) if re.search(rf"\b({m})\w*", low)}
     months |= {int(m) for _, m in re.findall(r"\b(20\d\d)-(\d\d)\b", low)}
+    months |= {int(m) for m, _ in re.findall(r"(?<![\d,])(0?[1-9]|1[0-2])[./](20\d\d)\b", low)}
+    for m in _QUARTER_RX.finditer(low):
+        q = _ORDINAL[next(g for g in m.groups() if g)]
+        months |= {3 * q - 2, 3 * q - 1, 3 * q}
+    for m in _HALF_RX.finditer(low):
+        h = _ORDINAL[next(g for g in m.groups() if g)]
+        months |= set(range(6 * h - 5, 6 * h + 1))
     return years, months
 
 
@@ -283,8 +448,8 @@ _MEASURES = [  # (source marker, words that must appear in the claim for the com
 ]
 
 
-def _compatible(claim: str, source_title: str) -> bool:
-    if re.search(r"hicp", claim, re.I) and re.search(r"\bCPI\b", source_title):
+def _compatible(claim: str, source_title: str, source_text: str = "") -> bool:
+    if not measures.compatible(claim, source_title, source_text):  # claim names another definition (HICP vs CPI…)
         return False
     return all(rx_claim.search(claim) for rx_src, rx_claim in _MEASURES if rx_src.search(source_title))
 
@@ -306,38 +471,72 @@ def _dates(s: str) -> list[tuple[int, int, int]]:
     return out
 
 
-_CURR_NAMES = {"EUR": "euro", "USD": "dolar", "CHF": "frank", "GBP": "funt", "NOK": "koron", "SEK": "koron", "DKK": "koron",
-               "CZK": "koron", "JPY": "jen", "HUF": "forint", "UAH": "hrywn", "CNY": "juan", "CAD": "dolar kanad",
-               "AUD": "dolar austral"}
+_OTHER_DOLLARS = r"(?!\s+(?:kanadyj|australij|nowozeland|hongkoń|hongkon|singapur|tajwań|tajwan))"
+_CURR_NAMES = {  # currency names in any inflected form; the crowns and the dollars only with their country
+    "EUR": r"\beuro\b|\beur\b", "USD": rf"\bdolar\w*\b{_OTHER_DOLLARS}", "CHF": r"\bfrank(?:a|i|ów|ow|om|ami|ach|iem)?\b",
+    "GBP": r"\bfunt\w*\b", "NOK": r"\bkoron\w*\s+norwe", "SEK": r"\bkoron\w*\s+szwedz", "DKK": r"\bkoron\w*\s+du[nń]s",
+    "CZK": r"\bkoron\w*\s+czes", "JPY": r"\bjen(?:a|y|ów|ow|om|ami|ach|ie)?\b", "HUF": r"\bforint\w*", "UAH": r"\bhrywn\w*",
+    "CNY": r"\bjuan\w*|\byuan\w*|\brenminbi", "CAD": r"\bdolar\w*\s+kanadyj", "AUD": r"\bdolar\w*\s+australij"}
+
+
+def _names_currency(claim: str, code: str) -> bool:
+    return bool(re.search(rf"\b{code}\b", claim, re.I) or (code in _CURR_NAMES and re.search(_CURR_NAMES[code], claim, re.I)))
+
+
+# the same indicator or subject named differently in a claim and in an official card's title: synonyms, abbreviations
+# and inflected forms (general Polish vocabulary of statistics and law). Both texts are rewritten to one word per
+# subject before the subject gate compares stems ("płaca minimalna" ~ "minimalne wynagrodzenie", "zmarło" ~ "zgonów").
+_SUBJECT_SYNONYMS = [(re.compile(rf"\b(?:{p})\b", re.I), w) for p, w in (
+    (r"produkt\w* krajow\w* brutto", "PKB"),
+    (r"wynagrodze\w*|płac(?:a|y|ę|e|om|ach|ami)|plac[ay]|pensj\w*|zarobk\w*|zarabia\w*|zarobi\w*", "wynagrodzenie"),
+    (r"zgon\w*|zmar[łl]\w*|umar[łl]\w*|umiera\w*|śmier[cć]\w*|smierc\w*|śmiertelnoś\w*|smiertelnos\w*", "zgon"),
+    (r"urodze\w*|urodzi\w*|narodzin\w*", "urodzenie"),
+    (r"ludnoś\w*|ludnos\w*|mieszkańc\w*|mieszkanc\w*|populacj\w*", "ludność"),
+    (r"inflacj\w*|inflacyjn\w*|drożyzn\w*|drozyzn\w*", "inflacja"),
+    (r"bezroboci\w*|bezrobotn\w*", "bezrobocie"),
+    (r"zadłużeni\w*|zadluzeni\w*|zadłużon\w*|zadluzon\w*|dług(?:u|iem|i|ów|ow|om|ach|ami)?|dlug(?:u|iem|i|ow|om|ach|ami)?",
+     "dług"),
+    (r"emerytur\w*|emeryt(?:a|ów|ow|om|ami|ach|y|ka|ki)?", "emerytura"),
+    (r"azyl\w*|ochron\w* międzynarodow\w*", "azyl"),
+    (r"prąd\w*|prad(?:u|em)?|energi\w* elektryczn\w*", "prąd"),
+)]
+
+
+def _subject_text(s: str) -> str:
+    for rx, word in _SUBJECT_SYNONYMS:
+        s = rx.sub(word, s)
+    return s
 _ACT = re.compile(r"^(Ustawa|Rozporządzenie|Dyrektywa|Decyzja|Konstytucja|Uchwała)\b", re.I)
-_QUALIFIED = [  # measures whose value depends on the definition; a mismatch is only meaningful if the claim names it
-    (re.compile(r"\bCPI\b"), re.compile(r"\bcpi\b|\bgus\b", re.I)),
-    (re.compile(r"\bHICP\b"), re.compile(r"hicp|eurostat|zharmonizowan", re.I)),
-    (re.compile(r"rejestrowan", re.I), re.compile(r"rejestrowan|\bgus\b|urzęd\w* pracy", re.I)),
-    (re.compile(r"\b(BAEL|LFS)\b|Eurostat", re.I), re.compile(r"bael|lfs|eurostat", re.I)),
-]
-
-
-_ALT = {"CPI": r"\bHICP\b", "HICP": r"\bCPI\b", "rejestrowan": r"\b(BAEL|LFS)\b|bezroboci\w* .*Eurostat|Eurostat.*bezroboci"}
-
-
-def _competing_measure(claim: str, title: str) -> bool:
-    """Does the claimed number match ANOTHER official card for the same period that measures the same thing with a
-    different definition (CPI vs HICP, registered vs LFS unemployment)? Then the mismatch is definitional, not false.
-    If the number matches no definition at all, it stays 'niezgodne'."""
-    for key, alt in _ALT.items():
-        if re.search(key, title, re.I):
-            rx = re.compile(alt, re.I)
-            return any(d.source_type == "official" and rx.search(d.title) and same_subject(claim, d.title)
-                       and numeric_stance(claim, f"{d.title}. {d.text[:6000]}") == "zgodne"
-                       for d in INDEX.docs)
-    return False
-
-
-def measure_named(claim: str, title: str) -> bool:
-    """False if the card measures something definition-dependent (CPI vs HICP, registered vs LFS unemployment)
-    and the claim does not say which measure it means."""
-    return all(rx_c.search(claim) for rx_t, rx_c in _QUALIFIED if rx_t.search(title))
+def _other_definition(claim: str, d) -> str:
+    """After a numeric mismatch with official card `d`: could the claim be using another definition of the same
+    indicator (CPI vs HICP, registered vs LFS unemployment, real vs nominal GDP — see measures.py)?
+    Returns "" when the mismatch stands: the claim names the card's definition, or for every other definition a card
+    for the same period is indexed and none of them gives the claimed number. Otherwise returns the note saying why
+    the card does not decide the claim (another definition gives the claimed number, or no card for it is indexed)."""
+    open_dims = measures.unnamed(claim, d.title, d.text)
+    if not open_dims:
+        return ""
+    m = measures.measure_of(d.title, d.text)
+    missing: list[str] = []
+    for dim, own in open_dims:
+        for alt in dim.variants:
+            if alt.name == own.name:
+                continue
+            cards = [o for o in INDEX.docs if o.source_type == "official" and o is not d
+                     and measures.uses(o.title, o.text, m.key, dim.key) == alt.name
+                     and measures.compatible(claim, o.title, o.text) and same_subject(claim, o.title)]
+            agree = next((o for o in cards if numeric_stance(claim, f"{o.title}. {o.text[:6000]}") == "zgodne"), None)
+            if agree is not None:
+                return (f"Wartość zależy od przyjętej miary: {agree.publisher} („{short(agree.title, 80)}”) podaje tę "
+                        f"liczbę według definicji {alt.name}, a {d.publisher} („{short(d.title, 80)}”) inną według "
+                        f"definicji {own.name}. Twierdzenie nie mówi, o którą miarę chodzi.")
+            if not cards:
+                missing.append(alt.name)
+    if missing:
+        return (f"Wartość zależy od przyjętej miary: {d.publisher} („{short(d.title, 80)}”) podaje inną liczbę według "
+                f"definicji {open_dims[0][1].name}; dla innej definicji ({', '.join(missing)}) nie mam danych za ten "
+                "okres, a twierdzenie nie mówi, o którą miarę chodzi.")
+    return ""
 
 
 _ALTERNATIONS = (("sz", "ch"), ("cz", "c"), ("rz", "r"))
@@ -370,18 +569,16 @@ def same_subject(claim: str, title: str) -> bool:
         if nums:
             return any(n in title for n in nums)
         m = re.search(r"\b(?:o|w sprawie)\s+(.+)$", title)
-        subject = set(tokens(m.group(1), stem=5)) if m else set(tokens(title, stem=5))
-        return len(subject & set(tokens(claim, stem=5))) / max(1, len(subject)) >= 0.4
+        subject = set(tokens(_subject_text(m.group(1) if m else title), stem=5))
+        return len(subject & set(tokens(_subject_text(claim), stem=5))) / max(1, len(subject)) >= 0.4
     head = re.split(r"[:—–]\s*\d", title)[0]  # e.g. "Ceny — transport — wrzesień 2026" / "Inflacja CPI w Polsce — marzec 2026"
-    subj = _anchors(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head)) - {t for t in tokens(" ".join(_PL_MONTHS))}
+    subj = _anchors(_subject_text(re.sub(r"\b(19|20)\d\d(-\d\d)?(-\d\d)?\b", " ", head))) - {t for t in tokens(" ".join(_PL_MONTHS))}
     subj = {t for t in subj if not any(t.startswith(m[:4]) for m in _MONTHS_STEMS)}
-    if subj and not (_alt_stems(subj) & _alt_stems(tokens(claim))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
+    if subj and not (_alt_stems(subj) & _alt_stems(tokens(_subject_text(claim)))) and not re.search(r"\b[A-Z]{3}/PLN\b", title):
         return False  # the card is about another indicator (e.g. transport prices vs. headline inflation)
     cur = re.search(r"\b([A-Z]{3})/PLN\b", title)
-    if cur:
-        code = cur.group(1)
-        if not (re.search(rf"\b{code}\b", claim, re.I) or (_CURR_NAMES.get(code) and _CURR_NAMES[code] in claim.lower())):
-            return False
+    if cur and not _names_currency(claim, cur.group(1)):
+        return False
     cy, cm = _date_keys(claim)
     ty, tm = _date_keys(title)
     if cy and ty and not (cy & ty):
@@ -416,14 +613,6 @@ _GENERIC = set(tokens("polsce polska polski gus nbp eurostat kurs średni dane w
 
 def _anchors(claim: str) -> set[str]:
     return {t for t in tokens(claim) if not t[0].isdigit() and t not in _GENERIC and len(t) > 2}
-
-
-def _anchor_text(claim: str, d) -> str:
-    """Sentences of the source that mention the claim's subject (e.g. 'frekwencja', 'Nawrocki'), for number checks."""
-    anchors = _anchors(claim)
-    scored = [(len(anchors & set(tokens(x))), i, x) for i, x in enumerate(split_sentences(d.text[:6000]))]
-    best = sorted([t for t in scored if t[0] > 0], key=lambda t: (-t[0], t[1]))[:3]
-    return " ".join(x for _, _, x in sorted(best, key=lambda t: t[1]))
 
 
 _WORD = re.compile(r"[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+")
@@ -573,6 +762,83 @@ def unit_match(c: _Cand, d, user_text: str) -> bool | None:
     return same_claim(c.unit_cos, c.nli_unit, c.nli_unit_rev or c.nli_unit, c.unit, user_text, d.source_type)
 
 
+# ------------------------------------------------------------------ consistency of fact-check matches
+# Each fact-check is matched to the user's text on its own (claim_match), so two analyses of ONE narrative can be read
+# with opposite polarity: one as "the user repeats it" (similarity alone), the other as "the user denies it" (NLI
+# contradiction both ways). Both are rated the same, so they then imply opposite verdicts and R2 reports a conflict that
+# no source holds. Analyses of one publisher, and analyses of the same checked claim, are therefore reconciled before
+# R1–R6: the match best backed by NLI decides; a weaker match that implies the opposite verdict from the same rating,
+# and a weaker same-publisher match that implies the same verdict (a duplicate), become context. Different ratings are
+# never reconciled (a true and a false rating are a real conflict), and agreeing analyses of different publishers stay
+# separate (independent confirmations).
+_NEGATION = re.compile(r"\b(nie|nigdy|żadn\w*|zadn\w*|bez)\b", re.I)
+
+
+def has_own_text(d) -> bool:
+    """Does the record carry text of its own beyond its headline and the checked claim? A ClaimReview metadata entry
+    (rating, claim, headline, link; its text is the headline and the claim joined) does not: there is no passage of
+    the analysis to quote as the finding, and the organisers' rule is that every verdict rests on a source quoted
+    verbatim. The headline and the claim are removed as whole passages, not word by word: a sentence of the article
+    that restates the finding in the headline's words ("Polecenie … jest prawdziwe") is the publisher's text and
+    counts as its own (the stored excerpt of a source kept as facts + one excerpt is often exactly that sentence)."""
+    rest = normalize_ws(d.text or "").lower()
+    for part in sorted({normalize_ws(d.title or "").lower(), normalize_ws(d.claim or "").lower()}, key=len, reverse=True):
+        if part:
+            rest = rest.replace(part, " ")
+    return bool(tokens(rest))
+
+
+def match_support(c: _Cand) -> tuple[int, float]:
+    """How well a fact-check match is backed: the number of NLI directions (user -> checked claim, checked claim ->
+    user) that state its polarity — entailment for "same", contradiction for "opposite" (a direction not computed
+    counts as not stating it) — then the similarity."""
+    fwd, rev = (c.nli_unit, c.nli_unit_rev) if c.via_unit else (c.nli_claim, c.nli_claim_rev)
+    key = "entail" if c.same else "contra"
+    return sum(1 for s in (fwd, rev) if s is not None and getattr(s, key) >= 0.5), c.claim_cos
+
+
+def same_checked_claim(a: str, b: str) -> bool:
+    """One checked claim restates the other: the content words of one contain the other's (a time or place
+    qualifier added, "Od 2025 roku X" / "X"), and both or neither are negated."""
+    ta, tb = set(tokens(a)), set(tokens(b))
+    small, big = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+    return len(small) >= 3 and small <= big and bool(_NEGATION.search(a)) == bool(_NEGATION.search(b))
+
+
+def consistent_matches(support: list, refute: list, misleading: list, evidence: list[Evidence]) -> list[str]:
+    """Reconcile the fact-check matches (see above) in place; returns audit notes for the polarity conflicts it
+    resolved (duplicates are collapsed silently)."""
+    buckets = {"falszywe": refute, "potwierdzone": support, "wprowadzajace_w_blad": misleading}
+    matched = [c for b in buckets.values() for c in b if c.same is not None and c.implied in buckets]
+    kept: list[_Cand] = []
+    notes: list[str] = []
+    for c in sorted(matched, key=match_support, reverse=True):
+        d = INDEX.docs[c.doc_idx]
+        drop = None
+        for k in kept:
+            dk = INDEX.docs[k.doc_idx]
+            same_pub = dk.publisher == d.publisher
+            if not (same_pub or same_checked_claim(dk.claim or "", d.claim or "")):
+                continue
+            if {k.implied, c.implied} == {"falszywe", "potwierdzone"} and dk.verdict == d.verdict:
+                drop = k
+                notes.append(f"Analizy „{short(dk.claim or dk.title, 90)}” i „{short(d.claim or d.title, 90)}” "
+                             f"({d.publisher}) mają tę samą ocenę, a dopasowania wskazywały przeciwne wnioski; przyjęto "
+                             "dopasowanie lepiej potwierdzone przez model NLI (pierwsze), drugie pokazano jako kontekst.")
+                break
+            if same_pub and k.implied == c.implied:
+                drop = k
+                break
+        if drop is None:
+            kept.append(c)
+            continue
+        buckets[c.implied].remove(c)
+        for e in evidence:
+            if e.doc_id == d.id and e.stance in ("przeczy", "popiera"):
+                e.stance = "kontekst"
+    return notes
+
+
 # ======================================================================================================== main
 def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     high_risk = bool(HIGH_RISK.search(claim.text))
@@ -594,7 +860,10 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     cands: dict[int, _Cand] = {}
     for doc_idx, cos in INDEX.match_claims(q_emb, claim.query, k=8):
         if cos >= settings.claim_match_soft - 0.06:
-            cands[doc_idx] = _Cand(doc_idx, "", cos, cos, is_claim_match=True, claim_cos=cos)
+            # cos: closest row (checked claim or headline) — finds and ranks the analysis; claim_cos: the checked
+            # claim itself — what claim matching rules on (a headline may state the correction, not the claim)
+            ccos = INDEX.checked_claim_cos(doc_idx, q_emb)
+            cands[doc_idx] = _Cand(doc_idx, "", cos, cos, is_claim_match=True, claim_cos=ccos)
     for chunk_idx, fused, cos in INDEX.search_chunks(claim.query, q_emb, k=settings.top_k_retrieval):
         ch = INDEX.chunks[chunk_idx]
         if cos < 0.55:  # dense-similarity floor: below it the passage is off-topic
@@ -609,8 +878,8 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     t0 = time.perf_counter()
     q_tokens = set(tokens(claim.query))
     for c in ranked:
-        c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
-    # "Czy X wydaje 700 mln zł? Dlaczego w analizie jest 650 mln zł?": an analysis of a statement that gave the user's
+        c.fragment, c.frag_cos, c.alternatives = _best_fragment(c.doc_idx, q_emb, q_tokens, claim.query)
+    # "Czy X kosztuje 40 mln zł? Skąd w analizie 36 mln zł?": an analysis of a statement that gave the user's
     # number quotes the passage with the asked number instead (the answer layer explains the two figures)
     stated = amounts(claim.query)
     asked = [a for a in amounts(getattr(claim, "meta", "")) if not any(same_amount(a, x) for x in stated)]
@@ -655,10 +924,12 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         if d.source_type != "official" or max(c.frag_cos, c.cos) < 0.65 or c.extra_irrelevant:
             continue
         num = None
-        if _compatible(claim.query, d.title):
+        if _compatible(claim.query, d.title, d.text):
             num = numeric_stance(claim.query, f"{d.title}. {d.text[:6000]}")
-            if num == "niezgodne" and not measure_named(claim.query, d.title) and _competing_measure(claim.query, d.title):
-                num, c.definitional = None, True  # e.g. CPI vs HICP: different measure, not a contradiction
+            if num == "niezgodne":
+                c.definitional = _other_definition(claim.query, d)
+                if c.definitional:  # e.g. CPI vs HICP: the claim may use the other measure — not a contradiction
+                    num = None
         num = num or legal_date_stance(claim.query, d.title, d.text)
         if num:
             c.numeric = num
@@ -667,15 +938,12 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
 
     # ---- evidence validity gates + stance classification
     support, refute, misleading, unverif, evidence, definitional = [], [], [], [], [], []
-    quote_failures = 0
     guarded: list[tuple[object, str]] = []  # G1: very similar checked claims not accepted, with what differed
     by_unit: list[tuple[object, str]] = []  # matched through one sentence of the checked claim (claim_units)
+    metadata_only: list[str] = []  # V3: matched records with no text of their own (see has_own_text)
     for c in ranked:
         d = INDEX.docs[c.doc_idx]
         if c.extra_irrelevant:
-            continue
-        if not _quote_ok(c.fragment, d.text or ""):
-            quote_failures += 1  # V2 failed: never show a quote we cannot find verbatim in the source
             continue
         if d.source_type in ("factcheck", "incident"):
             nc, same, differs = c.nli_claim, None, None
@@ -686,12 +954,19 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 if same is not None:
                     differs = None  # the whole quote differed, the sentence the fact-checker ruled on does not
                     c.claim_cos = max(c.claim_cos, c.unit_cos)
+                    c.via_unit = True
                     by_unit.append((d, c.unit))
             if differs:
                 guarded.append((d, differs))
             mapped = FC_TO_VERDICT.get(d.verdict or "") if same is not None else None
             if mapped and same is False:
                 mapped = {"falszywe": "potwierdzone", "potwierdzone": "falszywe"}.get(mapped)
+            c.same, c.implied = same, mapped
+            if mapped in ("falszywe", "potwierdzone", "wprowadzajace_w_blad") and not has_own_text(d):
+                # V3: no passage of its own carries the finding (a ClaimReview metadata entry: headline + checked
+                # claim only), so the record is listed as related and never decides
+                metadata_only.append(d.id)
+                evidence.append(_evidence(c, "kontekst", c.claim_cos, same)); continue
             if mapped is None and same is None and c.archival:  # R3a: the analysis dates the material earlier
                 refute.append(c); evidence.append(_evidence(c, "przeczy", max(c.claim_cos, c.cos), None)); continue
             if mapped == "falszywe":
@@ -717,13 +992,45 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 refute.append(c); evidence.append(_evidence(c, "przeczy", s_.contra, None))
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
+    resolved = consistent_matches(support, refute, misleading, evidence)
+    # a match on the OPPOSITE claim (same=False): the quote was chosen before matching, with the analysis' verdict
+    # words ("to nieprawda") counted as a finding; they are about the claim the user denies, so choose again without
+    for c in ranked:
+        d = INDEX.docs[c.doc_idx]
+        if c.same is not False or d.source_type not in ("factcheck", "incident") or c.archival or c.explains:
+            continue
+        frag, _, alts = _best_fragment(c.doc_idx, q_emb, q_tokens, claim.query, opposite=True)
+        if frag != c.fragment and _quote_ok(frag, d.text or ""):
+            c.fragment, c.alternatives = frag, alts
+            for e in evidence:
+                if e.doc_id == d.id:
+                    e.fragment = frag
+    # the quote of a decisive fact-check: the window whose NLI relation matches the verdict direction (a refuting
+    # finding for a refuted claim, a confirming one for a confirmed claim); archival / asked-number quotes stay
+    fc = [(c, "contra" if c in refute else "entail") for c in sorted(refute + support, key=lambda c: -c.claim_cos)
+          if INDEX.docs[c.doc_idx].source_type in ("factcheck", "incident") and not c.archival and not c.explains
+          and len(c.alternatives) > 1]
+    if fc:
+        t0 = time.perf_counter()
+        for doc_idx, quote in _rerank_findings(claim.query, fc).items():
+            for c, _ in fc:
+                if c.doc_idx == doc_idx:
+                    c.fragment = quote
+            for e in evidence:
+                if e.doc_id == INDEX.docs[doc_idx].id:
+                    e.fragment = quote
+        timings["nli_ms"] = timings.get("nli_ms", 0) + (time.perf_counter() - t0) * 1000
     res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
                   keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
     res.meta_question = getattr(claim, "meta", "") or None
+    if metadata_only:
+        res.rules_fired.append("V3:TYLKO_METADANE")
+    if resolved:
+        res.rules_fired.append("P1:SPOJNE_DOPASOWANIA")
+        res.premises.append(Premise(label="Spójność dopasowań do analiz tego samego twierdzenia lub wydawcy",
+                                    value=" ".join(resolved), effect="0"))
     if definitional:
-        d0 = INDEX.docs[definitional[0].doc_idx]
-        note = (f"Wartość zależy od przyjętej miary: {d0.publisher} („{short(d0.title, 80)}”) podaje inną liczbę dla innej "
-                "definicji wskaźnika. Twierdzenie nie mówi, o którą miarę chodzi.")
+        note = definitional[0].definitional
         res.premises.append(Premise(label="Różne definicje wskaźnika", value=note, effect="-"))
         if res.verdict == "potwierdzone":
             res.missing_context = note
@@ -743,9 +1050,6 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
         for d, differs in guarded[:2]:
             res.limitations.append(f"Bardzo podobnego twierdzenia sprawdzonego przez {d.publisher} („{short(d.claim or d.title, 110)}”) "
                                    f"nie uznano za to samo: różni się nazwą lub liczbą ({differs}) (reguła G1).")
-    if quote_failures:
-        res.limitations.append(f"Pominięto {quote_failures} materiał(y), których cytatu nie dało się dosłownie "
-                               "odnaleźć w źródle (bramka V2).")
     return res
 
 
@@ -777,6 +1081,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
     time_sensitive = is_time_sensitive(claim.text)
     sup_ab = [c for c in support if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
     ref_ab = [c for c in refute if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]
+    misleading = [c for c in misleading if TIER[INDEX.docs[c.doc_idx].source_type] <= 2]  # a catalogue entry alone never decides
 
     verdict, main, decisive = "brak_dowodow", None, []
     # ---- R2: conflict guard
@@ -914,7 +1219,7 @@ def _explain(verdict: str, main: _Cand | None, evidence: list[Evidence], conflic
             body += " Część twierdzenia jest prawdziwa, ale całość daje mylny obraz."
     else:
         body = f" Według źródła: {who} ({when})."
-    body += f" Fragment źródła: „{short(main.fragment, 260)}”"
+    body += f" Fragment źródła: „{short(shown_fragment(main.fragment, d.text or ''), 260)}”"
     if missing_context:
         body += f" Brakujący kontekst: {missing_context}"
     return lead + body, None

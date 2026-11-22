@@ -32,6 +32,7 @@ import httpx
 from ..config import settings
 from ..robots import RobotsTxt
 from ..security import ResolveError, UnsafeURL, check_public_url
+from ..textutil import opening_excerpt
 from . import registry
 
 log = logging.getLogger("prawdowid.sources")
@@ -296,6 +297,7 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
                 tags: list[str] | None = None) -> dict:
     url = canonical(url)
     max_chars = int(source.get("params", {}).get("max_chars") or MAX_TEXT)
+    excerpt_chars = int(source.get("params", {}).get("excerpt_chars") or 0)  # no open licence: one short quote
     retrieved = now_iso()
     if published_at and str(published_at)[:10] > retrieved[:10]:
         # a page cannot be published after it was fetched: the site shows a mistyped date (seen on gov.pl:
@@ -312,7 +314,7 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
         "retrieved_at": retrieved,
         "language": source.get("language", "pl"),
         "license": source.get("license", ""),
-        "text": truncate(text or "", max_chars),
+        "text": opening_excerpt(text, title, excerpt_chars) if excerpt_chars else truncate(text or "", max_chars),
         "claim": None, "claim_author": None, "verdict_raw": None, "verdict": None,
         "tags": sorted(set([source["id"], *source.get("topics", []), *(tags or [])])),
     }
@@ -626,6 +628,9 @@ def fetch_custom(source: dict, ctx: Ctx) -> list[dict]:
         raise FetchError(f"Brak modułu obsługi prawdowid.source_handlers.{handler} ({e}).") from e
     if not hasattr(mod, "fetch"):
         raise FetchError(f"Moduł prawdowid.source_handlers.{handler} nie ma funkcji fetch(source).")
+    if not ctx.limit and getattr(mod, "PERSIST", True) is False:  # e.g. Google Fact Check Tools API results
+        raise FetchError(f"Wyniki modułu {handler} nie są zapisywane w korpusie (warunki serwisu nie pozwalają na "
+                         "trwałe kopie) — źródło służy tylko do zapytań na żywo i podglądu w panelu.")
     src = json.loads(json.dumps(source))
     if ctx.limit:
         src["params"]["max_items"] = ctx.limit
@@ -784,7 +789,7 @@ def test_source(source: dict, n: int = 3) -> dict:
 
 
 # ------------------------------------------------------------------ auto-detect for admins
-GOV_LICENSE = "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło"
+GOV_LICENSE = registry.GOV_LICENSE
 EU_LICENSE = "© Unia Europejska, CC BY 4.0 (informacja prawna Komisji Europejskiej); podać źródło"
 _SKIP_EXT = re.compile(r"\.(pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp[34]|avi|rss|xml|css|js)$", re.I)
 

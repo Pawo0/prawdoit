@@ -84,8 +84,8 @@ out = ["# Katalog źródeł Prawdowida (generowany: `python ingest/make_sources_
        "Google Fact Check…; pobierane albo `reference_only`, gdy strona jest dynamiczna lub zablokowana dla automatów); "
        "`wskazane` = źródło użyte w scenariuszach referencyjnych lub instrukcjach organizatora (Demagog, PAP, EUvsDisinfo) albo ten "
        "sam serwis/instytucja co adres z listy; `rekomendowane` = wymienione tylko wśród „rekomendowanych punktów odniesienia” "
-       "w treści zadania, sekcja 7 (dane.gov.pl, ISAP, EUR-Lex, korpusy organizacji IFCN/EFCSN, Check First); `spoza listy` = dodane "
-       "przez zespół (GUS, NBP, Eurostat, PKW, Przedstawicielstwo KE). Uzasadnienie każdego wpisu: pole `scope_basis`; analiza i "
+       "w treści zadania, sekcja 7 (dane.gov.pl, ISAP — w tym obwieszczenia PKW z Dz.U., EUR-Lex, korpusy organizacji IFCN/EFCSN, Check First); `spoza listy` = dodane "
+       "przez zespół (GUS, NBP, Eurostat, Przedstawicielstwo KE). Uzasadnienie każdego wpisu: pole `scope_basis`; analiza i "
        "pomiar skutków ograniczenia bazy: `research/10_organiser_sources.md`. Kontrola: `python -m prawdowid.sources scope` "
        "(z `backend/`).",
        f"- **Stan zakresu:** {scope_line}.",

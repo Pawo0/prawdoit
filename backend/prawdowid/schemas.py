@@ -97,15 +97,15 @@ class ClaimResult(BaseModel):
     evidence: list[Evidence] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
     # short answer layer (answer.py, deterministic) — the same text on the web, in chats and in the extension
-    short_answer: str = ""  # "Nie. Demagog ocenił twierdzenie „…” jako „Fałsz”."
+    short_answer: str = ""  # "Nie. <fact-checker> ocenił(a) twierdzenie „…” jako „…”." (answer.py)
     basis_line: str = ""  # "Podstawa: mocna — 2 niezależne źródła, w tym urzędowe (…)."
     limitation_line: str = ""  # "Ograniczenie: …"
     main_evidence: Optional[int] = None  # index into `evidence` of the decisive source (the one link we show)
     # abstentions only: index into `evidence` of the item the short answer names as related material (never decisive;
     # shown with its link so the reader can open it, labelled as not settling the claim)
     related_evidence: Optional[int] = None
-    # a sentence of the message about the check itself, kept out of the query ("Dlaczego w analizie Demagoga jest
-    # 650 mln zł?"); when it names a number, the engine quotes the passage of the analysis that gives it
+    # a sentence of the message about the check itself, kept out of the query ("Skąd w tym raporcie liczba 12 tys.
+    # osób?"); when it names a number, the engine quotes the passage of the analysis that gives it
     meta_question: Optional[str] = None
 
 
@@ -128,7 +128,7 @@ class CheckRequest(BaseModel):
     mode: Literal["manual", "auto"] = "manual"
     live_search: Optional[bool] = None  # False skips the live stage for this request; always off in auto mode
     # screenshot (scenario F): base64 or a data URL; read locally with OCR (ocr.py) and never stored. `text` is the
-    # question that goes with it ("Czy Demagog to sprawdzał?"). Ignored in auto mode.
+    # question that goes with it ("Czy ktoś to sprawdzał?"). Ignored in auto mode.
     image_b64: Optional[str] = Field(default=None, max_length=8_200_000)
 
 
@@ -137,7 +137,7 @@ class LiveSearchInfo(BaseModel):
     provider: str  # google_factcheck | sitesearch | searxng | brave (joined with "+")
     query: str = ""
     n_results: int = 0  # documents added as candidate evidence
-    status: Literal["ok", "brak_wynikow", "blad"] = "brak_wynikow"
+    status: Literal["ok", "brak_wynikow", "blad", "nieaktywne"] = "brak_wynikow"  # nieaktywne: not configured
     notice: str = ""  # plain-Polish notice for the user
     steps: list[dict] = Field(default_factory=list)  # per provider: provider, query, n_results, status, notice
 

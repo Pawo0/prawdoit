@@ -1,4 +1,5 @@
-"""Capture screenshots of the main website flows (for the presentation / README)."""
+"""Capture screenshots of the main website flows (for the presentation / README).
+Needs a local server started with PRAWDOWID_DEV_MODE=1 (demo moderator token) or PRAWDOWID_MODERATOR_TOKEN=demo-moderator."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 OUT = Path(__file__).resolve().parent / "results" / "screens"

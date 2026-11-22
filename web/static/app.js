@@ -1,7 +1,7 @@
 // Prawdowid — shared front-end helpers (no framework, no build step).
 const VERDICT_ICON = {falszywe: "✕", wprowadzajace_w_blad: "!", potwierdzone: "✓", brak_dowodow: "?", nie_podlega_weryfikacji: "—"};
 const STANCE = {przeczy: "Przeczy twierdzeniu", popiera: "Potwierdza twierdzenie", kontekst: "Kontekst / temat pokrewny", neutralne: "Neutralne"};
-const TIER = {1: "Źródło pierwotne / urzędowe", 2: "Fact-checking / zweryfikowana baza", 3: "Media"};
+const TIER = {1: "Źródło pierwotne / urzędowe", 2: "Fact-checking / zweryfikowana baza", 3: "Baza incydentów dezinformacji", 4: "Media"};
 const STATUS = {blad_techniczny: "Błąd techniczny — to nie jest ocena treści", doprecyzuj: "Potrzebujemy doprecyzowania", poza_zakresem: "Poza zakresem"};
 const GENERIC_STAGE = "Analizujemy treść i szukamy źródeł…";
 
@@ -158,6 +158,20 @@ function openWait({inline = null, container = null, title = "Sprawdzanie informa
 }
 
 // ------------------------------------------------------------------ evidence chain
+// Data cards written by Prawdowid from an institution's dataset (ingest/official_gus.py, official_nbp.py,
+// official_eurostat.py; doc_id "<source>:…"): their text is not the publisher's own words, so it is not labelled
+// as a quote. Changes, r/r and m/m rates and EU rankings in them are computed by the ingest from the data.
+const DATA_CARD = {gus: "GUS", nbp: "NBP", eurostat: "Eurostatu"};
+const COMPUTED = /zmiana [+−-]?\d|\d% (r\/r|m\/m)|m\/m\)|\d+\. (miejsc|najniższ|najwyższ)/;
+function fragmentBlock(e) {
+  const src = DATA_CARD[String(e.doc_id || "").split(":")[0]];
+  if (!src) return `<blockquote><span class="small muted">Fragment źródła (cytat):</span><br>„${esc(e.fragment)}”</blockquote>`;
+  const calc = COMPUTED.test(e.fragment || "")
+    ? `<br><span class="small muted">Zmiany, stopy r/r i m/m oraz miejsca w rankingu to wyliczenie Prawdowida z tych danych.</span>` : "";
+  return `<blockquote><span class="small muted">Opis automatyczny na podstawie danych ${src} (<a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer">zbiór danych</a>):</span><br>${esc(e.fragment)}${calc}</blockquote>`;
+}
+const COMPUTED_PREMISE = /^Porównanie liczb/;  // engine.numeric_stance: the comparison is Prawdowid's own arithmetic
+
 function renderEvidence(e) {
   const fc = e.factcheck_verdict_raw ? `<div class="small">Sprawdzane twierdzenie: „${esc(e.factcheck_claim || e.title)}” — ocena źródła: <b>${esc(e.factcheck_verdict_raw)}</b>${e.same_claim === false ? " (Twoje twierdzenie jest jego zaprzeczeniem)" : ""}</div>` : "";
   return `<div class="ev">
@@ -165,7 +179,7 @@ function renderEvidence(e) {
     <div class="evidence-title" style="margin-top:6px"><a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(e.title)}</b></a></div>
     <div class="small muted">${esc(e.publisher)} · ${esc(e.domain)} · opublikowano ${fmtDate(e.published_at)}${e.age_days != null ? ` (${e.age_days} dni temu)` : ""}</div>
     ${fc}
-    <blockquote><span class="small muted">Fragment źródła (cytat):</span><br>„${esc(e.fragment)}”</blockquote>
+    ${fragmentBlock(e)}
     <details><summary>Dane źródła i analizy</summary><div class="small muted">Podobieństwo do twierdzenia: ${(e.similarity * 100).toFixed(0)}% · ${e.stance !== "kontekst" ? `pewność oceny fragmentu: ${(e.stance_score * 100).toFixed(0)}% · ` : ""}pobrano ${fmtDate(e.retrieved_at)} · <span title="${esc(e.license)}">${esc(shortLic(e.license))}</span> (<a href="/zrodla">warunki</a>)</div></details>
   </div>`;
 }
@@ -217,7 +231,7 @@ function renderClaim(c, i, n, full = false) {
   const why = premises.length || interp
     ? `<details${open}><summary>Dlaczego taki wynik?</summary>${interp}
       ${kind ? `<p class="small muted">Rodzaj wypowiedzi: ${kind}</p>` : ""}
-      ${premises.length ? `<ul class="premises">${premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}:</b> ${esc(p.value)}</li>`).join("")}</ul>
+      ${premises.length ? `<ul class="premises">${premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}${COMPUTED_PREMISE.test(p.label) ? " — wyliczenie Prawdowida" : ""}:</b> ${esc(p.value)}</li>`).join("")}</ul>
       <div class="small muted">Reguły: ${(c.rules_fired || []).map(esc).join(", ") || "—"} · <a href="/metodologia#reguly">opis reguł</a></div>` : ""}</details>` : "";
   return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Wynik sprawdzenia${n > 1 ? ` · ${i + 1} z ${n}` : ""}</span><span class="window-lines" aria-hidden="true"></span></div><div class="claim-body">
     <div class="verdict-hero"><span class="verdict-icon" aria-hidden="true">${VERDICT_ICON[c.verdict] || "?"}</span><div><div class="eyebrow">${n > 1 ? `Informacja ${i + 1} z ${n}` : "Co mówią źródła"}</div><h2>${esc(c.verdict === "falszywe" ? "Fałsz" : c.verdict_label)}</h2></div></div>
@@ -280,6 +294,7 @@ function renderResult(res, el, {full = false} = {}) {
   el.innerHTML = `
     ${res.demo ? '<div class="demo-banner"><b>Przykładowy wynik.</b> Dane są fikcyjne — to podgląd wyglądu, bez sprawdzania przez serwer.</div>' : ""}
     ${warnings.map(w => `<div class="warn">${esc(w)}</div>`).join("")}
+    ${(res.engine?.unavailable || []).map(w => `<div class="info small">Nie użyto: ${esc(w)}</div>`).join("")}
     ${full && orderedClaims.length > 1 && res.claims_overview ? `<p class="muted">${esc(res.claims_overview)}</p>` : ""}
     ${orderedClaims.map((c, i) => renderClaim(c, i, orderedClaims.length, full)).join("")}
     ${full ? renderResources(res.resources) : ""}
@@ -296,6 +311,7 @@ function renderResult(res, el, {full = false} = {}) {
       <tr><th>Kanał</th><td>${esc(res.channel)}</td></tr>
       <tr><th>Czasy etapów [ms]</th><td>${Object.entries(res.timings_ms || {}).map(([k, v]) => `${esc(k)}: ${Math.round(v)}`).join(" · ")}</td></tr>
       <tr><th>Modele</th><td>embedding: ${esc(res.engine?.embed_model)} · NLI: ${esc(res.engine?.nli_model)} · LLM: ${esc(res.engine?.llm || "nieużywany (wyjaśnienia z szablonów)")}</td></tr>
+      <tr><th>Wyszukiwanie na żywo</th><td>${(res.live_search?.steps || []).map(s => esc(`${s.provider}: ${s.status}${s.n_results ? ` (${s.n_results})` : ""}`)).join(" · ") || "nie uruchomiono"}${(res.engine?.unavailable || []).length ? "<br>" + res.engine.unavailable.map(esc).join("<br>") : ""}</td></tr>
       <tr><th>Korpus</th><td>${esc(res.engine?.corpus_documents)} dokumentów (wczytano ${esc(res.engine?.corpus_loaded_at)})</td></tr>
       <tr><th>Wersja reguł / przetwarzanie</th><td>${esc(res.engine?.rules_version)} · ${esc(res.engine?.processing)}</td></tr>
       <tr><th>Zdarzenia bezpieczeństwa</th><td>${res.security_events?.length ? res.security_events.map(e => esc(e.kind + " — " + e.where)).join("<br>") : "brak"}</td></tr></table>

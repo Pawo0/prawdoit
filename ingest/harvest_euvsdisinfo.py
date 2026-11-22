@@ -29,8 +29,8 @@ LIST = f"{BASE}/disinformation-cases/"
 LICENSE = ("EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is "
            "acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded.")
 LICENSE_PL = LICENSE + " PL text = EUvsDisinfo's own AI translation of the English case."
-LICENSE_HF = LICENSE + (" Case text taken from HF mirror NLP-UniBW/eu_vs_disinfo (scrape of euvsdisinfo.eu, "
-                        "no licence of its own) because the site served a Cloudflare challenge.")
+LICENSE_HF = LICENSE + (" Case texts taken from the Hugging Face copy NLP-UniBW/eu_vs_disinfo of the euvsdisinfo.eu "
+                        "case database, because the site serves a Cloudflare challenge, which we do not circumvent.")
 
 TOPIC_QUERIES = [
     "Polish", "Warsaw", "Tusk", "Duda", "Nawrocki", "Poles", "Polish army", "Belarus border",

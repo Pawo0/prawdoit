@@ -10,8 +10,8 @@ reviewDate, textualRating, languageCode}. It checks that
     and disabled sources are merely counted);
   * `textualRating` is mapped with exactly the rules used for the harvested corpus (ingest/common.py), including the
     Demagog labels that differ from plain true/false;
-  * an outage is reported as a technical notice ("Nie mogę teraz sprawdzić indeksu Google…"), never as "no such
-    article", and a missing key leaves the provider inactive without any request;
+  * an outage is reported as a technical notice ("Indeks Google Fact Check jest teraz niedostępny…"), never as "no such
+    article", and a missing key leaves the provider inactive without any request — reported as `nieaktywne`;
   * the key never appears in an error message.
 
 Run:  backend/.venv/bin/python backend/tests/test_google_factcheck.py      (or pytest backend/tests)
@@ -143,7 +143,7 @@ class GoogleFactCheckTest(unittest.TestCase):
         for label, expected in DEMAGOG_LABELS.items():
             self.assertEqual(W.map_rating(label), expected, label)
         for label, expected in (("W większości fałsz", "mixed"), ("W większości prawda", "mixed"),
-                                ("Brak dowodów", "unverifiable"), ("Mostly false", "false"), ("", None), (None, None)):
+                                ("Brak dowodów", "unverifiable"), ("Mostly false", "mixed"), ("", None), (None, None)):
             self.assertEqual(W.map_rating(label), expected, label)
 
     def test_every_label_the_api_returned_maps_to_its_class(self):
@@ -241,7 +241,7 @@ class GoogleFactCheckTest(unittest.TestCase):
         self.assertEqual(stage._join_google(), [])
         self.assertEqual(stage.google["status"], "blad")
         self.assertEqual(stage.warnings, [W.NOTICE_GOOGLE_FAIL])
-        self.assertIn("Nie mogę teraz sprawdzić indeksu Google", W.NOTICE_GOOGLE_FAIL)
+        self.assertIn("niedostępny (błąd techniczny)", W.NOTICE_GOOGLE_FAIL)
         with self.assertRaises(W.LiveError) as ctx:
             W.google_factcheck("inne pytanie")
         self.assertNotIn(KEY, str(ctx.exception))
@@ -258,7 +258,13 @@ class GoogleFactCheckTest(unittest.TestCase):
             stage = self._stage()
             self.assertEqual(stage._join_google(), [])
         self.assertEqual(self.calls, [])
-        self.assertIsNone(stage.google)  # provider inactive: no result and no notice (see research/10_organiser_sources.md)
+        # provider inactive: no request and no "no reviews" result, but the result says why (rules §5: a missing key
+        # must not look like a result) — a `nieaktywne` step and a line for engine.unavailable, not a user warning
+        self.assertEqual(stage.google["status"], "nieaktywne")
+        self.assertEqual(stage.google["notice"], W.NOTICE_GOOGLE_OFF)
+        self.assertEqual(stage.inactive(), [W.NOTICE_GOOGLE_OFF])
+        self.assertEqual(stage.warnings, [])
+        self.assertEqual(stage.info().status, "nieaktywne")
 
 
 class GoogleFactCheckFeedTest(unittest.TestCase):
@@ -367,6 +373,18 @@ class GoogleFactCheckFeedTest(unittest.TestCase):
             self.G.fetch(self.source, get=lambda url, **kw: _Resp(403, {"error": {"message": KEY}}))
         self.assertNotIn(KEY, str(ctx.exception))
         self.assertIn(self.G.ApiError, self.G.EXPECTED_ERRORS)
+
+    def test_a_scheduled_run_stores_nothing_but_the_dry_run_still_previews(self):
+        from prawdowid.sources import fetchers
+
+        src = {**self.source, "category": "factcheck", "publisher": "Demagog", "license": "l", "language": "pl",
+               "method": "custom", "params": {**self.source["params"], "handler": "google_factcheck_feed"}}
+        with mock.patch.object(self.G, "call", lambda *a, **kw: self.page1):
+            with self.assertRaises(fetchers.FetchError) as ctx:
+                fetchers.fetch_custom(src, fetchers.Ctx())
+            self.assertIn("nie są zapisywane", str(ctx.exception))
+            self.assertIs(self.G.PERSIST, False)
+            self.assertTrue(fetchers.fetch_custom(src, fetchers.Ctx(limit=2)))  # preview only, nothing written
 
     def test_lower_case_label_is_stored_capitalised_with_the_same_class(self):
         for label in ("fałsz", "manipulacja", "brakujący kontekst", "przerobione zdjęcie lub film"):

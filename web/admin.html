@@ -39,7 +39,7 @@ td.msg{max-width:340px;word-break:break-word}
   </div></div>
 
   <form class="card row" id="lf">
-    <label for="tok">Token administratora</label><input id="tok" type="password" style="max-width:220px" placeholder="demo-admin">
+    <label for="tok">Token administratora</label><input id="tok" type="password" style="max-width:220px" placeholder="token z PRAWDOWID_ADMIN_TOKEN">
     <label for="who">Twoje imię (do dziennika zmian)</label><input id="who" type="text" style="max-width:220px" placeholder="np. Anna K.">
     <button>Wejdź</button>
   </form>
@@ -75,7 +75,7 @@ td.msg{max-width:340px;word-break:break-word}
       <div class="f-full"><label for="f-params">Parametry metody (JSON)</label><div class="small muted" id="phint"></div>
         <textarea id="f-params" class="code" spellcheck="false">{}</textarea></div>
       <div class="f-full"><label>Tematy</label><div class="topics" id="f-topics"></div></div>
-      <div class="f-full"><label for="f-license">Licencja / warunki korzystania</label><textarea id="f-license" placeholder="np. CC BY-SA 4.0 — treści gov.pl; podać źródło"></textarea></div>
+      <div class="f-full"><label for="f-license">Licencja / warunki korzystania</label><textarea id="f-license" placeholder="np. cytat warunków korzystania z serwisu źródła i adres strony z warunkami; podać źródło"></textarea></div>
       <div class="f-full"><label for="f-qual">Uzasadnienie kwalifikacji (dlaczego to źródło jest wiarygodne)</label><textarea id="f-qual" placeholder="np. organ właściwy dla … — komunikaty urzędowe"></textarea></div>
       <div class="row" style="margin-top:14px">
         <button type="button" class="secondary" id="test">Testuj</button>
@@ -244,7 +244,7 @@ $("del").onclick = async () => {
 };
 $("clear").onclick = clearForm;
 $("new").onclick = () => { clearForm(); $("formcard").scrollIntoView({behavior: "smooth"}); $("f-url").focus(); };
-$("lf").onsubmit = e => { e.preventDefault(); sessionStorage.setItem("admtok", $("tok").value || "demo-admin"); sessionStorage.setItem("admuser", $("who").value.trim()); load(); };
+$("lf").onsubmit = e => { e.preventDefault(); sessionStorage.setItem("admtok", $("tok").value.trim()); sessionStorage.setItem("admuser", $("who").value.trim()); load(); };
 $("who").value = sessionStorage.getItem("admuser") || "";
 load(); setInterval(() => { if (tok() && !document.hidden) load(); }, 15000);
 </script></body></html>

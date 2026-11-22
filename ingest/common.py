@@ -209,7 +209,8 @@ _VERDICT_RULES: list[tuple[str, str | None]] = [
     # order matters: more specific first
     ("czesciowa prawda", "mixed"), ("czesciowo prawda", "mixed"), ("czesciowy falsz", "mixed"),
     ("czesciowo falsz", "mixed"), ("polprawda", "mixed"), ("mostly true", "mixed"),
-    ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"), ("mixed", "mixed"),
+    ("mostly false", "mixed"), ("partly false", "mixed"), ("partially false", "mixed"), ("half true", "mixed"),
+    ("mixed", "mixed"),
     ("nieweryfikowal", "unverifiable"), ("unverifiable", "unverifiable"), ("niesprawdzal", "unverifiable"),
     ("brak dowodow", "unverifiable"), ("sie zweryfikowac", "unverifiable"), ("insufficient evidence", "unverifiable"),
     ("w wiekszosci", "mixed"),
@@ -239,11 +240,19 @@ def clean_label(raw: str | None) -> str | None:
     return (s[0].upper() + s[1:]) if s else None
 
 
+# Labels that are not a rating of a claim: satire, explainers, analyses and reports, a promise-tracker status, a bare
+# "checked" mark. They map to no class, so the record is context only (research/04 §5.3: satire is not verifiable as
+# such; when re-shared as real news, the re-shared claim needs its own check). Substrings for the first group, whole
+# labels for the second (a sentence put into the rating field may contain "raport" and still rate the claim).
+_NO_VERDICT = ("satyr", "satire", "wyjasniamy", "explain")
+_NOT_A_RATING = {"analiza", "raport", "fact-checked", "fact checked", "zrealizowane"}
+
+
 def map_verdict(raw: str | None) -> str | None:
     if not raw:
         return None
     n = _norm(raw)
-    if any(x in n for x in ("satyr", "satire", "wyjasniamy", "explain")):
+    if n in _NOT_A_RATING or any(x in n for x in _NO_VERDICT):
         return None
     for key, val in _VERDICT_RULES:
         if key in n:
@@ -273,6 +282,21 @@ def clip(s: str | None, n: int = MAX_TEXT) -> str:
     if sp > n * 0.6:
         cut = cut[: sp + 1]
     return cut.rstrip() + " […]"
+
+
+EXCERPT_CHARS = 300
+
+
+def excerpt(body: str | None, title: str = "", claim: str | None = "", n: int = EXCERPT_CHARS) -> str:
+    """For articles without an open licence (FakeNews.pl, Pravda, CERT Polska): ONE verbatim passage of at most n
+    characters, the finding rather than the restated claim (backend/prawdowid/textutil.finding_excerpt). The record
+    keeps the facts (claim, rating, title, dates, link) and this quote; the article itself stays at its link."""
+    backend = str(ROOT / "backend")
+    if backend not in sys.path:
+        sys.path.insert(0, backend)
+    from prawdowid.textutil import finding_excerpt  # stdlib-only module
+
+    return finding_excerpt(clean_text(body), title or "", claim or "", n)
 
 
 def iso_date(s: str | None) -> str | None:
@@ -396,9 +420,11 @@ class IncrementalCorpus:
     def has_url(self, url: str) -> bool:
         return canonical_url(url) in self.urls
 
-    def add(self, rec: dict) -> bool:
+    def add(self, rec: dict, same_page: bool = False) -> bool:
+        """Add a new record. A URL already stored is skipped, except for `same_page` records: further records
+        of the page just added (e.g. a fact-check rating several claims, one record per ClaimReview)."""
         rec = normalize_record(rec)
-        if rec["id"] in self.ids or canonical_url(rec["url"]) in self.urls:
+        if rec["id"] in self.ids or (canonical_url(rec["url"]) in self.urls and not same_page):
             return False
         self.records.append(rec)
         self.ids.add(rec["id"])

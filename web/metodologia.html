@@ -34,7 +34,7 @@
 <p>Kategorię nadajemy według <b>rodzaju źródła i sposobu jego powstawania</b> — nigdy według poglądów politycznych ani „reputacji” domeny. Pełna lista z licencjami: <a href="/zrodla">Katalog źródeł</a>.</p></section>
 
 <section class="card" id="reguly"><h2 style="margin-top:0">Jak oceniamy siłę dowodów</h2>
-<p><b>Dowód się liczy</b>, gdy: pochodzi z katalogu i ma datę publikacji oraz pobrania; cytowany fragment występuje w źródle dosłownie; model porównujący zdania (NLI) ocenia zgodność lub sprzeczność z pewnością co najmniej 0,70; a dopasowanie do twierdzenia sprawdzonego przez fact-checkerów ma podobieństwo co najmniej 0,82 (albo 0,74 z potwierdzeniem NLI).</p>
+<p><b>Dowód się liczy</b>, gdy: pochodzi z katalogu i ma datę publikacji oraz pobrania; cytowany fragment występuje w źródle dosłownie; model porównujący zdania (NLI) ocenia zgodność lub sprzeczność z pewnością co najmniej 0,70; a dopasowanie do twierdzenia sprawdzonego przez fact-checkerów uznajemy za „to samo twierdzenie” przy podobieństwie co najmniej 0,86 i potwierdzeniu NLI (albo 0,80 z silnym potwierdzeniem NLI i wspólnymi słowami; samo podobieństwo od 0,88 tylko przy zgodnych nazwach i liczbach).</p>
 <ul>
 <li><b>Mocna podstawa</b> — źródło urzędowe i co najmniej 2 niezależnych wydawców (albo 2 niezależnych wydawców z bardzo wysoką zgodnością), bez sprzecznych źródeł.</li>
 <li><b>Umiarkowana</b> — progi werdyktu spełnione, ale bez powyższych warunków (np. jedno źródło).</li>
@@ -46,7 +46,8 @@
 <li><b>R3 Fałszywe</b> — ważny dowód przeczący z kat. A lub B i brak potwierdzeń z kat. A/B.</li>
 <li><b>R4 Wprowadzające w błąd</b> — fact-checker ocenił twierdzenie jako manipulację / brak kontekstu / częściową prawdę albo prawdziwy materiał sprzed ponad roku jest przedstawiany jako bieżący.</li>
 <li><b>R5 Potwierdzone</b> — ważny dowód potwierdzający z kat. A lub B i brak dowodów przeczących z kat. A/B.</li>
-<li><b>R6 Domyślnie</b> — „Brak wystarczających dowodów” z kodem przyczyny, opisem, czego nie ustalono, i wskazaniem, co mogłoby to rozstrzygnąć.</li></ol></details></section>
+<li><b>R6 Domyślnie</b> — „Brak wystarczających dowodów” z kodem przyczyny, opisem, czego nie ustalono, i wskazaniem, co mogłoby to rozstrzygnąć.</li></ol>
+<p>Reguły uzupełniające (widoczne w przebiegu sprawdzenia): <b>R3a</b> — fałsz, bo materiał jest starszy, niż twierdzi tekst; <b>M1</b> — zdanie odpowiada jednemu zdaniu sprawdzonej wypowiedzi; <b>M2</b> — czy link to ten sam materiał, który sprawdzali fact-checkerzy (nagłówek i data); <b>G1</b> — bardzo podobnego twierdzenia nie uznajemy za to samo, gdy różni się nazwą lub liczbą; <b>HR</b> — temat wysokiego ryzyka oparty na jednym źródle kat. B trafia do analityka.</p></details></section>
 
 <section class="card"><h2 style="margin-top:0">Czego system nie robi</h2><ul>
 <li>Nie ocenia prawdziwości po samej domenie, autorze, kanale, popularności ani liczbie udostępnień. Nie oznacza żadnego medium jako „fałszywego” w całości — także wtyczka oznacza tylko konkretne treści zbieżne z już zweryfikowanymi twierdzeniami.</li>
@@ -56,7 +57,7 @@
 <li>Nie traktuje braku wyniku jako dowodu: brak materiału w katalogu nie oznacza, że informacja jest fałszywa.</li></ul></section>
 
 <section class="card"><h2 style="margin-top:0">Dane i prywatność</h2><ul>
-<li>Maskujemy dane osobowe (PESEL, telefon, e-mail, numer konta). Przebieg sprawdzenia przechowujemy 30 dni; historię sprawdzeń z danej przeglądarki możesz usunąć.</li>
+<li>Maskujemy bezpośrednie identyfikatory osób (PESEL, numer dowodu i paszportu, telefon, prywatny e-mail, numer konta) zaraz po otrzymaniu tekstu — zanim cokolwiek trafi do wyszukiwarek, modelu językowego czy dziennika. Nie maskujemy nazwisk osób publicznych, nazw, miejsc, dat, kwot ani statystyk, bo bez nich nie da się znaleźć dowodu. Przebieg sprawdzenia przechowujemy 30 dni; historię sprawdzeń z danej przeglądarki możesz usunąć.</li>
 <li>Modele (wyszukiwanie semantyczne <span class="kbd">mmlw-retrieval-e5-small</span>, NLI <span class="kbd">mDeBERTa-v3 XNLI</span>) działają na naszym serwerze. Nie trenujemy modeli na danych użytkowników.</li>
 <li>Gdy katalog nic nie znajdzie, samo sprawdzane zdanie może trafić do wyszukiwarek zaufanych serwisów z rejestru (np. gov.pl, Demagog) lub do Google Fact Check Tools — dlatego nie wpisuj danych osobowych.</li></ul></section>
 
