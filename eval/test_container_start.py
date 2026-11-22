@@ -57,6 +57,37 @@ class StartupTests(unittest.TestCase):
                 self.assertEqual(history.read_bytes(), b"existing-history")
                 self.assertEqual(list((root / "state/index").glob("*.tmp")), [])
 
+    def test_private_admin_token_required(self):
+        for value in ("", "demo-admin"):
+            env = {"PRAWDOWID_MODERATOR_TOKEN": "private-test-token", "PRAWDOWID_ADMIN_TOKEN": value}
+            with self.subTest(token=value), patch.dict(os.environ, env, clear=True):
+                with self.assertRaisesRegex(SystemExit, "PRAWDOWID_ADMIN_TOKEN"):
+                    startup.prepare()
+
+    def test_source_seed_and_corpus_persist_without_resurrecting_deleted_sources(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for name, filename in (("sources", "test.json"), ("corpus", "test.jsonl")):
+                folder = root / "seed" / name
+                folder.mkdir(parents=True)
+                (folder / filename).write_text("seed")
+            env = {
+                "PRAWDOWID_MODERATOR_TOKEN": "private-test-token",
+                "PRAWDOWID_ADMIN_TOKEN": "private-admin-token",
+                "PRAWDOWID_RUNTIME_DIR": str(root / "state/runtime"),
+                "PRAWDOWID_INDEX_DIR": str(root / "state/index"),
+                "HF_HOME": str(root / "models"),
+            }
+            with patch.dict(os.environ, env, clear=True):
+                startup.prepare(root / "index-seed", root / "seed")
+                self.assertEqual((root / "state/sources/test.json").read_text(), "seed")
+                corpus = root / "state/corpus/test.jsonl"
+                corpus.write_text("harvested")
+                (root / "state/sources/test.json").unlink()
+                startup.prepare(root / "index-seed", root / "seed")
+                self.assertEqual(corpus.read_text(), "harvested")
+                self.assertFalse((root / "state/sources/test.json").exists())
+
     def test_without_discord_executes_api_directly(self):
         with patch.object(startup, "prepare"), patch.dict(os.environ, {"PRAWDOWID_DISCORD_TOKEN": ""}), \
              patch.object(startup.sys, "argv", ["start.py", "python", "-m", "uvicorn"]), \

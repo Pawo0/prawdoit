@@ -12,7 +12,21 @@ from urllib.error import URLError
 from urllib.request import urlopen
 
 
-def prepare(seed: Path = Path("/app/data/index")) -> None:
+def copy_seed(source: Path, destination: Path) -> None:
+    """Copy curated data without source security xattrs (e.g. a container's SELinux label)."""
+    destination.mkdir()
+    for entry in source.rglob("*"):
+        target = destination / entry.relative_to(source)
+        if entry.is_dir():
+            target.mkdir(exist_ok=True)
+        else:
+            shutil.copyfile(entry, target)
+            # Scheduler uses corpus mtime to avoid refetching every source at first startup.
+            stat = entry.stat()
+            os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+
+
+def prepare(seed: Path = Path("/app/data/index"), data_seed: Path = Path("/app/seed")) -> None:
     # Both panel tokens are required; the public demo values are refused (they work only with PRAWDOWID_DEV_MODE=1
     # outside the container, see backend/prawdowid/config.py).
     for name, demo in (("PRAWDOWID_MODERATOR_TOKEN", "demo-moderator"), ("PRAWDOWID_ADMIN_TOKEN", "demo-admin")):
@@ -26,6 +40,16 @@ def prepare(seed: Path = Path("/app/data/index")) -> None:
     cache = Path(os.environ["HF_HOME"])
     for folder in (runtime, index, cache):
         folder.mkdir(parents=True, exist_ok=True)
+    # /app/data links point here, also for legacy scripts which use fixed paths.
+    # Initialize once; preserve admin edits, source deletions and harvested documents on restarts.
+    for name in ("corpus", "sources"):
+        source, destination = data_seed / name, runtime.parent / name
+        if source.is_dir() and not destination.exists():
+            temporary = destination.with_name(name + ".bootstrap")
+            if temporary.exists():
+                shutil.rmtree(temporary)
+            copy_seed(source, temporary)
+            temporary.replace(destination)
     # Seed an empty volume with the shipped embeddings. Preserve caches from later corpus updates.
     for pattern in ("*.npy", "*.keys.json"):
         for source in seed.glob(pattern):

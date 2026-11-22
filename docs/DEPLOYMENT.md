@@ -123,7 +123,7 @@ wybierz pojedynczą instancję z trwałym dyskiem, zamiast wielu replik lub funk
 
 Compose tworzy wolumeny:
 
-- `state`: SQLite z historią i sprawami moderatora oraz aktualizowany cache indeksu;
+- `state`: SQLite z historią i sprawami moderatora, cache indeksu, edytowalny rejestr źródeł i aktualizowany korpus;
 - `models`: pobrane modele Hugging Face;
 - `caddy_data` / `caddy_config`: certyfikaty i konfiguracja Caddy, jeżeli używasz TLS.
 
@@ -136,7 +136,14 @@ Po zmianie kodu lub korpusu:
 docker compose up -d --build
 ```
 
-Dla TLS dodaj `--profile tls`. Korpus jest częścią obrazu. Kontener kopiuje gotowe embeddingi tylko do pustego cache,
+Dla TLS dodaj `--profile tls`. Obraz zawiera początkowy korpus i rejestr źródeł. Przy pierwszym starcie są kopiowane do wolumenu `state`
+(`/var/lib/prawdowid/corpus` i `/var/lib/prawdowid/sources`), a `/app/data/corpus` i `/app/data/sources`
+wskazują na nie przez dowiązania. Dzięki temu harmonogram, wyszukiwanie na żywo, panel i stare skrypty
+korzystają z tych samych trwałych danych. Restart lub nowy obraz nie nadpisują istniejącego rejestru ani korpusu,
+nie przywracają też źródeł usuniętych w panelu. Aktualizacje tych danych wykonuj przez panel/harmonogram;
+sama przebudowa obrazu po zmianie plików w repo nie zastępuje już zainicjalizowanych danych w wolumenie.
+Surowy cache pobranych stron (`/app/data/raw`) jest roboczy i nie jest montowany w trwałym wolumenie.
+Kontener kopiuje gotowe embeddingi tylko do pustego cache,
 a aplikacja uzupełnia go dla nowych fragmentów. Nie nadpisuje istniejącej bazy SQLite. Wykonuj kopie wolumenu
 `state` przy zatrzymanym backendzie, aby otrzymać spójną kopię bazy. Przywracaj z zachowaniem właściciela UID 10001.
 
@@ -167,7 +174,7 @@ nie zezwala na żądania do nowego serwera. Następnie przeładuj rozszerzenie i
 Python 3.12. Zależności pośrednie są rozwiązywane podczas budowania — nie jest to pełny lockfile.
 PyTorch jest instalowany z oficjalnego indeksu CPU; Discord jest dołączony do obrazu jako opcjonalny proces; Playwright i MCP nie są instalowane.
 Odczyt zrzutów ekranu (`image_b64` w `/api/check`) używa lokalnego Tesseracta z pakietów Debiana `tesseract-ocr`
-i `tesseract-ocr-pol` (ok. 20 MB). Obraz nie jest zapisywany; bez programu `tesseract` API zwraca komunikat techniczny.
+i `tesseract-ocr-pol` wraz z zależnościami systemowymi. Obraz nie jest zapisywany; bez programu `tesseract` API zwraca komunikat techniczny.
 Przy ustawionym tokenie entrypoint nadzoruje API i bota oraz przekazuje zatrzymanie obu procesom;
 bez tokenu zastępuje się procesem API.
 Fonty i grafiki strony są częścią obrazu, bez zależności od CDN.
@@ -183,3 +190,22 @@ Docker), uruchomienie z cache modeli i `HF_HUB_OFFLINE=1`, rzeczywista inferencj
 healthcheck, odczyt SQLite po zastąpieniu kontenera przez instancję Compose, nieuprzywilejowany użytkownik
 oraz walidacja konfiguracji Caddy. Pobieranie modeli od zera i publiczne wydanie certyfikatu wymagają internetu
 oraz własnej domeny; ten test korzystał z wcześniej pobranego cache i nie wdrażał aplikacji publicznie.
+
+## Azure — pierwsze wdrożenie
+
+Dla hosta `prawdowid-alpha.austriaeast.cloudapp.azure.com` ustaw w `.env`:
+
+```dotenv
+PRAWDOWID_DOMAIN=prawdowid-alpha.austriaeast.cloudapp.azure.com
+PRAWDOWID_PUBLIC_URL=https://prawdowid-alpha.austriaeast.cloudapp.azure.com
+PRAWDOWID_BIND_ADDRESS=127.0.0.1
+PRAWDOWID_TRUSTED_PROXY_IPS=*
+PRAWDOWID_CPU_THREADS=2
+```
+
+Dopuść przychodzący TCP 80 i 443 w regułach sieci maszyny Azure. Zbuduj obraz na maszynie docelowej
+i uruchom `sudo docker compose --profile tls up -d --build`. Caddy startuje po gotowości API.
+Pierwszy start może pobierać modele i rozbudowywać cache; nie włączaj `HF_HUB_OFFLINE=1` przed ich pobraniem.
+Sprawdź `sudo docker compose ps`, `curl --fail http://localhost:8000/api/health`, następnie publiczny HTTPS.
+Test całości: `python3 eval/test_container.py --base https://prawdowid-alpha.austriaeast.cloudapp.azure.com`.
+Przy braku tokenów dostawców Google/Brave/EUvsDisinfo te integracje są nieaktywne; nie są wymagane do startu.
