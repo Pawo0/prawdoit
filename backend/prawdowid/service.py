@@ -19,6 +19,7 @@ from .config import settings
 from .engine import same_claim, verify_claim
 from .fetch import FetchError, fetch_url
 from .index import INDEX
+from .linefilter import drop_metadata_lines
 from .nli import NLI_MODEL
 from .schemas import CheckRequest, CheckResult, QuickConflict, QuickMatch, QuickRequest, QuickResult
 from .security import ResolveError, UnsafeURL, neutralize, scan
@@ -210,11 +211,12 @@ def run_check(req: CheckRequest, progress=None) -> CheckResult:
             res.warnings.append("W treści wykryto fragmenty przypominające polecenia dla systemu (np. „zignoruj "
                                 "instrukcje”). Potraktowaliśmy je jako zwykły tekst — nie wpływają na ocenę. "
                                 "Zdarzenie zostało zapisane.")
-        clean = neutralize(re.sub(r"https?://\S+", " ", text) if page_text else text)
+        # metadata lines (author + date, handles, share counters, OCR debris) go before neutralize(), which joins lines
+        clean = neutralize(drop_metadata_lines(re.sub(r"https?://\S+", " ", text) if page_text else text))
         task = is_task_request(clean)  # "napisz wiersz…", "przetłumacz…": a task, not information to check
         claims = [] if task else extract_claims(clean, max_claims=3)
         if page_text and not task and not any(len(c.query.split()) >= 3 for c in claims):
-            clean = neutralize(page_text)  # "Co z tym artykułem? <link>": the claims are on the linked page
+            clean = neutralize(drop_metadata_lines(page_text))  # "Co z tym artykułem? <link>": claims on the page
             claims = extract_claims(clean, max_claims=3)
         vocab = INDEX.bm25.postings if INDEX.bm25 else {}
         known = [t for t in tokens(clean) if t in vocab and not t[0].isdigit()]

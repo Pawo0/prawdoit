@@ -22,7 +22,7 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens
+from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens, years_in
 
 log = logging.getLogger("prawdowid.engine")
 
@@ -58,6 +58,7 @@ class _Cand:
     nli_head_unit: object | None = None  # NLI(fact-checker's headline -> unit): does the headline deny / affirm it?
     explains: bool = False  # fragment = the passage giving the number the user asks about (asked_number_fragment)
     archival: tuple[int, int] | None = None  # (year of the material per the analysis, year it is presented as)
+    alternatives: tuple[tuple[str, float], ...] = ()  # fact-checks: the best-scoring quotable windows, best first
 
 
 def _fmt_date(s: str | None) -> str:
@@ -67,14 +68,53 @@ def _fmt_date(s: str | None) -> str:
     return f"{d}.{m}.{y}" if d else s
 
 
-def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple[str, float]:
+# How a fact-check states its finding, as opposed to the sentences that retell the viral claim (genre cues, not topics)
+_FINDING = re.compile(
+    r"\b(?:w rzeczywistości|w istocie|tak naprawdę|faktycznie|w praktyce|nieprawd\w*|fałsz\w*|manipulac\w*|"
+    r"zmanipulowan\w*|wprowadza\w* w błąd|wyrwan\w* z kontekstu|nie (?:jest|są|był\w*|został\w*|ma|mają|dotycz\w*|"
+    r"pokazuj\w*|przedstawia\w*|oznacza|wynika|potwierdza\w*)|nigdy nie|nie ma (?:żadnych )?(?:dowod\w*|danych|"
+    r"informacji|podstaw)|brak (?:jest )?(?:dowod\w*|potwierdzeni\w*)|pochodz\w* z|sprzed|archiwaln\w*|"
+    r"(?:nagrani\w*|film\w*|wideo|zdjęci\w*|materiał\w*) (?:z|sprzed) |"
+    r"(?:dane|statystyk\w*|badani\w*|raport\w*|analiz\w*)\b[^.]{0,80}\b(?:pokazuj\w*|wskazuj\w*|wynika|potwierdzaj\w*)|"
+    r"wynika z|według (?:danych|ekspert\w*|naukowc\w*)|wbrew|nie potwierdz\w*|zaprzecz\w*|zdementowa\w*|dementuj\w*|"
+    r"(?:poprawn|prawidłow|błędn|nieprawdziw|nieścisł|zawyżon|zaniżon)\w*|zgodn\w* z prawdą)", re.I)
+_RETELLS = re.compile(
+    r"\b(?:rzekom\w*|krąż\w*|pojawi\w* się\s+(?:\w+\s+){0,3}?(?:wpis\w*|post\w*|nagrani\w*|film\w*|informacj\w*|"
+    r"zdjęci\w*|artykuł\w*|grafik\w*|materiał\w*)|internau\w*|autorzy?\s+(?:post\w*|wpis\w*|nagrani\w*|materiał\w*)|"
+    r"twierdz\w*|sugeruj\w*|przekonuj\w*|alarmuj\w*|w mediach społecznościowych|w sieci)\b", re.I)
+
+
+def _finding_score(w: str, q_tokens: set[str], fc_tokens: set[str], claim_text: str) -> float:
+    """Bonus for a fact-check window that carries the finding rather than the claim: a finding cue, a year earlier
+    than the one the claim speaks of, an amount that differs from the claim's; a penalty for retelling the claim
+    ("Na Facebooku pojawiło się nagranie rzekomo…") and for a near-restatement (hardly a word beyond the user's claim
+    and the checked claim)."""
+    wt = set(tokens(w))
+    bonus = 0.3 if _FINDING.search(w) else 0.0
+    if _RETELLS.search(w):
+        bonus -= 0.25
+    if wt and len(wt - q_tokens - fc_tokens) / len(wt) < 0.3:
+        bonus -= 0.4
+    claim_years = years_in(claim_text)
+    if claim_years and any(y < min(claim_years) for y in years_in(w)):
+        bonus += 0.15
+    stated = amounts(claim_text)
+    if stated and any(a[1] == x[1] and not same_amount(a, x) for a in amounts(w) for x in stated):
+        bonus += 0.15
+    return bonus
+
+
+def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str],
+                   claim_text: str = "") -> tuple[str, float, tuple[tuple[str, float], ...]]:
     """Pick the quoted fragment WITHOUT re-encoding: best chunk of the document by (cached) embedding similarity,
     then the 1–2 consecutive sentences with the highest lexical overlap with the claim, cut verbatim out of the
-    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI."""
+    stored source text (see _fragment_windows). This exact span is both quoted to the user and judged by NLI.
+    Returns (fragment, chunk similarity, the best few windows with their scores: fact-checks only, for the NLI
+    re-ranking in verify_claim)."""
     ids = [i for i in INDEX.doc_chunks[doc_idx] if i not in INDEX.synthetic]
     d = INDEX.docs[doc_idx]
     if not ids:
-        return (d.text or d.title)[:400], 0.0
+        return (d.text or d.title)[:400], 0.0, ()
     sims = INDEX.chunk_emb[ids] @ q_emb
     j = int(np.argmax(sims))
     text, cos = INDEX.chunks[ids[j]].text, float(sims[j])
@@ -85,22 +125,53 @@ def _best_fragment(doc_idx: int, q_emb: np.ndarray, q_tokens: set[str]) -> tuple
         # wins the best chunk. Quoting it back proves nothing: the quote must be the analysis' finding. So the whole
         # analysis is searched (the claim's own sentences left out) for the passage that shares most words with the
         # user's claim AND with the fact-checker's headline, which states the finding ("Depesza PAP nie została
-        # usunięta"). The claim itself is quoted only when the record has nothing else.
+        # usunięta"), and that reads as a finding (_finding_score). The claim itself is quoted only when the record
+        # has nothing else.
         own = [w for k in ids for w in _fragment_windows(INDEX.chunks[k].text, d.text or "") if not _restates(w, d.claim)]
         if own:
             windows, head_tokens = list(dict.fromkeys(own)), set(tokens(d.title))
     if not windows:  # nothing of this passage can be found in the stored text (e.g. a title-only document): gate V2 decides
         windows = [([x for x in split_sentences(text) if len(x) > 15] or [text])[0][:520]]
+    fc_tokens = set(tokens(d.claim or ""))
 
     def score(w: str) -> float:
         wt = set(tokens(w))
         head = len(head_tokens & wt) / len(head_tokens) if head_tokens else 0.0
-        return len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
+        base = len(q_tokens & wt) / max(1, len(q_tokens)) + head - len(w) / 5000  # prefer shorter on ties
+        return base + _finding_score(w, q_tokens, fc_tokens, claim_text) if head_tokens else base
 
-    best = max(windows, key=score)
-    if head_tokens:  # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI)
-        best = best.lstrip("-–•* ") or best
-    return best, cos
+    ranked = sorted(((w, score(w)) for w in windows), key=lambda x: -x[1])
+    if not head_tokens:
+        return ranked[0][0], cos, ()
+    # a leading list bullet of the analysis is not part of the quote (fact-checks: never judged by NLI for the verdict)
+    ranked = [((w.lstrip("-–•* ") or w), sc) for w, sc in ranked]
+    return ranked[0][0], cos, tuple(ranked[:3])
+
+
+FINDING_NLI_BUDGET = 12  # windows judged by NLI per claim when choosing the quote of decisive fact-checks
+
+
+def _rerank_findings(claim_query: str, items: list) -> dict[int, str]:
+    """For decisive fact-checks, prefer among the best windows the one whose NLI relation to the user's claim matches
+    the verdict direction (want = 'contra' for a refuting, 'entail' for a supporting item): lexical score + 0.5 x
+    (wanted - opposite probability). One NLI batch of at most FINDING_NLI_BUDGET windows. Returns doc_idx -> quote;
+    every quote is re-checked against the stored text (gate V2). The verdict itself is not touched."""
+    pairs, owners = [], []
+    for c, want in items:
+        for w, base in c.alternatives:
+            if len(pairs) >= FINDING_NLI_BUDGET:
+                break
+            pairs.append((w, claim_query))
+            owners.append((c, want, w, base))
+    if not owners:
+        return {}
+    best: dict[int, tuple[float, str]] = {}
+    for (c, want, w, base), s_ in zip(owners, NLI_MODEL.score(pairs)):
+        direction = (s_.contra - s_.entail) if want == "contra" else (s_.entail - s_.contra)
+        val = base + 0.5 * direction
+        if c.doc_idx not in best or val > best[c.doc_idx][0]:
+            best[c.doc_idx] = (val, w)
+    return {k: w for k, (_, w) in best.items() if _quote_ok(w, INDEX.docs[k].text or "")}
 
 
 def _words(s: str) -> str:
@@ -610,7 +681,7 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     t0 = time.perf_counter()
     q_tokens = set(tokens(claim.query))
     for c in ranked:
-        c.fragment, c.frag_cos = _best_fragment(c.doc_idx, q_emb, q_tokens)
+        c.fragment, c.frag_cos, c.alternatives = _best_fragment(c.doc_idx, q_emb, q_tokens, claim.query)
     # "Czy X kosztuje 40 mln zł? Skąd w analizie 36 mln zł?": an analysis of a statement that gave the user's
     # number quotes the passage with the asked number instead (the answer layer explains the two figures)
     stated = amounts(claim.query)
@@ -718,6 +789,21 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
                 refute.append(c); evidence.append(_evidence(c, "przeczy", s_.contra, None))
             elif c.frag_cos >= 0.72:
                 evidence.append(_evidence(c, "kontekst", c.frag_cos, None))
+    # the quote of a decisive fact-check: the window whose NLI relation matches the verdict direction (a refuting
+    # finding for a refuted claim, a confirming one for a confirmed claim); archival / asked-number quotes stay
+    fc = [(c, "contra" if c in refute else "entail") for c in sorted(refute + support, key=lambda c: -c.claim_cos)
+          if INDEX.docs[c.doc_idx].source_type in ("factcheck", "incident") and not c.archival and not c.explains
+          and len(c.alternatives) > 1]
+    if fc:
+        t0 = time.perf_counter()
+        for doc_idx, quote in _rerank_findings(claim.query, fc).items():
+            for c, _ in fc:
+                if c.doc_idx == doc_idx:
+                    c.fragment = quote
+            for e in evidence:
+                if e.doc_id == INDEX.docs[doc_idx].id:
+                    e.fragment = quote
+        timings["nli_ms"] = timings.get("nli_ms", 0) + (time.perf_counter() - t0) * 1000
     res = _decide(claim, support, refute, misleading, unverif, evidence, high_risk,
                   keep={INDEX.docs[c.doc_idx].id for c in ranked if c.explains})
     res.meta_question = getattr(claim, "meta", "") or None
