@@ -789,7 +789,7 @@ def test_source(source: dict, n: int = 3) -> dict:
 
 
 # ------------------------------------------------------------------ auto-detect for admins
-GOV_LICENSE = "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło"
+GOV_LICENSE = registry.GOV_LICENSE
 EU_LICENSE = "© Unia Europejska, CC BY 4.0 (informacja prawna Komisji Europejskiej); podać źródło"
 _SKIP_EXT = re.compile(r"\.(pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp[34]|avi|rss|xml|css|js)$", re.I)
 

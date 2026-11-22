@@ -63,6 +63,7 @@ from .config import settings
 from .fetch import UA, fetch_url
 from .robots import RobotsTxt
 from .schemas import ClaimResult, LiveSearchInfo, SecurityEvent, SourceDoc
+from .sources.registry import GOV_LICENSE
 from .security import check_public_url, neutralize, scan
 from .textutil import STOP, normalize_ws, short, tokens
 
@@ -135,7 +136,7 @@ class TrustedSource:
 
 _FALLBACK = [
     TrustedSource("gov_pl", "Serwis Rzeczypospolitej Polskiej gov.pl", "gov.pl", "https://www.gov.pl", "official", 1,
-                  "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło", True),
+                  GOV_LICENSE, True),
     TrustedSource("demagog", "Demagog", "demagog.org.pl", "https://demagog.org.pl", "factcheck", 2,
                   "© Stowarzyszenie Demagog — krótkie fragmenty z podaniem źródła (prawo cytatu)", True),
     TrustedSource("fakenews_pl", "FakeNews.pl", "fakenews.pl", "https://fakenews.pl", "factcheck", 2,

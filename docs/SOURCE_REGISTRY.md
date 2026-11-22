@@ -22,7 +22,7 @@ roboczymi i trafia do SQLite (`data/runtime/prawdowid.sqlite`, tabela `source_ru
   "web_search": true,
   "topics": ["bezpieczenstwo", "pozary"],
   "language": "pl",
-  "license": "CC BY-SA 4.0 — treści gov.pl (gov.pl/web/gov/warunki-korzystania); podać źródło",
+  "license": "Warunki serwisu Gov.pl (gov.pl/web/gov/prawa-autorskie, odczyt 2026-11-22): „Korzystanie przez użytkowników z materiałów urzędowych …” (cytat warunków portalu)",
   "qualification": "Organ właściwy dla ochrony przeciwpożarowej; komunikaty urzędowe.",
   "scope": "organiser_listed",
   "scope_basis": "rules/resources.txt: gov.pl/web/kgpsp/aktualnosci",
