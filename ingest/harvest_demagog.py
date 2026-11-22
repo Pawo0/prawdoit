@@ -318,7 +318,7 @@ def _parse_page_common(url: str, html: str, wp: dict) -> tuple[dict, list[dict],
     return base, secs, lead
 
 
-def reparse_cache(path=None, raw_dir=None, max_chars: int = 3000) -> int:
+def reparse_cache(path=None, raw_dir=None, max_chars: int = 12000) -> int:
     """Offline rebuild of the corpus file from the raw page cache: every page is parsed again with parse_page, so a
     page rating several claims yields all of them. Makes no network request: only pages found in the cache are
     parsed (PoliteSession.get is never reached for a missing page). Each rebuilt record keeps the retrieved_at of
@@ -367,7 +367,7 @@ def main():
     ap.add_argument("--all", action="store_true", help="whole archive (ignores --since)")
     ap.add_argument("--max-new", type=int, default=0, help="cap on uncached page fetches per run (0 = no cap)")
     ap.add_argument("--checkpoint", type=int, default=100, help="save the corpus file every N new records")
-    ap.add_argument("--max-chars", type=int, default=3000)
+    ap.add_argument("--max-chars", type=int, default=12000)
     ap.add_argument("--delay", type=float, default=1.2)
     ap.add_argument("--out", default=None, help="corpus file (default data/corpus/demagog.jsonl)")
     ap.add_argument("--dry-run", action="store_true", help="only list/estimate, fetch no articles")

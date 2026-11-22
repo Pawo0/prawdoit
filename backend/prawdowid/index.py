@@ -124,6 +124,16 @@ def _index_files(corpus_dir: Path) -> tuple[list[Path], list[str]]:
         return sorted(corpus_dir.glob("*.jsonl")), []
 
 
+# Stored text kept per document. Fact-checks whose articles are stored (nearly) whole keep them, because the finding
+# usually comes at the end (ingest/common.py FULL_TEXT_LIMITS); everything else is cut as before.
+DOC_TEXT_LIMIT = 6000
+FULL_TEXT_LIMITS = {"demagog": 12000}
+
+
+def doc_text_limit(doc_id: str) -> int:
+    return FULL_TEXT_LIMITS.get(doc_id.split(":", 1)[0], DOC_TEXT_LIMIT)
+
+
 class CorpusIndex:
     def __init__(self) -> None:
         self.docs: list[SourceDoc] = []
@@ -168,7 +178,7 @@ class CorpusIndex:
                 if d.id in seen or not (d.text or d.claim):
                     continue
                 seen.add(d.id)
-                d.text = normalize_ws(d.text)[:6000]
+                d.text = normalize_ws(d.text)[: doc_text_limit(d.id)]
                 docs.append(d)
                 n += 1
             per_file[f.name] = n
@@ -397,7 +407,7 @@ class CorpusIndex:
                     continue
                 if d.id in known_ids or d.url.rstrip("/") in known_urls or not (d.text or d.claim):
                     continue
-                d.text = normalize_ws(d.text)[:6000]
+                d.text = normalize_ws(d.text)[: doc_text_limit(d.id)]
                 new.append(d)
                 known_ids.add(d.id)
                 known_urls.add(d.url.rstrip("/"))
@@ -509,7 +519,7 @@ def prune_cache(corpus_dir: Path | None = None) -> dict:
             except Exception:  # noqa: BLE001 — as load(): malformed lines are skipped
                 d = None
             if d is not None and (d.text or d.claim):
-                d.text = normalize_ws(d.text)[:6000]
+                d.text = normalize_ws(d.text)[: doc_text_limit(d.id)]
                 docs.append(d)
     wanted: dict[str, set[str]] = defaultdict(set)
 

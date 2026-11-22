@@ -15,7 +15,7 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-from common import CORPUS_DIR, MAX_TEXT, SCHEMA_KEYS, SOURCE_TYPES, VERDICTS
+from common import CORPUS_DIR, SCHEMA_KEYS, SOURCE_TYPES, VERDICTS, max_text_for
 
 ACCESS = {
     "demagog": "Yoast sitemaps + article HTML (schema.org ClaimReview JSON-LD); WP REST API closed (401)",
@@ -70,7 +70,7 @@ def main() -> int:
                 errs.append(f"retrieved_at {r.get('retrieved_at')}")
             if not r.get("title") or not r.get("url") or not r.get("text"):
                 errs.append("empty title/url/text")
-            if len(r.get("text") or "") > MAX_TEXT:
+            if len(r.get("text") or "") > max_text_for(r.get("id")):
                 errs.append(f"text too long {len(r['text'])}")
             if not isinstance(r.get("tags"), list):
                 errs.append("tags not list")

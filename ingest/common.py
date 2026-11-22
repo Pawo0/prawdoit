@@ -35,6 +35,16 @@ SCHEMA_KEYS = [
 SOURCE_TYPES = {"factcheck", "incident", "official", "media"}
 VERDICTS = {"true", "false", "misleading", "mixed", "unverifiable", None}
 MAX_TEXT = 4000
+# Sources whose articles are kept (nearly) whole: a fact-check states its finding at the end, and 92.8% of Demagog
+# articles are longer than the old 3,000-character clip (median ~5,000, p90 ~8,400, p97.7 12,000). Licence: Demagog
+# "Ogólne Warunki Licencji" allows non-commercial reuse with attribution and non-distorting shortening (see
+# data/sources/demagog.json); basis, retention and removal: docs/COMPLIANCE.md.
+FULL_TEXT_LIMITS = {"demagog": 12000}
+
+
+def max_text_for(record_id: str | None) -> int:
+    """Text limit of a corpus record, by the source prefix of its id (`demagog:wypowiedzi/...` -> demagog)."""
+    return FULL_TEXT_LIMITS.get((record_id or "").split(":", 1)[0], MAX_TEXT)
 
 
 def log(*a):
@@ -340,7 +350,7 @@ def normalize_record(rec: dict) -> dict:
     assert rec["id"] and rec["url"] and rec["title"], rec
     rec["tags"] = [t for t in dict.fromkeys(rec.get("tags") or []) if t]
     if rec["text"]:
-        rec["text"] = clip(rec["text"], MAX_TEXT)
+        rec["text"] = clip(rec["text"], max_text_for(rec["id"]))
     if rec["verdict_raw"] and not rec["verdict_raw"].startswith("Disinformation"):
         full = rec["verdict_raw"]
         rec["verdict_raw"] = clean_label(full)
