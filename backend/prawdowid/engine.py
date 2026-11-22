@@ -17,7 +17,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from . import measures
-from .agreement import disagreement, fold, same_word, specificity
+from .agreement import disagreement, fold, same_word
 from .claims import Claim
 from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
@@ -979,13 +979,6 @@ def verify_claim(claim: Claim, timings: dict[str, float]) -> ClaimResult:
     return res
 
 
-def _specificity(query: str, c: _Cand) -> int:
-    """agreement.specificity against what the source states about the claim: its title, the checked claim and who
-    made it, and the quoted fragment (not the whole body, so a long article does not win by length)."""
-    d = INDEX.docs[c.doc_idx]
-    return specificity(query, ". ".join(x for x in (d.title, d.claim, d.claim_author, c.fragment) if x))
-
-
 def _groups(cands: list[_Cand]) -> set[str]:
     """Independence groups: one per publisher (several articles of one publisher count once)."""
     return {INDEX.docs[c.doc_idx].publisher for c in cands}
@@ -1038,10 +1031,7 @@ def _decide(claim: Claim, support, refute, misleading, unverif, evidence: list[E
         reasons.append("FACTCHECK_NIEWERYFIKOWALNE")
 
     if decisive:
-        # the source about THIS claim, not only a similar one: primary/official first, then the most concrete
-        # details of the claim it shares (who, where, kind of event and of material, year), then the strongest match
-        main = max(decisive, key=lambda c: (TIER[INDEX.docs[c.doc_idx].source_type] == 1,
-                                            _specificity(claim.query, c), _score(c)))
+        main = max(decisive, key=lambda c: (TIER[INDEX.docs[c.doc_idx].source_type] == 1, _score(c)))
         d = INDEX.docs[main.doc_idx]
         age = INDEX.doc_age(d)
         if main.archival and verdict == "falszywe":  # R3a
