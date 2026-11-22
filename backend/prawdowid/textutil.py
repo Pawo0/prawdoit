@@ -437,3 +437,77 @@ def drop_pii_tags(s: str) -> str:
 def short(s: str, n: int = 280) -> str:
     s = normalize_ws(s)
     return s if len(s) <= n else s[: n - 1].rsplit(" ", 1)[0] + "…"
+
+
+# ------------------------------------------------------------------ stored excerpts of third-party articles
+# Sources whose terms give no licence (FakeNews.pl, Pravda, NASK/CERT) are stored as facts (claim, rating, title, date,
+# link) plus ONE verbatim excerpt of at most 300 characters: the passage a verdict card would quote. Measured on the
+# eval sets (research notes, sources_alignment.md, "finding" trim): no case and no organiser scenario changed.
+def _excerpt_words(s: str) -> str:
+    return " ".join(re.findall(r"[^\W_]+", (s or "").lower()))
+
+
+def _excerpt_restates(window: str, claim: str) -> bool:
+    w, c = _excerpt_words(window), _excerpt_words(claim)
+    if not claim:
+        return False
+    if not w or w in c:
+        return True
+    return any(len(x) >= 20 and x in w for x in (_excerpt_words(y) for y in split_sentences(claim)))
+
+
+def _excerpt_cut(s: str, n: int) -> str:
+    if len(s) <= n:
+        return s
+    i = s.rfind(" ", 0, n)
+    return s[: i if i > n // 2 else n].rstrip(" ,;:–-")
+
+
+def _excerpt_spans(text: str) -> tuple[str, list[tuple[int, int]]]:
+    src = re.sub(r"[ \t]+", " ", text)
+    out, pos = [], 0
+    for s in split_sentences(text):
+        s2 = re.sub(r"\s+", " ", s).strip()
+        i = src.find(s2, pos)
+        if i < 0:
+            continue
+        out.append((i, i + len(s2)))
+        pos = i + len(s2)
+    return src, out
+
+
+def lead_excerpt(text: str, max_len: int = 300) -> str:
+    """The opening sentences of `text`, verbatim, up to max_len characters."""
+    src, sp = _excerpt_spans(text)
+    if not sp:
+        return _excerpt_cut(src, max_len)
+    a, b = sp[0]
+    for _, y in sp[1:]:
+        if y - a > max_len:
+            break
+        b = y
+    return _excerpt_cut(src[a:b], max_len)
+
+
+def finding_excerpt(text: str, title: str = "", claim: str = "", max_len: int = 300) -> str:
+    """One verbatim excerpt of at most max_len characters: the sentence, or two neighbouring sentences, sharing most
+    words with the headline (which states the finding), leaving out sentences that restate the checked claim;
+    shorter windows win ties and windows that fit without cutting are preferred. Falls back to the opening."""
+    text = normalize_ws(text or "")
+    if not text:
+        return ""
+    src, sp = _excerpt_spans(text)
+    wins = list(sp) + [(x[0], y[1]) for x, y in zip(sp, sp[1:]) if y[0] - x[1] <= 6]
+    wins = [(a, b) for a, b in wins if b - a >= 16]
+    head = set(tokens(title or ""))
+    best, best_score = None, -1.0
+    for a, b in wins:
+        w = src[a:b]
+        if _excerpt_restates(w, claim or ""):
+            continue
+        score = (len(head & set(tokens(w))) / len(head) if head else 0) - len(w) / 5000 - a / 1e6
+        if b - a > max_len:
+            score -= 0.25
+        if score > best_score:
+            best, best_score = w, score
+    return _excerpt_cut(best, max_len) if best else lead_excerpt(text, max_len)
