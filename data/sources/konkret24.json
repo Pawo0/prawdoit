@@ -14,7 +14,7 @@
     ],
     "timeout_s": 3600
   },
-  "enabled": true,
+  "enabled": false,
   "schedule_hours": 24,
   "web_search": false,
   "topics": [
@@ -28,5 +28,6 @@
   "scope": "organiser_recommended",
   "scope_basis": "rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): korpusy zweryfikowanych informacji organizacji stosujących standardy IFCN lub EFCSN (Konkret24 — sygnatariusz IFCN)",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
-  "added_at": "2026-11-21"
+  "added_at": "2026-11-21",
+  "notes": "Wyłączone 2026-11-22, rekordy (290) usunięte z korpusu: TVN S.A. zastrzega, że kopiowanie i rozpowszechnianie materiałów „w całości lub we fragmentach” wymaga pisemnej zgody (regulamin TVN §13 ust. 4; zastrzeżenie z art. 25 ust. 1 pkt 1 lit. b w stopce serwisu). Rekordy nie miały oceny, więc służyły tylko jako kontekst. Ponowne włączenie dopiero po uzyskaniu pisemnej zgody TVN."
 }
