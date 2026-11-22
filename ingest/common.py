@@ -405,9 +405,11 @@ class IncrementalCorpus:
     def has_url(self, url: str) -> bool:
         return canonical_url(url) in self.urls
 
-    def add(self, rec: dict) -> bool:
+    def add(self, rec: dict, same_page: bool = False) -> bool:
+        """Add a new record. A URL already stored is skipped, except for `same_page` records: further records
+        of the page just added (e.g. a fact-check rating several claims, one record per ClaimReview)."""
         rec = normalize_record(rec)
-        if rec["id"] in self.ids or canonical_url(rec["url"]) in self.urls:
+        if rec["id"] in self.ids or (canonical_url(rec["url"]) in self.urls and not same_page):
             return False
         self.records.append(rec)
         self.ids.add(rec["id"])
