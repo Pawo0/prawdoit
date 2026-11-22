@@ -121,7 +121,7 @@ def _index_files(corpus_dir: Path) -> tuple[list[Path], list[str]]:
         return corpus_files_for_index(corpus_dir)
     except Exception:  # noqa: BLE001 — a broken registry must never empty the index
         log.exception("source registry unreadable — loading every corpus file")
-        return sorted(corpus_dir.glob("*.jsonl")), []
+        return sorted(f for f in corpus_dir.glob("*.jsonl") if not f.name.startswith("._")), []
 
 
 # Stored text kept per document. Fact-checks whose articles are stored (nearly) whole keep them, because the finding
@@ -513,6 +513,8 @@ def prune_cache(corpus_dir: Path | None = None) -> dict:
     corpus_dir = corpus_dir or settings.corpus_dir
     docs: list[SourceDoc] = []
     for f in sorted(corpus_dir.glob("*.jsonl")):
+        if f.name.startswith("._"):
+            continue
         for line in f.read_text(encoding="utf-8").splitlines():
             try:
                 d = SourceDoc(**json.loads(line)) if line.strip() else None

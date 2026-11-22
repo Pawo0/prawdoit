@@ -353,10 +353,12 @@ def load_all() -> tuple[dict[str, dict], dict[str, list[str]]]:
     if not d.is_dir():
         return out, problems
     for f in sorted(d.glob("*.json")):
+        if f.name.startswith("._"):  # macOS AppleDouble metadata, not a source definition
+            continue
         sid = f.stem
         try:
             raw = _read(f)
-        except (OSError, json.JSONDecodeError) as ex:
+        except (OSError, UnicodeError, json.JSONDecodeError) as ex:
             problems[sid] = [f"Plik nie jest poprawnym JSON: {ex}"]
             continue
         try:
@@ -448,7 +450,8 @@ def scope_report(corpus_dir: Path | None = None, strict: bool = False) -> dict:
         by_scope[scope].append(sid)
         if not in_organiser_scope({"scope": scope}, strict) and s.get("enabled") is True:
             enabled_outside.append(sid)
-    orphans = sorted(f.stem for f in corpus_dir.glob("*.jsonl") if f.stem not in sources)
+    orphans = sorted(f.stem for f in corpus_dir.glob("*.jsonl")
+                     if not f.name.startswith("._") and f.stem not in sources)
     live_on = (sources.get("live_web") or {}).get("enabled") is True
     stale_live = {
         sid: n
@@ -498,12 +501,16 @@ def corpus_files_for_index(corpus_dir: Path | None = None) -> tuple[list[Path], 
     d = sources_dir()
     if d.is_dir():
         for f in d.glob("*.json"):
+            if f.name.startswith("._"):
+                continue
             try:
                 enabled[f.stem] = _read(f).get("enabled") is True
             except Exception:  # noqa: BLE001 — unreadable registry file: keep the corpus visible
                 continue
     keep, skip = [], []
     for f in sorted(corpus_dir.glob("*.jsonl")):
+        if f.name.startswith("._"):  # copied resource forks are binary, even with a .jsonl suffix
+            continue
         if enabled.get(f.stem, True):
             keep.append(f)
         else:

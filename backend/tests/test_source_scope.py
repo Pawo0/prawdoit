@@ -87,6 +87,16 @@ class RestrictionTest(unittest.TestCase):
         p.start()
         self.addCleanup(p.stop)
 
+    def test_binary_macos_sidecars_do_not_change_registry_or_corpus(self):
+        before_sources = registry.load_all()
+        before_files = registry.corpus_files_for_index(self.corpus)
+        before_scope = registry.scope_report(self.corpus)
+        (self.src / "._lista.json").write_bytes(b"\x00\x05\x16\x07\xa3macOS metadata")
+        (self.corpus / "._lista.jsonl").write_bytes(b"\x00\x05\x16\x07\xa3macOS metadata")
+        self.assertEqual(registry.load_all(), before_sources)
+        self.assertEqual(registry.corpus_files_for_index(self.corpus), before_files)
+        self.assertEqual(registry.scope_report(self.corpus), before_scope)
+
     def test_report_names_everything_outside_the_scope(self):
         rep = registry.scope_report(self.corpus)
         self.assertEqual(rep["enabled_outside"], ["wlasne"])

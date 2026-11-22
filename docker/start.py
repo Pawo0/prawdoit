@@ -17,6 +17,8 @@ def copy_seed(source: Path, destination: Path) -> None:
     """Copy curated data without source security xattrs (e.g. a container's SELinux label)."""
     destination.mkdir()
     for entry in source.rglob("*"):
+        if any(part.startswith("._") or part == ".DS_Store" for part in entry.relative_to(source).parts):
+            continue
         target = destination / entry.relative_to(source)
         if entry.is_dir():
             target.mkdir(exist_ok=True)
@@ -32,7 +34,9 @@ def seed_release(*folders: Path) -> str:
     Written to /app/seed/RELEASE at build time; a different value on start means a new release of the data."""
     h = hashlib.sha256()
     for folder in folders:
-        for f in sorted(p for p in folder.rglob("*") if p.is_file() and p.name != "RELEASE"):
+        for f in sorted(p for p in folder.rglob("*") if p.is_file() and p.name != "RELEASE"
+                        and not any(part.startswith("._") or part == ".DS_Store"
+                                    for part in p.relative_to(folder).parts)):
             h.update(f"{folder.name}/{f.relative_to(folder)}\0".encode())
             with f.open("rb") as fh:
                 for block in iter(lambda: fh.read(1 << 20), b""):
@@ -84,6 +88,8 @@ def prepare(seed: Path = Path("/app/data/index"), data_seed: Path = Path("/app/s
     # The shipped embeddings fill an empty cache, and replace the cache on a new data release.
     for pattern in ("*.npy", "*.keys.json"):
         for source in seed.glob(pattern):
+            if source.name.startswith("._"):
+                continue
             destination = index / source.name
             if refresh or not destination.exists():
                 temporary = destination.with_suffix(destination.suffix + ".tmp")

@@ -221,3 +221,23 @@ Pierwszy start może pobierać modele i rozbudowywać cache; nie włączaj `HF_H
 Sprawdź `sudo docker compose ps`, `curl --fail http://localhost:8000/api/health`, następnie publiczny HTTPS.
 Test całości: `python3 eval/test_container.py --base https://prawdowid-alpha.austriaeast.cloudapp.azure.com`.
 Przy braku tokenów dostawców Google/Brave/EUvsDisinfo te integracje są nieaktywne; nie są wymagane do startu.
+
+## Paczka wdrożeniowa z macOS
+
+Przy użyciu systemowego `tar` na Macu wyłącz dołączanie AppleDouble (pliki `._…`). To binarne
+metadane systemu plików, a nie dokumenty JSON/JSONL. Przykład z katalogu repozytorium:
+
+```bash
+COPYFILE_DISABLE=1 tar --exclude='._*' --exclude='.DS_Store' \
+  --exclude='__pycache__' --exclude='*.pyc' \
+  -czf /tmp/prawdowid-update.tar.gz \
+  Dockerfile compose.yaml .dockerignore .env.example \
+  backend/prawdowid backend/requirements-container.txt \
+  bots/discord_bot.py web data/corpus data/sources data/index data/watchlist.json \
+  docker ingest/*.py ingest/requirements-container.txt eval/test_container.py
+```
+
+`.dockerignore` dodatkowo wyklucza metadane z obrazu; rejestr i indeks pomijają pliki `._…`.
+Jeśli wcześniejsza paczka już skopiowała je do wolumenu, można przenieść wyłącznie te pliki
+z `corpus/` i `sources/` do osobnego katalogu w `runtime/`, a następnie uruchomić backend ponownie.
+Nie należy zmieniać kodowania prawidłowych dokumentów ani usuwać wolumenu danych.

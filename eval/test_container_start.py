@@ -36,6 +36,8 @@ class StartupTests(unittest.TestCase):
             seed.mkdir()
             (seed / "emb-test.npy").write_bytes(b"shipped-cache")
             (seed / "emb-test.keys.json").write_text('["test"]')
+            (seed / "._emb-test.npy").write_bytes(b"\xa3macOS metadata")
+            (seed / "._emb-test.keys.json").write_bytes(b"\xa3macOS metadata")
             env = {
                 "PRAWDOWID_MODERATOR_TOKEN": "private-test-token",
                 "PRAWDOWID_ADMIN_TOKEN": "private-admin-token",
@@ -56,6 +58,7 @@ class StartupTests(unittest.TestCase):
                 self.assertEqual(index.read_bytes(), b"updated-cache")
                 self.assertEqual(history.read_bytes(), b"existing-history")
                 self.assertEqual(list((root / "state/index").glob("*.tmp")), [])
+                self.assertEqual(list((root / "state/index").glob("._*")), [])
 
     def test_admin_token_error_names_the_variable(self):
         for value in ("", "demo-admin"):
@@ -135,6 +138,19 @@ class StartupTests(unittest.TestCase):
             self.assertEqual(first, startup.seed_release(folder))
             (folder / "a.jsonl").write_text("y")
             self.assertNotEqual(first, startup.seed_release(folder))
+
+    def test_copy_and_release_ignore_macos_metadata(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            seed = root / "seed"
+            seed.mkdir()
+            (seed / "source.json").write_text("{}")
+            digest = startup.seed_release(seed)
+            (seed / "._source.json").write_bytes(b"\xa3macOS metadata")
+            (seed / ".DS_Store").write_bytes(b"Finder metadata")
+            self.assertEqual(startup.seed_release(seed), digest)
+            startup.copy_seed(seed, root / "copy")
+            self.assertEqual([p.name for p in (root / "copy").iterdir()], ["source.json"])
 
     def test_without_discord_executes_api_directly(self):
         with patch.object(startup, "prepare"), patch.dict(os.environ, {"PRAWDOWID_DISCORD_TOKEN": ""}), \
