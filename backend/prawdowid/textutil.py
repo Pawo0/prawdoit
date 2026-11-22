@@ -434,6 +434,39 @@ def drop_pii_tags(s: str) -> str:
     return normalize_ws(PII_TAG.sub(" ", s))
 
 
+# ------------------------------------------------------------------ rules (bans, obligations, new regulations)
+_RULE = re.compile(
+    r"\bnie\s+będ\w*\s+(?:mogł\w*|można|wolno)\b|\bnie\s+(?:wolno|można)\b"
+    r"|\b(?:zakaz\w*|zakazan\w*|nakaz\w*|obowiąz(?:ek|ku|kiem|ki|kow\w*|uj\w*)|zobowiązan\w*)\b"
+    r"|\b(?:wchodz\w*|wejd\w*|weszł\w*|wejści\w*)\s+w\s+życie\b"
+    r"|\bwprowadz\w*\s+(?:\w+\s+){0,3}?(?:zakaz\w*|nakaz\w*|obowiąz\w*|opłat\w*|stref\w*|limit\w*|ogranicze\w*|"
+    r"przepis\w*|zasad\w*|podat\w*|kar\w*)\b")
+_FROM_DATE = re.compile(r"\bod\s+(?:przyszł\w+|następn\w+|nowego|kolejn\w+|jutra|poniedziałku|wtorku|środy|czwartku|"
+                        r"piątku|soboty|niedzieli|\d{1,2}(?:\.\d{1,2}|\s+\w+)|stycznia|lutego|marca|kwietnia|maja|"
+                        r"czerwca|lipca|sierpnia|września|października|listopada|grudnia|(?:19|20)\d\d)\b")
+_FROM_DATE_BAN = re.compile(r"\bnie\s+(?:będ\w*|wjad\w*|wjedzi\w*|wjech\w*|wejd\w*|kupi\w*|sprzeda\w*|"
+                            r"zapłaci\w*|dostan\w*|zaparkuj\w*)\b")
+_EU_SCOPE = re.compile(r"\b(?:ue|unii|unia|unię|unijn\w*|bruksel\w*|dyrektyw\w*|komisj\w+\s+europejsk\w*|"
+                       r"parlament\w*\s+europejsk\w*|europejsk\w+\s+(?:komisj|parlament)\w*)\b")
+_LOCAL_SCOPE = re.compile(r"\b(?:gmin\w*|miast\w*|miejsk\w*|centrum|śródmieści\w*|dzielnic\w*|osiedl\w*|ulic\w*|"
+                          r"rynek|rynku|starówk\w*|burmistrz\w*|wójt\w*|ratusz\w*|radn\w*|rad\w*\s+(?:gminy|miasta)|"
+                          r"prezydent\w*\s+miasta|stref\w*\s+(?:czyst\w+|płatn\w+|ograniczon\w+))\b")
+
+
+def is_rule_claim(claim: str) -> bool:
+    """Does the claim say that a rule (ban, obligation, new regulation) applies or starts to apply?"""
+    c = claim.lower()
+    return bool(_RULE.search(c) or (_FROM_DATE.search(c) and _FROM_DATE_BAN.search(c)))
+
+
+def rule_scope(claim: str) -> str | None:
+    """Who would adopt the rule the claim describes: "eu", "local" (a municipality), "national"; None if no rule."""
+    if not is_rule_claim(claim):
+        return None
+    c = claim.lower()
+    return "eu" if _EU_SCOPE.search(c) else "local" if _LOCAL_SCOPE.search(c) else "national"
+
+
 def short(s: str, n: int = 280) -> str:
     s = normalize_ws(s)
     return s if len(s) <= n else s[: n - 1].rsplit(" ", 1)[0] + "…"

@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 
 from .schemas import CheckResult, ClaimResult, Evidence
-from .textutil import amounts, asks_who_checked, same_amount, short, split_sentences, tokens
+from .textutil import amounts, asks_who_checked, rule_scope, same_amount, short, split_sentences, tokens
 
 FC_LABEL = {"false": "fałsz", "true": "prawda", "misleading": "wprowadzające w błąd", "mixed": "częściowa prawda",
             "unverifiable": "nieweryfikowalne"}
@@ -400,7 +400,8 @@ def finalize(res: CheckResult) -> None:
     """Fill short_answer / basis_line / limitation_line / main_evidence on every claim and on the result."""
     live = _live(res)
     for c in res.claims:
-        if c.verdict == "brak_dowodow":
+        # a municipal or EU rule: the engine's hint already names the act, the area it covers and its start date
+        if c.verdict == "brak_dowodow" and rule_scope(c.claim) not in ("local", "eu"):
             for rx, hint in SETTLE:
                 if rx.search(c.claim):
                     c.would_settle = hint

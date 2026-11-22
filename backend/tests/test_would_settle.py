@@ -5,7 +5,10 @@ from __future__ import annotations
 import unittest
 
 import _testenv  # noqa: F401  (runtime dir, no scheduler)
-from prawdowid.engine import _would_settle, is_rule_claim  # noqa: E402
+from prawdowid import answer  # noqa: E402
+from prawdowid.engine import _would_settle  # noqa: E402
+from prawdowid.schemas import CheckResult, ClaimResult  # noqa: E402
+from prawdowid.textutil import is_rule_claim, rule_scope  # noqa: E402
 
 
 class RuleClaims(unittest.TestCase):
@@ -41,6 +44,28 @@ class RuleClaims(unittest.TestCase):
                       "Burmistrz Lipowca spotkał się wczoraj z mieszkańcami.",
                       "Piłkarz nie mógł zagrać w finale z powodu kontuzji."):
             self.assertFalse(is_rule_claim(claim), claim)
+
+
+class AnswerKeepsTheRuleHint(unittest.TestCase):
+    """answer.finalize replaces the engine hint by a topic hint (transport, weather, municipal office…). For a municipal
+    or EU rule it keeps the engine's, which names the act, the area it covers and the date it enters into force."""
+
+    def _hint(self, text: str) -> str:
+        c = ClaimResult(claim=text, verdict="brak_dowodow", verdict_label="brak", strength=0.0, explanation="…",
+                        strength_label="niewystarczająca", evidence=[], would_settle=_would_settle(text))
+        res = CheckResult(id="x", created_at="2026-11-22", channel="web", status="ok", input_kind="text",
+                          input_excerpt="", claims=[c])
+        answer.finalize(res)
+        return res.claims[0].would_settle
+
+    def test_municipal_ban_keeps_the_resolution_hint(self):
+        text = "Gmina Zalesie wprowadza zakaz wjazdu ciężarówek na rynek od lipca."
+        self.assertEqual(rule_scope(text), "local")
+        self.assertIn("datą wejścia w życie", self._hint(text))
+
+    def test_topic_hint_still_wins_for_other_claims(self):
+        self.assertIn("przewoźnika", self._hint("Bilety na tramwaj w Lipowcu podrożały dwukrotnie."))
+        self.assertIn("przewoźnika", self._hint("Od jutra nie można kupić biletu u kierowcy autobusu."))  # national rule
 
 
 class TopicHints(unittest.TestCase):

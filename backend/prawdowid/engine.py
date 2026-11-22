@@ -23,7 +23,8 @@ from .config import settings
 from .index import INDEX, TIER, TIER_LABEL
 from .nli import NLI_MODEL, NLIScore
 from .schemas import VERDICT_LABEL_PL, ClaimResult, Evidence, Premise
-from .textutil import amounts, is_time_sensitive, normalize_ws, same_amount, short, split_sentences, tokens
+from .textutil import (amounts, is_time_sensitive, normalize_ws, rule_scope, same_amount, short, split_sentences,
+                       tokens)
 
 log = logging.getLogger("prawdowid.engine")
 
@@ -242,22 +243,6 @@ def _evidence(c: _Cand, stance: str, score: float, same: bool | None) -> Evidenc
 
 # ---- "what would settle it" (an abstention names the kind of source that would decide the claim)
 # Stems are anchored at a word start: a bare "cen" matched "centrum" and "lek" matched "lekko".
-_RULE = re.compile(
-    r"\bnie\s+będ\w*\s+(?:mogł\w*|można|wolno)\b|\bnie\s+(?:wolno|można)\b"
-    r"|\b(?:zakaz\w*|zakazan\w*|nakaz\w*|obowiąz(?:ek|ku|kiem|ki|kow\w*|uj\w*)|zobowiązan\w*)\b"
-    r"|\b(?:wchodz\w*|wejd\w*|weszł\w*|wejści\w*)\s+w\s+życie\b"
-    r"|\bwprowadz\w*\s+(?:\w+\s+){0,3}?(?:zakaz\w*|nakaz\w*|obowiąz\w*|opłat\w*|stref\w*|limit\w*|ogranicze\w*|"
-    r"przepis\w*|zasad\w*|podat\w*|kar\w*)\b")
-_FROM_DATE = re.compile(r"\bod\s+(?:przyszł\w+|następn\w+|nowego|kolejn\w+|jutra|poniedziałku|wtorku|środy|czwartku|"
-                        r"piątku|soboty|niedzieli|\d{1,2}(?:\.\d{1,2}|\s+\w+)|stycznia|lutego|marca|kwietnia|maja|"
-                        r"czerwca|lipca|sierpnia|września|października|listopada|grudnia|(?:19|20)\d\d)\b")
-_FROM_DATE_BAN = re.compile(r"\bnie\s+(?:będ\w*|wjad\w*|wjedzi\w*|wjech\w*|wejd\w*|kupi\w*|sprzeda\w*|"
-                            r"zapłaci\w*|dostan\w*|zaparkuj\w*)\b")
-_EU_SCOPE = re.compile(r"\b(?:ue|unii|unia|unię|unijn\w*|bruksel\w*|dyrektyw\w*|komisj\w+\s+europejsk\w*|"
-                       r"parlament\w*\s+europejsk\w*|europejsk\w+\s+(?:komisj|parlament)\w*)\b")
-_LOCAL_SCOPE = re.compile(r"\b(?:gmin\w*|miast\w*|miejsk\w*|centrum|śródmieści\w*|dzielnic\w*|osiedl\w*|ulic\w*|"
-                          r"rynek|rynku|starówk\w*|burmistrz\w*|wójt\w*|ratusz\w*|radn\w*|rad\w*\s+(?:gminy|miasta)|"
-                          r"prezydent\w*\s+miasta|stref\w*\s+(?:czyst\w+|płatn\w+|ograniczon\w+))\b")
 _LAW = re.compile(r"\b(?:ustaw(?:a|y|ie|ę|ą|om|ami|ach)?|przepis\w*|rozporządz\w*|praw(?:o|a|em)|kodeks\w*|"
                   r"dyrektyw\w*|unijn\w*|ue|bruksel\w*)\b")
 _NUMBERS = re.compile(r"\d|%|\b(?:procent\w*|mln|mld|tys|wzro(?:st\w*|sł\w*|śnie|sną|sn\w*)|"
@@ -270,29 +255,23 @@ _SECURITY = re.compile(r"\b(?:wojsk\w*|wojn\w*|armi\w*|nato|ukrain\w*|rosj\w*|ro
                        r"msz|mon|dyplomac\w*|żołnierz\w*)\b")
 
 
-def is_rule_claim(claim: str) -> bool:
-    """Does the claim say that a rule (ban, obligation, new regulation) applies or starts to apply?"""
-    c = claim.lower()
-    return bool(_RULE.search(c) or (_FROM_DATE.search(c) and _FROM_DATE_BAN.search(c)))
-
-
-def _rule_settle(c: str) -> str:
-    """A rule is settled by the act that makes it: it states the area (or the people and things) it covers and the
-    date it enters into force. Which act depends on who could adopt it."""
-    if _EU_SCOPE.search(c):
-        return ("akt prawny UE w EUR-Lex (rozporządzenie, dyrektywa lub decyzja) — z zakresem, którego dotyczy, i datą "
-                "wejścia w życie; dyrektywa wiąże obywateli dopiero przez polską ustawę (ISAP)")
-    if _LOCAL_SCOPE.search(c):
-        return ("uchwała rady gminy lub miasta (akt prawa miejscowego, ogłaszany w wojewódzkim dzienniku urzędowym) — "
-                "z opisem obszaru, który obejmuje, i datą wejścia w życie")
-    return ("ustawa lub rozporządzenie w Dzienniku Ustaw (wyszukiwarka ISAP Sejmu) — z zakresem, którego dotyczy, i "
-            "datą wejścia w życie")
+# A rule is settled by the act that makes it, which states the area (or the people and things) it covers and the date
+# it enters into force. Which act depends on who could adopt it (textutil.rule_scope).
+_RULE_SETTLE = {
+    "eu": ("akt prawny UE w EUR-Lex (rozporządzenie, dyrektywa lub decyzja) — z zakresem, którego dotyczy, i datą "
+           "wejścia w życie; dyrektywa wiąże obywateli dopiero przez polską ustawę (ISAP)"),
+    "local": ("uchwała rady gminy lub miasta (akt prawa miejscowego, ogłaszany w wojewódzkim dzienniku urzędowym) — "
+              "z opisem obszaru, który obejmuje, i datą wejścia w życie"),
+    "national": ("ustawa lub rozporządzenie w Dzienniku Ustaw (wyszukiwarka ISAP Sejmu) — z zakresem, którego dotyczy, "
+                 "i datą wejścia w życie"),
+}
 
 
 def _would_settle(claim: str) -> str:
     c = claim.lower()
-    if is_rule_claim(c):
-        return _rule_settle(c)
+    scope = rule_scope(c)
+    if scope:
+        return _RULE_SETTLE[scope]
     if _LAW.search(c):
         return "akt prawny w ISAP (Dziennik Ustaw) lub EUR-Lex albo komunikat właściwego ministerstwa"
     if _NUMBERS.search(c):
