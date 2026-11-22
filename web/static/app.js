@@ -158,6 +158,20 @@ function openWait({inline = null, container = null, title = "Sprawdzanie informa
 }
 
 // ------------------------------------------------------------------ evidence chain
+// Data cards written by Prawdowid from an institution's dataset (ingest/official_gus.py, official_nbp.py,
+// official_eurostat.py; doc_id "<source>:…"): their text is not the publisher's own words, so it is not labelled
+// as a quote. Changes, r/r and m/m rates and EU rankings in them are computed by the ingest from the data.
+const DATA_CARD = {gus: "GUS", nbp: "NBP", eurostat: "Eurostatu"};
+const COMPUTED = /zmiana [+−-]?\d|\d% (r\/r|m\/m)|m\/m\)|\d+\. (miejsc|najniższ|najwyższ)/;
+function fragmentBlock(e) {
+  const src = DATA_CARD[String(e.doc_id || "").split(":")[0]];
+  if (!src) return `<blockquote><span class="small muted">Fragment źródła (cytat):</span><br>„${esc(e.fragment)}”</blockquote>`;
+  const calc = COMPUTED.test(e.fragment || "")
+    ? `<br><span class="small muted">Zmiany, stopy r/r i m/m oraz miejsca w rankingu to wyliczenie Prawdowida z tych danych.</span>` : "";
+  return `<blockquote><span class="small muted">Opis automatyczny na podstawie danych ${src} (<a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer">zbiór danych</a>):</span><br>${esc(e.fragment)}${calc}</blockquote>`;
+}
+const COMPUTED_PREMISE = /^Porównanie liczb/;  // engine.numeric_stance: the comparison is Prawdowid's own arithmetic
+
 function renderEvidence(e) {
   const fc = e.factcheck_verdict_raw ? `<div class="small">Sprawdzane twierdzenie: „${esc(e.factcheck_claim || e.title)}” — ocena źródła: <b>${esc(e.factcheck_verdict_raw)}</b>${e.same_claim === false ? " (Twoje twierdzenie jest jego zaprzeczeniem)" : ""}</div>` : "";
   return `<div class="ev">
@@ -165,7 +179,7 @@ function renderEvidence(e) {
     <div class="evidence-title" style="margin-top:6px"><a href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(e.title)}</b></a></div>
     <div class="small muted">${esc(e.publisher)} · ${esc(e.domain)} · opublikowano ${fmtDate(e.published_at)}${e.age_days != null ? ` (${e.age_days} dni temu)` : ""}</div>
     ${fc}
-    <blockquote><span class="small muted">Fragment źródła (cytat):</span><br>„${esc(e.fragment)}”</blockquote>
+    ${fragmentBlock(e)}
     <details><summary>Dane źródła i analizy</summary><div class="small muted">Podobieństwo do twierdzenia: ${(e.similarity * 100).toFixed(0)}% · ${e.stance !== "kontekst" ? `pewność oceny fragmentu: ${(e.stance_score * 100).toFixed(0)}% · ` : ""}pobrano ${fmtDate(e.retrieved_at)} · <span title="${esc(e.license)}">${esc(shortLic(e.license))}</span> (<a href="/zrodla">warunki</a>)</div></details>
   </div>`;
 }
@@ -217,7 +231,7 @@ function renderClaim(c, i, n, full = false) {
   const why = premises.length || interp
     ? `<details${open}><summary>Dlaczego taki wynik?</summary>${interp}
       ${kind ? `<p class="small muted">Rodzaj wypowiedzi: ${kind}</p>` : ""}
-      ${premises.length ? `<ul class="premises">${premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}:</b> ${esc(p.value)}</li>`).join("")}</ul>
+      ${premises.length ? `<ul class="premises">${premises.map(p => `<li>${pe(p)} <b>${esc(p.label)}${COMPUTED_PREMISE.test(p.label) ? " — wyliczenie Prawdowida" : ""}:</b> ${esc(p.value)}</li>`).join("")}</ul>
       <div class="small muted">Reguły: ${(c.rules_fired || []).map(esc).join(", ") || "—"} · <a href="/metodologia#reguly">opis reguł</a></div>` : ""}</details>` : "";
   return `<section class="card claim-card b-${c.verdict}" aria-label="Twierdzenie ${i + 1}"><div class="window-bar blue-bar"><span class="window-square" aria-hidden="true"></span><span class="bar-title">Wynik sprawdzenia${n > 1 ? ` · ${i + 1} z ${n}` : ""}</span><span class="window-lines" aria-hidden="true"></span></div><div class="claim-body">
     <div class="verdict-hero"><span class="verdict-icon" aria-hidden="true">${VERDICT_ICON[c.verdict] || "?"}</span><div><div class="eyebrow">${n > 1 ? `Informacja ${i + 1} z ${n}` : "Co mówią źródła"}</div><h2>${esc(c.verdict === "falszywe" ? "Fałsz" : c.verdict_label)}</h2></div></div>
