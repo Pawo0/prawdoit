@@ -29,7 +29,8 @@ class LineKinds(unittest.TestCase):
 
     def test_interface_text(self):
         self.assertKind("interfejs", ["Udostępnij", "1,5 tys. polubień · 230 komentarzy", "Lubię to! Odpowiedz",
-                                      "Pokaż więcej", "12K views", "Komentarze (34)", "Zobacz tłumaczenie"])
+                                      "Pokaż więcej", "12K views", "Komentarze (34)", "Zobacz tłumaczenie",
+                                      "21:14 · 15 września 2024 · 48,1 tys. wyświetleń", "3 marca 2025 · 87 udostępnień"])
 
     def test_ocr_debris(self):
         self.assertKind("szum", ["|| ~ ® =", "ii | lf ;", "Pilne!", "---"])

@@ -185,6 +185,9 @@ def line_kind(line: str) -> str | None:
         return "data"
     if _is_ui_line(s):
         return "interfejs"
+    # a timestamp followed or preceded by counters: "21:14 · 15 wrz 2024 · 48,1 tys. wyświetleń"
+    if _DATE_EDGE.search(s) and _is_ui_line(_DATE_EDGE.sub(" ", s)):
+        return "interfejs"
     if _is_handle_line(s):
         return "konto"
     if _is_byline(s):

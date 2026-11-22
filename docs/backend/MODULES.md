@@ -136,7 +136,7 @@ Lokalny odczyt tekstu ze zrzutów z limitami obrazów i jawną obsługą błęd�
 
 Kod: [`ocr.py`](../../backend/prawdowid/ocr.py) · Przewodnik: [REQUEST_FLOW.md](REQUEST_FLOW.md)
 
-Punkty wejścia: `OcrUnavailable`, `OcrError`, `available`, `decode_b64`, `prepare`, `read_text`, `blocks_to_sentences`.
+Punkty wejścia: `OcrUnavailable`, `OcrError`, `available`, `decode_b64`, `load`, `prepare`, `read_text`, `parse_tsv`, `lines_to_text`, `blocks_to_sentences`.
 
 ## provenance.py
 
