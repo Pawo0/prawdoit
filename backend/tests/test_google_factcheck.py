@@ -374,6 +374,18 @@ class GoogleFactCheckFeedTest(unittest.TestCase):
         self.assertNotIn(KEY, str(ctx.exception))
         self.assertIn(self.G.ApiError, self.G.EXPECTED_ERRORS)
 
+    def test_a_scheduled_run_stores_nothing_but_the_dry_run_still_previews(self):
+        from prawdowid.sources import fetchers
+
+        src = {**self.source, "category": "factcheck", "publisher": "Demagog", "license": "l", "language": "pl",
+               "method": "custom", "params": {**self.source["params"], "handler": "google_factcheck_feed"}}
+        with mock.patch.object(self.G, "call", lambda *a, **kw: self.page1):
+            with self.assertRaises(fetchers.FetchError) as ctx:
+                fetchers.fetch_custom(src, fetchers.Ctx())
+            self.assertIn("nie są zapisywane", str(ctx.exception))
+            self.assertIs(self.G.PERSIST, False)
+            self.assertTrue(fetchers.fetch_custom(src, fetchers.Ctx(limit=2)))  # preview only, nothing written
+
     def test_lower_case_label_is_stored_capitalised_with_the_same_class(self):
         for label in ("fałsz", "manipulacja", "brakujący kontekst", "przerobione zdjęcie lub film"):
             rec = self.G.to_record({"text": "Minister zapowiedział podwyżkę podatku od wszystkich samochodów."},

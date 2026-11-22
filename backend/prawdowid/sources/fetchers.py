@@ -626,6 +626,9 @@ def fetch_custom(source: dict, ctx: Ctx) -> list[dict]:
         raise FetchError(f"Brak modułu obsługi prawdowid.source_handlers.{handler} ({e}).") from e
     if not hasattr(mod, "fetch"):
         raise FetchError(f"Moduł prawdowid.source_handlers.{handler} nie ma funkcji fetch(source).")
+    if not ctx.limit and getattr(mod, "PERSIST", True) is False:  # e.g. Google Fact Check Tools API results
+        raise FetchError(f"Wyniki modułu {handler} nie są zapisywane w korpusie (warunki serwisu nie pozwalają na "
+                         "trwałe kopie) — źródło służy tylko do zapytań na żywo i podglądu w panelu.")
     src = json.loads(json.dumps(source))
     if ctx.limit:
         src["params"]["max_items"] = ctx.limit
