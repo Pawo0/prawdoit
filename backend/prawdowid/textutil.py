@@ -112,7 +112,6 @@ _TEMPORAL_NOW = re.compile(
     r"breaking|najnowsze|trwa|w tej chwili)\b",
     re.IGNORECASE,
 )
-_YEAR = re.compile(r"\b(19[5-9]\d|20[0-4]\d)\b")
 
 
 def is_question(s: str) -> bool:
@@ -324,10 +323,6 @@ def same_amount(a: tuple, b: tuple) -> bool:
 
 def is_time_sensitive(s: str) -> bool:
     return bool(_TEMPORAL_NOW.search(s))
-
-
-def years_in(s: str) -> list[int]:
-    return [int(y) for y in _YEAR.findall(s)]
 
 
 # ------------------------------------------------------------------ PII masking (RODO: data minimisation)

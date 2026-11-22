@@ -452,14 +452,6 @@ def _anchors(claim: str) -> set[str]:
     return {t for t in tokens(claim) if not t[0].isdigit() and t not in _GENERIC and len(t) > 2}
 
 
-def _anchor_text(claim: str, d) -> str:
-    """Sentences of the source that mention the claim's subject (e.g. 'frekwencja', 'Nawrocki'), for number checks."""
-    anchors = _anchors(claim)
-    scored = [(len(anchors & set(tokens(x))), i, x) for i, x in enumerate(split_sentences(d.text[:6000]))]
-    best = sorted([t for t in scored if t[0] > 0], key=lambda t: (-t[0], t[1]))[:3]
-    return " ".join(x for _, _, x in sorted(best, key=lambda t: t[1]))
-
-
 _WORD = re.compile(r"[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+")
 
 
