@@ -5,9 +5,10 @@ Everything on screen inside the windows is a recording of the real application a
 Remotion adds the window frame, camera moves, cursor, captions and title cards.
 
 The visual palette is **Soczysty karmin**: `#C92743`, `#9C1A32`, ivory `#FAF5EC`, and soft pink `#F0DCE0`.
-The existing demo and presentation clips were migrated with `tools/recolor-legacy.mjs input.mp4 output.mp4`;
+The existing demo video (`out/prawdowid-demo.mp4`) was migrated with `tools/recolor-legacy.mjs input.mp4 output.mp4`;
 this changes colors in the archived footage without re-running checks or posting Discord messages.
 Use an original cobalt recording as input only once. Future recordings use the application's current palette directly.
+The presentation's stills and clips are not migrated: they are cut from website and extension recordings made in this palette.
 
 ```bash
 cd video && npm install
