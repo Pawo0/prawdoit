@@ -4,8 +4,9 @@ APT/disinformation-related analyses) + thematic scam guides (fałszywe inwestycj
 konsultanci, płatności, CAPTCHA, załączniki...) + the "Lista ostrzeżeń" description page.
 
 robots.txt: disallows only /telefon/, /szukaj/, /en/search/ (checked at runtime).
-Licence: cert.pl content © NASK — no open licence stated; we keep short excerpts with
-attribution + link (quotation right, art. 29 pr. aut.). The hole.cert.pl domain list itself
+Licence: cert.pl content © NASK — no open licence stated; each record keeps title, date and link plus
+ONE verbatim excerpt of at most 300 chars (the opening after the headline; textutil.opening_excerpt),
+quoted with attribution (quotation right, art. 29 pr. aut.). The hole.cert.pl domain list itself
 is free for any use (cert.pl/en/warning-list).
 
 Output: data/corpus/official_cert.jsonl
@@ -15,10 +16,16 @@ from __future__ import annotations
 import re
 import sys
 
+from pathlib import Path
+
 from official_common import JsonlWriter, fetch_text, html_to_text, log, make_record, pl_date
 
-LIC = ("© NASK / CERT Polska — brak otwartej licencji; krótkie fragmenty z przypisem i linkiem "
-       "(prawo cytatu); lista hole.cert.pl: dowolne użycie")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+from prawdowid.textutil import opening_excerpt  # noqa: E402  (stdlib-only module)
+
+LIC = ("© NASK / CERT Polska — brak otwartej licencji; zapisane: tytuł, data, link i jeden dosłowny fragment "
+       "(do 300 znaków) z przypisem (prawo cytatu, art. 29 pr. aut.); lista hole.cert.pl: dowolne użycie")
+EXCERPT_CHARS = 300
 PUB = "CERT Polska (NASK)"
 GUIDES = [
     ("/falszywe-inwestycje/", ["oszustwa", "fałszywe inwestycje", "deepfake"]),
@@ -65,7 +72,8 @@ def main():
                 log("  skip", link, e)
                 continue
             w.write(make_record(source="cert", sid=link.rstrip("/").split("/posts/")[-1], publisher=PUB, url=link,
-                                title=t or title, text=body, published_at=date, license=LIC, domain="cert.pl",
+                                title=t or title, text=opening_excerpt(body, t or title, EXCERPT_CHARS),
+                                published_at=date, license=LIC, domain="cert.pl",
                                 tags=["CERT Polska", "cyberbezpieczeństwo", "ostrzeżenie"] +
                                      (["dezinformacja", "APT"] if re.search(r"UNC1151|Ghostwriter|dezinform", t + body) else [])))
         for path, tags in GUIDES:
@@ -76,7 +84,8 @@ def main():
                 log("  skip", url, e)
                 continue
             w.write(make_record(source="cert", sid="guide" + path.rstrip("/"), publisher=PUB, url=url,
-                                title=t, text=body, published_at=d, license=LIC, domain="cert.pl",
+                                title=t, text=opening_excerpt(body, t, EXCERPT_CHARS), published_at=d, license=LIC,
+                                domain="cert.pl",
                                 tags=["CERT Polska", "poradnik", "ostrzeżenie"] + tags))
 
 

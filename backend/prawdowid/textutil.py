@@ -489,6 +489,15 @@ def lead_excerpt(text: str, max_len: int = 300) -> str:
     return _excerpt_cut(src[a:b], max_len)
 
 
+def opening_excerpt(text: str, title: str = "", max_len: int = 300) -> str:
+    """The opening of `text`, verbatim, up to max_len characters, after its headline when the text starts by repeating
+    it (an advisory's first lines say what is going on; a headline match would only repeat the title)."""
+    text, head = normalize_ws(text or ""), normalize_ws(title or "")
+    if head and text.startswith(head) and len(text) > len(head) + 16:
+        text = text[len(head):].lstrip(" \n.:–-")
+    return lead_excerpt(text, max_len) if text else ""
+
+
 def finding_excerpt(text: str, title: str = "", claim: str = "", max_len: int = 300) -> str:
     """One verbatim excerpt of at most max_len characters: the sentence, or two neighbouring sentences, sharing most
     words with the headline (which states the finding), leaving out sentences that restate the checked claim;

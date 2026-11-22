@@ -32,6 +32,7 @@ import httpx
 from ..config import settings
 from ..robots import RobotsTxt
 from ..security import ResolveError, UnsafeURL, check_public_url
+from ..textutil import opening_excerpt
 from . import registry
 
 log = logging.getLogger("prawdowid.sources")
@@ -296,6 +297,7 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
                 tags: list[str] | None = None) -> dict:
     url = canonical(url)
     max_chars = int(source.get("params", {}).get("max_chars") or MAX_TEXT)
+    excerpt_chars = int(source.get("params", {}).get("excerpt_chars") or 0)  # no open licence: one short quote
     retrieved = now_iso()
     if published_at and str(published_at)[:10] > retrieved[:10]:
         # a page cannot be published after it was fetched: the site shows a mistyped date (seen on gov.pl:
@@ -312,7 +314,7 @@ def make_record(source: dict, *, url: str, title: str, text: str, published_at: 
         "retrieved_at": retrieved,
         "language": source.get("language", "pl"),
         "license": source.get("license", ""),
-        "text": truncate(text or "", max_chars),
+        "text": opening_excerpt(text, title, excerpt_chars) if excerpt_chars else truncate(text or "", max_chars),
         "claim": None, "claim_author": None, "verdict_raw": None, "verdict": None,
         "tags": sorted(set([source["id"], *source.get("topics", []), *(tags or [])])),
     }

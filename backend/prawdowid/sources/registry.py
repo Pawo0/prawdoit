@@ -65,6 +65,8 @@ PARAM_SPEC: dict[str, dict[str, tuple[type | tuple, bool, object]]] = {
 }
 COMMON_PARAMS = {"max_docs": (int, False, DEFAULT_MAX_DOCS),   # cap on records kept in data/corpus/<id>.jsonl
                  "max_chars": (int, False, None),               # cap on stored text per record (default 4000)
+                 # sources without an open licence: store only the opening passage, verbatim, up to this many chars
+                 "excerpt_chars": (int, False, None),
                  "delay_s": ((int, float), False, None)}        # min. seconds between requests to one host (≥ 1)
 
 

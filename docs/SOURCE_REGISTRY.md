@@ -99,7 +99,8 @@ pobieraniu i usuwane z pliku przy każdym scaleniu (także po pustym uruchomieni
 Adresy porównujemy po zdekodowaniu znaków `%XX` (`co%e2%82%82` w zbiorach stron = `co%E2%82%82` w API).
 
 Parametry wspólne dla metod pobierających: `max_docs` (ile najnowszych rekordów zostaje w pliku korpusu, domyślnie 500),
-`max_chars` (długość tekstu rekordu, domyślnie 4000), `delay_s` (odstęp między zapytaniami do hosta; tylko spowalnia —
+`max_chars` (długość tekstu rekordu, domyślnie 4000), `excerpt_chars` (źródła bez otwartej licencji: zapisywany jest
+tylko początkowy fragment tekstu, dosłownie, do tylu znaków; np. CERT Polska — 300), `delay_s` (odstęp między zapytaniami do hosta; tylko spowalnia —
 minimum 1,5 s, a gdy robots.txt podaje `Crawl-delay`, obowiązuje on). Nieznane parametry są zachowywane (dla `custom`).
 
 ### Jak działa pobieranie (implementacja: `backend/prawdowid/sources/`)
