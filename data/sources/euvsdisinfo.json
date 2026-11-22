@@ -18,7 +18,7 @@
     ],
     "timeout_s": 3600
   },
-  "enabled": false,
+  "enabled": true,
   "schedule_hours": 168,
   "web_search": false,
   "topics": [
@@ -27,11 +27,11 @@
     "ue"
   ],
   "language": "en",
-  "license": "EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded. Case text taken from HF mirror NLP-UniBW/eu_vs_disinfo (scrape of euvsdisinfo.eu, no licence of its own) because the site served a Cloudflare challenge.",
+  "license": "EUvsDisinfo (EEAS East StratCom Task Force). Reuse authorised provided the source is acknowledged (EEAS legal notice, Decision 2011/833/EU); third-party content excluded. Case texts taken from the Hugging Face copy NLP-UniBW/eu_vs_disinfo of the euvsdisinfo.eu case database, because the site serves a Cloudflare challenge, which we do not circumvent.",
   "qualification": "Instytucjonalna baza East StratCom Task Force (EEAS): przypadki prokremlowskiej dezinformacji z obaleniem. Kategoria B (baza incydentów). Treść przypadków z mirrora HF NLP-UniBW/eu_vs_disinfo, bo serwis pokazuje test Cloudflare (nie obchodzimy go); dlatego bez wyszukiwania na żywo.",
   "scope": "organiser_implied",
   "scope_basis": "rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf (instrukcja organizatora pobierania bazy EUvsDisinfo); także rules/MSZ - Pełna treść zadania konkursowego.pdf, sekcja 7 „Dostępne zasoby” (rekomendowane punkty odniesienia): EUvsDisinfo",
   "added_by": "zespół Prawdowid (migracja z ingest/run_factchecks.sh i ingest/run_official.sh)",
   "added_at": "2026-11-21",
-  "notes": "Wyłączone 2026-11-22, 300 rekordów usunięte z korpusu: wszystkie pochodziły z kopii na Hugging Face (NLP-UniBW/eu_vs_disinfo) bez licencji udzielonej przez EEAS, a nie z serwisu euvsdisinfo.eu. Do odbudowy wyłącznie przez oficjalny dostęp (lista przypadków na euvsdisinfo.eu lub serwer MCP EUvsDisinfo, wpis euvsdisinfo_mcp) z zapisaną zgodą lub podstawą ponownego wykorzystania. Wpis z katalogu nigdy sam nie rozstrzyga werdyktu (poziom 3)."
+  "notes": "Przywrócone 2026-11-22. Podstawa: instrukcja organizatorów pobierania bazy EUvsDisinfo (rules/How_to_grab_all_Articles_and_Cases_from_disinfo.pdf) oraz nota prawna EEAS, która pozwala na ponowne wykorzystanie treści z podaniem źródła (decyzja 2011/833/UE; z wyłączeniem treści osób trzecich). Teksty przypadków pochodzą z kopii bazy NLP-UniBW/eu_vs_disinfo w serwisie Hugging Face, ponieważ euvsdisinfo.eu wyświetla test Cloudflare, którego nie obchodzimy. Poziom 3 (baza incydentów): wpis z katalogu nigdy sam nie rozstrzyga werdyktu — potrzebne jest źródło poziomu 1–2."
 }
