@@ -77,7 +77,7 @@
    działają tylko dla twierdzeń, które po bazie zostały bez dowodu (najwyżej 2, `MAX_FALLBACK_CLAIMS`):
    (gov.pl, WordPress REST: Demagog, FakeNews.pl, CheckFirst; opcjonalnie SearXNG/Brave z filtrem `site:`). Każdy serwis
    ma jeden zegar (robots.txt + zapytania, 7 s), potem ≤ 5 stron jest pobieranych (SSRF, robots.txt, skan injection) i
-   ocenianych tymi samymi regułami. Wynik trafia do `live_web.jsonl` (następne pytanie = baza). Awaria/timeout → komunikat
+   ocenianych tymi samymi regułami. Wynik służy tej odpowiedzi; zapis w `live_web.jsonl` jest domyślnie wyłączony (`PRAWDOWID_LIVE_PERSIST_DAYS`, najwyżej 30 dni). Awaria/timeout → komunikat
    „…jest teraz niedostępny (błąd techniczny)…”, nigdy werdykt. Gdy krok nie działał (brak klucza Google, wyszukiwanie
    wyłączone na serwerze lub w tym żądaniu, LLM niedostępny lub odrzucony w walidacji), wynik mówi to wprost:
    `engine.unavailable`, `live_search.status = "nieaktywne"`, `engine.llm_status`, wiersz „Nie użyto: …” w interfejsie.

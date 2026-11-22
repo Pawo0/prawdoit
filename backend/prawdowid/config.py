@@ -62,6 +62,9 @@ class Settings:
     quick_wait_s: float = float(_env("QUICK_WAIT_S", "3"))               # then 503 + Retry-After, never a queue
     retention_days: int = int(_env("RETENTION_DAYS", "30"))
     auto_retention_days: int = int(_env("AUTO_RETENTION_DAYS", "7"))     # audit rows of mode="auto" (no text stored)
+    # pages found by live search kept in data/corpus/live_web.jsonl: 0 = never stored (default); otherwise days,
+    # capped at retention_days (websearch.persist_days)
+    live_persist_days: int = int(_env("LIVE_PERSIST_DAYS", "0"))
 
     # --- channels (secrets only from env, never committed) ---
     wa_verify_token: str = _env("WA_VERIFY_TOKEN", "")
